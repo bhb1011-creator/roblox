@@ -10,7 +10,7 @@ local Parts = require(script.Parent.Parts)
 
 local Camp = {}
 
-local Y = Layout.NATURE_Y -- der Grillplatz liegt auf Waldboden
+local Y = Layout.GROUND_Y
 local FIRE = Layout.CAMPFIRE
 local COLORS = {
 	wood = Color3.fromRGB(110, 78, 50),
@@ -466,7 +466,7 @@ function Camp.build(parent)
 	buildNoticeBoard(camp, Layout.NOTICE_BOARD)
 	buildInfoBoard(camp)
 
-	-- Lichterketten rund um den Grillplatz und einmal quer darüber
+	-- Lichterketten nur außen rund um den Grillplatz
 	local height = 12
 	local corners = {
 		Vector3.new(-34, Y, -14),
@@ -479,8 +479,6 @@ function Camp.build(parent)
 		local nextCorner = corners[i % #corners + 1]
 		buildStringLights(camp, corner + Vector3.new(0, height - 0.2, 0), nextCorner + Vector3.new(0, height - 0.2, 0), 2.5)
 	end
-	buildStringLights(camp, corners[1] + Vector3.new(0, height - 0.2, 0), corners[3] + Vector3.new(0, height - 0.2, 0), 4)
-	buildStringLights(camp, corners[2] + Vector3.new(0, height - 0.2, 0), corners[4] + Vector3.new(0, height - 0.2, 0), 4)
 end
 
 return Camp

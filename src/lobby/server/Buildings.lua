@@ -1,6 +1,6 @@
 -- Gebäude am Südrand: begehbarer Kiosk mit Verkäufer und drei Snack-Regalen,
 -- Kassenhäuschen mit Kassierer (Robux-Käufe), große Bestenliste, verlassener
--- Wohnwagen und Automaten draußen.
+-- Wohnwagen.
 local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -27,10 +27,6 @@ local COLORS = {
 }
 
 local IDLE_ANIMATION = "rbxassetid://507766388" -- Standard-Atemanimation von Roblox (R15)
-
-local function randomProductColor(rng)
-	return Color3.fromHSV(rng:NextNumber(), rng:NextNumber(0.45, 0.85), rng:NextNumber(0.55, 0.95))
-end
 
 -- Figur hinter einer Theke mit Namensschild und Interaktion (E).
 -- `feet` = Position der Füße, Blickrichtung = LookVector.
@@ -84,65 +80,6 @@ local function createNpc(parent, feet, options)
 	prompt.Parent = root
 	CollectionService:AddTag(prompt, options.tag)
 	return npc
-end
-
--- Snackautomat (befüllt); Vorderseite zeigt nach -Z von `cframe`
-local function buildSnackMachine(parent, cframe, rng, bodyColor)
-	local machine = Instance.new("Model")
-	machine.Name = "Snackautomat"
-	local block = Parts.builder(machine, cframe)
-	local W, H, D = 4.6, 8, 3
-	block("Body", Vector3.new(W, H, D), CFrame.new(0, H / 2, 0.15), bodyColor, Enum.Material.Metal)
-	local front = -D / 2
-	-- Innenraum hinter der Scheibe
-	local back = block("InnerLight", Vector3.new(3.2, 5.6, 0.05), CFrame.new(-0.55, 4.6, front + 0.05), Color3.fromRGB(235, 240, 245), Enum.Material.Neon)
-	Parts.light("PointLight", back, { Range = 9, Brightness = 0.8, Color = Color3.fromRGB(220, 235, 255) })
-	CollectionService:AddTag(back, "FlickerLamp")
-	for row = 0, 4 do
-		local y = 2.3 + row * 1.1
-		block("Tray", Vector3.new(3.2, 0.08, 0.9), CFrame.new(-0.55, y, front - 0.45), COLORS.darkMetal, Enum.Material.Metal)
-		for col = 0, 3 do
-			block(
-				"Snack",
-				Vector3.new(0.62, 0.85, 0.3),
-				CFrame.new(-1.75 + col * 0.8, y + 0.47, front - 0.5) * CFrame.Angles(math.rad(-8), 0, 0),
-				randomProductColor(rng),
-				Enum.Material.SmoothPlastic,
-				{ CanCollide = false }
-			)
-		end
-	end
-	block("Window", Vector3.new(3.4, 5.8, 0.1), CFrame.new(-0.55, 4.6, front - 1), COLORS.glass, Enum.Material.Glass, { Transparency = 0.75 })
-	for _, x in { -2.3, 1.2 } do
-		block("WindowFrame", Vector3.new(0.2, 6, 1.1), CFrame.new(x, 4.6, front - 0.5), bodyColor, Enum.Material.Metal)
-	end
-	block("FrameTop", Vector3.new(3.7, 0.3, 1.1), CFrame.new(-0.55, 7.65, front - 0.5), bodyColor, Enum.Material.Metal)
-	block("FrameBottom", Vector3.new(3.7, 0.3, 1.1), CFrame.new(-0.55, 1.55, front - 0.5), bodyColor, Enum.Material.Metal)
-	-- Bedienfeld rechts
-	block("Panel", Vector3.new(0.9, 5.8, 1.1), CFrame.new(1.8, 4.6, front - 0.5), COLORS.darkMetal, Enum.Material.Metal)
-	block("Display", Vector3.new(0.7, 0.4, 0.05), CFrame.new(1.8, 6.6, front - 1.07), Color3.fromRGB(90, 255, 120), Enum.Material.Neon)
-	for row = 0, 3 do
-		for col = 0, 1 do
-			block("Button", Vector3.new(0.22, 0.22, 0.08), CFrame.new(1.65 + col * 0.3, 5.6 - row * 0.35, front - 1.07), Color3.fromRGB(200, 200, 200), Enum.Material.Metal)
-		end
-	end
-	block("CoinSlot", Vector3.new(0.3, 0.5, 0.08), CFrame.new(1.8, 3.6, front - 1.07), Color3.fromRGB(150, 150, 150), Enum.Material.Metal)
-	block("Flap", Vector3.new(3, 0.9, 0.1), CFrame.new(-0.55, 0.9, front - 0.02), COLORS.darkMetal, Enum.Material.Metal)
-	machine.Parent = parent
-	return machine
-end
-
-local function buildDrinkMachine(parent, cframe)
-	local machine = Instance.new("Model")
-	machine.Name = "Getraenkeautomat"
-	local block = Parts.builder(machine, cframe)
-	block("Body", Vector3.new(3.5, 7.5, 2.5), CFrame.new(0, 3.75, 0), Color3.fromRGB(150, 30, 35), Enum.Material.Metal)
-	local front = block("Front", Vector3.new(2.6, 4.6, 0.1), CFrame.new(-0.2, 4.6, -1.27), Color3.fromRGB(170, 205, 220), Enum.Material.Neon)
-	Parts.light("PointLight", front, { Range = 11, Brightness = 0.9, Color = Color3.fromRGB(170, 210, 255) })
-	CollectionService:AddTag(front, "FlickerLamp")
-	block("Slot", Vector3.new(2, 0.6, 0.15), CFrame.new(-0.2, 1.3, -1.27), Color3.fromRGB(20, 20, 20))
-	block("Buttons", Vector3.new(0.4, 2, 0.12), CFrame.new(1.4, 4.6, -1.27), Color3.fromRGB(60, 60, 60), Enum.Material.Metal)
-	machine.Parent = parent
 end
 
 -- Lockeres Snack-Regal: drei Böden mit je drei Snacks und Preisschild.
@@ -298,13 +235,15 @@ local function buildShop(parent)
 	Parts.column({ Name = "TableTop", Color = COLORS.wood, Material = Enum.Material.Wood, Parent = shop }, 0.2, 2.6, base * CFrame.new(-8, 4, -7.5))
 	for _, x in { -10, -6 } do
 		Parts.column({ Name = "StoolLeg", Color = COLORS.darkMetal, Material = Enum.Material.Metal, Parent = shop }, 2.4, 0.25, base * CFrame.new(x, 0.4, -7.5))
+		Parts.column({ Name = "StoolCushion", Color = Color3.fromRGB(150, 40, 35), Material = Enum.Material.Fabric, Parent = shop }, 0.3, 1.4, base * CFrame.new(x, 2.8, -7.5))
+		-- Unsichtbare, gerade Sitzfläche: so sitzt man aufrecht und schaut zum Tisch
+		local stoolPosition = (base * CFrame.new(x, 3.05, -7.5)).Position
+		local tablePosition = (base * CFrame.new(-8, 3.05, -7.5)).Position
 		Parts.new("Seat", {
 			Name = "Stool",
-			Shape = Enum.PartType.Cylinder,
-			Size = Vector3.new(0.3, 1.4, 1.4),
-			CFrame = base * CFrame.new(x, 2.95, -7.5) * CFrame.Angles(0, 0, math.rad(90)),
-			Color = Color3.fromRGB(150, 40, 35),
-			Material = Enum.Material.Fabric,
+			Size = Vector3.new(1.2, 0.2, 1.2),
+			CFrame = CFrame.lookAt(stoolPosition, tablePosition),
+			Transparency = 1,
 			Parent = shop,
 		})
 	end
@@ -486,8 +425,6 @@ function Buildings.build(parent)
 	buildBooth(buildings)
 	buildLeaderboard(buildings)
 	buildCamper(buildings)
-	buildDrinkMachine(buildings, Layout.VENDING_MACHINE)
-	buildSnackMachine(buildings, Layout.VENDING_MACHINE * CFrame.new(4.6, 0, 0), Random.new(9), Color3.fromRGB(150, 110, 30))
 end
 
 return Buildings

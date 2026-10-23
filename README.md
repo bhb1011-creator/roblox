@@ -5,14 +5,14 @@ Ein Roblox-Horrorspiel nach wahren Begebenheiten – allein oder zu zweit.
 ## Aktueller Stand: Lobby (erster Entwurf)
 
 - **Ego-Perspektive** mit leichtem Kopfwippen und Punkt in der Bildmitte
-- Waldparkplatz im **Sonnenuntergang** (die Zeit bleibt stehen, Himmel ohne Sterne), Asphalt nur im Autobereich, weiße Flutlichtmasten, Waldboden ohne Grashalme
+- Waldparkplatz im **Sonnenuntergang** (die Zeit bleibt stehen, Himmel ohne Sterne), Asphalt nur im Autobereich, weiße Flutlichtmasten, sonst flacher Waldboden
 - Hohe, detaillierte Tannen, tote Bäume, Büsche, Felsen und umgestürzte Stämme
 - Waldstraße mit Kurve, Leitpfosten und Warnschildern, die im Dunkeln verschwindet
 - Begehbarer **Kiosk** mit Verkäufer und drei Snack-Regalen (Snacks ansehen per **E**)
 - **Kasse** mit Kassierer: Wiederbelebungen und Rebirths für Robux (werden gespeichert)
-- **Grillplatz** in der Mitte: Feuerstelle mit Schwenkgrill, Bänke und Biertische zum Hinsetzen, gemauerter Grill, Zelte, Lichterketten
+- **Grillplatz** in der Mitte: Feuerstelle mit Schwenkgrill, Bänke und Biertische zum Hinsetzen, gemauerter Grill, Zelte, Lichterketten außen herum
 - Große Bestenliste, Pinnwand mit Vermisst-Zetteln am Rand
-- Holzzaun, Gehweg vor den Gebäuden, verlassener Wohnwagen, Getränke- und Snackautomat
+- Holzzaun, verlassener Wohnwagen mit Campingecke, Blumenkästen, Topfpflanzen, junge Laubbäume, Farne, Blumenbeete und Trittsteinwege
 - **4 Autos:** 2× „Allein“ (1 Platz) und 2× „Zu zweit“ (2 Plätze)
   - Einsteigen mit der Taste **E** (oder Antippen am Handy)
   - Ist das Auto voll, läuft ein Countdown von 10 Sekunden
@@ -40,7 +40,7 @@ Die Baseplate wird beim Start automatisch entfernt.
 | Ordner | Landet in Studio in | Inhalt |
 |---|---|---|
 | `src/shared` | ReplicatedStorage › Shared | `Config.lua` – Einstellungen (Titel, Countdown, Autos …) |
-| `src/lobby/server` | ServerScriptService › Lobby | Bauen der Lobby (Environment, Forest, Road, ParkingLot, Camp, Buildings, Car) und Autos (CarQueue) |
+| `src/lobby/server` | ServerScriptService › Lobby | Bauen der Lobby (Environment, Forest, Road, ParkingLot, Camp, Buildings, Decor, Car) und Autos (CarQueue) |
 | `src/lobby/client` | StarterPlayerScripts › Lobby | Knöpfe, Hinweise, Shop-Fenster, Lichteffekte |
 
 ## Robux-Produkte einrichten (Kasse)

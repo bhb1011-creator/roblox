@@ -89,23 +89,19 @@ function Environment.buildTerrain(roadSegments, roadWidth)
 		)
 	end
 
-	-- Erdiger Rand neben der Straße und festgetretene Erde rund um den Grillplatz
+	-- Erdiger Rand neben der Straße
 	for _, segment in roadSegments do
 		terrain:FillBlock(segment.cframe * CFrame.new(0, -2, 0), Vector3.new(roadWidth + 10, 4, segment.length + 4), Enum.Material.Ground)
 	end
-	local fire = Layout.CAMPFIRE
-	terrain:FillCylinder(CFrame.new(fire.X, -2, fire.Z), 4, 18, Enum.Material.Ground)
 
-	-- Unter Asphalt, Gehweg und Straße das Gelände entfernen. Dort liegen dicke
-	-- Platten, so kann kein Gelände durch die Oberfläche ragen.
+	-- Innerhalb des Zauns und unter der Straße das Gelände entfernen. Dort liegen
+	-- flache, dicke Platten, so steht alles genau auf dem Boden.
 	local lot = Layout.LOT
-	for _, zone in { Layout.ASPHALT, Layout.PLAZA } do
-		terrain:FillBlock(
-			CFrame.new(0, 0, (zone.minZ + zone.maxZ) / 2),
-			Vector3.new(lot.halfWidth * 2 + 2, 8, zone.maxZ - zone.minZ + 2),
-			Enum.Material.Air
-		)
-	end
+	terrain:FillBlock(
+		CFrame.new(0, 0, (lot.minZ + lot.maxZ) / 2),
+		Vector3.new(lot.halfWidth * 2 + 2, 8, lot.maxZ - lot.minZ + 2),
+		Enum.Material.Air
+	)
 	for _, segment in roadSegments do
 		terrain:FillBlock(segment.cframe, Vector3.new(roadWidth + 1, 8, segment.length + 2), Enum.Material.Air)
 	end

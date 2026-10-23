@@ -39,7 +39,18 @@ end
 local function buildSurface(lot, rng)
 	local asphalt = Layout.ASPHALT
 	slab(lot, "Asphalt", asphalt, COLORS.asphalt, Enum.Material.Asphalt)
-	slab(lot, "Sidewalk", Layout.PLAZA, Color3.fromRGB(150, 145, 138), Enum.Material.Pavement)
+	-- Flacher Waldboden auf derselben Höhe wie der Asphalt
+	slab(lot, "ForestFloor", { minZ = asphalt.maxZ, maxZ = LOT.maxZ }, Color3.fromRGB(78, 86, 52), Enum.Material.LeafyGrass)
+
+	-- Festgetretene Erde rund um den Grillplatz
+	local fire = Layout.CAMPFIRE
+	Parts.column({
+		Name = "Dirt",
+		Color = Color3.fromRGB(96, 78, 58),
+		Material = Enum.Material.Ground,
+		CanCollide = false,
+		Parent = lot,
+	}, 0.02, 34, CFrame.new(fire.X, Y, fire.Z))
 
 	-- Leicht ausgebesserte Stellen im Asphalt
 	for _ = 1, 10 do
@@ -59,23 +70,19 @@ local function buildSurface(lot, rng)
 	end
 end
 
+-- Niedriger Bordstein nur rund um den Asphalt
 local function buildCurbs(lot)
-	local width = LOT.halfWidth * 2 + 1
+	local zone = Layout.ASPHALT
+	local width = LOT.halfWidth * 2 + 0.8
 	local side = LOT.halfWidth - LOT.exitHalfWidth
+	local height = 0.3
 	local curbs = {
-		-- Asphalt: Nordkante mit Ausfahrt, Südkante zum Waldboden
-		{ Vector3.new(side, 0.6, 1), Vector3.new(-(LOT.exitHalfWidth + side / 2), Y + 0.3, Layout.ASPHALT.minZ) },
-		{ Vector3.new(side, 0.6, 1), Vector3.new(LOT.exitHalfWidth + side / 2, Y + 0.3, Layout.ASPHALT.minZ) },
-		{ Vector3.new(width, 0.6, 1), Vector3.new(0, Y + 0.3, Layout.ASPHALT.maxZ) },
-		-- Gehweg vor den Gebäuden
-		{ Vector3.new(width, 0.6, 1), Vector3.new(0, Y + 0.3, Layout.PLAZA.minZ) },
-		{ Vector3.new(width, 0.6, 1), Vector3.new(0, Y + 0.3, Layout.PLAZA.maxZ) },
+		{ Vector3.new(side, height, 0.8), Vector3.new(-(LOT.exitHalfWidth + side / 2), Y + height / 2, zone.minZ) },
+		{ Vector3.new(side, height, 0.8), Vector3.new(LOT.exitHalfWidth + side / 2, Y + height / 2, zone.minZ) },
+		{ Vector3.new(width, height, 0.8), Vector3.new(0, Y + height / 2, zone.maxZ) },
 	}
-	for _, zone in { Layout.ASPHALT, Layout.PLAZA } do
-		local depth = zone.maxZ - zone.minZ
-		for _, x in { -LOT.halfWidth, LOT.halfWidth } do
-			table.insert(curbs, { Vector3.new(1, 0.6, depth), Vector3.new(x, Y + 0.3, (zone.minZ + zone.maxZ) / 2) })
-		end
+	for _, x in { -LOT.halfWidth, LOT.halfWidth } do
+		table.insert(curbs, { Vector3.new(0.8, height, zone.maxZ - zone.minZ), Vector3.new(x, Y + height / 2, (zone.minZ + zone.maxZ) / 2) })
 	end
 	for _, curb in curbs do
 		Parts.new("Part", {
@@ -124,9 +131,9 @@ local function buildFence(lot, rng)
 		end
 	end
 
-	-- Pfosten stehen auf Höhe 0, damit sie auf Waldboden und Platten gleich gut sitzen
+	-- Die Pfosten stehen auf Höhe 0 und stecken so ein Stück im Boden
 	local x, minZ, maxZ = LOT.halfWidth + 0.5, LOT.minZ - 0.5, LOT.maxZ + 0.5
-	local y = Layout.NATURE_Y
+	local y = 0
 	line(Vector3.new(-x, y, maxZ), Vector3.new(x, y, maxZ))
 	line(Vector3.new(-x, y, minZ), Vector3.new(-x, y, maxZ))
 	line(Vector3.new(x, y, minZ), Vector3.new(x, y, maxZ))
@@ -404,7 +411,7 @@ function ParkingLot.build(parent)
 	local furniture = Instance.new("Folder")
 	furniture.Name = "Furniture"
 	furniture.Parent = lot
-	local nature = Layout.NATURE_Y
+	local nature = Y
 	for _, position in {
 		Vector3.new(-22, Y, 46),
 		Vector3.new(22, Y, 46),

@@ -1,6 +1,7 @@
 -- Baut die komplette Lobby per Code zusammen.
 local Buildings = require(script.Parent.Buildings)
 local Camp = require(script.Parent.Camp)
+local Decor = require(script.Parent.Decor)
 local Environment = require(script.Parent.Environment)
 local Forest = require(script.Parent.Forest)
 local Layout = require(script.Parent.Layout)
@@ -44,6 +45,7 @@ function LobbyBuilder.build()
 	Forest.build(lobby, isClearForNature, Road.distanceTo)
 	Camp.build(lobby)
 	Buildings.build(lobby)
+	Decor.build(lobby)
 
 	Parts.new("SpawnLocation", {
 		Name = "LobbySpawn",
