@@ -17,7 +17,7 @@ local function randomBase(position, rng)
 	return CFrame.new(position) * CFrame.Angles(0, rng:NextNumber(0, math.pi * 2), 0)
 end
 
--- Detaillierte Tanne: zweiteiliger Stamm, unten kahl, darüber 5 Etagen aus hängenden Ästen
+-- Detaillierte Tanne: zweiteiliger Stamm, dichte Etagen aus hängenden Ästen bis weit nach unten
 local function buildPine(parent, position, height, rng)
 	local tree = Instance.new("Model")
 	tree.Name = "Pine"
@@ -34,22 +34,22 @@ local function buildPine(parent, position, height, rng)
 	)
 
 	local leafColor = LEAVES[rng:NextInteger(1, #LEAVES)]
-	local firstTier = height * rng:NextNumber(0.25, 0.4)
-	local tiers, branches = 5, 5
+	local firstTier = height * rng:NextNumber(0.08, 0.16)
+	local tiers, branches = 6, 5
 	for tier = 0, tiers - 1 do
 		local t = tier / (tiers - 1)
 		local y = firstTier + t * (height - firstTier - 3)
-		local radius = height * 0.2 * (1 - t * 0.75)
+		local radius = height * 0.22 * (1 - t * 0.78)
 		local turn = rng:NextNumber(0, math.pi * 2)
 		for branch = 1, branches do
 			local angle = turn + branch / branches * math.pi * 2
 			Parts.new("Part", {
 				Name = "Branch",
-				Size = Vector3.new(radius, 1.4 + (1 - t) * 0.8, radius * 0.85),
+				Size = Vector3.new(radius, 1.8 + (1 - t) * 1.2, radius * 1.05),
 				CFrame = base
 					* CFrame.new(0, y, 0)
 					* CFrame.Angles(0, angle, 0)
-					* CFrame.Angles(0, 0, math.rad(-22))
+					* CFrame.Angles(0, 0, math.rad(-18))
 					* CFrame.new(radius / 2, 0, 0),
 				Color = leafColor:Lerp(Color3.new(0, 0, 0), rng:NextNumber(0, 0.25)),
 				Material = Enum.Material.LeafyGrass,
@@ -76,14 +76,14 @@ local function buildSimplePine(parent, position, height, rng)
 	Parts.column({ Name = "Trunk", Color = TRUNK, Material = Enum.Material.Wood, Parent = tree }, height * 0.9, height * 0.035, base)
 	local leafColor = LEAVES[rng:NextInteger(1, #LEAVES)]
 	for tier = 0, 2 do
-		local diameter = height * (0.32 - tier * 0.09)
+		local diameter = height * (0.36 - tier * 0.1)
 		Parts.column({
 			Name = "Leaves",
 			Color = leafColor,
 			Material = Enum.Material.LeafyGrass,
 			CanCollide = false,
 			Parent = tree,
-		}, height * 0.22, diameter, base * CFrame.new(0, height * (0.35 + tier * 0.2), 0))
+		}, height * 0.26, diameter, base * CFrame.new(0, height * (0.15 + tier * 0.26), 0))
 	end
 	tree.Parent = parent
 end
@@ -190,24 +190,27 @@ function Forest.build(parent, isClear, roadDistance)
 		end
 	end
 
-	local nearLot = { -135, 135, -130, 125 }
-	local roadArea = { -380, 70, -340, -40 }
-	local everywhere = { -420, 420, -540, 300 }
+	local nearLot = { -175, 175, -165, 160 }
+	local roadArea = { -420, 80, -390, -60 }
+	local everywhere = { -480, 480, -600, 360 }
 	local function nearRoad(x, z)
 		return roadDistance(x, z) < 55
 	end
 	local function farAway(x, z)
-		local lotDistance = math.max(math.abs(x) - 60, math.abs(z) - 50, 0)
+		local lotDistance = math.max(math.abs(x) - 80, math.abs(z) - 70, 0)
 		return lotDistance > 70 and roadDistance(x, z) > 50
 	end
 
-	scatter(150, nearLot, 6, nil, function(position)
-		buildPine(forest, position, rng:NextNumber(28, 48), rng)
-	end)
-	scatter(110, roadArea, 5, nearRoad, function(position)
-		buildPine(forest, position, rng:NextNumber(28, 48), rng)
-	end)
-	scatter(280, everywhere, 8, farAway, function(position)
+	-- Tannen mit einem Busch am Fuß, damit der Wald auch unten dicht wirkt
+	local function pineWithUndergrowth(position)
+		buildPine(forest, position, rng:NextNumber(30, 52), rng)
+		if rng:NextNumber() < 0.5 then
+			buildBush(forest, position + Vector3.new(rng:NextNumber(-4, 4), 0, rng:NextNumber(-4, 4)), rng)
+		end
+	end
+	scatter(190, nearLot, 6, nil, pineWithUndergrowth)
+	scatter(130, roadArea, 5, nearRoad, pineWithUndergrowth)
+	scatter(320, everywhere, 8, farAway, function(position)
 		buildSimplePine(forest, position, rng:NextNumber(30, 50), rng)
 	end)
 	scatter(26, nearLot, 6, nil, function(position)
@@ -216,10 +219,10 @@ function Forest.build(parent, isClear, roadDistance)
 	scatter(10, roadArea, 5, nearRoad, function(position)
 		buildDeadTree(forest, position, rng)
 	end)
-	scatter(170, nearLot, 2, nil, function(position)
+	scatter(220, nearLot, 2, nil, function(position)
 		buildBush(forest, position, rng)
 	end)
-	scatter(80, roadArea, 1, nearRoad, function(position)
+	scatter(110, roadArea, 1, nearRoad, function(position)
 		buildBush(forest, position, rng)
 	end)
 	scatter(70, nearLot, 3, nil, function(position)

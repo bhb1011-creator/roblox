@@ -7,8 +7,8 @@ Config.GAME_SUBTITLE = "Basierend auf wahren Begebenheiten"
 -- PlaceId des Horror-Levels. Solange 0, fahren die Autos nur eine Proberunde.
 Config.GAME_PLACE_ID = 0
 
--- Feste Uhrzeit in der Lobby (18.0 = später Sonnenuntergang). Die Zeit läuft nicht weiter.
-Config.LOBBY_CLOCK_TIME = 18.0
+-- Feste Uhrzeit in der Lobby (17.7 = Sonnenuntergang). Die Zeit läuft nicht weiter.
+Config.LOBBY_CLOCK_TIME = 17.7
 
 -- Sekunden, bis ein volles Auto losfährt
 Config.COUNTDOWN_SECONDS = 10
@@ -23,10 +23,10 @@ Config.MODES = {
 
 -- Die vier Autos auf dem Parkplatz (Position = Mitte der Parkbucht)
 Config.CARS = {
-	{ mode = "Solo", position = Vector3.new(-42, 0.2, -38), color = Color3.fromRGB(110, 28, 30) },
-	{ mode = "Solo", position = Vector3.new(-26, 0.2, -38), color = Color3.fromRGB(40, 60, 90) },
-	{ mode = "Duo", position = Vector3.new(26, 0.2, -38), color = Color3.fromRGB(60, 70, 50) },
-	{ mode = "Duo", position = Vector3.new(42, 0.2, -38), color = Color3.fromRGB(85, 85, 90) },
+	{ mode = "Solo", position = Vector3.new(-58, 0.2, -56), color = Color3.fromRGB(110, 28, 30) },
+	{ mode = "Solo", position = Vector3.new(-36, 0.2, -56), color = Color3.fromRGB(40, 60, 90) },
+	{ mode = "Duo", position = Vector3.new(36, 0.2, -56), color = Color3.fromRGB(60, 70, 50) },
+	{ mode = "Duo", position = Vector3.new(58, 0.2, -56), color = Color3.fromRGB(85, 85, 90) },
 }
 
 return Config

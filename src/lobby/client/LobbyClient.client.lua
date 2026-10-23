@@ -90,11 +90,11 @@ local exitButton = create("TextButton", {
 	Name = "ExitCar",
 	AnchorPoint = Vector2.new(0.5, 1),
 	Position = UDim2.new(0.5, 0, 1, -110),
-	Size = UDim2.fromOffset(200, 50),
+	Size = UDim2.fromOffset(260, 50),
 	BackgroundColor3 = Color3.fromRGB(25, 20, 20),
 	BackgroundTransparency = 0.2,
 	Font = Enum.Font.GothamBold,
-	Text = "Aussteigen",
+	Text = "Aussteigen [Leertaste]",
 	TextSize = 22,
 	TextColor3 = Color3.fromRGB(240, 225, 205),
 	Visible = false,
@@ -153,6 +153,7 @@ local closeShop = create("TextButton", {
 	TextSize = 20,
 	TextColor3 = Color3.new(1, 1, 1),
 	ZIndex = 21,
+	Modal = true, -- gibt in der Ego-Perspektive die Maus frei, solange der Shop offen ist
 	Parent = shopWindow,
 }, { corner(10) })
 

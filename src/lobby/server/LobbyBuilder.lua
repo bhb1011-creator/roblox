@@ -26,13 +26,13 @@ local function isClearForNature(x, z, margin)
 	if math.abs(x) < lot.halfWidth + margin and z > lot.minZ - margin and z < lot.maxZ + margin then
 		return false
 	end
-	return Road.distanceTo(x, z) > 10 + margin
+	return Road.distanceTo(x, z) > Road.WIDTH / 2 + 3 + margin
 end
 
 function LobbyBuilder.build()
 	removeTemplateParts()
 	Environment.setupLighting()
-	Environment.buildTerrain(Road.SEGMENTS)
+	Environment.buildTerrain(Road.SEGMENTS, Road.WIDTH)
 
 	local lobby = Instance.new("Folder")
 	lobby.Name = "Lobby"

@@ -91,8 +91,8 @@ local function buildRoute(home)
 	local position = home.Position
 	local y = position.Y
 	local route = {
-		{ position = Vector3.new(position.X, y, -22), speed = LOT_SPEED },
-		{ position = Vector3.new(0, y, -22), speed = LOT_SPEED },
+		{ position = Vector3.new(position.X, y, Layout.CAR_TURN_Z), speed = LOT_SPEED },
+		{ position = Vector3.new(0, y, Layout.CAR_TURN_Z), speed = LOT_SPEED },
 		{ position = Vector3.new(0, y, Layout.GATE_Z - 2), speed = LOT_SPEED },
 	}
 	for _, point in Road.PATH do

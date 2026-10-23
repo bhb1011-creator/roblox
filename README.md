@@ -4,11 +4,13 @@ Ein Roblox-Horrorspiel nach wahren Begebenheiten – allein oder zu zweit.
 
 ## Aktueller Stand: Lobby (erster Entwurf)
 
-- Waldparkplatz im dunklen **Sonnenuntergang** (die Zeit bleibt stehen), Gelände mit Gras und Waldboden
+- **Ego-Perspektive** mit sichtbarem Körper, leichtem Kopfwippen und Punkt in der Bildmitte
+- Großer Waldparkplatz im **Sonnenuntergang** (die Zeit bleibt stehen), weiße Flutlichtmasten, Gelände mit Gras und Waldboden
 - Hohe, detaillierte Tannen, tote Bäume, Büsche, Felsen und umgestürzte Stämme
 - Waldstraße mit Kurve, Leitpfosten und Warnschildern, die im Dunkeln verschwindet
-- Begehbarer **Kiosk** mit Verkäufer (Shop öffnen per **E**), Regalen, Kühlschrank und Leuchtreklame
-- Lager in der Mitte: Lagerfeuer, Zelte, Lichterketten, Picknicktisch, Pinnwand mit Vermisst-Zetteln
+- Großer begehbarer **Kiosk** mit Verkäufer (Shop öffnen per **E**), Regalen, Getränkekühlschränken, Snackautomat und Eistruhe
+- **Grillplatz** in der Mitte: Feuerstelle mit Schwenkgrill, Bänke und Biertische zum Hinsetzen, gemauerter Grill, Zelte, Lichterketten
+- Große Bestenliste, Pinnwand mit Vermisst-Zetteln am Rand
 - Holzzaun, Pfützen, Risse im Asphalt, verlassener Wohnwagen, Getränkeautomat
 - **4 Autos:** 2× „Allein“ (1 Platz) und 2× „Zu zweit“ (2 Plätze)
   - Einsteigen mit der Taste **E** (oder Antippen am Handy)

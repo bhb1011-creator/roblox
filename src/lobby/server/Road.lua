@@ -7,17 +7,18 @@ local Parts = require(script.Parent.Parts)
 
 local Road = {}
 
-local WIDTH = 16
+local WIDTH = 18
 local SAMPLE_SPACING = 8
 local CONTROL_POINTS = {
 	Vector3.new(0, 0, Layout.LOT.minZ),
-	Vector3.new(0, 0, -110),
-	Vector3.new(-18, 0, -175),
-	Vector3.new(-70, 0, -230),
-	Vector3.new(-150, 0, -262),
-	Vector3.new(-250, 0, -278),
-	Vector3.new(-340, 0, -282),
+	Vector3.new(0, 0, -140),
+	Vector3.new(-22, 0, -210),
+	Vector3.new(-80, 0, -265),
+	Vector3.new(-165, 0, -298),
+	Vector3.new(-270, 0, -314),
+	Vector3.new(-370, 0, -318),
 }
+Road.WIDTH = WIDTH
 
 local COLORS = {
 	asphalt = Color3.fromRGB(36, 36, 40),
@@ -121,10 +122,11 @@ function Road.build(parent)
 	for index, segment in Road.SEGMENTS do
 		local cf = segment.cframe
 		local length = segment.length + 1.2 -- leichte Überlappung, damit in Kurven keine Lücken entstehen
+		-- Dicke Platte (Oberkante 0.2), damit kein Gelände durchschaut
 		Parts.new("Part", {
 			Name = "RoadSurface",
-			Size = Vector3.new(WIDTH, 0.2, length),
-			CFrame = cf * CFrame.new(0, 0.1, 0),
+			Size = Vector3.new(WIDTH, 4.2, length),
+			CFrame = cf * CFrame.new(0, -1.9, 0),
 			Color = COLORS.asphalt,
 			Material = Enum.Material.Asphalt,
 			Parent = road,
@@ -200,7 +202,7 @@ function Road.buildGate(parent)
 	Parts.new("Part", {
 		Name = "Housing",
 		Size = Vector3.new(1.4, 4, 1.4),
-		CFrame = CFrame.new(-10, 2.2, z),
+		CFrame = CFrame.new(-11, 2.2, z),
 		Color = Color3.fromRGB(200, 170, 40),
 		Material = Enum.Material.Metal,
 		Parent = gateModel,
@@ -208,18 +210,18 @@ function Road.buildGate(parent)
 	Parts.new("Part", {
 		Name = "Rest",
 		Size = Vector3.new(0.6, 3.2, 0.6),
-		CFrame = CFrame.new(9.5, 1.8, z),
+		CFrame = CFrame.new(10.5, 1.8, z),
 		Color = Color3.fromRGB(70, 72, 76),
 		Material = Enum.Material.Metal,
 		Parent = gateModel,
 	})
 
-	local pivot = CFrame.new(-9.5, 3.8, z)
-	local closed = pivot * CFrame.new(9, 0, 0)
-	local open = pivot * CFrame.Angles(0, 0, math.rad(80)) * CFrame.new(9, 0, 0)
+	local pivot = CFrame.new(-10.5, 3.8, z)
+	local closed = pivot * CFrame.new(10, 0, 0)
+	local open = pivot * CFrame.Angles(0, 0, math.rad(80)) * CFrame.new(10, 0, 0)
 	local arm = Parts.new("Part", {
 		Name = "Arm",
-		Size = Vector3.new(18, 0.5, 0.5),
+		Size = Vector3.new(20, 0.5, 0.5),
 		CFrame = closed,
 		Color = Color3.fromRGB(190, 40, 40),
 		Parent = gateModel,

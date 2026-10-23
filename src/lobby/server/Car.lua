@@ -1,17 +1,19 @@
--- Ein Auto aus Blöcken. Vorne ist -Z (Blickrichtung von homeCFrame).
+-- Ein realistischeres SUV aus Bauteilen. Vorne ist -Z (Blickrichtung von homeCFrame).
 local Parts = require(script.Parent.Parts)
 
 local Car = {}
 
-local DARK = Color3.fromRGB(25, 25, 28)
-local CHROME = Color3.fromRGB(170, 172, 178)
+local DARK = Color3.fromRGB(22, 22, 25)
+local CHROME = Color3.fromRGB(175, 178, 184)
+local GLASS = Color3.fromRGB(95, 115, 135)
+local INTERIOR = Color3.fromRGB(42, 38, 36)
 
 local function buildStatusSign(body, title)
 	local billboard = Instance.new("BillboardGui")
 	billboard.Name = "StatusSign"
 	billboard.Size = UDim2.fromOffset(220, 96)
-	billboard.StudsOffsetWorldSpace = Vector3.new(0, 11, 0)
-	billboard.MaxDistance = 110
+	billboard.StudsOffsetWorldSpace = Vector3.new(0, 12, 0)
+	billboard.MaxDistance = 120
 	billboard.LightInfluence = 0
 	billboard.Parent = body
 
@@ -61,74 +63,116 @@ function Car.build(parent, homeCFrame, color, seatCount, name, title, plate)
 	local model = Instance.new("Model")
 	model.Name = name
 	local block = Parts.builder(model, homeCFrame)
-	local metal = Enum.Material.Metal
+	local paint = Enum.Material.Metal
+	local glass = { Transparency = 0.5 }
 
-	local body = block("Body", Vector3.new(6.4, 2, 13), CFrame.new(0, 2, 0), color, metal)
-	block("Roof", Vector3.new(6.2, 0.4, 6.4), CFrame.new(0, 7.7, 1.2), color, metal)
-	for _, x in { -2.95, 2.95 } do
-		for _, z in { -1.8, 4.2 } do
-			block("Pillar", Vector3.new(0.3, 4.5, 0.3), CFrame.new(x, 5.25, z), color, metal)
-		end
+	-- Karosserie
+	local body = block("Body", Vector3.new(6.6, 2, 14.4), CFrame.new(0, 2, 0), color, paint)
+	Parts.new("WedgePart", {
+		Name = "Hood",
+		Size = Vector3.new(6.4, 0.6, 4.2),
+		CFrame = homeCFrame * CFrame.new(0, 3.3, -5.1),
+		Color = color,
+		Material = paint,
+		Parent = model,
+	})
+	-- Seitenwände unter den Fenstern; innen bleibt der Boden auf Sitzhöhe frei
+	for _, x in { -3, 3 } do
+		block("Belt", Vector3.new(0.4, 0.6, 10.2), CFrame.new(x, 3.3, 2.1), color, paint)
 	end
-
-	local glass = { Transparency = 0.55 }
-	local glassColor = Color3.fromRGB(110, 130, 150)
-	block("Windshield", Vector3.new(5.6, 4.5, 0.15), CFrame.new(0, 5.25, -1.8), glassColor, Enum.Material.Glass, glass)
-	block("RearWindow", Vector3.new(5.6, 4.5, 0.15), CFrame.new(0, 5.25, 4.2), glassColor, Enum.Material.Glass, glass)
-	for _, x in { -2.95, 2.95 } do
-		block("SideWindow", Vector3.new(0.15, 4.5, 5.7), CFrame.new(x, 5.25, 1.2), glassColor, Enum.Material.Glass, glass)
-		block("Mirror", Vector3.new(0.7, 0.5, 0.9), CFrame.new(x * 1.17, 4.1, -1.5), color, metal)
-		-- Türfugen
-		for _, z in { -1.6, 1.4 } do
-			block("DoorLine", Vector3.new(0.05, 1.8, 0.08), CFrame.new(x * 1.087, 2, z), DARK, Enum.Material.SmoothPlastic, { CanCollide = false })
-		end
-		block("DoorHandle", Vector3.new(0.12, 0.2, 0.7), CFrame.new(x * 1.095, 2.6, -0.6), CHROME, metal, { CanCollide = false })
+	block("Roof", Vector3.new(6.3, 0.4, 7.8), CFrame.new(0, 8, 3.2), color, paint)
+	for _, x in { -2.6, 2.6 } do
+		block("RoofRail", Vector3.new(0.2, 0.25, 6.6), CFrame.new(x, 8.32, 3.2), DARK, Enum.Material.Metal)
 	end
+	block("Antenna", Vector3.new(0.06, 1.2, 0.06), CFrame.new(1.5, 8.8, 5.6), DARK, Enum.Material.Metal, { CanCollide = false })
 
-	for _, x in { -3.3, 3.3 } do
-		for _, z in { -4.2, 4.2 } do
-			block("Tire", Vector3.new(1.2, 2.4, 2.4), CFrame.new(x, 1.2, z), DARK, Enum.Material.SmoothPlastic, { Shape = Enum.PartType.Cylinder })
-			block("Rim", Vector3.new(1.25, 1.3, 1.3), CFrame.new(x, 1.2, z), CHROME, metal, { Shape = Enum.PartType.Cylinder })
+	-- Scheiben
+	Parts.new("WedgePart", {
+		Name = "Windshield",
+		Size = Vector3.new(6, 4.2, 2.4),
+		CFrame = homeCFrame * CFrame.new(0, 5.7, -1.8),
+		Color = GLASS,
+		Material = Enum.Material.Glass,
+		Transparency = 0.5,
+		Parent = model,
+	})
+	block("RearWindow", Vector3.new(6, 4.2, 0.15), CFrame.new(0, 5.7, 7.05), GLASS, Enum.Material.Glass, glass)
+
+	for _, side in { -1, 1 } do
+		local x = side * 3.1
+		block("SideWindow", Vector3.new(0.15, 4.2, 7.6), CFrame.new(x, 5.7, 3.2), GLASS, Enum.Material.Glass, glass)
+		Parts.beam(
+			{ Name = "APillar", Color = color, Material = paint, Parent = model },
+			homeCFrame * Vector3.new(side * 3.05, 3.6, -3),
+			homeCFrame * Vector3.new(side * 3.05, 7.8, -0.6),
+			0.3
+		)
+		block("BPillar", Vector3.new(0.3, 4.2, 0.4), CFrame.new(x, 5.7, 2.6), DARK)
+		block("DPillar", Vector3.new(0.3, 4.2, 0.5), CFrame.new(x, 5.7, 6.9), color, paint)
+		block("SideSkirt", Vector3.new(0.15, 0.5, 8), CFrame.new(side * 3.33, 1.25, 0), DARK)
+		block("Mirror", Vector3.new(0.7, 0.55, 1), CFrame.new(side * 3.55, 4, -2.2), color, paint)
+		for _, z in { -0.4, 2.8 } do
+			block("DoorLine", Vector3.new(0.05, 2.2, 0.08), CFrame.new(side * 3.31, 2.3, z), DARK, Enum.Material.SmoothPlastic, { CanCollide = false })
 		end
-	end
+		for _, z in { 0.4, 3.6 } do
+			block("DoorHandle", Vector3.new(0.12, 0.2, 0.7), CFrame.new(side * 3.34, 3.1, z), CHROME, Enum.Material.Metal, { CanCollide = false })
+		end
+		for _, z in { -4.7, 4.7 } do
+			block("FenderFlare", Vector3.new(0.3, 0.6, 3.4), CFrame.new(side * 3.4, 2.55, z), DARK)
+			block("Tire", Vector3.new(1.3, 2.7, 2.7), CFrame.new(side * 3.3, 1.35, z), DARK, Enum.Material.SmoothPlastic, { Shape = Enum.PartType.Cylinder })
+			block("Rim", Vector3.new(1.35, 1.5, 1.5), CFrame.new(side * 3.3, 1.35, z), CHROME, Enum.Material.Metal, { Shape = Enum.PartType.Cylinder })
+		end
 
-	block("FrontBumper", Vector3.new(6.6, 0.8, 0.6), CFrame.new(0, 1.3, -6.7), DARK)
-	block("RearBumper", Vector3.new(6.6, 0.8, 0.6), CFrame.new(0, 1.3, 6.7), DARK)
-	block("Grille", Vector3.new(3.2, 0.9, 0.1), CFrame.new(0, 2.4, -6.55), DARK, metal)
-	addPlate(block("FrontPlate", Vector3.new(2.2, 0.55, 0.05), CFrame.new(0, 1.3, -7.03), Color3.fromRGB(235, 235, 230)), plate)
-	local rearPlate = block("RearPlate", Vector3.new(2.2, 0.55, 0.05), CFrame.new(0, 2.3, 6.53) * CFrame.Angles(0, math.pi, 0), Color3.fromRGB(235, 235, 230))
-	addPlate(rearPlate, plate)
-
-	for _, x in { -2.2, 2.2 } do
-		local headlight = block("Headlight", Vector3.new(1.2, 0.6, 0.2), CFrame.new(x, 2.5, -6.55), Color3.fromRGB(255, 245, 220), Enum.Material.Neon)
+		-- Lichter
+		local headlight = block("Headlight", Vector3.new(1.5, 0.45, 0.15), CFrame.new(side * 2.4, 2.75, -7.25), Color3.fromRGB(255, 248, 230), Enum.Material.Neon)
 		Parts.light("SpotLight", headlight, {
 			Face = Enum.NormalId.Front,
-			Range = 45,
-			Angle = 60,
-			Brightness = 2,
-			Color = Color3.fromRGB(255, 240, 210),
+			Range = 55,
+			Angle = 55,
+			Brightness = 3,
+			Color = Color3.fromRGB(255, 244, 220),
+			Shadows = true,
 		})
-		block("Taillight", Vector3.new(1.2, 0.6, 0.2), CFrame.new(x, 2.5, 6.55), Color3.fromRGB(200, 20, 20), Enum.Material.Neon)
+		Parts.light("PointLight", headlight, { Range = 5, Brightness = 1, Color = Color3.fromRGB(255, 244, 220) })
+		block("FogLight", Vector3.new(0.6, 0.3, 0.1), CFrame.new(side * 2.6, 1.4, -7.8), Color3.fromRGB(255, 240, 200), Enum.Material.Neon)
+		local taillight = block("Taillight", Vector3.new(1.6, 0.5, 0.15), CFrame.new(side * 2.4, 2.75, 7.25), Color3.fromRGB(210, 20, 20), Enum.Material.Neon)
+		Parts.light("PointLight", taillight, { Range = 6, Brightness = 0.7, Color = Color3.fromRGB(255, 40, 30) })
 	end
 
-	-- Innenraum: Armaturenbrett, Lenkrad und Sitze
-	block("Dashboard", Vector3.new(5.6, 0.8, 1), CFrame.new(0, 3.6, -1.2), DARK)
-	block("SteeringWheel", Vector3.new(0.2, 1.2, 1.2), CFrame.new(-1.4, 4.2, -0.6) * CFrame.Angles(0, math.pi / 2, math.rad(-20)), DARK, Enum.Material.SmoothPlastic, { Shape = Enum.PartType.Cylinder, CanCollide = false })
+	-- Front und Heck
+	block("FrontBumper", Vector3.new(6.8, 0.9, 0.7), CFrame.new(0, 1.5, -7.4), DARK)
+	block("RearBumper", Vector3.new(6.8, 0.9, 0.7), CFrame.new(0, 1.5, 7.4), DARK)
+	block("Grille", Vector3.new(3.6, 1, 0.1), CFrame.new(0, 2.4, -7.25), DARK, Enum.Material.Metal)
+	block("GrilleBar", Vector3.new(3.6, 0.12, 0.12), CFrame.new(0, 2.4, -7.32), CHROME, Enum.Material.Metal)
+	addPlate(block("FrontPlate", Vector3.new(2.2, 0.55, 0.05), CFrame.new(0, 1.5, -7.78), Color3.fromRGB(235, 235, 230)), plate)
+	addPlate(block("RearPlate", Vector3.new(2.2, 0.55, 0.05), CFrame.new(0, 2.3, 7.23) * CFrame.Angles(0, math.pi, 0), Color3.fromRGB(235, 235, 230)), plate)
+
+	-- Innenraum: Armaturenbrett, Lenkrad, Sitze, Rückbank und Innenlicht
+	block("Dashboard", Vector3.new(6, 0.9, 1.2), CFrame.new(0, 3.9, -1.9), DARK)
+	block("SteeringWheel", Vector3.new(0.2, 1.3, 1.3), CFrame.new(-1.4, 4.6, -1) * CFrame.Angles(0, math.pi / 2, 0) * CFrame.Angles(0, 0, math.rad(-25)), DARK, Enum.Material.SmoothPlastic, { Shape = Enum.PartType.Cylinder, CanCollide = false })
+	block("RearBench", Vector3.new(5.6, 1, 2), CFrame.new(0, 3.5, 4.8), INTERIOR, Enum.Material.Fabric)
+	block("RearBenchBack", Vector3.new(5.6, 2.6, 0.4), CFrame.new(0, 5, 6), INTERIOR, Enum.Material.Fabric, { CanCollide = false })
+	local dome = block("DomeLight", Vector3.new(1, 0.1, 0.6), CFrame.new(0, 7.75, 2.5), Color3.fromRGB(255, 225, 170), Enum.Material.Neon)
+	Parts.light("PointLight", dome, { Range = 9, Brightness = 0.7, Color = Color3.fromRGB(255, 220, 170) })
 
 	local seats = {}
-	local sides = seatCount == 1 and { -1 } or { -1, 1 }
-	for _, side in sides do
-		local seat = Parts.new("Seat", {
-			Name = "Seat",
-			Size = Vector3.new(2, 0.6, 2),
-			CFrame = homeCFrame * CFrame.new(side * 1.4, 3.3, 0.8),
-			Color = Color3.fromRGB(45, 40, 38),
-			Material = Enum.Material.Fabric,
-			Parent = model,
-		})
-		seat:SetAttribute("LobbyCar", true)
-		block("SeatBack", Vector3.new(2, 2.6, 0.4), CFrame.new(side * 1.4, 4.6, 1.9), Color3.fromRGB(45, 40, 38), Enum.Material.Fabric, { CanCollide = false })
-		table.insert(seats, { seat = seat, exitOffset = CFrame.new(side * 6.5, 3, 0.8) })
+	for index, side in { -1, 1 } do
+		local offset = CFrame.new(side * 1.4, 3.15, 1.2)
+		block("SeatBack", Vector3.new(2, 2.8, 0.4), CFrame.new(side * 1.4, 4.7, 2.3), INTERIOR, Enum.Material.Fabric, { CanCollide = false })
+		if index <= seatCount then
+			local seat = Parts.new("Seat", {
+				Name = "Seat",
+				Size = Vector3.new(2, 0.3, 2),
+				CFrame = homeCFrame * offset,
+				Color = INTERIOR,
+				Material = Enum.Material.Fabric,
+				Parent = model,
+			})
+			seat:SetAttribute("LobbyCar", true)
+			table.insert(seats, { seat = seat, exitOffset = CFrame.new(side * 7, 3, 1.2) })
+		else
+			block("PassengerSeat", Vector3.new(2, 0.3, 2), offset, INTERIOR, Enum.Material.Fabric)
+		end
 	end
 
 	local prompt = Instance.new("ProximityPrompt")
