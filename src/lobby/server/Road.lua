@@ -3,7 +3,7 @@
 local TweenService = game:GetService("TweenService")
 
 local Layout = require(script.Parent.Layout)
-local Parts = require(script.Parent.Parts)
+local Parts = require(game:GetService("ReplicatedStorage").Shared.Parts)
 
 local Road = {}
 

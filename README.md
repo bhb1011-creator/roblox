@@ -35,13 +35,33 @@ Die Lobby wird erst beim **Play** per Code gebaut. Im Bearbeiten-Modus siehst du
 Skripte (z. B. ServerScriptService › Lobby) und die leere Baseplate – das ist normal.
 Die Baseplate wird beim Start automatisch entfernt.
 
+## Level 1 – Zwischensequenz „Die Fahrt“
+
+- Man sitzt im Auto: allein am Steuer, zu zweit sitzt der zweite Spieler auf dem Beifahrersitz
+- Ego-Perspektive, umsehen mit der Maus (oder Finger am Handy)
+- Detaillierter Innenraum: Tacho und Drehzahlmesser laufen mit, Lenkrad dreht in Kurven, Radio, Schaltknüppel, Gurte, Rückspiegel, Duftbaum
+- Ca. 30 Sekunden Fahrt durch den Wald in der Dämmerung: Leitpfosten, Leitplanken, Schilder, Strommasten
+- Das Auto hält in einer Parkbucht mit Waldweg und flackernder Laterne
+- Der Fremde (Stufe 1) kommt aus dem Wald und bleibt am Beifahrerfenster stehen – das Gespräch folgt
+
+**Testen:** In Studio ein **neues** Spiel (Vorlage „Baseplate“) öffnen. Im Terminal:
+
+```
+rojo serve level.project.json --port 34873
+```
+
+Im Rojo-Plugin den Port auf **34873** stellen, **Connect**, dann **Play**.
+Zu zweit testen: **Test → Clients und Server → 2 Spieler**.
+
 ## Ordner
 
 | Ordner | Landet in Studio in | Inhalt |
 |---|---|---|
-| `src/shared` | ReplicatedStorage › Shared | `Config.lua` – Einstellungen (Titel, Countdown, Autos …) |
-| `src/lobby/server` | ServerScriptService › Lobby | Bauen der Lobby (Environment, Forest, Road, ParkingLot, Camp, Buildings, Decor, Car) und Autos (CarQueue) |
+| `src/shared` | ReplicatedStorage › Shared | `Config.lua` (Einstellungen), `Parts.lua` und `Forest.lua` (Bausteine), `LevelRoute.lua` (Strecke von Level 1) |
+| `src/lobby/server` | ServerScriptService › Lobby | Bauen der Lobby (Environment, Road, ParkingLot, Camp, Buildings, Decor, Car) und Autos (CarQueue) |
 | `src/lobby/client` | StarterPlayerScripts › Lobby | Knöpfe, Hinweise, Shop-Fenster, Lichteffekte |
+| `src/level/server` | ServerScriptService › Level | Level 1: Welt, Auto für die Zwischensequenz, der Fremde |
+| `src/level/client` | StarterPlayerScripts › Level | Ablauf der Zwischensequenz, Kamera |
 
 ## Robux-Produkte einrichten (Kasse)
 

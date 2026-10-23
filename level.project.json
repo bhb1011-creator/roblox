@@ -1,0 +1,23 @@
+{
+  "name": "Level1",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "Shared": {
+        "$path": "src/shared"
+      }
+    },
+    "ServerScriptService": {
+      "Level": {
+        "$path": "src/level/server"
+      }
+    },
+    "StarterPlayer": {
+      "StarterPlayerScripts": {
+        "Level": {
+          "$path": "src/level/client"
+        }
+      }
+    }
+  }
+}

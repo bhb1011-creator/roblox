@@ -168,6 +168,17 @@ local function buildStump(parent, position, rng)
 	)
 end
 
+-- Die einzelnen Bausteine, damit auch andere Orte (z. B. Level 1) damit Wald bauen können
+Forest.builders = {
+	pine = buildPine,
+	simplePine = buildSimplePine,
+	deadTree = buildDeadTree,
+	bush = buildBush,
+	rock = buildRock,
+	fallenLog = buildFallenLog,
+	stump = buildStump,
+}
+
 -- isClear(x, z, margin) sagt, ob an einer Stelle Platz ist (nicht auf Parkplatz oder Straße).
 -- roadDistance(x, z) liefert den Abstand zur Straße.
 function Forest.build(parent, isClear, roadDistance)

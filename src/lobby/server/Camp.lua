@@ -6,7 +6,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local Layout = require(script.Parent.Layout)
-local Parts = require(script.Parent.Parts)
+local Parts = require(game:GetService("ReplicatedStorage").Shared.Parts)
 
 local Camp = {}
 

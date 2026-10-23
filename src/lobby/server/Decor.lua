@@ -2,7 +2,7 @@
 -- an der Bestenliste, Farne und Büsche am Zaun, Trittsteinwege, ein Grillplatz-Schild
 -- und eine Campingecke am Wohnwagen.
 local Layout = require(script.Parent.Layout)
-local Parts = require(script.Parent.Parts)
+local Parts = require(game:GetService("ReplicatedStorage").Shared.Parts)
 
 local Decor = {}
 

@@ -3,10 +3,10 @@ local Buildings = require(script.Parent.Buildings)
 local Camp = require(script.Parent.Camp)
 local Decor = require(script.Parent.Decor)
 local Environment = require(script.Parent.Environment)
-local Forest = require(script.Parent.Forest)
+local Forest = require(game:GetService("ReplicatedStorage").Shared.Forest)
 local Layout = require(script.Parent.Layout)
 local ParkingLot = require(script.Parent.ParkingLot)
-local Parts = require(script.Parent.Parts)
+local Parts = require(game:GetService("ReplicatedStorage").Shared.Parts)
 local Road = require(script.Parent.Road)
 
 local LobbyBuilder = {}

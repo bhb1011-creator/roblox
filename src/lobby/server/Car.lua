@@ -1,6 +1,6 @@
 -- Ein realistischer Kombi/SUV in Roblox-Charaktergröße. Vorne ist -Z (Blickrichtung von homeCFrame).
 -- Die Sitze liegen tief in der Karosserie, so passen Spieler hinein, ohne dass das Auto riesig wird.
-local Parts = require(script.Parent.Parts)
+local Parts = require(game:GetService("ReplicatedStorage").Shared.Parts)
 
 local Car = {}
 
