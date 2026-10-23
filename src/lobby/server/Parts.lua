@@ -25,13 +25,38 @@ function Parts.column(props, height, diameter, baseCFrame)
 	return Parts.new("Part", props)
 end
 
+-- Balken zwischen zwei Punkten (Geländer, Kabel, Äste). Nicht für senkrechte Linien.
+function Parts.beam(props, from, to, thickness)
+	props.Size = Vector3.new(thickness, thickness, (to - from).Magnitude)
+	props.CFrame = CFrame.lookAt((from + to) / 2, to)
+	return Parts.new("Part", props)
+end
+
+-- Erstellt Teile relativ zu einem Ursprung: block(name, size, offset, color, material, extra)
+function Parts.builder(parent, origin)
+	return function(name, size, offset, color, material, extra)
+		local props = {
+			Name = name,
+			Size = size,
+			CFrame = origin * offset,
+			Color = color,
+			Material = material or Enum.Material.SmoothPlastic,
+			Parent = parent,
+		}
+		for key, value in extra or {} do
+			props[key] = value
+		end
+		return Parts.new("Part", props)
+	end
+end
+
 -- Schild-Oberfläche auf einer Seite eines Bauteils.
-function Parts.surfaceGui(part, face)
+function Parts.surfaceGui(part, face, glowing)
 	local gui = Instance.new("SurfaceGui")
 	gui.Face = face
 	gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
 	gui.PixelsPerStud = 40
-	gui.LightInfluence = 0.3
+	gui.LightInfluence = glowing and 0 or 0.6
 	gui.Parent = part
 	return gui
 end
@@ -48,6 +73,15 @@ function Parts.text(parent, props)
 	end
 	label.Parent = parent
 	return label
+end
+
+function Parts.light(className, parent, props)
+	local light = Instance.new(className)
+	for key, value in props do
+		light[key] = value
+	end
+	light.Parent = parent
+	return light
 end
 
 return Parts

@@ -4,14 +4,18 @@ Ein Roblox-Horrorspiel nach wahren Begebenheiten – allein oder zu zweit.
 
 ## Aktueller Stand: Lobby (erster Entwurf)
 
-- Parkplatz am Waldrand, immer im **Sonnenuntergang** (die Zeit bleibt stehen)
+- Waldparkplatz im dunklen **Sonnenuntergang** (die Zeit bleibt stehen), Gelände mit Gras und Waldboden
+- Hohe, detaillierte Tannen, tote Bäume, Büsche, Felsen und umgestürzte Stämme
+- Waldstraße mit Kurve, Leitpfosten und Warnschildern, die im Dunkeln verschwindet
+- Begehbarer **Kiosk** mit Verkäufer (Shop öffnen per **E**), Regalen, Kühlschrank und Leuchtreklame
+- Lager in der Mitte: Lagerfeuer, Zelte, Lichterketten, Picknicktisch, Pinnwand mit Vermisst-Zetteln
+- Holzzaun, Pfützen, Risse im Asphalt, verlassener Wohnwagen, Getränkeautomat
 - **4 Autos:** 2× „Allein“ (1 Platz) und 2× „Zu zweit“ (2 Plätze)
   - Einsteigen mit der Taste **E** (oder Antippen am Handy)
   - Ist das Auto voll, läuft ein Countdown von 10 Sekunden
   - Aussteigen mit dem Knopf **„Aussteigen“** oder der Leertaste – dann wird der Countdown abgebrochen
   - Danach fährt das Auto über die Straße in den Wald und der Bildschirm wird schwarz
-- Lagerfeuer als Treffpunkt, flackernde Laternen, Nebel
-- Infotafel, Shop-Kiosk und Bestenliste (Shop und Bestenliste sind noch Platzhalter)
+- Infotafel und Bestenliste (Shop-Inhalt und Bestenliste sind noch Platzhalter)
 
 Solange es das Horror-Level noch nicht gibt, fährt das Auto nur eine Proberunde
 und man landet wieder am Lagerfeuer.
@@ -33,7 +37,7 @@ Die Baseplate wird beim Start automatisch entfernt.
 | Ordner | Landet in Studio in | Inhalt |
 |---|---|---|
 | `src/shared` | ReplicatedStorage › Shared | `Config.lua` – Einstellungen (Titel, Countdown, Autos …) |
-| `src/lobby/server` | ServerScriptService › Lobby | Bauen der Lobby, Autos, Abfahrt |
+| `src/lobby/server` | ServerScriptService › Lobby | Bauen der Lobby (Environment, Forest, Road, ParkingLot, Camp, Buildings, Car) und Autos (CarQueue) |
 | `src/lobby/client` | StarterPlayerScripts › Lobby | Knöpfe, Hinweise, Shop-Fenster, Lichteffekte |
 
 ## Später, wenn das Level fertig ist

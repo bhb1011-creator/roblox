@@ -7,8 +7,8 @@ Config.GAME_SUBTITLE = "Basierend auf wahren Begebenheiten"
 -- PlaceId des Horror-Levels. Solange 0, fahren die Autos nur eine Proberunde.
 Config.GAME_PLACE_ID = 0
 
--- Feste Uhrzeit in der Lobby (18.1 = Sonnenuntergang). Die Zeit läuft nicht weiter.
-Config.LOBBY_CLOCK_TIME = 18.1
+-- Feste Uhrzeit in der Lobby (18.0 = später Sonnenuntergang). Die Zeit läuft nicht weiter.
+Config.LOBBY_CLOCK_TIME = 18.0
 
 -- Sekunden, bis ein volles Auto losfährt
 Config.COUNTDOWN_SECONDS = 10

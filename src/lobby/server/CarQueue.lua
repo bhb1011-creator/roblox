@@ -5,7 +5,9 @@ local RunService = game:GetService("RunService")
 local TeleportService = game:GetService("TeleportService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
-local LobbyBuilder = require(script.Parent.LobbyBuilder)
+local Car = require(script.Parent.Car)
+local Layout = require(script.Parent.Layout)
+local Road = require(script.Parent.Road)
 
 local CarQueue = {}
 
@@ -74,7 +76,7 @@ local function driveAlong(model, route)
 			while elapsed < duration do
 				elapsed += RunService.Heartbeat:Wait()
 				local alpha = math.min(elapsed / duration, 1)
-				local turn = math.min(elapsed / 0.8, 1)
+				local turn = math.min(elapsed / math.min(0.8, duration), 1)
 				current = CFrame.new(startPosition:Lerp(waypoint.position, alpha))
 					* startRotation:Lerp(endRotation, turn)
 				model:PivotTo(current)
@@ -83,17 +85,22 @@ local function driveAlong(model, route)
 	end
 end
 
+-- Aus der Parkbucht nach vorne, zur Mitte, dann nach Norden durch die Schranke
+-- und die Waldstraße entlang, bis das Auto im Dunkeln verschwunden ist.
 local function buildRoute(home)
 	local position = home.Position
 	local y = position.Y
-	local lane = position.X < 0 and -14 or 14
-	return {
-		{ position = Vector3.new(position.X, y, -18), speed = LOT_SPEED },
-		{ position = Vector3.new(lane, y, -18), speed = LOT_SPEED },
-		{ position = Vector3.new(lane, y, 32), speed = LOT_SPEED },
-		{ position = Vector3.new(0, y, 56), speed = LOT_SPEED },
-		{ position = Vector3.new(0, y, 260), speed = ROAD_SPEED },
+	local route = {
+		{ position = Vector3.new(position.X, y, -22), speed = LOT_SPEED },
+		{ position = Vector3.new(0, y, -22), speed = LOT_SPEED },
+		{ position = Vector3.new(0, y, Layout.GATE_Z - 2), speed = LOT_SPEED },
 	}
+	for _, point in Road.PATH do
+		if point.Z < Layout.GATE_Z - 4 then
+			table.insert(route, { position = Vector3.new(point.X, y, point.Z), speed = ROAD_SPEED })
+		end
+	end
+	return route
 end
 
 -- Schickt die Mitfahrer ins Horror-Level. Ohne Level-PlaceId (oder wenn der
@@ -184,7 +191,8 @@ end
 local function setupCar(index, carConfig, parent)
 	local mode = Config.MODES[carConfig.mode]
 	local home = CFrame.lookAt(carConfig.position, carConfig.position + Vector3.zAxis)
-	local built = LobbyBuilder.buildCar(parent, home, carConfig.color, mode.capacity, "Car" .. index, mode.title)
+	local plate = string.format("WL-%s %d", string.char(64 + index), 100 + index * 37)
+	local built = Car.build(parent, home, carConfig.color, mode.capacity, "Car" .. index, mode.title, plate)
 
 	local car = {
 		model = built.model,
