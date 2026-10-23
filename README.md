@@ -20,12 +20,13 @@ und man landet wieder am Lagerfeuer.
 
 1. Roblox Studio öffnen → neues Spiel mit der Vorlage **„Baseplate“**.
 2. In VS Code diesen Ordner öffnen.
-3. Rojo starten: in der Rojo-Erweiterung **`lobby.project.json`** auswählen und auf Start klicken
-   (oder im Terminal: `rojo serve lobby.project.json`).
+3. Rojo starten: im Terminal `rojo serve` (nutzt automatisch `default.project.json`).
 4. In Studio: **Plugins → Rojo → Connect**.
 5. Auf **Play** drücken.
 
-Die Lobby wird beim Start automatisch per Code gebaut – vorher ist die Welt leer, das ist normal.
+Die Lobby wird erst beim **Play** per Code gebaut. Im Bearbeiten-Modus siehst du nur die
+Skripte (z. B. ServerScriptService › Lobby) und die leere Baseplate – das ist normal.
+Die Baseplate wird beim Start automatisch entfernt.
 
 ## Ordner
 
