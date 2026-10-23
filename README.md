@@ -43,6 +43,7 @@ Die Baseplate wird beim Start automatisch entfernt.
 - Ca. 30 Sekunden Fahrt durch den Wald in der Dämmerung: Leitpfosten, Leitplanken, Schilder, Strommasten
 - Das Auto hält in einer Parkbucht mit Waldweg und flackernder Laterne
 - Der Fremde (Stufe 1) kommt aus dem Wald und bleibt am Beifahrerfenster stehen – das Gespräch folgt
+- Sounds: Musik im Autoradio, Motor, Fahrgeräusche, Blinker beim Ranfahren, Bremsen, Schotter, Waldgeräusche; wenn der Fremde ankommt, rauscht das Radio
 
 **Testen:** In Studio ein **neues** Spiel (Vorlage „Baseplate“) öffnen. Im Terminal:
 
@@ -52,6 +53,28 @@ rojo serve level.project.json --port 34873
 
 Im Rojo-Plugin den Port auf **34873** stellen, **Connect**, dann **Play**.
 Zu zweit testen: **Test → Clients und Server → 2 Spieler**.
+
+### Sounds und Musik hochladen (einmalig)
+
+Die Sounds liegen in `assets/audio` (selbst erzeugt, frei verwendbar):
+
+| Datei | Wofür |
+|---|---|
+| `music_calm.ogg` | ruhige Musik im Autoradio |
+| `engine_loop.ogg`, `road_loop.ogg`, `wind_loop.ogg` | Motor, Abrollgeräusch, Fahrtwind |
+| `brake.ogg`, `gravel_loop.ogg`, `blinker_tick.ogg` | Bremsen, Schotter in der Parkbucht, Blinker |
+| `forest_night_loop.ogg` | Grillen, Wind und eine Eule im Wald |
+| `footstep.ogg`, `lamp_buzz_loop.ogg` | Schritte des Fremden, summende Laterne |
+| `radio_static_loop.ogg`, `sting.ogg` | Radio-Rauschen und Schreck-Akzent, wenn der Fremde ankommt |
+
+1. Auf **create.roblox.com → Kreationen → Entwicklungsobjekte (Development Items) → Audio** jede Datei hochladen
+   (oder in Studio: **Asset Manager → Bulk Import**).
+2. Bei jeder Datei die **ID kopieren** und in `src/shared/Config.lua` bei `Config.SOUNDS` eintragen,
+   z. B. `engine = "rbxassetid://1234567890",`.
+3. Statt `music_calm.ogg` kannst du auch ein ruhiges Lied aus der **Toolbox → Audio** nehmen
+   (Roblox stellt dort viele Lieder kostenlos bereit) und dessen ID eintragen.
+
+Fehlt eine ID, wird der Sound einfach weggelassen – das Spiel funktioniert trotzdem.
 
 ## Ordner
 

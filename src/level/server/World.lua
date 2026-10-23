@@ -13,7 +13,7 @@ local World = {}
 
 local Y = Route.GROUND_Y
 local WIDTH = Route.ROAD_WIDTH
-local SEGMENT = 8
+local SEGMENT = 4
 local COLORS = {
 	asphalt = Color3.fromRGB(42, 42, 46),
 	line = Color3.fromRGB(215, 210, 195),
@@ -130,8 +130,10 @@ local function buildRoad(parent, segments)
 
 	local previousForward
 	for index, segment in segments do
-		local cf = segment.cframe
-		local length = segment.length + 1.2
+		-- Benachbarte Stücke liegen minimal versetzt, damit Überlappungen in Kurven nicht flimmern
+		local lift = (index % 2) * 0.012
+		local cf = segment.cframe * CFrame.new(0, lift, 0)
+		local length = segment.length + 0.6
 		Parts.new("Part", {
 			Name = "RoadSurface",
 			Size = Vector3.new(WIDTH, 4.2, length),
@@ -150,7 +152,7 @@ local function buildRoad(parent, segments)
 				Parent = road,
 			})
 		end
-		if index % 2 == 0 then
+		if index % 4 == 0 then
 			Parts.new("Part", {
 				Name = "CenterLine",
 				Size = Vector3.new(0.3, 0.02, 5),
@@ -162,7 +164,7 @@ local function buildRoad(parent, segments)
 		end
 
 		-- Leitpfosten alle 48 Studs auf beiden Seiten
-		if index % 6 == 0 then
+		if index % 12 == 0 then
 			for _, side in { -1, 1 } do
 				local base = cf * CFrame.new(side * (WIDTH / 2 + 2.5), 0, 0)
 				Parts.new("Part", { Name = "MarkerPost", Size = Vector3.new(0.5, 3.2, 0.5), CFrame = base * CFrame.new(0, 1.6, 0), Color = COLORS.post, Parent = road })
@@ -182,7 +184,7 @@ local function buildRoad(parent, segments)
 		local forward = cf.LookVector
 		if previousForward then
 			local turn = previousForward:Cross(forward).Y
-			if math.abs(turn) > 0.012 and not (segment.s > Route.LAYBY_START_S - 20 and segment.s < Route.LAYBY_END_S + 10) then
+			if math.abs(turn) > 0.006 and not (segment.s > Route.LAYBY_START_S - 20 and segment.s < Route.LAYBY_END_S + 10) then
 				local side = turn > 0 and 1 or -1
 				local base = cf * CFrame.new(side * (WIDTH / 2 + 1.6), 0, 0)
 				Parts.new("Part", {
@@ -214,7 +216,7 @@ local function buildPowerLine(parent, segments)
 	folder.Parent = parent
 	local tops = {}
 	for index, segment in segments do
-		if index % 8 == 1 then
+		if index % 16 == 1 then
 			local base = segment.cframe * CFrame.new(-(WIDTH / 2 + 7), 0, 0)
 			Parts.column({ Name = "Pole", Color = COLORS.wood, Material = Enum.Material.Wood, Parent = folder }, 22, 0.9, base)
 			Parts.new("Part", {
@@ -438,10 +440,11 @@ local function buildForest(parent)
 		end
 	end
 
-	scatter(260, WIDTH / 2 + 7, 48, 4, function(position)
+	-- Große Tannen haben Äste bis ~11 Studs Radius: so weit weg, dass nichts in die Fahrbahn ragt
+	scatter(240, WIDTH / 2 + 17, 55, 4, function(position)
 		builders.pine(forest, position, rng:NextNumber(30, 52), rng)
 	end)
-	scatter(380, 48, 170, 4, function(position)
+	scatter(380, 55, 170, 4, function(position)
 		builders.simplePine(forest, position, rng:NextNumber(32, 54), rng)
 	end)
 	scatter(30, 16, 70, 4, function(position)

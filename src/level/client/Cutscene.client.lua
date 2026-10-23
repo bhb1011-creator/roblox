@@ -1,15 +1,20 @@
 -- Zwischensequenz 1: Man sitzt im Auto (Fahrer oder Beifahrer) und schaut sich in der
 -- Ego-Perspektive um. Das Auto fährt etwa 30 Sekunden durch den Wald und hält in der
 -- Parkbucht. Dann kommt der Fremde aus dem Wald und bleibt am Fenster stehen.
+-- Dazu laufen Musik im Autoradio, Motor, Fahrgeräusche, Blinker, Bremsen, Schotter,
+-- Waldgeräusche und am Ende Rauschen im Radio und ein Schreck-Akzent.
 local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local SoundService = game:GetService("SoundService")
 local StarterGui = game:GetService("StarterGui")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 
-local Route = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("LevelRoute"))
+local Shared = ReplicatedStorage:WaitForChild("Shared")
+local Config = require(Shared:WaitForChild("Config"))
+local Route = require(Shared:WaitForChild("LevelRoute"))
 local player = Players.LocalPlayer
 local cutscene = ReplicatedStorage:WaitForChild("Cutscene")
 local puppets = cutscene:WaitForChild("Puppets")
@@ -122,6 +127,15 @@ end
 local car = cutscene:WaitForChild("Car"):Clone()
 local root = car.PrimaryPart
 root.Anchored = true
+-- Rechte Blinker (in der Vorlage liegt das Auto im Ursprung, rechts ist +X)
+local rightIndicators = {}
+for _, part in car:GetDescendants() do
+	if part:IsA("BasePart") and part.Name == "Indicator" and part.Position.X > 0 then
+		table.insert(rightIndicators, { part = part, color = part.Color })
+	end
+end
+local blinkerArrow = car:FindFirstChild("BlinkerArrow", true)
+local radioText = car:FindFirstChild("RadioText", true)
 car.Parent = workspace
 root.CFrame = Route.carCFrame(Route.START_S)
 
@@ -155,6 +169,10 @@ local function loadTrack(humanoid, animationId, looped)
 	end
 	return nil
 end
+
+-- Werden weiter unten gefüllt, aber schon vom Fremden benutzt
+local sounds = {}
+local strangerSteps
 
 ------------------------------------------------------------------ Mitfahrer als Puppe im Auto
 local seatedPlayers = {}
@@ -225,12 +243,23 @@ local function strangerWalksToCar()
 	if walk then
 		walk:Play(0.3, 1, 0.7)
 	end
+	local walking = true
+	task.spawn(function()
+		while walking do
+			if strangerSteps then
+				strangerSteps.PlaybackSpeed = 0.9 + math.random() * 0.2
+				strangerSteps:Play()
+			end
+			task.wait(0.55)
+		end
+	end)
 	task.spawn(function()
 		local waypoints = Route.strangerWaypoints()
 		for i = 2, #waypoints do
 			strangerHumanoid:MoveTo(waypoints[i])
 			strangerHumanoid.MoveToFinished:Wait()
 		end
+		walking = false
 		if walk then
 			walk:Stop(0.5)
 		end
@@ -242,6 +271,12 @@ local function strangerWalksToCar()
 		strangerRoot.Anchored = true
 		strangerRoot.CFrame = CFrame.lookAt(strangerRoot.Position, Vector3.new(carPosition.X, strangerRoot.Position.Y, carPosition.Z))
 		strangerArrived = os.clock()
+		if sounds.sting then
+			sounds.sting:Play()
+		end
+		if radioText then
+			radioText.Text = "FM --.-   ~~ KEIN EMPFANG ~~"
+		end
 	end)
 end
 
@@ -267,6 +302,70 @@ task.spawn(function()
 	end
 end)
 
+------------------------------------------------------------------ Sounds
+-- IDs stehen in Config.SOUNDS. Fehlt eine ID, wird der Sound einfach weggelassen.
+local FALLBACK_SOUNDS = {
+	footstep = "rbxasset://sounds/action_footsteps_plastic.mp3",
+}
+local function makeSound(key, parent, props)
+	local id = Config.SOUNDS and Config.SOUNDS[key] or ""
+	if id == "" then
+		id = FALLBACK_SOUNDS[key]
+	end
+	if not id then
+		return nil
+	end
+	local sound = Instance.new("Sound")
+	sound.Name = key
+	sound.SoundId = id
+	for property, value in props or {} do
+		sound[property] = value
+	end
+	sound.Parent = parent
+	return sound
+end
+
+sounds = {
+	engine = makeSound("engine", SoundService, { Looped = true, Volume = 0 }),
+	road = makeSound("road", SoundService, { Looped = true, Volume = 0 }),
+	wind = makeSound("wind", SoundService, { Looped = true, Volume = 0 }),
+	forest = makeSound("forest", SoundService, { Looped = true, Volume = 0 }),
+	gravel = makeSound("gravel", SoundService, { Looped = true, Volume = 0 }),
+	music = makeSound("music", SoundService, { Looped = true, Volume = 0 }),
+	radioStatic = makeSound("radioStatic", SoundService, { Looped = true, Volume = 0 }),
+	brake = makeSound("brake", SoundService, { Volume = 0.35 }),
+	blinker = makeSound("blinker", SoundService, { Volume = 0.5 }),
+	sting = makeSound("sting", SoundService, { Volume = 0.7 }),
+}
+-- Das Radio klingt wie aus kleinen Autolautsprechern
+if sounds.music then
+	local speaker = Instance.new("EqualizerSoundEffect")
+	speaker.LowGain = -4
+	speaker.MidGain = 0
+	speaker.HighGain = -7
+	speaker.Parent = sounds.music
+end
+for _, sound in sounds do
+	if sound.Looped then
+		sound:Play()
+	end
+end
+-- Die alte Laterne summt (3D-Sound, nur in der Nähe hörbar)
+for _, lens in CollectionService:GetTagged("FlickerLamp") do
+	local buzz = makeSound("lampBuzz", lens, { Looped = true, Volume = 0.35, RollOffMaxDistance = 45 })
+	if buzz then
+		buzz:Play()
+	end
+end
+strangerSteps = stranger and makeSound("footstep", strangerRoot, { Volume = 0.6, RollOffMaxDistance = 60 })
+
+-- Lautstärke weich an ein Ziel annähern
+local function blend(sound, volume, speed, deltaTime)
+	if sound then
+		sound.Volume += (volume - sound.Volume) * math.min(deltaTime * (speed or 3), 1)
+	end
+end
+
 ------------------------------------------------------------------ Umsehen mit Maus oder Finger
 local yaw, pitch = 0, 0
 UserInputService.InputChanged:Connect(function(input)
@@ -288,6 +387,7 @@ end
 
 local camera = workspace.CurrentCamera
 local wheelSpin = 0
+local lastBlink = false
 
 RunService.RenderStepped:Connect(function(deltaTime)
 	local t = workspace:GetServerTimeNow() - startTime
@@ -331,6 +431,51 @@ RunService.RenderStepped:Connect(function(deltaTime)
 		* CFrame.Angles(pitch, 0, 0)
 	UserInputService.MouseBehavior = Enum.MouseBehavior.LockCenter
 	UserInputService.MouseIconEnabled = false
+
+	-- Sounds: Motor, Fahrgeräusche, Wald und Radio
+	local inLayby = s > Route.LAYBY_START_S - 10
+	if sounds.engine then
+		sounds.engine.PlaybackSpeed = 0.75 + 0.55 * moving
+	end
+	blend(sounds.engine, 0.35 + 0.15 * moving, 3, deltaTime)
+	blend(sounds.road, inLayby and 0 or 0.45 * moving, 3, deltaTime)
+	blend(sounds.wind, 0.22 * moving * moving, 3, deltaTime)
+	blend(sounds.gravel, inLayby and 0.5 * moving or 0, 5, deltaTime)
+	blend(sounds.forest, speed < 1 and 0.45 or 0.1, 0.8, deltaTime)
+	local radioOff = strangerArrived ~= nil
+	blend(sounds.music, t < 0 and 0 or (radioOff and 0 or 0.32), radioOff and 1.5 or 0.6, deltaTime)
+	blend(sounds.radioStatic, radioOff and 0.25 or 0, 1.5, deltaTime)
+	if t >= Route.CRUISE_TIME + 0.6 then
+		once("brake", function()
+			if sounds.brake then
+				sounds.brake:Play()
+			end
+		end)
+	end
+
+	-- Blinker rechts beim Ranfahren an die Parkbucht
+	local blinking = t >= Route.CRUISE_TIME - 3 and t <= Route.STOP_TIME + 2
+	local blinkOn = blinking and (t % 0.76) < 0.38
+	if blinkOn ~= lastBlink then
+		lastBlink = blinkOn
+		for _, indicator in rightIndicators do
+			indicator.part.Color = blinkOn and Color3.fromRGB(255, 170, 40) or indicator.color:Lerp(Color3.new(0, 0, 0), 0.6)
+		end
+		if blinkerArrow then
+			blinkerArrow.TextTransparency = blinkOn and 0 or 1
+		end
+		if blinking and sounds.blinker then
+			sounds.blinker.PlaybackSpeed = blinkOn and 1 or 0.85
+			sounds.blinker:Play()
+		end
+	end
+	if not blinking and t > Route.STOP_TIME then
+		once("blinkerOff", function()
+			for _, indicator in rightIndicators do
+				indicator.part.Color = indicator.color
+			end
+		end)
+	end
 
 	-- Zeitplan
 	if t >= 0 then

@@ -70,4 +70,21 @@ Config.SNACKS = {
 	{ title = "Chips", description = "Einfach lecker. Hilft gegen Hunger.", price = 15, color = Color3.fromRGB(230, 200, 60) },
 }
 
+-- Sounds für Level 1. Die Dateien liegen im Ordner assets/audio. Nach dem Hochladen bei
+-- Roblox die ID hier eintragen, z. B. "rbxassetid://1234567890". Leer = Sound fällt weg.
+Config.SOUNDS = {
+	music = "", -- music_calm.ogg (oder ein ruhiges Lied aus der Toolbox)
+	engine = "", -- engine_loop.ogg
+	road = "", -- road_loop.ogg
+	wind = "", -- wind_loop.ogg
+	forest = "", -- forest_night_loop.ogg
+	brake = "", -- brake.ogg
+	gravel = "", -- gravel_loop.ogg
+	footstep = "", -- footstep.ogg
+	blinker = "", -- blinker_tick.ogg
+	radioStatic = "", -- radio_static_loop.ogg
+	lampBuzz = "", -- lamp_buzz_loop.ogg
+	sting = "", -- sting.ogg
+}
+
 return Config

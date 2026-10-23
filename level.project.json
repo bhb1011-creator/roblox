@@ -18,6 +18,16 @@
           "$path": "src/level/client"
         }
       }
+    },
+    "Lighting": {
+      "$properties": {
+        "Technology": "Future"
+      }
+    },
+    "Workspace": {
+      "$properties": {
+        "StreamingEnabled": false
+      }
     }
   }
 }

@@ -214,6 +214,15 @@ function CutsceneCar.build(parent)
 			Position = UDim2.fromScale(0.3, 0.8),
 		})
 	end
+	-- Blinker-Pfeil zwischen den Uhren (der Client lässt ihn blinken)
+	Parts.text(clusterGui, {
+		Name = "BlinkerArrow",
+		Text = "▶",
+		TextColor3 = Color3.fromRGB(80, 255, 110),
+		TextTransparency = 1,
+		Size = UDim2.fromScale(0.08, 0.3),
+		Position = UDim2.fromScale(0.46, 0.08),
+	})
 	Parts.light("PointLight", cluster, { Range = 3, Brightness = 0.6, Color = Color3.fromRGB(255, 170, 90) })
 
 	-- Mittelkonsole: Radio, Lüftungen, Warnblinker, Regler
