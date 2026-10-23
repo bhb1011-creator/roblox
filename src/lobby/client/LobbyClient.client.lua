@@ -1,6 +1,7 @@
 -- Alles, was nur der Spieler selbst sieht: Aussteigen-Knopf, Abblenden bei der
 -- Abfahrt, Hinweise, Shop-Fenster und flackernde Lichter.
 local CollectionService = game:GetService("CollectionService")
+local MarketplaceService = game:GetService("MarketplaceService")
 local Players = game:GetService("Players")
 local ProximityPromptService = game:GetService("ProximityPromptService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -104,66 +105,171 @@ local exitButton = create("TextButton", {
 	create("UIStroke", { Color = Color3.fromRGB(150, 60, 50), Thickness = 2 }),
 })
 
--- Shop-Fenster (Platzhalter, bis es Items gibt)
-local shopWindow = create("Frame", {
-	Name = "ShopWindow",
-	AnchorPoint = Vector2.new(0.5, 0.5),
-	Position = UDim2.fromScale(0.5, 0.5),
-	Size = UDim2.fromOffset(420, 240),
-	BackgroundColor3 = Color3.fromRGB(22, 18, 16),
-	BackgroundTransparency = 0.05,
-	Visible = false,
-	ZIndex = 20,
-	Parent = gui,
-}, {
-	corner(14),
-	create("UIStroke", { Color = Color3.fromRGB(255, 210, 120), Thickness = 2, Transparency = 0.3 }),
-	create("TextLabel", {
-		Name = "Title",
-		Position = UDim2.fromOffset(0, 18),
-		Size = UDim2.new(1, 0, 0, 40),
-		BackgroundTransparency = 1,
-		Font = Enum.Font.GothamBold,
-		Text = "🛒 SHOP",
-		TextSize = 32,
-		TextColor3 = Color3.fromRGB(255, 210, 120),
-		ZIndex = 21,
-	}),
-	create("TextLabel", {
-		Name = "Body",
-		Position = UDim2.new(0, 24, 0, 70),
-		Size = UDim2.new(1, -48, 0, 90),
+-- Fenster für Kiosk (Snacks) und Kasse (Robux). Der Schließen-Knopf ist "Modal":
+-- solange ein Fenster offen ist, ist die Maus in der Ego-Perspektive frei.
+local function createWindow(name, title, subtitle)
+	local window = create("Frame", {
+		Name = name,
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.5),
+		Size = UDim2.fromOffset(500, 440),
+		BackgroundColor3 = Color3.fromRGB(22, 18, 16),
+		BackgroundTransparency = 0.05,
+		Visible = false,
+		ZIndex = 20,
+		Parent = gui,
+	}, {
+		corner(14),
+		create("UIStroke", { Color = Color3.fromRGB(255, 210, 120), Thickness = 2, Transparency = 0.3 }),
+		create("TextLabel", {
+			Name = "Title",
+			Position = UDim2.fromOffset(0, 14),
+			Size = UDim2.new(1, 0, 0, 36),
+			BackgroundTransparency = 1,
+			Font = Enum.Font.GothamBold,
+			Text = title,
+			TextSize = 30,
+			TextColor3 = Color3.fromRGB(255, 210, 120),
+			ZIndex = 21,
+		}),
+	})
+	local subtitleLabel = create("TextLabel", {
+		Name = "Subtitle",
+		Position = UDim2.fromOffset(0, 50),
+		Size = UDim2.new(1, 0, 0, 22),
 		BackgroundTransparency = 1,
 		Font = Enum.Font.Gotham,
-		Text = "Hier kannst du bald Items und Spezial-Items kaufen.\nKomm später wieder!",
-		TextSize = 20,
-		TextWrapped = true,
-		TextColor3 = Color3.fromRGB(230, 220, 205),
+		Text = subtitle,
+		TextSize = 16,
+		TextColor3 = Color3.fromRGB(200, 190, 175),
 		ZIndex = 21,
-	}),
-})
-local closeShop = create("TextButton", {
-	Name = "Close",
-	AnchorPoint = Vector2.new(0.5, 1),
-	Position = UDim2.new(0.5, 0, 1, -18),
-	Size = UDim2.fromOffset(160, 42),
-	BackgroundColor3 = Color3.fromRGB(150, 45, 40),
-	Font = Enum.Font.GothamBold,
-	Text = "Schließen",
-	TextSize = 20,
-	TextColor3 = Color3.new(1, 1, 1),
-	ZIndex = 21,
-	Modal = true, -- gibt in der Ego-Perspektive die Maus frei, solange der Shop offen ist
-	Parent = shopWindow,
-}, { corner(10) })
+		Parent = window,
+	})
+	local list = create("ScrollingFrame", {
+		Name = "List",
+		Position = UDim2.fromOffset(16, 82),
+		Size = UDim2.new(1, -32, 1, -150),
+		BackgroundTransparency = 1,
+		BorderSizePixel = 0,
+		ScrollBarThickness = 6,
+		AutomaticCanvasSize = Enum.AutomaticSize.Y,
+		CanvasSize = UDim2.new(),
+		ZIndex = 21,
+		Parent = window,
+	}, {
+		create("UIListLayout", { Padding = UDim.new(0, 8), SortOrder = Enum.SortOrder.LayoutOrder }),
+	})
+	local close = create("TextButton", {
+		Name = "Close",
+		AnchorPoint = Vector2.new(0.5, 1),
+		Position = UDim2.new(0.5, 0, 1, -14),
+		Size = UDim2.fromOffset(160, 42),
+		BackgroundColor3 = Color3.fromRGB(150, 45, 40),
+		Font = Enum.Font.GothamBold,
+		Text = "Schließen",
+		TextSize = 20,
+		TextColor3 = Color3.new(1, 1, 1),
+		ZIndex = 21,
+		Modal = true,
+		Parent = window,
+	}, { corner(10) })
+	close.Activated:Connect(function()
+		window.Visible = false
+	end)
+	return window, list, subtitleLabel
+end
 
-closeShop.Activated:Connect(function()
-	shopWindow.Visible = false
-end)
+-- Eine Zeile im Fenster: Name, Beschreibung und ein Knopf rechts
+local function addCard(list, order, title, description, buttonText, buttonColor, onClick)
+	local card = create("Frame", {
+		Name = title,
+		Size = UDim2.new(1, -8, 0, 70),
+		BackgroundColor3 = Color3.fromRGB(40, 34, 30),
+		LayoutOrder = order,
+		ZIndex = 22,
+		Parent = list,
+	}, {
+		corner(10),
+		create("TextLabel", {
+			Position = UDim2.fromOffset(14, 8),
+			Size = UDim2.new(1, -170, 0, 26),
+			BackgroundTransparency = 1,
+			Font = Enum.Font.GothamBold,
+			Text = title,
+			TextSize = 20,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			TextColor3 = Color3.fromRGB(245, 235, 215),
+			ZIndex = 23,
+		}),
+		create("TextLabel", {
+			Position = UDim2.fromOffset(14, 36),
+			Size = UDim2.new(1, -170, 0, 26),
+			BackgroundTransparency = 1,
+			Font = Enum.Font.Gotham,
+			Text = description,
+			TextSize = 14,
+			TextWrapped = true,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			TextColor3 = Color3.fromRGB(190, 180, 165),
+			ZIndex = 23,
+		}),
+	})
+	local button = create("TextButton", {
+		AnchorPoint = Vector2.new(1, 0.5),
+		Position = UDim2.new(1, -12, 0.5, 0),
+		Size = UDim2.fromOffset(140, 42),
+		BackgroundColor3 = buttonColor,
+		AutoButtonColor = onClick ~= nil,
+		Font = Enum.Font.GothamBold,
+		Text = buttonText,
+		TextSize = 16,
+		TextColor3 = Color3.new(1, 1, 1),
+		ZIndex = 23,
+		Parent = card,
+	}, { corner(8) })
+	if onClick then
+		button.Activated:Connect(onClick)
+	end
+end
+
+-- Kiosk: Snacks, die im Spiel helfen (Kauf mit Münzen kommt später)
+local shopWindow, shopList = createWindow("ShopWindow", "🛒 KIOSK", "Snacks, die dir in der Nacht helfen")
+for index, snack in Config.SNACKS do
+	addCard(shopList, index, snack.title, snack.description, "🪙 " .. snack.price .. " · bald", Color3.fromRGB(80, 75, 70), nil)
+end
+
+-- Kasse: Robux-Produkte (Wiederbelebungen, Rebirths)
+local cashierWindow, cashierList, cashierInfo = createWindow("CashierWindow", "💰 KASSE", "")
+for index, product in Config.PRODUCTS do
+	addCard(cashierList, index, product.title, product.description, "R$ " .. product.robux, Color3.fromRGB(40, 140, 70), function()
+		if product.id == 0 then
+			showToast("Dieses Produkt ist noch nicht eingerichtet.", 3)
+			return
+		end
+		MarketplaceService:PromptProductPurchase(player, product.id)
+	end)
+end
+local function updateCashierInfo()
+	cashierInfo.Text = string.format(
+		"Deine Wiederbelebungen: %d   ·   Rebirths: %d",
+		player:GetAttribute("Revives") or 0,
+		player:GetAttribute("Rebirths") or 0
+	)
+end
+player:GetAttributeChangedSignal("Revives"):Connect(updateCashierInfo)
+player:GetAttributeChangedSignal("Rebirths"):Connect(updateCashierInfo)
+updateCashierInfo()
 
 ProximityPromptService.PromptTriggered:Connect(function(prompt, triggeringPlayer)
-	if triggeringPlayer == player and CollectionService:HasTag(prompt, "ShopPrompt") then
+	if triggeringPlayer ~= player then
+		return
+	end
+	if CollectionService:HasTag(prompt, "ShopPrompt") then
+		cashierWindow.Visible = false
 		shopWindow.Visible = true
+	elseif CollectionService:HasTag(prompt, "CashierPrompt") then
+		shopWindow.Visible = false
+		cashierWindow.Visible = true
 	end
 end)
 

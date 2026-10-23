@@ -2,14 +2,20 @@
 -- Norden ist -Z: dort verlässt die Straße den Parkplatz.
 local Layout = {}
 
-Layout.GROUND_Y = 0.2
+Layout.GROUND_Y = 0.2 -- Oberkante von Asphalt und Gehweg
+Layout.NATURE_Y = 0 -- Oberkante des Geländes (Waldboden in der Mitte)
 
 Layout.LOT = { halfWidth = 80, minZ = -70, maxZ = 70, exitHalfWidth = 10 }
 Layout.GATE_Z = -73
 Layout.CAR_TURN_Z = -40 -- hier biegen die Autos zur Mitte ab
 
+-- Asphalt nur im Norden (Autos, Ausfahrt, Spawn), Gehweg im Süden vor den Gebäuden.
+-- Dazwischen liegt Waldboden mit dem Grillplatz.
+Layout.ASPHALT = { minZ = -70, maxZ = -16 }
+Layout.PLAZA = { minZ = 42, maxZ = 70 }
+
 Layout.SPAWN = Vector3.new(0, 0.3, -26)
-Layout.CAMPFIRE = Vector3.new(0, 0.2, 6)
+Layout.CAMPFIRE = Vector3.new(0, 0, 6)
 
 Layout.SHOP = CFrame.new(-50, 0.2, 57) -- Vorderseite (Tür) zeigt nach Norden
 Layout.VENDING_MACHINE = CFrame.new(-30, 0.2, 64)
@@ -17,7 +23,7 @@ Layout.INFO_BOARD = Vector3.new(-14, 0.2, 64)
 Layout.CAMPER = CFrame.new(12, 0.2, 60)
 Layout.BOOTH = CFrame.new(40, 0.2, 61)
 Layout.LEADERBOARD = CFrame.new(63, 0.2, 60)
-Layout.NOTICE_BOARD = CFrame.lookAt(Vector3.new(-77, 0.2, 4), Vector3.new(0, 0.2, 4))
+Layout.NOTICE_BOARD = CFrame.lookAt(Vector3.new(-77, 0, 4), Vector3.new(0, 0, 4))
 
 -- Weiße Flutlichtmasten: { Position, Ziel des Lichts }
 Layout.FLOODLIGHTS = {

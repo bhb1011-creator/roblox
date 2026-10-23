@@ -1,7 +1,11 @@
--- Gebäude am Südrand: großer begehbarer Kiosk mit Verkäufer und Automaten,
--- Kassenhäuschen, große Bestenliste, verlassener Wohnwagen und Automaten draußen.
+-- Gebäude am Südrand: begehbarer Kiosk mit Verkäufer und drei Snack-Regalen,
+-- Kassenhäuschen mit Kassierer (Robux-Käufe), große Bestenliste, verlassener
+-- Wohnwagen und Automaten draußen.
 local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Config = require(ReplicatedStorage.Shared.Config)
 
 local Layout = require(script.Parent.Layout)
 local Parts = require(script.Parent.Parts)
@@ -28,31 +32,32 @@ local function randomProductColor(rng)
 	return Color3.fromHSV(rng:NextNumber(), rng:NextNumber(0.45, 0.85), rng:NextNumber(0.55, 0.95))
 end
 
--- Verkäufer hinter der Theke. `feet` = Position der Füße, Blickrichtung = LookVector.
-local function createSeller(parent, feet)
-	local ok, seller = pcall(function()
+-- Figur hinter einer Theke mit Namensschild und Interaktion (E).
+-- `feet` = Position der Füße, Blickrichtung = LookVector.
+local function createNpc(parent, feet, options)
+	local ok, npc = pcall(function()
 		local description = Instance.new("HumanoidDescription")
-		local skin = Color3.fromRGB(205, 160, 125)
+		local skin = options.skin
 		description.HeadColor = skin
 		description.LeftArmColor = skin
 		description.RightArmColor = skin
-		description.TorsoColor = Color3.fromRGB(45, 70, 50) -- grüne Schürze
+		description.TorsoColor = options.shirt
 		description.LeftLegColor = Color3.fromRGB(40, 40, 48)
 		description.RightLegColor = Color3.fromRGB(40, 40, 48)
 		return Players:CreateHumanoidModelFromDescription(description, Enum.HumanoidRigType.R15)
 	end)
 	if not ok then
-		warn("Verkäufer konnte nicht erstellt werden:", seller)
+		warn(options.name .. " konnte nicht erstellt werden:", npc)
 		return nil
 	end
 
-	seller.Name = "Verkäufer"
-	local humanoid = seller:FindFirstChildOfClass("Humanoid")
-	local root = seller:FindFirstChild("HumanoidRootPart")
+	npc.Name = options.name
+	local humanoid = npc:FindFirstChildOfClass("Humanoid")
+	local root = npc:FindFirstChild("HumanoidRootPart")
 	humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
 	root.Anchored = true
-	seller:PivotTo(feet * CFrame.new(0, humanoid.HipHeight + root.Size.Y / 2, 0))
-	seller.Parent = parent
+	npc:PivotTo(feet * CFrame.new(0, humanoid.HipHeight + root.Size.Y / 2, 0))
+	npc.Parent = parent
 
 	pcall(function()
 		local animator = humanoid:FindFirstChildOfClass("Animator") or Instance.new("Animator")
@@ -65,95 +70,20 @@ local function createSeller(parent, feet)
 	end)
 
 	local nameTag = Instance.new("BillboardGui")
-	nameTag.Size = UDim2.fromOffset(140, 30)
+	nameTag.Size = UDim2.fromOffset(160, 30)
 	nameTag.StudsOffset = Vector3.new(0, 3, 0)
-	nameTag.MaxDistance = 30
+	nameTag.MaxDistance = 35
 	nameTag.Parent = root
-	Parts.text(nameTag, { Text = "Verkäufer", TextColor3 = Color3.fromRGB(255, 220, 160), TextStrokeTransparency = 0.4 })
+	Parts.text(nameTag, { Text = options.name, TextColor3 = Color3.fromRGB(255, 220, 160), TextStrokeTransparency = 0.4 })
 
 	local prompt = Instance.new("ProximityPrompt")
-	prompt.ActionText = "Shop öffnen"
-	prompt.ObjectText = "Verkäufer"
-	prompt.MaxActivationDistance = 10
+	prompt.ActionText = options.action
+	prompt.ObjectText = options.name
+	prompt.MaxActivationDistance = options.distance or 10
 	prompt.RequiresLineOfSight = false
 	prompt.Parent = root
-	CollectionService:AddTag(prompt, "ShopPrompt")
-	return seller
-end
-
--- Reihe von Produkten auf einem Regalboden (von x1 bis x2, lokale Koordinaten von `cframe`)
-local function fillBoard(block, rng, cframe, x1, x2, y, z)
-	local x = x1
-	while x < x2 - 0.7 do
-		local size = Vector3.new(rng:NextNumber(0.55, 1), rng:NextNumber(0.6, 1.3), rng:NextNumber(0.5, 0.8))
-		block("Product", size, cframe * CFrame.new(x + size.X / 2, y + size.Y / 2, z), randomProductColor(rng), Enum.Material.SmoothPlastic, { CanCollide = false })
-		x += size.X + 0.15
-	end
-end
-
--- Wandregal; Rückwand bei +Z, Waren zeigen nach -Z
-local function buildWallShelf(block, rng, cframe, width, height)
-	local depth = 1.6
-	block("ShelfBack", Vector3.new(width, height, 0.2), cframe * CFrame.new(0, height / 2, depth / 2), COLORS.trim, Enum.Material.Wood)
-	for _, x in { -width / 2, width / 2 } do
-		block("ShelfSide", Vector3.new(0.2, height, depth), cframe * CFrame.new(x, height / 2, 0), COLORS.trim, Enum.Material.Wood)
-	end
-	local levels = math.floor(height / 1.7)
-	for level = 0, levels - 1 do
-		local y = 0.3 + level * 1.7
-		block("ShelfBoard", Vector3.new(width, 0.15, depth), cframe * CFrame.new(0, y, 0), COLORS.wood, Enum.Material.Wood)
-		fillBoard(block, rng, cframe, -width / 2 + 0.2, width / 2, y + 0.075, 0)
-	end
-end
-
--- Freistehendes Regal mit Waren auf beiden Seiten (Länge entlang lokal X)
-local function buildGondola(block, rng, cframe, length)
-	local height, width = 5.2, 2.6
-	block("GondolaBase", Vector3.new(length, 0.5, width), cframe * CFrame.new(0, 0.25, 0), COLORS.darkMetal, Enum.Material.Metal)
-	block("GondolaDivider", Vector3.new(length, height, 0.2), cframe * CFrame.new(0, height / 2, 0), Color3.fromRGB(200, 200, 205), Enum.Material.Metal)
-	block("GondolaTop", Vector3.new(length + 0.2, 0.3, width), cframe * CFrame.new(0, height + 0.15, 0), COLORS.darkMetal, Enum.Material.Metal)
-	for _, side in { -1, 1 } do
-		for level = 0, 2 do
-			local y = 0.5 + level * 1.6
-			block("GondolaBoard", Vector3.new(length, 0.12, width / 2 - 0.1), cframe * CFrame.new(0, y, side * width / 4), Color3.fromRGB(220, 220, 225), Enum.Material.Metal)
-			fillBoard(block, rng, cframe, -length / 2 + 0.2, length / 2, y + 0.06, side * (width / 4 + 0.1))
-		end
-	end
-	local sign = block("GondolaSign", Vector3.new(3, 1, 0.1), cframe * CFrame.new(0, height + 1, 0), Color3.fromRGB(200, 50, 40), Enum.Material.SmoothPlastic, { CanCollide = false })
-	for _, face in { Enum.NormalId.Front, Enum.NormalId.Back } do
-		Parts.text(Parts.surfaceGui(sign, face), { Text = "SNACKS", TextColor3 = Color3.new(1, 1, 1) })
-	end
-end
-
--- Getränkekühlschrank mit Glastür; Vorderseite zeigt nach -Z von `cframe`
-local function buildFridge(parent, cframe, rng)
-	local block = Parts.builder(parent, cframe)
-	local W, H, D = 4.6, 8, 2.6
-	block("FridgeTop", Vector3.new(W, 1, D), CFrame.new(0, H - 0.5, 0), Color3.fromRGB(30, 60, 120), Enum.Material.Metal)
-	block("FridgeBottom", Vector3.new(W, 0.8, D), CFrame.new(0, 0.4, 0), COLORS.darkMetal, Enum.Material.Metal)
-	for _, x in { -W / 2 + 0.15, W / 2 - 0.15 } do
-		block("FridgeSide", Vector3.new(0.3, H, D), CFrame.new(x, H / 2, 0), COLORS.darkMetal, Enum.Material.Metal)
-	end
-	local panel = block("FridgeLight", Vector3.new(W - 0.6, H - 1.8, 0.1), CFrame.new(0, H / 2 - 0.1, D / 2 - 0.1), Color3.fromRGB(200, 230, 255), Enum.Material.Neon)
-	Parts.light("PointLight", panel, { Range = 8, Brightness = 0.7, Color = Color3.fromRGB(180, 215, 255) })
-	for level = 0, 3 do
-		local y = 1.0 + level * 1.5
-		block("FridgeShelf", Vector3.new(W - 0.6, 0.08, D - 0.4), CFrame.new(0, y, 0), COLORS.glass, Enum.Material.Glass, { Transparency = 0.4 })
-		for i = 0, 5 do
-			Parts.column({
-				Name = "Bottle",
-				Color = randomProductColor(rng),
-				Material = Enum.Material.Glass,
-				Transparency = 0.15,
-				CanCollide = false,
-				Parent = parent,
-			}, 1.1, 0.45, cframe * CFrame.new(-1.5 + i * 0.6, y + 0.04, -0.2))
-		end
-	end
-	block("FridgeDoor", Vector3.new(W - 0.6, H - 1.8, 0.1), CFrame.new(0, H / 2 - 0.1, -D / 2 + 0.05), COLORS.glass, Enum.Material.Glass, { Transparency = 0.7 })
-	block("FridgeHandle", Vector3.new(0.15, 2, 0.2), CFrame.new(W / 2 - 0.6, H / 2, -D / 2 - 0.1), Color3.fromRGB(190, 190, 195), Enum.Material.Metal)
-	local label = block("FridgeLabel", Vector3.new(W - 0.4, 0.7, 0.05), CFrame.new(0, H - 0.5, -D / 2 - 0.03), Color3.fromRGB(30, 60, 120), Enum.Material.SmoothPlastic, { CanCollide = false })
-	Parts.text(Parts.surfaceGui(label, Enum.NormalId.Front, true), { Text = "GETRÄNKE", TextColor3 = Color3.new(1, 1, 1) })
+	CollectionService:AddTag(prompt, options.tag)
+	return npc
 end
 
 -- Snackautomat (befüllt); Vorderseite zeigt nach -Z von `cframe`
@@ -215,12 +145,35 @@ local function buildDrinkMachine(parent, cframe)
 	machine.Parent = parent
 end
 
+-- Lockeres Snack-Regal: drei Böden mit je drei Snacks und Preisschild.
+-- Rückwand bei +Z, Waren zeigen nach -Z.
+local function buildSnackShelf(block, cframe, firstSnack)
+	local width, height, depth = 6, 5.6, 1.6
+	local snacks = Config.SNACKS
+	block("ShelfBack", Vector3.new(width, height, 0.2), cframe * CFrame.new(0, height / 2, depth / 2), COLORS.trim, Enum.Material.Wood)
+	for _, x in { -width / 2, width / 2 } do
+		block("ShelfSide", Vector3.new(0.2, height, depth), cframe * CFrame.new(x, height / 2, 0), COLORS.trim, Enum.Material.Wood)
+	end
+	block("ShelfTop", Vector3.new(width + 0.2, 0.2, depth), cframe * CFrame.new(0, height, 0), COLORS.trim, Enum.Material.Wood)
+	for level = 0, 2 do
+		local y = 0.5 + level * 1.7
+		block("ShelfBoard", Vector3.new(width, 0.15, depth), cframe * CFrame.new(0, y, 0), COLORS.wood, Enum.Material.Wood)
+		for i = 0, 2 do
+			local snack = snacks[(firstSnack + level * 3 + i - 1) % #snacks + 1]
+			local x = -width / 2 + (i + 0.5) * width / 3
+			block("Snack", Vector3.new(0.9, 1.1, 0.45), cframe * CFrame.new(x, y + 0.63, -0.1), snack.color, Enum.Material.SmoothPlastic, { CanCollide = false })
+			block("PriceTag", Vector3.new(0.7, 0.25, 0.04), cframe * CFrame.new(x, y, -depth / 2 - 0.02), Color3.fromRGB(240, 235, 220), Enum.Material.SmoothPlastic, { CanCollide = false })
+		end
+	end
+	local header = block("ShelfSign", Vector3.new(3, 0.8, 0.1), cframe * CFrame.new(0, height + 0.6, 0.3), Color3.fromRGB(170, 40, 35), Enum.Material.SmoothPlastic, { CanCollide = false })
+	Parts.text(Parts.surfaceGui(header, Enum.NormalId.Front), { Text = "SNACKS" })
+end
+
 local function buildShop(parent)
 	local shop = Instance.new("Model")
 	shop.Name = "Kiosk"
 	local base = Layout.SHOP
 	local block = Parts.builder(shop, base)
-	local rng = Random.new(5)
 	local W, D, H, T = 30, 22, 11, 0.8
 	local frontZ = -D / 2 + T / 2
 	local innerW, innerD = W - 2 * T, D - 2 * T
@@ -300,7 +253,7 @@ local function buildShop(parent)
 	CollectionService:AddTag(openSign, "FlickerLamp")
 
 	-- Deckenlampen (eine davon flackert)
-	for i, offset in { Vector3.new(-8, H - 0.15, -4), Vector3.new(-8, H - 0.15, 5), Vector3.new(5, H - 0.15, -4), Vector3.new(5, H - 0.15, 5) } do
+	for i, offset in { Vector3.new(-8, H - 0.15, -4), Vector3.new(-8, H - 0.15, 5), Vector3.new(6, H - 0.15, -4), Vector3.new(6, H - 0.15, 5) } do
 		local panel = block("CeilingLight", Vector3.new(5, 0.2, 1.2), CFrame.new(offset), COLORS.coldLight, Enum.Material.Neon)
 		Parts.light("PointLight", panel, { Range = 16, Brightness = 0.9, Color = COLORS.coldLight, Shadows = i == 1 })
 		if i == 3 then
@@ -308,7 +261,7 @@ local function buildShop(parent)
 		end
 	end
 
-	-- Theke mit Kasse, Kartenterminal und Süßigkeiten
+	-- Theke mit Kasse
 	block("Counter", Vector3.new(10, 3.6, 2.2), CFrame.new(-8, 2.2, 3), COLORS.wood, Enum.Material.WoodPlanks)
 	block("CounterSide", Vector3.new(2.2, 3.6, 3), CFrame.new(-2, 2.2, 5.6), COLORS.wood, Enum.Material.WoodPlanks)
 	block("CounterTop", Vector3.new(10.4, 0.25, 2.6), CFrame.new(-8, 4.1, 3), Color3.fromRGB(40, 38, 36), Enum.Material.Granite)
@@ -316,52 +269,34 @@ local function buildShop(parent)
 	block("Register", Vector3.new(1.6, 1, 1.2), CFrame.new(-5, 4.7, 3.2), Color3.fromRGB(50, 50, 55), Enum.Material.Metal)
 	block("RegisterDisplay", Vector3.new(1, 0.4, 0.1), CFrame.new(-5, 5.4, 2.8) * CFrame.Angles(math.rad(-20), 0, 0), Color3.fromRGB(90, 255, 120), Enum.Material.Neon)
 	block("CardTerminal", Vector3.new(0.5, 0.2, 0.8), CFrame.new(-3.7, 4.33, 2.5), COLORS.darkMetal)
-	for i = 0, 3 do
-		block("CandyBox", Vector3.new(0.9, 0.6, 0.7), CFrame.new(-12 + i * 1.1, 4.55, 2.4), randomProductColor(rng))
-	end
-	block("Newspapers", Vector3.new(1.4, 0.4, 1), CFrame.new(-7.5, 4.45, 2.6), Color3.fromRGB(215, 210, 195))
 
-	-- Rückwand hinter dem Verkäufer: Arbeitsfläche, Kaffeemaschine, Regal und Preistafel
+	-- Rückwand hinter dem Verkäufer: Arbeitsfläche mit Kaffeemaschine und Preistafel
 	block("BackCounter", Vector3.new(12, 3.4, 1.6), CFrame.new(-8, 2.1, D / 2 - T - 0.8), COLORS.wood, Enum.Material.WoodPlanks)
 	block("CoffeeMachine", Vector3.new(1.6, 2, 1.2), CFrame.new(-12, 4.8, D / 2 - T - 0.9), COLORS.darkMetal, Enum.Material.Metal)
 	block("CoffeeLight", Vector3.new(0.3, 0.3, 0.05), CFrame.new(-11.6, 5.2, D / 2 - T - 1.53), Color3.fromRGB(255, 80, 60), Enum.Material.Neon)
 	block("CupStack", Vector3.new(0.5, 1, 0.5), CFrame.new(-10.6, 4.3, D / 2 - T - 0.9), Color3.fromRGB(235, 235, 230))
-	buildWallShelf(block, rng, CFrame.new(-8, 5.2, D / 2 - T - 0.8), 10, 3.6)
-	local prices = block("PriceBoard", Vector3.new(8, 2, 0.15), CFrame.new(-8, 9.5, D / 2 - T - 0.1), Color3.fromRGB(25, 25, 25))
+	local priceLines = {}
+	for _, snack in Config.SNACKS do
+		table.insert(priceLines, snack.title .. "  " .. snack.price)
+	end
+	local prices = block("PriceBoard", Vector3.new(9, 3.2, 0.15), CFrame.new(-8, 7.6, D / 2 - T - 0.1), Color3.fromRGB(25, 25, 25))
 	Parts.text(Parts.surfaceGui(prices, Enum.NormalId.Front, true), {
-		Text = "Kaffee 1,50 €   Hotdog 2,50 €\nCola 1,80 €   Chips 1,20 €   Eis 1,00 €",
+		Text = table.concat(priceLines, "\n"),
 		Font = Enum.Font.SpecialElite,
 		TextColor3 = Color3.fromRGB(240, 230, 200),
-		Size = UDim2.fromScale(0.92, 0.8),
-		Position = UDim2.fromScale(0.04, 0.1),
+		Size = UDim2.fromScale(0.9, 0.88),
+		Position = UDim2.fromScale(0.05, 0.06),
 	})
 
-	-- Regale links an der Wand und zwei freistehende Regale in der Mitte
-	buildWallShelf(block, rng, CFrame.new(-W / 2 + T + 0.8, 0.4, -5) * CFrame.Angles(0, math.rad(-90), 0), 6, 6.5)
-	buildGondola(block, rng, CFrame.new(1.5, 0.4, -1) * CFrame.Angles(0, math.rad(90), 0), 9)
-	buildGondola(block, rng, CFrame.new(6.5, 0.4, -1) * CFrame.Angles(0, math.rad(90), 0), 9)
-
-	-- Drei Getränkekühlschränke an der rechten Wand
-	for _, z in { -6.6, -1.8, 3 } do
-		buildFridge(shop, base * CFrame.new(W / 2 - T - 1.3, 0.4, z) * CFrame.Angles(0, math.rad(90), 0), rng)
-	end
-
-	-- Snackautomat an der Rückwand
-	buildSnackMachine(shop, base * CFrame.new(9, 0.4, D / 2 - T - 1.6), rng, Color3.fromRGB(35, 70, 140))
-
-	-- Eistruhe vor der Theke
-	block("Freezer", Vector3.new(4, 3, 2.2), CFrame.new(-7, 1.9, -3), Color3.fromRGB(230, 232, 235), Enum.Material.Metal)
-	for i = 0, 5 do
-		block("IceCream", Vector3.new(0.5, 0.3, 0.8), CFrame.new(-8.6 + i * 0.65, 3.42, -3), randomProductColor(rng), Enum.Material.SmoothPlastic, { CanCollide = false })
-	end
-	block("FreezerGlass", Vector3.new(3.6, 0.1, 1.8), CFrame.new(-7, 3.6, -3), COLORS.glass, Enum.Material.Glass, { Transparency = 0.6 })
-	local freezerLabel = block("FreezerLabel", Vector3.new(2, 0.8, 0.05), CFrame.new(-7, 2.2, -4.13), Color3.fromRGB(60, 140, 220), Enum.Material.SmoothPlastic, { CanCollide = false })
-	Parts.text(Parts.surfaceGui(freezerLabel, Enum.NormalId.Front), { Text = "EIS" })
+	-- Drei lockere Snack-Regale
+	buildSnackShelf(block, CFrame.new(-W / 2 + T + 0.8, 0.4, -4) * CFrame.Angles(0, math.rad(-90), 0), 1)
+	buildSnackShelf(block, CFrame.new(W / 2 - T - 0.8, 0.4, -5) * CFrame.Angles(0, math.rad(90), 0), 4)
+	buildSnackShelf(block, CFrame.new(W / 2 - T - 0.8, 0.4, 4) * CFrame.Angles(0, math.rad(90), 0), 2)
 
 	-- Stehtisch mit zwei Hockern am Fenster
-	Parts.column({ Name = "TablePole", Color = COLORS.darkMetal, Material = Enum.Material.Metal, Parent = shop }, 3.6, 0.3, base * CFrame.new(-9, 0.4, -7.5))
-	Parts.column({ Name = "TableTop", Color = COLORS.wood, Material = Enum.Material.Wood, Parent = shop }, 0.2, 2.6, base * CFrame.new(-9, 4, -7.5))
-	for _, x in { -11, -7 } do
+	Parts.column({ Name = "TablePole", Color = COLORS.darkMetal, Material = Enum.Material.Metal, Parent = shop }, 3.6, 0.3, base * CFrame.new(-8, 0.4, -7.5))
+	Parts.column({ Name = "TableTop", Color = COLORS.wood, Material = Enum.Material.Wood, Parent = shop }, 0.2, 2.6, base * CFrame.new(-8, 4, -7.5))
+	for _, x in { -10, -6 } do
 		Parts.column({ Name = "StoolLeg", Color = COLORS.darkMetal, Material = Enum.Material.Metal, Parent = shop }, 2.4, 0.25, base * CFrame.new(x, 0.4, -7.5))
 		Parts.new("Seat", {
 			Name = "Stool",
@@ -374,14 +309,14 @@ local function buildShop(parent)
 		})
 	end
 
-	-- Zeitschriftenständer neben der Tür
-	block("MagazineRack", Vector3.new(3, 3.4, 1), CFrame.new(-0.5, 2.1, frontZ + 1.2), COLORS.trim, Enum.Material.Wood)
-	for i = 0, 2 do
-		block("Magazine", Vector3.new(0.8, 1.1, 0.1), CFrame.new(-1.4 + i * 0.9, 3.6, frontZ + 0.75) * CFrame.Angles(math.rad(-15), 0, 0), randomProductColor(rng))
-	end
-
 	shop.Parent = parent
-	createSeller(shop, base * CFrame.new(-8, 0.4, 6.2))
+	createNpc(shop, base * CFrame.new(-8, 0.4, 6.2), {
+		name = "Verkäufer",
+		action = "Snacks kaufen",
+		tag = "ShopPrompt",
+		skin = Color3.fromRGB(205, 160, 125),
+		shirt = Color3.fromRGB(45, 70, 50),
+	})
 end
 
 local function buildBooth(parent)
@@ -408,7 +343,6 @@ local function buildBooth(parent)
 
 	-- Innen: Schreibtisch, Stuhl und eine schwache Lampe
 	block("Desk", Vector3.new(5, 0.3, 2), CFrame.new(1, 3.3, frontZ + 1.5), COLORS.wood, Enum.Material.Wood)
-	block("Chair", Vector3.new(1.6, 2.4, 1.6), CFrame.new(1, 1.6, frontZ + 3.4), Color3.fromRGB(40, 40, 45), Enum.Material.Fabric)
 	local lamp = block("DeskLamp", Vector3.new(0.6, 0.6, 0.6), CFrame.new(-1, 3.75, frontZ + 1.5), COLORS.neonWarm, Enum.Material.Neon)
 	Parts.light("PointLight", lamp, { Range = 10, Brightness = 0.9, Color = COLORS.neonWarm })
 
@@ -418,6 +352,14 @@ local function buildBooth(parent)
 	Parts.light("SpotLight", outsideLamp, { Face = Enum.NormalId.Bottom, Range = 14, Angle = 100, Brightness = 1.2, Color = COLORS.neonWarm })
 
 	booth.Parent = parent
+	createNpc(booth, Layout.BOOTH * CFrame.new(1, 0.4, frontZ + 3.2), {
+		name = "Kassierer",
+		action = "Kasse öffnen",
+		tag = "CashierPrompt",
+		distance = 12,
+		skin = Color3.fromRGB(150, 105, 80),
+		shirt = Color3.fromRGB(120, 30, 35),
+	})
 end
 
 -- Große Bestenliste mit Holzrahmen, Dach und zwei Strahlern

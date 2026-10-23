@@ -1,6 +1,6 @@
--- Ego-Perspektive: Kamera fest in der Ich-Sicht, eigener Körper beim Runterschauen
--- sichtbar, leichtes Kopfwippen beim Laufen, ruhiges Atmen im Stand und ein kleiner
--- Punkt in der Bildmitte.
+-- Ego-Perspektive: Kamera fest in der Ich-Sicht (eigener Körper unsichtbar),
+-- leichtes Kopfwippen beim Laufen, ruhiges Atmen im Stand und ein kleiner Punkt
+-- in der Bildmitte.
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
@@ -11,7 +11,6 @@ player.CameraMinZoomDistance = 0.5
 player.CameraMaxZoomDistance = 0.5
 
 local FIELD_OF_VIEW = 78
-local FORWARD_OFFSET = -0.4 -- Kamera etwas nach vorne, damit man beim Runterschauen nicht in den Hals sieht
 local BOB_SPEED = 9
 local BOB_SIDE = 0.07
 local BOB_UP = 0.11
@@ -36,31 +35,11 @@ round.CornerRadius = UDim.new(1, 0)
 round.Parent = dot
 
 local humanoid
-local bodyParts = {}
 local bobTime, bobBlend = 0, 0
 
--- Kopf und Accessoires (Haare, Hüte) bleiben unsichtbar, der Rest des Körpers wird gezeigt
-local function shouldHide(part)
-	return part.Name == "Head" or part:FindFirstAncestorOfClass("Accessory") ~= nil
-end
-
-local function trackPart(part)
-	if part:IsA("BasePart") then
-		bodyParts[part] = shouldHide(part)
-	end
-end
-
 local function onCharacterAdded(character)
-	bodyParts = {}
 	bobTime, bobBlend = 0, 0
 	humanoid = character:WaitForChild("Humanoid")
-	for _, descendant in character:GetDescendants() do
-		trackPart(descendant)
-	end
-	character.DescendantAdded:Connect(trackPart)
-	character.DescendantRemoving:Connect(function(part)
-		bodyParts[part] = nil
-	end)
 end
 
 player.CharacterAdded:Connect(onCharacterAdded)
@@ -72,10 +51,6 @@ end
 RunService:BindToRenderStep("FirstPersonPolish", Enum.RenderPriority.Camera.Value + 1, function(deltaTime)
 	local camera = workspace.CurrentCamera
 	camera.FieldOfView = FIELD_OF_VIEW
-
-	for part, hidden in bodyParts do
-		part.LocalTransparencyModifier = hidden and 1 or 0
-	end
 
 	if not humanoid or humanoid.Health <= 0 then
 		return
@@ -92,5 +67,5 @@ RunService:BindToRenderStep("FirstPersonPolish", Enum.RenderPriority.Camera.Valu
 
 	local bob = Vector3.new(math.sin(bobTime) * BOB_SIDE, math.abs(math.cos(bobTime)) * BOB_UP, 0) * bobBlend
 	local breath = Vector3.new(0, math.sin(os.clock() * 1.6) * BREATH, 0)
-	humanoid.CameraOffset = Vector3.new(0, 0, FORWARD_OFFSET) + bob + breath
+	humanoid.CameraOffset = bob + breath
 end)

@@ -10,7 +10,7 @@ local Parts = require(script.Parent.Parts)
 
 local Camp = {}
 
-local Y = Layout.GROUND_Y
+local Y = Layout.NATURE_Y -- der Grillplatz liegt auf Waldboden
 local FIRE = Layout.CAMPFIRE
 local COLORS = {
 	wood = Color3.fromRGB(110, 78, 50),

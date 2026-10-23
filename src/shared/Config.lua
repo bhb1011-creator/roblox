@@ -29,4 +29,45 @@ Config.CARS = {
 	{ mode = "Duo", position = Vector3.new(58, 0.2, -56), color = Color3.fromRGB(85, 85, 90) },
 }
 
+-- Robux-Produkte an der Kasse. Die IDs bekommst du, wenn du im Creator Hub unter
+-- Monetarisierung → Entwicklerprodukte ein Produkt anlegst. Solange die ID 0 ist,
+-- zeigt die Kasse "Noch nicht eingerichtet". Der Preis wird im Creator Hub festgelegt,
+-- `robux` hier ist nur die Anzeige.
+Config.PRODUCTS = {
+	{
+		id = 0,
+		title = "Wiederbelebung",
+		description = "Nach dem Tod sofort an Ort und Stelle weiterspielen.",
+		field = "Revives",
+		amount = 1,
+		robux = 25,
+	},
+	{
+		id = 0,
+		title = "3× Wiederbelebung",
+		description = "Drei Wiederbelebungen zum Sparpreis.",
+		field = "Revives",
+		amount = 3,
+		robux = 60,
+	},
+	{
+		id = 0,
+		title = "Rebirth",
+		description = "Starte neu mit einem dauerhaften Bonus.",
+		field = "Rebirths",
+		amount = 1,
+		robux = 99,
+	},
+}
+
+-- Snacks im Kiosk, die im Spiel helfen. Gekauft wird später mit Münzen aus dem Spiel.
+Config.SNACKS = {
+	{ title = "Energieriegel", description = "Kurz schneller laufen.", price = 25, color = Color3.fromRGB(200, 60, 40) },
+	{ title = "Kaffee", description = "Länger sprinten, ohne müde zu werden.", price = 30, color = Color3.fromRGB(110, 70, 40) },
+	{ title = "Schokolade", description = "Gibt ein bisschen Leben zurück.", price = 20, color = Color3.fromRGB(90, 50, 30) },
+	{ title = "Energy-Drink", description = "Hört Geräusche früher.", price = 35, color = Color3.fromRGB(60, 160, 60) },
+	{ title = "Batterien", description = "Die Taschenlampe hält länger.", price = 40, color = Color3.fromRGB(220, 180, 40) },
+	{ title = "Chips", description = "Einfach lecker. Hilft gegen Hunger.", price = 15, color = Color3.fromRGB(230, 200, 60) },
+}
+
 return Config

@@ -1,4 +1,4 @@
--- Der Parkplatz: dicke Asphaltplatte mit Flecken, Rissen und Pfützen, Parkbuchten,
+-- Der Parkplatz: Asphalt im Norden, Gehweg im Süden, Parkbuchten,
 -- Bordsteine, Holzzaun, weiße Flutlichtmasten, Laternen, Schilder, Mülleimer, Bänke
 -- und unsichtbare Grenzen.
 local CollectionService = game:GetService("CollectionService")
@@ -24,72 +24,59 @@ local COLORS = {
 	flood = Color3.fromRGB(255, 252, 242),
 }
 
-local function buildSurface(lot, rng)
-	local depth = LOT.maxZ - LOT.minZ
-	local midZ = (LOT.maxZ + LOT.minZ) / 2
-	-- Dicke Platte bis 4 Studs unter den Boden: kein Gelände kann hindurchragen
-	Parts.new("Part", {
-		Name = "Asphalt",
-		Size = Vector3.new(LOT.halfWidth * 2, 4.2, depth),
-		CFrame = CFrame.new(0, Y - 2.1, midZ),
-		Color = COLORS.asphalt,
-		Material = Enum.Material.Asphalt,
-		Parent = lot,
+-- Dicke Platte bis 4 Studs unter den Boden: so kann kein Gelände hindurchragen
+local function slab(parent, name, zone, color, material)
+	return Parts.new("Part", {
+		Name = name,
+		Size = Vector3.new(LOT.halfWidth * 2, 4.2, zone.maxZ - zone.minZ),
+		CFrame = CFrame.new(0, Y - 2.1, (zone.minZ + zone.maxZ) / 2),
+		Color = color,
+		Material = material,
+		Parent = parent,
 	})
+end
 
-	local function randomSpot(margin)
-		return rng:NextNumber(-LOT.halfWidth + margin, LOT.halfWidth - margin), rng:NextNumber(LOT.minZ + margin, LOT.maxZ - margin)
-	end
+local function buildSurface(lot, rng)
+	local asphalt = Layout.ASPHALT
+	slab(lot, "Asphalt", asphalt, COLORS.asphalt, Enum.Material.Asphalt)
+	slab(lot, "Sidewalk", Layout.PLAZA, Color3.fromRGB(150, 145, 138), Enum.Material.Pavement)
 
-	for _ = 1, 24 do
-		local x, z = randomSpot(8)
+	-- Leicht ausgebesserte Stellen im Asphalt
+	for _ = 1, 10 do
 		Parts.new("Part", {
 			Name = "Patch",
-			Size = Vector3.new(rng:NextNumber(6, 18), 0.02, rng:NextNumber(4, 14)),
-			CFrame = CFrame.new(x, Y + 0.005, z) * CFrame.Angles(0, rng:NextNumber(-0.2, 0.2), 0),
-			Color = COLORS.asphalt:Lerp(Color3.fromRGB(72, 70, 68), rng:NextNumber(0.1, 0.4)),
+			Size = Vector3.new(rng:NextNumber(8, 18), 0.02, rng:NextNumber(5, 10)),
+			CFrame = CFrame.new(
+				rng:NextNumber(-LOT.halfWidth + 10, LOT.halfWidth - 10),
+				Y + 0.005,
+				rng:NextNumber(asphalt.minZ + 8, asphalt.maxZ - 6)
+			) * CFrame.Angles(0, rng:NextNumber(-0.15, 0.15), 0),
+			Color = COLORS.asphalt:Lerp(Color3.fromRGB(70, 68, 66), rng:NextNumber(0.1, 0.25)),
 			Material = Enum.Material.Asphalt,
 			CanCollide = false,
 			Parent = lot,
 		})
 	end
-
-	for _ = 1, 70 do
-		local x, z = randomSpot(3)
-		Parts.new("Part", {
-			Name = "Crack",
-			Size = Vector3.new(0.15, 0.02, rng:NextNumber(2, 7)),
-			CFrame = CFrame.new(x, Y + 0.012, z) * CFrame.Angles(0, rng:NextNumber(0, math.pi), 0),
-			Color = Color3.fromRGB(22, 22, 24),
-			CanCollide = false,
-			Parent = lot,
-		})
-	end
-
-	-- Pfützen spiegeln das Licht
-	for _ = 1, 14 do
-		local x, z = randomSpot(6)
-		Parts.column({
-			Name = "Puddle",
-			Color = Color3.fromRGB(34, 38, 46),
-			Reflectance = 0.35,
-			CanCollide = false,
-			Parent = lot,
-		}, 0.02, rng:NextNumber(3, 9), CFrame.new(x, Y + 0.008, z))
-	end
 end
 
 local function buildCurbs(lot)
-	local depth = LOT.maxZ - LOT.minZ
-	local midZ = (LOT.maxZ + LOT.minZ) / 2
+	local width = LOT.halfWidth * 2 + 1
 	local side = LOT.halfWidth - LOT.exitHalfWidth
 	local curbs = {
-		{ Vector3.new(LOT.halfWidth * 2 + 1, 0.6, 1), Vector3.new(0, Y + 0.3, LOT.maxZ) },
-		{ Vector3.new(1, 0.6, depth), Vector3.new(-LOT.halfWidth, Y + 0.3, midZ) },
-		{ Vector3.new(1, 0.6, depth), Vector3.new(LOT.halfWidth, Y + 0.3, midZ) },
-		{ Vector3.new(side, 0.6, 1), Vector3.new(-(LOT.exitHalfWidth + side / 2), Y + 0.3, LOT.minZ) },
-		{ Vector3.new(side, 0.6, 1), Vector3.new(LOT.exitHalfWidth + side / 2, Y + 0.3, LOT.minZ) },
+		-- Asphalt: Nordkante mit Ausfahrt, Südkante zum Waldboden
+		{ Vector3.new(side, 0.6, 1), Vector3.new(-(LOT.exitHalfWidth + side / 2), Y + 0.3, Layout.ASPHALT.minZ) },
+		{ Vector3.new(side, 0.6, 1), Vector3.new(LOT.exitHalfWidth + side / 2, Y + 0.3, Layout.ASPHALT.minZ) },
+		{ Vector3.new(width, 0.6, 1), Vector3.new(0, Y + 0.3, Layout.ASPHALT.maxZ) },
+		-- Gehweg vor den Gebäuden
+		{ Vector3.new(width, 0.6, 1), Vector3.new(0, Y + 0.3, Layout.PLAZA.minZ) },
+		{ Vector3.new(width, 0.6, 1), Vector3.new(0, Y + 0.3, Layout.PLAZA.maxZ) },
 	}
+	for _, zone in { Layout.ASPHALT, Layout.PLAZA } do
+		local depth = zone.maxZ - zone.minZ
+		for _, x in { -LOT.halfWidth, LOT.halfWidth } do
+			table.insert(curbs, { Vector3.new(1, 0.6, depth), Vector3.new(x, Y + 0.3, (zone.minZ + zone.maxZ) / 2) })
+		end
+	end
 	for _, curb in curbs do
 		Parts.new("Part", {
 			Name = "Curb",
@@ -137,12 +124,14 @@ local function buildFence(lot, rng)
 		end
 	end
 
+	-- Pfosten stehen auf Höhe 0, damit sie auf Waldboden und Platten gleich gut sitzen
 	local x, minZ, maxZ = LOT.halfWidth + 0.5, LOT.minZ - 0.5, LOT.maxZ + 0.5
-	line(Vector3.new(-x, Y, maxZ), Vector3.new(x, Y, maxZ))
-	line(Vector3.new(-x, Y, minZ), Vector3.new(-x, Y, maxZ))
-	line(Vector3.new(x, Y, minZ), Vector3.new(x, Y, maxZ))
-	line(Vector3.new(-x, Y, minZ), Vector3.new(-LOT.exitHalfWidth - 1, Y, minZ))
-	line(Vector3.new(LOT.exitHalfWidth + 1, Y, minZ), Vector3.new(x, Y, minZ))
+	local y = Layout.NATURE_Y
+	line(Vector3.new(-x, y, maxZ), Vector3.new(x, y, maxZ))
+	line(Vector3.new(-x, y, minZ), Vector3.new(-x, y, maxZ))
+	line(Vector3.new(x, y, minZ), Vector3.new(x, y, maxZ))
+	line(Vector3.new(-x, y, minZ), Vector3.new(-LOT.exitHalfWidth - 1, y, minZ))
+	line(Vector3.new(LOT.exitHalfWidth + 1, y, minZ), Vector3.new(x, y, minZ))
 end
 
 local function buildBays(lot)
@@ -167,14 +156,6 @@ local function buildBays(lot)
 			Material = Enum.Material.Concrete,
 			Parent = lot,
 		})
-
-		Parts.column({
-			Name = "OilStain",
-			Color = Color3.fromRGB(22, 22, 24),
-			Transparency = 0.2,
-			CanCollide = false,
-			Parent = lot,
-		}, 0.02, 3, CFrame.new(x + 0.6, Y + 0.009, z - 1))
 
 		local marking = Parts.new("Part", {
 			Name = "BayMarking",
@@ -201,8 +182,8 @@ local function buildFloodlight(parent, position, target)
 
 	Parts.new("Part", {
 		Name = "Foot",
-		Size = Vector3.new(2.2, 1.2, 2.2),
-		CFrame = base * CFrame.new(0, 0.6, 0),
+		Size = Vector3.new(2.2, 2, 2.2),
+		CFrame = base * CFrame.new(0, 0.2, 0),
 		Color = Color3.fromRGB(125, 122, 116),
 		Material = Enum.Material.Concrete,
 		Parent = mast,
@@ -267,8 +248,8 @@ local function buildLamp(parent, position)
 
 	Parts.new("Part", {
 		Name = "Foot",
-		Size = Vector3.new(1.6, 1.2, 1.6),
-		CFrame = base * CFrame.new(0, 0.6, 0),
+		Size = Vector3.new(1.6, 2, 1.6),
+		CFrame = base * CFrame.new(0, 0.2, 0),
 		Color = Color3.fromRGB(120, 118, 112),
 		Material = Enum.Material.Concrete,
 		Parent = lamp,
@@ -423,16 +404,17 @@ function ParkingLot.build(parent)
 	local furniture = Instance.new("Folder")
 	furniture.Name = "Furniture"
 	furniture.Parent = lot
+	local nature = Layout.NATURE_Y
 	for _, position in {
 		Vector3.new(-22, Y, 46),
 		Vector3.new(22, Y, 46),
-		Vector3.new(-77, Y, 30),
-		Vector3.new(77, Y, 12),
+		Vector3.new(-77, nature, 30),
+		Vector3.new(77, nature, 12),
 	} do
 		buildTrashBin(furniture, position)
 	end
-	buildBench(furniture, CFrame.lookAt(Vector3.new(-77, Y, 20), Vector3.new(0, Y, 20)))
-	buildBench(furniture, CFrame.lookAt(Vector3.new(77, Y, 0), Vector3.new(0, Y, 0)))
+	buildBench(furniture, CFrame.lookAt(Vector3.new(-77, nature, 20), Vector3.new(0, nature, 20)))
+	buildBench(furniture, CFrame.lookAt(Vector3.new(77, nature, 0), Vector3.new(0, nature, 0)))
 	buildBench(furniture, CFrame.lookAt(Vector3.new(77, Y, 50), Vector3.new(0, Y, 50)))
 end
 
