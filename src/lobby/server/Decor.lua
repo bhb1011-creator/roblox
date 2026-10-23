@@ -1,6 +1,6 @@
--- Pflanzen und kleine Details innerhalb des Zauns: Blumenkästen, Topfpflanzen,
--- junge Laubbäume, Farne, Blumenbeete, Trittsteinwege, ein Grillplatz-Schild und
--- eine Campingecke am Wohnwagen.
+-- Pflanzen und kleine Details innerhalb des Zauns: Topfpflanzen, ein Blumenkasten
+-- an der Bestenliste, Farne und Büsche am Zaun, Trittsteinwege, ein Grillplatz-Schild
+-- und eine Campingecke am Wohnwagen.
 local Layout = require(script.Parent.Layout)
 local Parts = require(script.Parent.Parts)
 
@@ -121,62 +121,6 @@ local function buildPottedPlant(parent, position, rng)
 	pot.Parent = parent
 end
 
--- Junger Laubbaum (Birke oder Ahorn) mit Rindenmulch am Fuß
-local function buildYoungTree(parent, position, rng)
-	local tree = Instance.new("Model")
-	tree.Name = "Laubbaum"
-	local base = CFrame.new(position) * CFrame.Angles(0, rng:NextNumber(0, math.pi * 2), 0)
-	local birch = rng:NextNumber() < 0.5
-	local height = rng:NextNumber(9, 12)
-
-	Parts.column({ Name = "Mulch", Color = Color3.fromRGB(70, 48, 32), Material = Enum.Material.Ground, CanCollide = false, Parent = tree }, 0.05, 4.5, base)
-	Parts.column({
-		Name = "Trunk",
-		Color = birch and Color3.fromRGB(225, 222, 212) or Color3.fromRGB(90, 66, 46),
-		Material = Enum.Material.Wood,
-		Parent = tree,
-	}, height, 0.8, base)
-	if birch then
-		-- Dunkle Flecken auf der Birkenrinde
-		for i = 1, 5 do
-			Parts.new("Part", {
-				Name = "BarkMark",
-				Size = Vector3.new(0.5, 0.15, 0.1),
-				CFrame = base * CFrame.Angles(0, i * 1.7, 0) * CFrame.new(0, i * height / 7, -0.38),
-				Color = Color3.fromRGB(40, 38, 36),
-				CanCollide = false,
-				Parent = tree,
-			})
-		end
-	end
-	for _ = 1, 2 do
-		local start = (base * CFrame.new(0, height * rng:NextNumber(0.55, 0.75), 0)).Position
-		local angle = rng:NextNumber(0, math.pi * 2)
-		Parts.beam(
-			{ Name = "Branch", Color = birch and Color3.fromRGB(200, 196, 186) or Color3.fromRGB(90, 66, 46), Material = Enum.Material.Wood, CanCollide = false, Parent = tree },
-			start,
-			start + Vector3.new(math.cos(angle) * 2.2, 1.6, math.sin(angle) * 2.2),
-			0.35
-		)
-	end
-
-	local leafColor = birch and Color3.fromRGB(110, 140, 60) or Color3.fromRGB(80, 115, 50)
-	for _ = 1, 6 do
-		local size = rng:NextNumber(3.5, 5.5)
-		Parts.new("Part", {
-			Name = "Crown",
-			Shape = Enum.PartType.Ball,
-			Size = Vector3.new(size, size, size),
-			CFrame = base * CFrame.new(rng:NextNumber(-2, 2), height + rng:NextNumber(-1.5, 1.5), rng:NextNumber(-2, 2)),
-			Color = leafColor:Lerp(Color3.fromRGB(40, 60, 30), rng:NextNumber(0, 0.35)),
-			Material = Enum.Material.LeafyGrass,
-			CanCollide = false,
-			Parent = tree,
-		})
-	end
-	tree.Parent = parent
-end
-
 -- Farn: Wedel, die schräg nach außen hängen
 local function buildFern(parent, position, rng)
 	local fern = Instance.new("Model")
@@ -203,11 +147,24 @@ local function buildFern(parent, position, rng)
 	fern.Parent = parent
 end
 
-local function buildFlowerPatch(parent, center, rng, count)
-	for _ = 1, count do
-		local angle, distance = rng:NextNumber(0, math.pi * 2), rng:NextNumber(0, 2.2)
-		buildFlower(parent, center + Vector3.new(math.cos(angle) * distance, 0, math.sin(angle) * distance), rng, rng:NextNumber(0.4, 0.8))
+-- Kleiner, dunkler Busch
+local function buildBush(parent, position, rng)
+	local bush = Instance.new("Model")
+	bush.Name = "Busch"
+	for _ = 1, rng:NextInteger(2, 3) do
+		local size = rng:NextNumber(1.8, 3)
+		Parts.new("Part", {
+			Name = "Leaves",
+			Shape = Enum.PartType.Ball,
+			Size = Vector3.new(size, size, size),
+			CFrame = CFrame.new(position + Vector3.new(rng:NextNumber(-0.8, 0.8), size * 0.3, rng:NextNumber(-0.8, 0.8))),
+			Color = Color3.fromRGB(45, 65, 38):Lerp(Color3.new(0, 0, 0), rng:NextNumber(0, 0.3)),
+			Material = Enum.Material.LeafyGrass,
+			CanCollide = false,
+			Parent = bush,
+		})
 	end
+	bush.Parent = parent
 end
 
 -- Trittsteine entlang einer Linie aus Punkten
@@ -279,37 +236,18 @@ function Decor.build(parent)
 	decor.Parent = parent
 	local rng = Random.new(31)
 
-	-- Kiosk: Blumenkästen unter den Fenstern und Topfpflanzen neben der Tür
-	buildPlanter(decor, CFrame.new(-58, Y, 44.4), 9, rng)
-	buildPlanter(decor, CFrame.new(-37.5, Y, 44.4), 3.6, rng)
-	buildPottedPlant(decor, point(-49.4, 44.6), rng)
-	buildPottedPlant(decor, point(-40.6, 44.6), rng)
-
-	-- Infotafel, Kassenhäuschen und Bestenliste
-	buildPlanter(decor, CFrame.new(-14, Y, 62), 10, rng)
-	buildPottedPlant(decor, point(33, 55.5), rng)
-	buildPottedPlant(decor, point(47.5, 59.5), rng)
-	buildPlanter(decor, CFrame.new(63, Y, 58.2), 14, rng)
-
-	-- Campingecke und Pflanze am Wohnwagen
-	buildCampingCorner(decor, CFrame.lookAt(point(6.5, 53.5), point(6.5, 40)), point(9, 53.2))
-	buildPottedPlant(decor, point(16.5, 55.4), rng)
-
-	-- Junge Laubbäume auf dem Waldboden
-	for _, position in {
-		point(-56, 14),
-		point(-46, 34),
-		point(-62, -4),
-		point(56, 24),
-		point(46, 4),
-		point(63, 40),
-		point(-27, 55),
-	} do
-		buildYoungTree(decor, position, rng)
-		buildFern(decor, position + Vector3.new(rng:NextNumber(2.5, 3.5), 0, rng:NextNumber(-1, 1)), rng)
+	-- Topfpflanzen an Kiosk, Kassenhäuschen und Wohnwagen
+	for _, position in { point(-49.4, 44.6), point(-40.6, 44.6), point(33, 55.5), point(47.5, 59.5), point(16.5, 55.4) } do
+		buildPottedPlant(decor, position, rng)
 	end
 
-	-- Farne und Blumen entlang des Zauns (Stellen mit Bänken, Tafeln und Masten bleiben frei)
+	-- Blumenkasten vor der Bestenliste
+	buildPlanter(decor, CFrame.new(63, Y, 58.2), 14, rng)
+
+	-- Campingecke am Wohnwagen
+	buildCampingCorner(decor, CFrame.lookAt(point(6.5, 53.5), point(6.5, 40)), point(9, 53.2))
+
+	-- Farne und Büsche entlang des Zauns (Stellen mit Bänken, Tafeln und Masten bleiben frei)
 	local blocked = { -20, 0, 4, 12, 20, 30, 32, 50 }
 	for _, side in { -1, 1 } do
 		for z = -12, 66, 7 do
@@ -324,20 +262,15 @@ function Decor.build(parent)
 				if rng:NextNumber() < 0.6 then
 					buildFern(decor, position, rng)
 				else
-					buildFlowerPatch(decor, position, rng, 5)
+					buildBush(decor, position, rng)
 				end
 			end
 		end
 	end
 
-	-- Ein paar Blumenbeete rund um den Grillplatz
-	for _, position in { point(-40, 16), point(40, 12), point(-18, -10), point(18, -12), point(0, 38) } do
-		buildFlowerPatch(decor, position, rng, 9)
-	end
-
-	-- Trittsteinwege vom Grillplatz zum Kiosk und zum Wohnwagen/zur Kasse
-	buildSteppingStones(decor, { point(-12, 21), point(-16, 30), point(-30, 37), point(-45, 44.5) }, rng)
-	buildSteppingStones(decor, { point(14, 20), point(25, 33), point(34, 46), point(39, 55) }, rng)
+	-- Trittsteinwege vom Grillplatz zum Kiosk und zur Kasse, außen um Bänke und Tische herum
+	buildSteppingStones(decor, { point(-16, 14), point(-32, 16), point(-36, 32), point(-45, 44.5) }, rng)
+	buildSteppingStones(decor, { point(16, 14), point(32, 16), point(38, 32), point(39, 55) }, rng)
 
 	buildWoodSign(decor, CFrame.lookAt(point(-9, -12), point(-9, -30)), "GRILLPLATZ")
 end

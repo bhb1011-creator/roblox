@@ -207,10 +207,11 @@ local function buildBeerTable(parent, cframe)
 	end
 
 	block("LanternBase", Vector3.new(0.8, 0.3, 0.8), CFrame.new(2, 3.05, 0), Color3.fromRGB(40, 40, 40), Enum.Material.Metal)
-	local glass = block("LanternGlass", Vector3.new(0.6, 0.9, 0.6), CFrame.new(2, 3.65, 0), COLORS.warmLight, Enum.Material.Neon)
+	-- Glas leuchtet nicht selbst, das Licht kommt von der Lampe darin
+	local glass = block("LanternGlass", Vector3.new(0.6, 0.9, 0.6), CFrame.new(2, 3.65, 0), Color3.fromRGB(200, 160, 110), Enum.Material.Glass, { Transparency = 0.3 })
 	Parts.light("PointLight", glass, { Range = 14, Brightness = 1.2, Color = COLORS.warmLight, Shadows = true })
 	CollectionService:AddTag(glass, "Campfire")
-	block("Plate", Vector3.new(1.2, 0.05, 1.2), CFrame.new(-1.5, 2.93, 0.5), Color3.fromRGB(235, 235, 230))
+	block("Plate", Vector3.new(1.2, 0.05, 1.2), CFrame.new(-1.5, 2.93, 0.5), Color3.fromRGB(150, 145, 138))
 	block("Mug", Vector3.new(0.4, 0.5, 0.4), CFrame.new(-3, 3.15, -0.5), Color3.fromRGB(150, 40, 40))
 	block("Ketchup", Vector3.new(0.3, 0.7, 0.3), CFrame.new(0.4, 3.25, -0.3), Color3.fromRGB(190, 30, 30))
 	set.Parent = parent

@@ -12,9 +12,9 @@ Ein Roblox-Horrorspiel nach wahren Begebenheiten – allein oder zu zweit.
 - **Kasse** mit Kassierer: Wiederbelebungen und Rebirths für Robux (werden gespeichert)
 - **Grillplatz** in der Mitte: Feuerstelle mit Schwenkgrill, Bänke und Biertische zum Hinsetzen, gemauerter Grill, Zelte, Lichterketten außen herum
 - Große Bestenliste, Pinnwand mit Vermisst-Zetteln am Rand
-- Holzzaun, verlassener Wohnwagen mit Campingecke, Blumenkästen, Topfpflanzen, junge Laubbäume, Farne, Blumenbeete und Trittsteinwege
+- Holzzaun, verlassener Wohnwagen mit Campingecke, Topfpflanzen, Blumenkasten an der Bestenliste, Farne und Büsche am Zaun, Trittsteinwege
 - **4 Autos:** 2× „Allein“ (1 Platz) und 2× „Zu zweit“ (2 Plätze)
-  - Einsteigen mit der Taste **E** (oder Antippen am Handy)
+  - Einsteigen mit der Taste **E** (oder Antippen am Handy); das Schild über dem Auto erscheint, wenn man nah dran ist
   - Ist das Auto voll, läuft ein Countdown von 10 Sekunden
   - Aussteigen mit dem Knopf **„Aussteigen“** oder der Leertaste – dann wird der Countdown abgebrochen
   - Danach fährt das Auto über die Straße in den Wald und der Bildschirm wird schwarz

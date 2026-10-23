@@ -22,7 +22,7 @@ local function buildStatusSign(body, title)
 	billboard.Name = "StatusSign"
 	billboard.Size = UDim2.fromOffset(220, 96)
 	billboard.StudsOffsetWorldSpace = Vector3.new(0, 9.5, 0)
-	billboard.MaxDistance = 120
+	billboard.MaxDistance = 25 -- nur sichtbar, wenn man nah am Auto steht
 	billboard.LightInfluence = 0
 	billboard.Parent = body
 
