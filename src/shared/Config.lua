@@ -73,18 +73,18 @@ Config.SNACKS = {
 -- Sounds für Level 1. Die Dateien liegen im Ordner assets/audio. Nach dem Hochladen bei
 -- Roblox die ID hier eintragen, z. B. "rbxassetid://1234567890". Leer = Sound fällt weg.
 Config.SOUNDS = {
-	music = "", -- music_calm.ogg (oder ein ruhiges Lied aus der Toolbox)
-	engine = "", -- engine_loop.ogg
-	road = "", -- road_loop.ogg
-	wind = "", -- wind_loop.ogg
-	forest = "", -- forest_night_loop.ogg
-	brake = "", -- brake.ogg
-	gravel = "", -- gravel_loop.ogg
-	footstep = "", -- footstep.ogg
-	blinker = "", -- blinker_tick.ogg
-	radioStatic = "", -- radio_static_loop.ogg
+	music = "rbxassetid://129799584506039", -- music_calm.ogg (oder ein ruhiges Lied aus der Toolbox)
+	engine = "rbxassetid://121893718227351", -- engine_loop.ogg
+	road = "rbxassetid://131705442552114", -- road_loop.ogg
+	wind = "rbxassetid://133055757601743", -- wind_loop.ogg
+	forest = "rbxassetid://117319242416734", -- forest_night_loop.ogg
+	brake = "rbxassetid://114887694790169", -- brake.ogg
+	gravel = "rbxassetid://107310869410051", -- gravel_loop.ogg
+	footstep = "rbxassetid://91754085610268", -- footstep.ogg
+	blinker = "rbxassetid://119651566230299", -- blinker_tick.ogg
+	radioStatic = "rbxassetid://111802312351078", -- radio_static_loop.ogg
 	lampBuzz = "rbxassetid://87539521921383", -- lamp_buzz_loop.ogg
-	sting = "", -- sting.ogg
+	sting = "rbxassetid://94291824225136", -- sting.ogg
 }
 
 return Config
