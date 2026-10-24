@@ -27,15 +27,15 @@ local COLORS = {
 	lamp = Color3.fromRGB(255, 190, 120),
 }
 
--- Dämmerung: nicht heller, aber besser erkennbar – wenig Dunst, mehr Kontrast und
+-- Dämmerung, gut erkennbar: wenig Dunst, mehr Kontrast und
 -- kühles Schattenlicht, damit Konturen von Bäumen und Straße sichtbar bleiben.
 local function setupLighting()
-	Lighting.ClockTime = 18.55
+	Lighting.ClockTime = 18.25
 	Lighting.GeographicLatitude = 41
-	Lighting.Brightness = 1.3
-	Lighting.ExposureCompensation = -0.15
-	Lighting.Ambient = Color3.fromRGB(38, 38, 50)
-	Lighting.OutdoorAmbient = Color3.fromRGB(68, 66, 84)
+	Lighting.Brightness = 2
+	Lighting.ExposureCompensation = 0.15
+	Lighting.Ambient = Color3.fromRGB(58, 56, 70)
+	Lighting.OutdoorAmbient = Color3.fromRGB(105, 98, 115)
 	Lighting.EnvironmentDiffuseScale = 0.6
 	Lighting.EnvironmentSpecularScale = 0.6
 	Lighting.ShadowSoftness = 0.2
