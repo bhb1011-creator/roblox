@@ -83,7 +83,7 @@ Config.SOUNDS = {
 	footstep = "", -- footstep.ogg
 	blinker = "", -- blinker_tick.ogg
 	radioStatic = "", -- radio_static_loop.ogg
-	lampBuzz = "", -- lamp_buzz_loop.ogg
+	lampBuzz = "rbxassetid://87539521921383", -- lamp_buzz_loop.ogg
 	sting = "", -- sting.ogg
 }
 
