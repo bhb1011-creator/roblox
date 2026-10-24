@@ -8,6 +8,7 @@ local RunService = game:GetService("RunService")
 
 local Route = require(ReplicatedStorage.Shared.LevelRoute)
 local CutsceneCar = require(script.Parent.CutsceneCar)
+local DialogueRunner = require(script.Parent.DialogueRunner)
 local Stranger = require(script.Parent.Stranger)
 local World = require(script.Parent.World)
 
@@ -37,6 +38,12 @@ cutscene.Name = "Cutscene"
 local puppets = Instance.new("Folder")
 puppets.Name = "Puppets"
 puppets.Parent = cutscene
+-- Gespräch: Server → Clients (Sätze, Auswahl) und Client → Server (gewählte Antwort)
+for _, name in { "DialogueEvent", "DialogueChoice" } do
+	local remote = Instance.new("RemoteEvent")
+	remote.Name = name
+	remote.Parent = cutscene
+end
 cutscene.Parent = ReplicatedStorage
 
 World.build()
@@ -101,7 +108,11 @@ local function onPlayerAdded(player)
 			while #Players:GetPlayers() < expected and os.clock() - firstJoin < WAIT_FOR_GROUP do
 				task.wait(0.25)
 			end
-			cutscene:SetAttribute("StartTime", workspace:GetServerTimeNow() + START_DELAY)
+			local startTime = workspace:GetServerTimeNow() + START_DELAY
+			local duo = #Players:GetPlayers() >= 2
+			cutscene:SetAttribute("Duo", duo)
+			cutscene:SetAttribute("StartTime", startTime)
+			DialogueRunner.start(cutscene, startTime, duo)
 		end)
 	end
 
@@ -124,14 +135,24 @@ Players.PlayerRemoving:Connect(function(player)
 	end
 end)
 
--- Ladepunkte mit dem Auto mitbewegen
+-- Ladepunkte mit dem Auto (oder den Spielern zu Fuß) mitbewegen
+local driveLine, walkLine = Route.driveToHouseLine(), Route.walkLine()
 RunService.Heartbeat:Connect(function()
 	local startTime = cutscene:GetAttribute("StartTime")
 	if not startTime then
 		return
 	end
-	local s = Route.driveDistance(workspace:GetServerTimeNow() - startTime)
-	local cframe = Route.carCFrame(s)
+	local now = workspace:GetServerTimeNow()
+	local branch, branchStart = cutscene:GetAttribute("Branch"), cutscene:GetAttribute("BranchStart")
+	local cframe
+	if branch == "drive" and branchStart then
+		local s = Route.profile(now - branchStart, driveLine.length, Route.DRIVE_TOP_SPEED, Route.DRIVE_ACCELERATION, Route.DRIVE_BRAKE)
+		cframe = driveLine.cframeAt(s)
+	elseif branch == "follow" and branchStart then
+		cframe = walkLine.cframeAt(math.clamp((now - branchStart - Route.WALK_FADE) * Route.WALK_SPEED, 0, walkLine.length))
+	else
+		cframe = Route.carCFrame(Route.driveDistance(now - startTime))
+	end
 	for _, focus in focusParts do
 		focus.CFrame = cframe
 	end

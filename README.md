@@ -41,9 +41,23 @@ Die Baseplate wird beim Start automatisch entfernt.
 - Ego-Perspektive, umsehen mit der Maus (oder Finger am Handy)
 - Detaillierter Innenraum: Tacho und Drehzahlmesser laufen mit, Lenkrad dreht in Kurven, Radio, Schaltknüppel, Gurte, Rückspiegel, Duftbaum
 - Ca. 30 Sekunden Fahrt durch den Wald in pechschwarzer Nacht: orange Straßenlaternen (manche flackern), Leitpfosten, Leitplanken, Schilder, Strommasten, Innenlicht im Auto
+- Während der Fahrt erzählt eine Stimme (Englisch, mit Untertiteln), wo man herkommt: vom Campingplatz, eine Nacht bei der Gastfamilie Wagner, dann nach Hause
 - Das Auto hält in einer Parkbucht mit Waldweg und flackernder Laterne
-- Der Fremde (Stufe 1) kommt schon beim Einparken langsam aus dem Wald und bleibt am Beifahrerfenster stehen – das Gespräch folgt
-- Sounds: Musik im Autoradio, Motor, Fahrgeräusche, Blinker beim Ranfahren, Bremsen, Schotter, Waldgeräusche; wenn der Fremde ankommt, rauscht das Radio
+- Der Fremde kommt schon beim Einparken langsam aus dem Wald, klopft ans Beifahrerfenster und redet mit einem. Bis er sich als **Sarp** vorstellt, steht in den Untertiteln „???“
+- Drei Antworten wählt der **Fahrer** (Maus/Finger oder Tasten **1** und **2**); nach 25 Sekunden ohne Wahl wird die erste genommen
+- **Ende A – nicht folgen:** Man fährt weiter, die Straße macht eine Rechtskurve, dann biegt man in die Einfahrt der Wagners. Sarp steht schon im Scheinwerferlicht vor der Garage
+- **Ende B – folgen:** Man steigt aus und läuft mit dem Handylicht über einen unheimlichen Waldweg (tote Bäume, hängende Zweigfiguren, Stoffstreifen) bis zur Veranda. Dort verabschiedet sich Sarp und verschwindet im Wald
+- Das Haus der Wagners: großes, altes Holzhaus mit zwei Stockwerken, Veranda, Garage, Schornstein, Zaun, Briefkasten – **kein einziges Licht brennt**
+- Danach: „Fortsetzung folgt …“
+- Sounds: Musik im Autoradio, Motor, Fahrgeräusche, Blinker, Bremsen, Schotter, Waldgeräusche, Klopfen, knackender Ast; ab der Erzählung über das Funkloch rauscht das Radio
+
+### Sprachausgabe (Text-to-Speech)
+
+Gesprochen wird mit der Text-to-Speech-Funktion von Roblox (`AudioTextToSpeech`). Die Stimmen stehen in
+`src/shared/Config.lua` unter `Config.VOICES` (`id` = Nummer der Stimme, `pitch` = Tonhöhe, `speed` = Tempo).
+Klingt eine Stimme unpassend, eine andere Nummer eintragen. Geht die Sprachausgabe in Studio nicht, steht im
+**Output** eine gelbe Warnung – dann gibt es nur Untertitel, der Ablauf funktioniert trotzdem.
+Alle Texte stehen in `src/shared/Dialogue.lua`.
 
 **Testen:** In Studio ein **neues** Spiel (Vorlage „Baseplate“) öffnen. Im Terminal:
 
@@ -66,6 +80,7 @@ Die Sounds liegen in `assets/audio` (selbst erzeugt, frei verwendbar):
 | `forest_night_loop.ogg` | Grillen, Wind und eine Eule im Wald |
 | `footstep.ogg`, `lamp_buzz_loop.ogg` | Schritte des Fremden, summende Laterne |
 | `radio_static_loop.ogg`, `sting.ogg` | Radio-Rauschen und Schreck-Akzent, wenn der Fremde ankommt |
+| `knock.ogg`, `twig_snap.ogg` | Klopfen ans Autofenster, knackender Ast im Wald (Config: `knock`, `twig`) |
 
 1. Auf **create.roblox.com → Kreationen → Entwicklungsobjekte (Development Items) → Audio** jede Datei hochladen
    (oder in Studio: **Asset Manager → Bulk Import**).
@@ -74,17 +89,18 @@ Die Sounds liegen in `assets/audio` (selbst erzeugt, frei verwendbar):
 3. Statt `music_calm.ogg` kannst du auch ein ruhiges Lied aus der **Toolbox → Audio** nehmen
    (Roblox stellt dort viele Lieder kostenlos bereit) und dessen ID eintragen.
 
-Fehlt eine ID, wird der Sound einfach weggelassen – das Spiel funktioniert trotzdem.
+Fehlt eine ID, wird der Sound einfach weggelassen – das Spiel funktioniert trotzdem
+(für Klopfen und Ast-Knacken wird so lange ein tiefer Schritt-Sound genommen).
 
 ## Ordner
 
 | Ordner | Landet in Studio in | Inhalt |
 |---|---|---|
-| `src/shared` | ReplicatedStorage › Shared | `Config.lua` (Einstellungen), `Parts.lua` und `Forest.lua` (Bausteine), `LevelRoute.lua` (Strecke von Level 1) |
+| `src/shared` | ReplicatedStorage › Shared | `Config.lua` (Einstellungen), `Parts.lua` und `Forest.lua` (Bausteine), `LevelRoute.lua` (Strecke, Haus und Wege von Level 1), `Dialogue.lua` (alle Texte) |
 | `src/lobby/server` | ServerScriptService › Lobby | Bauen der Lobby (Environment, Road, ParkingLot, Camp, Buildings, Decor, Car) und Autos (CarQueue) |
 | `src/lobby/client` | StarterPlayerScripts › Lobby | Knöpfe, Hinweise, Shop-Fenster, Lichteffekte |
-| `src/level/server` | ServerScriptService › Level | Level 1: Welt, Auto für die Zwischensequenz, der Fremde |
-| `src/level/client` | StarterPlayerScripts › Level | Ablauf der Zwischensequenz, Kamera |
+| `src/level/server` | ServerScriptService › Level | Level 1: Welt, Haus der Wagners, Auto, Sarp, Ablauf des Gesprächs (`DialogueRunner`) |
+| `src/level/client` | StarterPlayerScripts › Level | Ablauf der Zwischensequenz, Kamera, Sprachausgabe/Untertitel (`Speech`), Antwortauswahl (`Choices`) |
 
 ## Robux-Produkte einrichten (Kasse)
 

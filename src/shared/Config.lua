@@ -85,6 +85,20 @@ Config.SOUNDS = {
 	radioStatic = "rbxassetid://111802312351078", -- radio_static_loop.ogg
 	lampBuzz = "rbxassetid://87539521921383", -- lamp_buzz_loop.ogg
 	sting = "rbxassetid://94291824225136", -- sting.ogg
+	knock = "", -- knock.ogg (Klopfen ans Autofenster)
+	twig = "", -- twig_snap.ogg (knackender Ast im Wald)
+}
+
+-- Sprachausgabe auf Englisch mit der Text-to-Speech-Funktion von Roblox.
+-- `id` = Nummer der Roblox-Stimme ("1", "2", "3" …). Klingt eine Stimme nicht passend,
+-- einfach eine andere Nummer ausprobieren. `pitch` = Tonhöhe in Halbtönen (0 = normal,
+-- minus = tiefer), `speed` = Sprechtempo (1 = normal), `volume` = Lautstärke.
+-- Funktioniert die Sprachausgabe nicht, erscheinen trotzdem die Untertitel.
+Config.SPEECH_ENABLED = true
+Config.VOICES = {
+	narrator = { id = "1", pitch = -1, speed = 0.92, volume = 1.4 },
+	sarp = { id = "2", pitch = -3, speed = 0.85, volume = 1.5 },
+	player = { id = "3", pitch = 0, speed = 1, volume = 1.2 },
 }
 
 return Config
