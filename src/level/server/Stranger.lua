@@ -58,7 +58,7 @@ function Stranger.build(parent)
 
 	local humanoid = model:FindFirstChildOfClass("Humanoid")
 	humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
-	humanoid.WalkSpeed = 7 -- langsam, fast schleichend
+	humanoid.WalkSpeed = 5 -- langsam, fast schleichend
 
 	-- Hände in Hautfarbe, Schuhe dunkelbraun mit Schlamm
 	for _, name in { "LeftHand", "RightHand" } do

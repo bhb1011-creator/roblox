@@ -27,16 +27,17 @@ local COLORS = {
 	lamp = Color3.fromRGB(255, 190, 120),
 }
 
--- Nacht, aber hell genug zum Erkennen: kühles Mondlicht, aufgehellte Schatten,
--- wenig Dunst und mehr Kontrast. Die Scheinwerfer bleiben das stärkste Licht.
+-- Pechschwarze Nacht: kein Mond, keine Sterne, schwarzer Himmel. Licht kommt nur von
+-- den orangen Straßenlaternen, den Scheinwerfern und dem Innenlicht. Ein schwaches,
+-- neutrales Grundlicht lässt nahe Umrisse gerade noch erkennen.
 local function setupLighting()
 	Lighting.ClockTime = 0
 	Lighting.GeographicLatitude = 41
-	Lighting.Brightness = 3
-	Lighting.ExposureCompensation = 0.6
-	Lighting.Ambient = Color3.fromRGB(72, 78, 98)
-	Lighting.OutdoorAmbient = Color3.fromRGB(110, 118, 145)
-	Lighting.EnvironmentDiffuseScale = 0.6
+	Lighting.Brightness = 0
+	Lighting.ExposureCompensation = 0.3
+	Lighting.Ambient = Color3.fromRGB(30, 30, 34)
+	Lighting.OutdoorAmbient = Color3.fromRGB(42, 42, 48)
+	Lighting.EnvironmentDiffuseScale = 0.3
 	Lighting.EnvironmentSpecularScale = 0.6
 	Lighting.ShadowSoftness = 0.2
 	Lighting.GlobalShadows = true
@@ -45,31 +46,33 @@ local function setupLighting()
 			child:Destroy()
 		end
 	end
-	-- Nachthimmel mit Mond und wenigen Sternen
 	local sky = Instance.new("Sky")
-	sky.StarCount = 1500
+	sky.StarCount = 0
+	sky.MoonTextureId = ""
+	sky.CelestialBodiesShown = false
 	sky.Parent = Lighting
 
+	-- Schwarzer Dunst: in der Ferne verschwindet alles im Dunkeln
 	local atmosphere = Instance.new("Atmosphere")
-	atmosphere.Density = 0.28
-	atmosphere.Offset = 0.05
-	atmosphere.Color = Color3.fromRGB(95, 105, 135)
-	atmosphere.Decay = Color3.fromRGB(30, 36, 60)
+	atmosphere.Density = 0.35
+	atmosphere.Offset = 0
+	atmosphere.Color = Color3.fromRGB(8, 8, 10)
+	atmosphere.Decay = Color3.fromRGB(0, 0, 0)
 	atmosphere.Glare = 0
-	atmosphere.Haze = 1
+	atmosphere.Haze = 0
 	atmosphere.Parent = Lighting
 
 	local grading = Instance.new("ColorCorrectionEffect")
-	grading.Saturation = -0.12
-	grading.Contrast = 0.2
-	grading.Brightness = 0.03
-	grading.TintColor = Color3.fromRGB(225, 232, 255)
+	grading.Saturation = 0
+	grading.Contrast = 0.15
+	grading.Brightness = 0
+	grading.TintColor = Color3.fromRGB(255, 250, 245)
 	grading.Parent = Lighting
 
 	local bloom = Instance.new("BloomEffect")
-	bloom.Intensity = 0.4
+	bloom.Intensity = 0.45
 	bloom.Size = 24
-	bloom.Threshold = 1.5
+	bloom.Threshold = 1.3
 	bloom.Parent = Lighting
 end
 
@@ -253,6 +256,40 @@ local function buildPowerLine(parent, segments)
 	end
 end
 
+-- Orange Straßenlaternen (wie alte Natriumdampflampen) rechts der Straße, der Arm
+-- ragt über den Rand. In der Parkbucht steht keine, dort gibt es die alte Laterne.
+local function buildStreetLamps(parent, segments)
+	local folder = Instance.new("Folder")
+	folder.Name = "StreetLamps"
+	folder.Parent = parent
+	local sodium = Color3.fromRGB(255, 145, 55)
+	local count = 0
+	for index, segment in segments do
+		local inLayby = segment.s > Route.LAYBY_START_S - 30 and segment.s < Route.LAYBY_END_S + 15
+		if index % 16 == 9 and not inLayby then
+			count += 1
+			local base = segment.cframe * CFrame.new(WIDTH / 2 + 2.5, 0, 0)
+			Parts.new("Part", { Name = "LampFoot", Size = Vector3.new(1.2, 1.6, 1.2), CFrame = base * CFrame.new(0, 0.3, 0), Color = Color3.fromRGB(120, 118, 112), Material = Enum.Material.Concrete, Parent = folder })
+			Parts.column({ Name = "LampPole", Color = COLORS.darkMetal, Material = Enum.Material.Metal, Parent = folder }, 18, 0.5, base)
+			Parts.new("Part", { Name = "LampArm", Size = Vector3.new(5, 0.35, 0.35), CFrame = base * CFrame.new(-2.5, 17.8, 0), Color = COLORS.darkMetal, Material = Enum.Material.Metal, Parent = folder })
+			Parts.new("Part", { Name = "LampHead", Size = Vector3.new(2.6, 0.55, 1.4), CFrame = base * CFrame.new(-5.2, 17.7, 0), Color = Color3.fromRGB(35, 35, 38), Material = Enum.Material.Metal, Parent = folder })
+			local lens = Parts.new("Part", {
+				Name = "LampLens",
+				Size = Vector3.new(2.2, 0.12, 1.1),
+				CFrame = base * CFrame.new(-5.2, 17.38, 0),
+				Color = sodium,
+				Material = Enum.Material.Neon,
+				Parent = folder,
+			})
+			Parts.light("SpotLight", lens, { Face = Enum.NormalId.Bottom, Range = 48, Angle = 120, Brightness = 2.4, Color = sodium })
+			-- jede fünfte Laterne flackert ab und zu
+			if count % 5 == 0 then
+				CollectionService:AddTag(lens, "FlickerLamp")
+			end
+		end
+	end
+end
+
 -- Verkehrsschild am rechten Straßenrand, Vorderseite zum herankommenden Auto
 local function buildSign(parent, s, draw)
 	local position = Route.sidePoint(s, WIDTH / 2 + 3.5, 0)
@@ -374,8 +411,9 @@ local function buildLayby(parent, segments)
 		Parent = layby,
 	})
 
-	-- Alte Laterne, die flackert
-	local lampBase = CFrame.lookAt(Route.sidePoint(Route.STOP_S - 30, Route.LAYBY_OFFSET + 7.5, 0), Route.sidePoint(Route.STOP_S - 30, 0, 0))
+	-- Alte Laterne direkt am Anfang des Waldwegs: sie flackert und beleuchtet den Fremden,
+	-- wenn er aus dem Wald kommt
+	local lampBase = CFrame.lookAt(Route.sidePoint(Route.STOP_S + 2, Route.LAYBY_OFFSET + 8, 0), Route.sidePoint(Route.STOP_S + 2, 0, 0))
 	Parts.column({ Name = "LampPole", Color = COLORS.darkMetal, Material = Enum.Material.Metal, Parent = layby }, 14.2, 0.45, lampBase)
 	Parts.new("Part", { Name = "LampArm", Size = Vector3.new(0.3, 0.3, 2.6), CFrame = lampBase * CFrame.new(0, Y + 13.8, -1.2), Color = COLORS.darkMetal, Material = Enum.Material.Metal, Parent = layby })
 	local lens = Parts.new("Part", {
@@ -386,7 +424,7 @@ local function buildLayby(parent, segments)
 		Material = Enum.Material.Neon,
 		Parent = layby,
 	})
-	Parts.light("SpotLight", lens, { Face = Enum.NormalId.Bottom, Range = 30, Angle = 100, Brightness = 1.4, Color = COLORS.lamp, Shadows = true })
+	Parts.light("SpotLight", lens, { Face = Enum.NormalId.Bottom, Range = 34, Angle = 120, Brightness = 2.2, Color = COLORS.lamp, Shadows = true })
 	CollectionService:AddTag(lens, "FlickerLamp")
 
 	-- Mülleimer und eine verwitterte Infotafel
@@ -484,6 +522,7 @@ function World.build()
 	world.Parent = workspace
 	buildRoad(world, segments)
 	buildPowerLine(world, segments)
+	buildStreetLamps(world, segments)
 	buildSigns(world)
 	buildLayby(world, segments)
 	buildForest(world)

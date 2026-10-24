@@ -241,7 +241,7 @@ local function strangerWalksToCar()
 		strangerIdle:Stop(0.3)
 	end
 	if walk then
-		walk:Play(0.3, 1, 0.7)
+		walk:Play(0.3, 1, 0.55)
 	end
 	local walking = true
 	task.spawn(function()
@@ -250,7 +250,7 @@ local function strangerWalksToCar()
 				strangerSteps.PlaybackSpeed = 0.9 + math.random() * 0.2
 				strangerSteps:Play()
 			end
-			task.wait(0.55)
+			task.wait(0.72)
 		end
 	end)
 	task.spawn(function()
@@ -285,7 +285,9 @@ task.spawn(function()
 	local rng = Random.new()
 	while true do
 		task.wait(rng:NextNumber(0.8, 3.5))
-		for _, lens in CollectionService:GetTagged("FlickerLamp") do
+		local lamps = CollectionService:GetTagged("FlickerLamp")
+		local lens = #lamps > 0 and lamps[rng:NextInteger(1, #lamps)]
+		if lens then
 			local light = lens:FindFirstChildWhichIsA("Light")
 			if light then
 				local brightness, color = light.Brightness, lens.Color
@@ -495,7 +497,8 @@ RunService.RenderStepped:Connect(function(deltaTime)
 			showText(chapterTitle, false, 1.5)
 		end)
 	end
-	if t >= Route.STOP_TIME + 1.5 then
+	-- Er setzt sich schon in Bewegung, während das Auto einparkt
+	if t >= Route.STOP_TIME - 3 then
 		once("stranger", strangerWalksToCar)
 	end
 	if strangerArrived and os.clock() - strangerArrived > 2 then

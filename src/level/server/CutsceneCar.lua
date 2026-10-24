@@ -223,7 +223,7 @@ function CutsceneCar.build(parent)
 		Size = UDim2.fromScale(0.08, 0.3),
 		Position = UDim2.fromScale(0.46, 0.08),
 	})
-	Parts.light("PointLight", cluster, { Range = 3, Brightness = 0.6, Color = Color3.fromRGB(255, 170, 90) })
+	Parts.light("PointLight", cluster, { Range = 4, Brightness = 0.9, Color = Color3.fromRGB(255, 170, 90) })
 
 	-- Mittelkonsole: Radio, Lüftungen, Warnblinker, Regler
 	part("CenterStack", Vector3.new(1.6, 1.7, 0.4), CFrame.new(0, 3.15, ROOF_FRONT - 0.95), DASH)
@@ -313,9 +313,11 @@ function CutsceneCar.build(parent)
 	part("RearViewGlass", Vector3.new(1, 0.28, 0.03), CFrame.new(0, GLASS_TOP - 0.55, ROOF_FRONT + 0.22), Color3.fromRGB(80, 90, 100), Enum.Material.Glass, { Reflectance = 0.6 })
 	part("FreshenerString", Vector3.new(0.02, 0.35, 0.02), CFrame.new(0.2, GLASS_TOP - 0.9, ROOF_FRONT + 0.15), Color3.fromRGB(230, 230, 230))
 	part("AirFreshener", Vector3.new(0.28, 0.42, 0.03), CFrame.new(0.2, GLASS_TOP - 1.28, ROOF_FRONT + 0.15) * CFrame.Angles(0, math.rad(25), 0), Color3.fromRGB(40, 120, 60))
-	local dome = part("DomeLight", Vector3.new(0.9, 0.08, 0.5), CFrame.new(0, GLASS_TOP - 0.07, 2.4), Color3.fromRGB(200, 195, 185))
-	part("MapLight", Vector3.new(0.6, 0.06, 0.3), CFrame.new(0, GLASS_TOP - 0.07, ROOF_FRONT + 0.6), Color3.fromRGB(200, 195, 185))
-	Parts.light("PointLight", dome, { Range = 6, Brightness = 0.25, Color = Color3.fromRGB(255, 220, 170) })
+	-- Innenlicht ist an: warme Deckenleuchte und Leselampe vorne
+	local dome = part("DomeLight", Vector3.new(0.9, 0.08, 0.5), CFrame.new(0, GLASS_TOP - 0.07, 2.4), Color3.fromRGB(255, 220, 160), Enum.Material.Neon)
+	local mapLight = part("MapLight", Vector3.new(0.6, 0.06, 0.3), CFrame.new(0, GLASS_TOP - 0.07, ROOF_FRONT + 0.6), Color3.fromRGB(255, 220, 160), Enum.Material.Neon)
+	Parts.light("PointLight", dome, { Range = 9, Brightness = 1.1, Color = Color3.fromRGB(255, 215, 160) })
+	Parts.light("SpotLight", mapLight, { Face = Enum.NormalId.Bottom, Range = 7, Angle = 90, Brightness = 0.8, Color = Color3.fromRGB(255, 215, 160) })
 
 	model.WorldPivot = CFrame.new()
 	model.Parent = parent
