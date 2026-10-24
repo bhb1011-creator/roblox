@@ -40,9 +40,9 @@ Die Baseplate wird beim Start automatisch entfernt.
 - Man sitzt im Auto: allein am Steuer, zu zweit sitzt der zweite Spieler auf dem Beifahrersitz
 - Ego-Perspektive, umsehen mit der Maus (oder Finger am Handy)
 - Detaillierter Innenraum: Tacho und Drehzahlmesser laufen mit, Lenkrad dreht in Kurven, Radio, Schaltknüppel, Gurte, Rückspiegel, Duftbaum
-- Ca. 30 Sekunden Fahrt durch den Wald in der Dämmerung: Leitpfosten, Leitplanken, Schilder, Strommasten
+- Ca. 30 Sekunden Fahrt durch den Wald in pechschwarzer Nacht: orange Straßenlaternen (manche flackern), Leitpfosten, Leitplanken, Schilder, Strommasten, Innenlicht im Auto
 - Das Auto hält in einer Parkbucht mit Waldweg und flackernder Laterne
-- Der Fremde (Stufe 1) kommt aus dem Wald und bleibt am Beifahrerfenster stehen – das Gespräch folgt
+- Der Fremde (Stufe 1) kommt schon beim Einparken langsam aus dem Wald und bleibt am Beifahrerfenster stehen – das Gespräch folgt
 - Sounds: Musik im Autoradio, Motor, Fahrgeräusche, Blinker beim Ranfahren, Bremsen, Schotter, Waldgeräusche; wenn der Fremde ankommt, rauscht das Radio
 
 **Testen:** In Studio ein **neues** Spiel (Vorlage „Baseplate“) öffnen. Im Terminal:
@@ -95,10 +95,11 @@ Fehlt eine ID, wird der Sound einfach weggelassen – das Spiel funktioniert tro
 4. Damit Käufe auch in Studio gespeichert werden: Spieleinstellungen → Sicherheit →
    **Studio-Zugriff auf API-Dienste** einschalten.
 
-## Tipp für schönere Grafik
+## Grafik
 
-In Studio im Explorer **Lighting** anklicken und bei **Technology** auf **Future** stellen
-(das geht nur in Studio, nicht per Skript).
+Beide Projektdateien stellen **Lighting → Technology** automatisch auf **Future**.
+In Level 1 ist außerdem **StreamingEnabled** aus, damit die ganze Strecke sofort geladen ist.
+Rojo entfernt beim Verbinden Skripte, die nicht zum jeweiligen Ort gehören.
 
 ## Später, wenn das Level fertig ist
 
