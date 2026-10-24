@@ -1,4 +1,12 @@
 -- Startpunkt der Lobby: baut die Welt, startet die Autos und die Kasse.
+
+-- Liegen im selben Studio-Ort auch die Skripte von Level 1, läuft nur das Level.
+-- (Sonst würden Lobby und Level übereinander gebaut.)
+if script.Parent.Parent:FindFirstChild("Level") then
+	warn("Lobby-Skripte übersprungen: In diesem Ort liegt Level 1.")
+	return
+end
+
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 

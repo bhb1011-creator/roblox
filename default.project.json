@@ -8,12 +8,14 @@
       }
     },
     "ServerScriptService": {
+      "$ignoreUnknownInstances": false,
       "Lobby": {
         "$path": "src/lobby/server"
       }
     },
     "StarterPlayer": {
       "StarterPlayerScripts": {
+        "$ignoreUnknownInstances": false,
         "Lobby": {
           "$path": "src/lobby/client"
         }

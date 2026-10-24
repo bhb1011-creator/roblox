@@ -1,5 +1,11 @@
 -- Alles, was nur der Spieler selbst sieht: Aussteigen-Knopf, Abblenden bei der
 -- Abfahrt, Hinweise, Shop-Fenster und flackernde Lichter.
+
+-- Liegen im selben Studio-Ort auch die Skripte von Level 1, läuft nur das Level
+if game:GetService("StarterPlayer").StarterPlayerScripts:FindFirstChild("Level") then
+	return
+end
+
 local CollectionService = game:GetService("CollectionService")
 local MarketplaceService = game:GetService("MarketplaceService")
 local Players = game:GetService("Players")

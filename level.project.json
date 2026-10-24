@@ -8,12 +8,14 @@
       }
     },
     "ServerScriptService": {
+      "$ignoreUnknownInstances": false,
       "Level": {
         "$path": "src/level/server"
       }
     },
     "StarterPlayer": {
       "StarterPlayerScripts": {
+        "$ignoreUnknownInstances": false,
         "Level": {
           "$path": "src/level/client"
         }

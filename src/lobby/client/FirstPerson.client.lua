@@ -1,6 +1,12 @@
 -- Ego-Perspektive: Kamera fest in der Ich-Sicht (eigener Körper unsichtbar),
 -- leichtes Kopfwippen beim Laufen, ruhiges Atmen im Stand und ein kleiner Punkt
 -- in der Bildmitte.
+
+-- Liegen im selben Studio-Ort auch die Skripte von Level 1, läuft nur das Level
+if game:GetService("StarterPlayer").StarterPlayerScripts:FindFirstChild("Level") then
+	return
+end
+
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
