@@ -16,6 +16,22 @@ local START_DELAY = 2
 
 Players.CharacterAutoLoads = false
 
+-- Alte Lobby-Skripte, die noch im selben Studio-Ort liegen, stoppen und entfernen
+-- (inklusive der Lobby, die sie vielleicht schon gebaut haben). Sonst stehen
+-- Lobby-Bäume und -Schranke mitten auf der Straße.
+for _, container in { script.Parent.Parent, game:GetService("StarterPlayer").StarterPlayerScripts } do
+	local leftover = container:FindFirstChild("Lobby")
+	if leftover then
+		warn("Alte Lobby-Skripte in Level 1 gefunden und entfernt.")
+		leftover:Destroy()
+	end
+end
+task.wait()
+local oldLobby = workspace:FindFirstChild("Lobby")
+if oldLobby then
+	oldLobby:Destroy()
+end
+
 local cutscene = Instance.new("Folder")
 cutscene.Name = "Cutscene"
 local puppets = Instance.new("Folder")

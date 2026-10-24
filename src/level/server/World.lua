@@ -27,15 +27,15 @@ local COLORS = {
 	lamp = Color3.fromRGB(255, 190, 120),
 }
 
--- Dämmerung, gut erkennbar: wenig Dunst, mehr Kontrast und
--- kühles Schattenlicht, damit Konturen von Bäumen und Straße sichtbar bleiben.
+-- Nacht, aber hell genug zum Erkennen: kühles Mondlicht, aufgehellte Schatten,
+-- wenig Dunst und mehr Kontrast. Die Scheinwerfer bleiben das stärkste Licht.
 local function setupLighting()
-	Lighting.ClockTime = 18.25
+	Lighting.ClockTime = 0
 	Lighting.GeographicLatitude = 41
-	Lighting.Brightness = 2
-	Lighting.ExposureCompensation = 0.15
-	Lighting.Ambient = Color3.fromRGB(58, 56, 70)
-	Lighting.OutdoorAmbient = Color3.fromRGB(105, 98, 115)
+	Lighting.Brightness = 3
+	Lighting.ExposureCompensation = 0.6
+	Lighting.Ambient = Color3.fromRGB(72, 78, 98)
+	Lighting.OutdoorAmbient = Color3.fromRGB(110, 118, 145)
 	Lighting.EnvironmentDiffuseScale = 0.6
 	Lighting.EnvironmentSpecularScale = 0.6
 	Lighting.ShadowSoftness = 0.2
@@ -45,31 +45,31 @@ local function setupLighting()
 			child:Destroy()
 		end
 	end
+	-- Nachthimmel mit Mond und wenigen Sternen
 	local sky = Instance.new("Sky")
-	sky.StarCount = 0
-	sky.MoonTextureId = ""
-	sky.SunAngularSize = 12
+	sky.StarCount = 1500
 	sky.Parent = Lighting
 
 	local atmosphere = Instance.new("Atmosphere")
-	atmosphere.Density = 0.3
+	atmosphere.Density = 0.28
 	atmosphere.Offset = 0.05
-	atmosphere.Color = Color3.fromRGB(150, 100, 100)
-	atmosphere.Decay = Color3.fromRGB(40, 32, 52)
-	atmosphere.Glare = 0.8
-	atmosphere.Haze = 1.2
+	atmosphere.Color = Color3.fromRGB(95, 105, 135)
+	atmosphere.Decay = Color3.fromRGB(30, 36, 60)
+	atmosphere.Glare = 0
+	atmosphere.Haze = 1
 	atmosphere.Parent = Lighting
 
 	local grading = Instance.new("ColorCorrectionEffect")
-	grading.Saturation = 0
-	grading.Contrast = 0.24
-	grading.TintColor = Color3.fromRGB(240, 232, 235)
+	grading.Saturation = -0.12
+	grading.Contrast = 0.2
+	grading.Brightness = 0.03
+	grading.TintColor = Color3.fromRGB(225, 232, 255)
 	grading.Parent = Lighting
 
 	local bloom = Instance.new("BloomEffect")
-	bloom.Intensity = 0.35
+	bloom.Intensity = 0.4
 	bloom.Size = 24
-	bloom.Threshold = 1.6
+	bloom.Threshold = 1.5
 	bloom.Parent = Lighting
 end
 
