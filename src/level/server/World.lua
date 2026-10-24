@@ -27,15 +27,18 @@ local COLORS = {
 	lamp = Color3.fromRGB(255, 190, 120),
 }
 
+-- Dämmerung: nicht heller, aber besser erkennbar – wenig Dunst, mehr Kontrast und
+-- kühles Schattenlicht, damit Konturen von Bäumen und Straße sichtbar bleiben.
 local function setupLighting()
 	Lighting.ClockTime = 18.55
 	Lighting.GeographicLatitude = 41
-	Lighting.Brightness = 1.4
+	Lighting.Brightness = 1.3
 	Lighting.ExposureCompensation = -0.15
-	Lighting.Ambient = Color3.fromRGB(30, 26, 34)
-	Lighting.OutdoorAmbient = Color3.fromRGB(75, 58, 66)
-	Lighting.EnvironmentDiffuseScale = 0.4
-	Lighting.EnvironmentSpecularScale = 0.5
+	Lighting.Ambient = Color3.fromRGB(38, 38, 50)
+	Lighting.OutdoorAmbient = Color3.fromRGB(68, 66, 84)
+	Lighting.EnvironmentDiffuseScale = 0.6
+	Lighting.EnvironmentSpecularScale = 0.6
+	Lighting.ShadowSoftness = 0.2
 	Lighting.GlobalShadows = true
 	for _, child in Lighting:GetChildren() do
 		if child:IsA("Atmosphere") or child:IsA("PostEffect") or child:IsA("Sky") then
@@ -49,24 +52,24 @@ local function setupLighting()
 	sky.Parent = Lighting
 
 	local atmosphere = Instance.new("Atmosphere")
-	atmosphere.Density = 0.42
-	atmosphere.Offset = 0.15
-	atmosphere.Color = Color3.fromRGB(170, 100, 90)
-	atmosphere.Decay = Color3.fromRGB(45, 28, 44)
-	atmosphere.Glare = 1.2
-	atmosphere.Haze = 2.4
+	atmosphere.Density = 0.3
+	atmosphere.Offset = 0.05
+	atmosphere.Color = Color3.fromRGB(150, 100, 100)
+	atmosphere.Decay = Color3.fromRGB(40, 32, 52)
+	atmosphere.Glare = 0.8
+	atmosphere.Haze = 1.2
 	atmosphere.Parent = Lighting
 
 	local grading = Instance.new("ColorCorrectionEffect")
-	grading.Saturation = -0.08
-	grading.Contrast = 0.15
-	grading.TintColor = Color3.fromRGB(245, 230, 225)
+	grading.Saturation = 0
+	grading.Contrast = 0.24
+	grading.TintColor = Color3.fromRGB(240, 232, 235)
 	grading.Parent = Lighting
 
 	local bloom = Instance.new("BloomEffect")
-	bloom.Intensity = 0.55
-	bloom.Size = 28
-	bloom.Threshold = 1.4
+	bloom.Intensity = 0.35
+	bloom.Size = 24
+	bloom.Threshold = 1.6
 	bloom.Parent = Lighting
 end
 
