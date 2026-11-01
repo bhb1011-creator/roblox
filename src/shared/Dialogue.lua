@@ -147,12 +147,9 @@ Dialogue.ENDINGS = {
 			},
 		},
 		{ arrive = 1.5, speaker = "sarp", text = "You took the long way.", voice = "sarp_16_long_way" },
-		-- er dreht sich weg, geht an der Garage vorbei in den Wald und löst sich auf
-		{ arrive = 6.2, action = "leave" },
-		-- abblenden, aussteigen: die Spieler stehen auf der Veranda vor der Haustür
-		{ arrive = 12.8, exitCar = true },
+		-- der Erzähler, solange Sarp noch vor der Garage steht ("Nobody but him")
 		{
-			arrive = 15,
+			arrive = 6,
 			speaker = "narrator",
 			voice = { solo = "erzaehler_13", duo = "erzaehler_14" },
 			text = {
@@ -160,7 +157,11 @@ Dialogue.ENDINGS = {
 				duo = "The house was dark. Not a single light. Nobody was waiting for us. Nobody but him.",
 			},
 		},
-		{ arrive = 25, finish = true },
+		-- dann dreht er sich weg, geht an der Garage vorbei in den Wald und löst sich auf
+		{ arrive = 14.2, action = "leave" },
+		-- abblenden, aussteigen: die Spieler stehen auf der Veranda vor der Haustür
+		{ arrive = 20.8, exitCar = true },
+		{ arrive = 28, finish = true },
 	},
 	-- Folgen: selbst zu Fuß über den Waldweg den Hügel hinauf bis zur Veranda,
 	-- Sarp geht voraus. An der Veranda verschwindet er.
