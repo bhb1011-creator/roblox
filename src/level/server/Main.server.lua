@@ -6,7 +6,6 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
-local Config = require(ReplicatedStorage.Shared.Config)
 local Route = require(ReplicatedStorage.Shared.LevelRoute)
 local CutsceneCar = require(script.Parent.CutsceneCar)
 local DialogueRunner = require(script.Parent.DialogueRunner)
@@ -32,12 +31,6 @@ task.wait()
 local oldLobby = workspace:FindFirstChild("Lobby")
 if oldLobby then
 	oldLobby:Destroy()
-end
-
--- Kapitel 2 direkt starten (vor der Haustür der Wagners), siehe Config.START_CHAPTER
-if Config.START_CHAPTER == 2 then
-	require(script.Parent.Kapitel2).start()
-	return
 end
 
 local cutscene = Instance.new("Folder")

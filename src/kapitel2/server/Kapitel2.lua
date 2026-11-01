@@ -1,4 +1,4 @@
--- Kapitel 2 auf dem Server: Man steht vor der Haustür der Wagners (wie am Ende von
+-- Kapitel 2 auf dem Server (gestartet von Main.server.lua): Man steht vor der Haustür der Wagners (wie am Ende von
 -- Kapitel 1). Wer an die Tür klopft, startet die Begrüßung: Mrs. Wagner öffnet erst
 -- einen Spalt, dann ganz; ihr Mann steht plötzlich hinter ihr. Sie bitten einen herein,
 -- man geht selbst hinein und die Tür fällt zu. Texte und Ablauf: Shared/Kapitel2Dialogue.

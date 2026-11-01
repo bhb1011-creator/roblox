@@ -70,10 +70,6 @@ Config.SNACKS = {
 	{ title = "Chips", description = "Einfach lecker. Hilft gegen Hunger.", price = 15, color = Color3.fromRGB(230, 200, 60) },
 }
 
--- Womit das Level startet: 1 = Kapitel 1 (Fahrt durch den Wald, Sarp),
--- 2 = Kapitel 2 (man steht vor der Haustür der Wagners). Zum Testen einfach umstellen.
-Config.START_CHAPTER = 2
-
 -- Sounds für Level 1. Die Dateien liegen im Ordner assets/audio. Nach dem Hochladen bei
 -- Roblox die ID hier eintragen, z. B. "rbxassetid://1234567890". Leer = Sound fällt weg.
 Config.SOUNDS = {

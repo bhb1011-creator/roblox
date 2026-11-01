@@ -18,11 +18,6 @@ local UserInputService = game:GetService("UserInputService")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
--- Kapitel 2 direkt starten (vor der Haustür der Wagners), siehe Config.START_CHAPTER
-if Config.START_CHAPTER == 2 then
-	require(script.Parent:WaitForChild("Kapitel2")).run()
-	return
-end
 local Dialogue = require(Shared:WaitForChild("Dialogue"))
 local Route = require(Shared:WaitForChild("LevelRoute"))
 local Speech = require(script.Parent:WaitForChild("Speech"))

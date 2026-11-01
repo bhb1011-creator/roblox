@@ -31,7 +31,7 @@ Alles ist düster bei ihnen, irgendwie komisch. Sie sind freundlich, aber es sti
 5. Sie bitten einen herein, man geht selbst hinein, die Tür fällt zu.
 6. „The children are already asleep.“ – „Your room is upstairs. Second door on the left. Not the first one.“ – „And whatever you hear tonight… it's just the house.“
 
-Texte: `src/shared/Kapitel2Dialogue.lua`. Figuren: `src/level/server/Wagners.lua`.
+Texte: `src/shared/Kapitel2Dialogue.lua`. Figuren: `src/kapitel2/server/Wagners.lua`. Starten: `rojo serve kapitel2.project.json --port 34874`.
 
 ## Offen
 

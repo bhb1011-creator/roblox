@@ -35,14 +35,18 @@ Die Lobby wird erst beim **Play** per Code gebaut. Im Bearbeiten-Modus siehst du
 Skripte (z. B. ServerScriptService › Lobby) und die leere Baseplate – das ist normal.
 Die Baseplate wird beim Start automatisch entfernt.
 
-## Kapitel wählen
+## Teile einzeln testen
 
-In `src/shared/Config.lua` steht `Config.START_CHAPTER`:
+Jeder Teil ist ein eigenes Rojo-Projekt (am Ende wird alles zusammengefügt):
 
-- `1` = Kapitel 1 (die Fahrt durch den Wald, Sarp)
-- `2` = Kapitel 2 (man steht vor der Haustür der Wagners) – **im Moment eingestellt**
+| Teil | Starten mit |
+|---|---|
+| Lobby | `rojo serve` (nutzt `default.project.json`) |
+| Kapitel 1 – Die Fahrt | `rojo serve level.project.json --port 34873` |
+| Kapitel 2 – Die Wagners | `rojo serve kapitel2.project.json --port 34874` |
 
-Gestartet wird beides gleich: `rojo serve level.project.json --port 34873`, in Studio verbinden, **Play**.
+Danach in Studio: **Plugins → Rojo → Connect** (beim Port die richtige Zahl eintragen), dann **Play**.
+Am besten jeden Teil in einem eigenen Studio-Ort (eigene Datei) testen.
 
 ## Kapitel 2 – „Die Wagners“ (Anfang)
 
@@ -54,7 +58,7 @@ Gestartet wird beides gleich: `rojo serve level.project.json --port 34873`, in S
 - Sie bitten einen herein; man geht selbst hinein, die Tür fällt hinter einem zu. (Wer draußen bleibt, wird erinnert und nach 40 Sekunden hereingeholt)
 - Eingangshalle: Treppe zur Galerie mit zwei Türen (die erste ist vernagelt – „Not the first one.“), stehen gebliebene Standuhr, Kinderstiefel an der Garderobe, Familienfotos mit zerkratzten Gesichtern, verhängter Spiegel, Durchgänge ins Dunkle, nur Kerzenlicht
 - Stimmen erst mal mit der Roblox-Stimme (Mrs. Wagner: Stimme 4, Mr. Wagner: Stimme 5, siehe `Config.VOICES`)
-- Texte und Ablauf: `src/shared/Kapitel2Dialogue.lua`, Figuren: `src/level/server/Wagners.lua`, Konzept: `docs/konzept/wagners.md`
+- Texte und Ablauf: `src/shared/Kapitel2Dialogue.lua`, Figuren: `src/kapitel2/server/Wagners.lua`, Konzept: `docs/konzept/wagners.md`
 - Die Kinder (Tochter und Sohn) kommen später
 
 ## Level 1 – Zwischensequenz „Die Fahrt“
@@ -145,8 +149,10 @@ Fehlt eine ID, wird der Sound einfach weggelassen – das Spiel funktioniert tro
 | `src/shared` | ReplicatedStorage › Shared | `Config.lua` (Einstellungen), `Parts.lua` und `Forest.lua` (Bausteine), `LevelRoute.lua` (Strecke, Haus und Wege von Level 1), `Dialogue.lua` (alle Texte), `Beast.lua` (das Biest) |
 | `src/lobby/server` | ServerScriptService › Lobby | Bauen der Lobby (Environment, Road, ParkingLot, Camp, Buildings, Decor, Car) und Autos (CarQueue) |
 | `src/lobby/client` | StarterPlayerScripts › Lobby | Knöpfe, Hinweise, Shop-Fenster, Lichteffekte |
-| `src/level/server` | ServerScriptService › Level | Level 1: Welt, Haus der Wagners, Auto, Sarp, Ablauf des Gesprächs (`DialogueRunner`), Waldweg mit Biest (`ForestWalk`). Kapitel 2: Ablauf (`Kapitel2`), Eingangshalle (`HouseInterior`), die Wagners (`Wagners`) |
-| `src/level/client` | StarterPlayerScripts › Level | Ablauf der Zwischensequenz, Kamera, Sprachausgabe/Untertitel (`Speech`), Antwortauswahl (`Choices`), Biest/Rennen/Tod (`BeastView`), Umgebungsgeräusche (`Ambience`), Kapitel 2 (`Kapitel2`) |
+| `src/level/server` | ServerScriptService › Level | Level 1: Welt, Haus der Wagners, Auto, Sarp, Ablauf des Gesprächs (`DialogueRunner`), Waldweg mit Biest (`ForestWalk`) |
+| `src/level/client` | StarterPlayerScripts › Level | Ablauf der Zwischensequenz, Kamera, Sprachausgabe/Untertitel (`Speech`), Antwortauswahl (`Choices`), Biest/Rennen/Tod (`BeastView`), Umgebungsgeräusche (`Ambience`) |
+| `src/kapitel2/server` | ServerScriptService › Kapitel2 | Kapitel 2: Start (`Main`), Ablauf (`Kapitel2`), Eingangshalle (`HouseInterior`), die Wagners (`Wagners`). Welt, Haus und `ForestWalk` kommen aus `src/level/server` |
+| `src/kapitel2/client` | StarterPlayerScripts › Kapitel2 | Kapitel 2: Start (`Main`), Kamera/Licht/Kerzen/Köpfe (`Scene`). `Speech`, `Choices` und `Ambience` kommen aus `src/level/client` |
 
 ## Robux-Produkte einrichten (Kasse)
 
