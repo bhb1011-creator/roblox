@@ -210,16 +210,16 @@ Config.VOICE_LINES = {
 	erzaehler_19 = { id = "rbxassetid://106922355096569", length = 6.70 },
 	erzaehler_20 = { id = "rbxassetid://86497146595639", length = 6.20 },
 	-- Antworten der Spieler im Gespräch (gleiche Stimme wie der Erzähler, denn der Erzähler
-	-- ist der Spieler). Noch ohne Aufnahme: bis dahin nur Untertitel.
-	erzaehler_21 = { id = "", length = 0 }, -- I'm looking for the Wagners' house.
-	erzaehler_22 = { id = "", length = 0 }, -- We're looking for the Wagners' house.
-	erzaehler_23 = { id = "", length = 0 }, -- Who are you?
-	erzaehler_24 = { id = "", length = 0 }, -- How do you know that?
-	erzaehler_25 = { id = "", length = 0 }, -- ...Yes.
-	erzaehler_26 = { id = "", length = 0 }, -- I'll drive there myself.
-	erzaehler_27 = { id = "", length = 0 }, -- We'll drive there ourselves.
-	erzaehler_28 = { id = "", length = 0 }, -- ...Okay. Show me the way.
-	erzaehler_29 = { id = "", length = 0 }, -- ...Okay. Show us the way.
+	-- ist der Spieler).
+	erzaehler_21 = { id = "rbxassetid://106878531684916", length = 2.93 }, -- I'm looking for the Wagners' house.
+	erzaehler_22 = { id = "rbxassetid://75977898752243", length = 2.51 }, -- We're looking for the Wagners' house.
+	erzaehler_23 = { id = "rbxassetid://118134773273906", length = 1.49 }, -- Who are you?
+	erzaehler_24 = { id = "rbxassetid://102214339822434", length = 1.80 }, -- How do you know that?
+	erzaehler_25 = { id = "rbxassetid://71566433596036", length = 1.72 }, -- ...Yes.
+	erzaehler_26 = { id = "rbxassetid://122852232408061", length = 2.04 }, -- I'll drive there myself.
+	erzaehler_27 = { id = "rbxassetid://129011583221839", length = 2.51 }, -- We'll drive there ourselves.
+	erzaehler_28 = { id = "rbxassetid://124378973824781", length = 3.32 }, -- ...Okay. Show me the way.
+	erzaehler_29 = { id = "rbxassetid://133511673604193", length = 2.59 }, -- ...Okay. Show us the way.
 }
 
 return Config
