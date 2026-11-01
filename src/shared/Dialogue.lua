@@ -21,27 +21,31 @@ function Dialogue.duration(text, speed)
 	return (1 + #text * 0.068) / (speed or 1)
 end
 
--- Erzählung während der Fahrt; `at` = Sekunden nach dem Start der Zwischensequenz
+-- Erzählung während der Fahrt; `at` = frühester Zeitpunkt (Sekunden nach dem Start der
+-- Zwischensequenz). Ein Satz wartet immer, bis der vorige fertig gesprochen ist.
 Dialogue.NARRATION = {
-	{ at = 8.5, text = "October 14th. 11:52 PM." },
+	{ at = 7.5, text = "October 14th. 11:52 PM.", voice = "erzaehler_01" },
 	{
-		at = 12,
+		at = 11.5,
+		voice = { solo = "erzaehler_02", duo = "erzaehler_03" },
 		text = {
 			solo = "The camping trip was over. One more night with a host family, the Wagners. Then I could finally go home.",
 			duo = "The camping trip was over. One more night with a host family, the Wagners. Then we could finally go home.",
 		},
 	},
-	{ at = 21, text = "Mrs. Wagner's directions were strange. Take the old forest road. Don't stop. No matter what you see." },
+	{ at = 21, text = "Mrs. Wagner's directions were strange. Take the old forest road. Don't stop. No matter what you see.", voice = "erzaehler_04" },
 	{
-		at = 29.5,
+		at = 30,
 		radioOff = true, -- ab hier rauscht das Radio nur noch
+		voice = { solo = "erzaehler_05", duo = "erzaehler_06" },
 		text = {
 			solo = "Then the radio lost its signal. And the navigation lost the road. I had to stop.",
 			duo = "Then the radio lost its signal. And the navigation lost the road. We had to stop.",
 		},
 	},
 	{
-		at = 36.5,
+		at = 37,
+		voice = { solo = "erzaehler_07", duo = "erzaehler_08" },
 		text = {
 			solo = "That's when I saw him. A man, walking out of the forest. Straight towards me.",
 			duo = "That's when we saw him. A man, walking out of the forest. Straight towards us.",
@@ -118,6 +122,7 @@ Dialogue.ENDINGS = {
 		{
 			at = 3,
 			speaker = "narrator",
+			voice = { solo = "erzaehler_09", duo = "erzaehler_10" },
 			text = {
 				solo = "I drove on. In the mirror, he just stood there. Watching me go.",
 				duo = "We drove on. In the mirror, he just stood there. Watching us go.",
@@ -126,6 +131,7 @@ Dialogue.ENDINGS = {
 		{
 			at = 15,
 			speaker = "narrator",
+			voice = { solo = "erzaehler_11", duo = "erzaehler_12" },
 			text = {
 				solo = "The road turned all the way around, back through the forest. As if it didn't want to let me leave.",
 				duo = "The road turned all the way around, back through the forest. As if it didn't want to let us leave.",
@@ -135,6 +141,7 @@ Dialogue.ENDINGS = {
 		{
 			arrive = 5,
 			speaker = "narrator",
+			voice = { solo = "erzaehler_13", duo = "erzaehler_14" },
 			text = {
 				solo = "The house was dark. Not a single light. Nobody was waiting for me. Nobody but him.",
 				duo = "The house was dark. Not a single light. Nobody was waiting for us. Nobody but him.",
@@ -145,11 +152,12 @@ Dialogue.ENDINGS = {
 	-- Folgen: selbst zu Fuß über den Waldweg den Hügel hinauf bis zur Veranda,
 	-- Sarp geht voraus. An der Veranda verschwindet er.
 	follow = {
-		{ progress = 0.06, speaker = "narrator", text = "He walked fast. He never once looked back." },
+		{ progress = 0.06, speaker = "narrator", text = "He walked fast. He never once looked back.", voice = "erzaehler_15" },
 		{ progress = 0.37, action = "crack" },
 		{
 			progress = 0.38,
 			speaker = "narrator",
+			voice = { solo = "erzaehler_16", duo = "erzaehler_17" },
 			text = {
 				solo = "Something moved between the trees. Something that kept pace with me.",
 				duo = "Something moved between the trees. Something that kept pace with us.",
@@ -158,6 +166,7 @@ Dialogue.ENDINGS = {
 		{
 			progress = 0.7,
 			speaker = "narrator",
+			voice = "erzaehler_18",
 			text = "The path climbed up the hill. With every step, the forest got quieter.",
 		},
 		{ arrive = 0.5, action = "faceGroup" },
@@ -167,6 +176,7 @@ Dialogue.ENDINGS = {
 		{
 			arrive = 11,
 			speaker = "narrator",
+			voice = { solo = "erzaehler_19", duo = "erzaehler_20" },
 			text = {
 				solo = "The house was dark. Not a single light. And I never heard him walk away.",
 				duo = "The house was dark. Not a single light. And we never heard him walk away.",

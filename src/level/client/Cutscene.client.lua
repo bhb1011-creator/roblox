@@ -419,6 +419,7 @@ local camera = workspace.CurrentCamera
 local wheelSpin = 0
 local lastBlink, wasBlinking = false, false
 local radioOff = false
+local narrationIndex, narrationFreeAt = 1, 0 -- Erzählung während der Fahrt
 local finished = false
 local shakeUntil, shakeStrength = 0, 0
 local sarpStepTimer = 0
@@ -846,19 +847,27 @@ RunService.RenderStepped:Connect(function(deltaTime)
 		end)
 	end
 	-- Erzählung während der Fahrt
-	for index, entry in Dialogue.NARRATION do
-		if t >= entry.at and t < entry.at + 3 then
-			once("narration" .. index, function()
-				local text = Dialogue.text(entry.text, duo)
-				local voice = Config.VOICES and Config.VOICES.narrator
-				Speech.say("narrator", nil, text, Dialogue.duration(text, voice and voice.speed))
-				if entry.radioOff then
-					radioOff = true
-					if radioText then
-						radioText.Text = "FM --.-   ~~ KEIN EMPFANG ~~"
-					end
-				end
-			end)
+	-- (nacheinander: ein Satz beginnt frühestens, wenn der vorige zu Ende ist)
+	local entry = Dialogue.NARRATION[narrationIndex]
+	if entry and t >= entry.at and t >= narrationFreeAt and not branch then
+		narrationIndex += 1
+		local text = Dialogue.text(entry.text, duo)
+		local voice = Config.VOICES and Config.VOICES.narrator
+		local duration = Dialogue.duration(text, voice and voice.speed)
+		local recordingName = entry.voice and Dialogue.text(entry.voice, duo)
+		local recording = recordingName and Config.VOICE_LINES and Config.VOICE_LINES[recordingName]
+		if recording and recording.id ~= "" then
+			duration = recording.length + 0.25
+		else
+			recordingName = nil
+		end
+		Speech.say("narrator", nil, text, duration, recordingName)
+		narrationFreeAt = t + duration + 0.4
+		if entry.radioOff then
+			radioOff = true
+			if radioText then
+				radioText.Text = "FM --.-   ~~ KEIN EMPFANG ~~"
+			end
 		end
 	end
 	-- Ende "drive": die Scheinwerfer erfassen ihn vor der Garage

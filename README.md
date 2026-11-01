@@ -62,13 +62,15 @@ damit sie auch bei deutschen Spielern Englisch bleiben. Geht die Sprachausgabe i
 **Output** eine gelbe Warnung – dann gibt es nur Untertitel, der Ablauf funktioniert trotzdem.
 Alle Texte stehen in `src/shared/Dialogue.lua`.
 
-### Eigene Sprachaufnahmen (Sarp)
+### Eigene Sprachaufnahmen (Sarp und Erzähler)
 
 Die Rohaufnahmen liegen in `assets/voice/raw`, die fertig bearbeiteten Dateien (Stille entfernt,
 gleich laut, etwas dunkler; Satz 16 gedämpft wie durch die Windschutzscheibe) als `.ogg` in
 `assets/voice`. Die `.ogg`-Dateien bei Roblox hochladen und die IDs in `src/shared/Config.lua`
 unter `Config.VOICE_LINES` bei `id` eintragen. Sobald eine ID eingetragen ist, wird dieser Satz
-mit der Aufnahme gesprochen (aus Sarps Richtung, mit etwas Hall), sonst mit der Roblox-Stimme.
+mit der Aufnahme gesprochen (Sarp aus seiner Richtung mit etwas Hall, der Erzähler überall gleich laut),
+sonst mit der Roblox-Stimme. Die Erzähler-Dateien heißen `erzaehler_01` bis `erzaehler_20`; bei zwei
+aufeinanderfolgenden Nummern ist die erste für allein („I“) und die zweite für zu zweit („we“).
 
 **Testen:** In Studio ein **neues** Spiel (Vorlage „Baseplate“) öffnen. Im Terminal:
 

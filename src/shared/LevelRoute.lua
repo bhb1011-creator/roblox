@@ -399,7 +399,7 @@ end
 function LevelRoute.strangerArrival()
 	return LevelRoute.STRANGER_START + LevelRoute.strangerLine().length / LevelRoute.STRANGER_SPEED
 end
-LevelRoute.DIALOGUE_DELAY = 2.5 -- so lange starrt er stumm, bevor er klopft
+LevelRoute.DIALOGUE_DELAY = 5 -- so lange starrt er stumm, bevor er klopft (die Erzählung ist dann zu Ende)
 
 ------------------------------------------------------------------ Ende A: weiterfahren zum Haus
 -- Aus der Parkbucht zurück auf die Spur, durch die Kehre, dann die Einfahrt hinauf

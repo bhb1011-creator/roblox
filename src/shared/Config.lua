@@ -185,6 +185,27 @@ Config.VOICE_LINES = {
 	sarp_17_stay_close = { id = "rbxassetid://118173417017559", length = 4.40 },
 	sarp_18_leave_you = { id = "rbxassetid://88373461532940", length = 4.20 },
 	sarp_19_sleep_well = { id = "rbxassetid://99466167069052", length = 3.20 },
+	-- Erzähler
+	erzaehler_01 = { id = "", length = 3.72 },
+	erzaehler_02 = { id = "", length = 9.10 },
+	erzaehler_03 = { id = "", length = 8.60 },
+	erzaehler_04 = { id = "", length = 8.50 },
+	erzaehler_05 = { id = "", length = 6.90 },
+	erzaehler_06 = { id = "", length = 6.80 },
+	erzaehler_07 = { id = "", length = 6.20 },
+	erzaehler_08 = { id = "", length = 6.10 },
+	erzaehler_09 = { id = "", length = 6.10 },
+	erzaehler_10 = { id = "", length = 5.80 },
+	erzaehler_11 = { id = "", length = 6.60 },
+	erzaehler_12 = { id = "", length = 6.50 },
+	erzaehler_13 = { id = "", length = 7.20 },
+	erzaehler_14 = { id = "", length = 7.40 },
+	erzaehler_15 = { id = "", length = 3.56 },
+	erzaehler_16 = { id = "", length = 4.90 },
+	erzaehler_17 = { id = "", length = 5.10 },
+	erzaehler_18 = { id = "", length = 5.80 },
+	erzaehler_19 = { id = "", length = 6.70 },
+	erzaehler_20 = { id = "", length = 6.20 },
 }
 
 return Config
