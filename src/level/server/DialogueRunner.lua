@@ -36,14 +36,22 @@ function DialogueRunner.start(cutscene, startTime, duo)
 	local choiceEvent = cutscene:WaitForChild("DialogueChoice")
 	local nameKnown = false
 
-	local function say(speaker, entry, name)
+	local function say(speaker, entry, name, voiceEntry)
 		local text = Dialogue.text(entry, duo)
 		local voice = Config.VOICES and Config.VOICES[speaker] or {}
 		local duration = Dialogue.duration(text, voice.speed)
+		-- Gibt es eine eigene Aufnahme mit ID, dauert der Satz so lange wie die Aufnahme
+		local recordingName = voiceEntry and Dialogue.text(voiceEntry, duo)
+		local recording = recordingName and Config.VOICE_LINES and Config.VOICE_LINES[recordingName]
+		if recording and recording.id ~= "" then
+			duration = recording.length + 0.25
+		else
+			recordingName = nil
+		end
 		if speaker == "sarp" then
 			name = nameKnown and "Sarp" or "???"
 		end
-		event:FireAllClients({ type = "line", speaker = speaker, name = name, text = text, duration = duration })
+		event:FireAllClients({ type = "line", speaker = speaker, name = name, text = text, duration = duration, voice = recordingName })
 		task.wait(duration + GAP)
 	end
 
@@ -52,7 +60,7 @@ function DialogueRunner.start(cutscene, startTime, duo)
 			event:FireAllClients({ type = "action", action = line.action })
 		end
 		if line.text then
-			say(line.speaker, line.text)
+			say(line.speaker, line.text, nil, line.voice)
 		end
 		if line.reveal then
 			nameKnown = true

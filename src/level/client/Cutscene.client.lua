@@ -242,6 +242,7 @@ if strangerTemplate then
 		strangerIdle:Play()
 	end
 	local head = stranger:FindFirstChild("Head")
+	Speech.setEmitter("sarp", head) -- Sarps Aufnahmen kommen aus seiner Richtung
 	local neck = head and head:FindFirstChild("Neck")
 	if neck and neck:IsA("Motor6D") then
 		strangerNeck = { motor = neck, base = neck.C0 }
@@ -493,7 +494,7 @@ end
 
 dialogueEvent.OnClientEvent:Connect(function(message)
 	if message.type == "line" then
-		Speech.say(message.speaker, message.name, message.text, message.duration)
+		Speech.say(message.speaker, message.name, message.text, message.duration, message.voice)
 	elseif message.type == "action" then
 		handleAction(message.action)
 	elseif message.type == "choice" then

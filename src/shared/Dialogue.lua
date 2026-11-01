@@ -4,7 +4,8 @@
 -- Ein Text ist entweder ein String oder eine Tabelle { solo = "...", duo = "..." },
 -- wenn er allein anders lautet als zu zweit ("I" statt "we").
 -- speaker: "narrator" (Erzähler), "sarp" (der Fremde) oder "player" (der Spieler,
--- der die Antwort ausgewählt hat).
+-- der die Antwort ausgewählt hat). `voice` = Name der eigenen Sprachaufnahme
+-- (siehe Config.VOICE_LINES); fehlt sie, spricht die Roblox-Stimme.
 local Dialogue = {}
 
 -- Den passenden Text für allein oder zu zweit holen
@@ -52,56 +53,56 @@ Dialogue.NARRATION = {
 -- `action` lässt Sarp etwas tun, `wait` = zusätzliche Pause danach.
 Dialogue.SCRIPT = {
 	{ action = "knock", wait = 2 },
-	{ speaker = "sarp", text = "Evening.", action = "lean", wait = 0.8 },
-	{ speaker = "sarp", text = "You shouldn't stop here. Not on this road.", action = "tilt" },
+	{ speaker = "sarp", text = "Evening.", voice = "sarp_01_evening", action = "lean", wait = 0.8 },
+	{ speaker = "sarp", text = "You shouldn't stop here. Not on this road.", voice = "sarp_02_shouldnt_stop", action = "tilt" },
 	{
 		choice = {
 			{
 				text = { solo = "I'm looking for the Wagners' house.", duo = "We're looking for the Wagners' house." },
 				reply = {
-					{ speaker = "sarp", text = "The Wagners...", wait = 1.2 },
-					{ speaker = "sarp", text = "Yes. They told me you would come." },
-					{ speaker = "sarp", text = "I'm Sarp. I live close to them.", reveal = true },
+					{ speaker = "sarp", text = "The Wagners...", voice = "sarp_03_the_wagners", wait = 1.2 },
+					{ speaker = "sarp", text = "Yes. They told me you would come.", voice = "sarp_04_told_me" },
+					{ speaker = "sarp", text = "I'm Sarp. I live close to them.", voice = "sarp_05_im_sarp", reveal = true },
 				},
 			},
 			{
 				text = "Who are you?",
 				reply = {
-					{ speaker = "sarp", text = "Who am I?", action = "tilt", wait = 1 },
-					{ speaker = "sarp", text = "My name is Sarp. I'm a neighbor of the Wagners.", reveal = true },
-					{ speaker = "sarp", text = { solo = "I've been waiting for you.", duo = "I've been waiting for you two." } },
+					{ speaker = "sarp", text = "Who am I?", voice = "sarp_06_who_am_i", action = "tilt", wait = 1 },
+					{ speaker = "sarp", text = "My name is Sarp. I'm a neighbor of the Wagners.", voice = "sarp_07_my_name", reveal = true },
+					{ speaker = "sarp", text = { solo = "I've been waiting for you.", duo = "I've been waiting for you two." }, voice = { solo = "sarp_08_waiting_solo", duo = "sarp_08_waiting_duo" } },
 				},
 			},
 		},
 	},
-	{ speaker = "sarp", text = { solo = "You're the one from the campsite, aren't you?", duo = "You're the two from the campsite, aren't you?" } },
+	{ speaker = "sarp", text = { solo = "You're the one from the campsite, aren't you?", duo = "You're the two from the campsite, aren't you?" }, voice = { solo = "sarp_09_campsite_solo", duo = "sarp_09_campsite_duo" } },
 	{
 		choice = {
 			{
 				text = "How do you know that?",
-				reply = { { speaker = "sarp", text = "Small place. Word gets around." } },
+				reply = { { speaker = "sarp", text = "Small place. Word gets around.", voice = "sarp_10_small_place" } },
 			},
 			{
 				text = "...Yes.",
-				reply = { { speaker = "sarp", text = "I know. I watched you pack up your tent this afternoon." } },
+				reply = { { speaker = "sarp", text = "I know. I watched you pack up your tent this afternoon.", voice = "sarp_11_watched_you" } },
 			},
 		},
 	},
-	{ speaker = "sarp", text = "The house is just up that path. The beds are made. There's warm food.", action = "turnToPath" },
-	{ speaker = "sarp", text = "Come. I'll take you.", action = "faceCar", wait = 0.5 },
+	{ speaker = "sarp", text = "The house is just up that path. The beds are made. There's warm food.", voice = "sarp_12_house_up_path", action = "turnToPath" },
+	{ speaker = "sarp", text = "Come. I'll take you.", voice = "sarp_13_come", action = "faceCar", wait = 0.5 },
 	{
 		choice = {
 			{
 				text = { solo = "I'll drive there myself.", duo = "We'll drive there ourselves." },
 				reply = {
-					{ speaker = "sarp", text = "There is no road to the house.", action = "stepBack", wait = 1.2 },
-					{ speaker = "sarp", text = "But go ahead. I'll be waiting." },
+					{ speaker = "sarp", text = "There is no road to the house.", voice = "sarp_14_no_road", action = "stepBack", wait = 1.2 },
+					{ speaker = "sarp", text = "But go ahead. I'll be waiting.", voice = "sarp_15_ill_be_waiting" },
 				},
 				ending = "drive",
 			},
 			{
 				text = { solo = "...Okay. Show me the way.", duo = "...Okay. Show us the way." },
-				reply = { { speaker = "sarp", text = "Good. Stay close. And don't look into the trees." } },
+				reply = { { speaker = "sarp", text = "Good. Stay close. And don't look into the trees.", voice = "sarp_17_stay_close" } },
 				ending = "follow",
 			},
 		},
@@ -130,7 +131,7 @@ Dialogue.ENDINGS = {
 				duo = "The road turned all the way around, back through the forest. As if it didn't want to let us leave.",
 			},
 		},
-		{ arrive = 1.5, speaker = "sarp", text = "You took the long way." },
+		{ arrive = 1.5, speaker = "sarp", text = "You took the long way.", voice = "sarp_16_long_way" },
 		{
 			arrive = 5,
 			speaker = "narrator",
@@ -160,8 +161,8 @@ Dialogue.ENDINGS = {
 			text = "The path climbed up the hill. With every step, the forest got quieter.",
 		},
 		{ arrive = 0.5, action = "faceGroup" },
-		{ arrive = 1.2, speaker = "sarp", text = "This is where I leave you." },
-		{ arrive = 4.5, speaker = "sarp", text = "Sleep well. And lock your door." },
+		{ arrive = 1.2, speaker = "sarp", text = "This is where I leave you.", voice = "sarp_18_leave_you" },
+		{ arrive = 4.5, speaker = "sarp", text = "Sleep well. And lock your door.", voice = "sarp_19_sleep_well" },
 		{ arrive = 8, action = "leave" },
 		{
 			arrive = 11,

@@ -131,7 +131,37 @@ local function show(visible, duration)
 end
 
 -- speaker: "narrator", "sarp" oder "player"; name: was über dem Text steht
-function Speech.say(speaker, name, text, duration)
+-- Wo eine Stimme herkommt (z. B. Sarps Kopf); ohne Angabe klingt sie überall gleich laut
+local emitters = {}
+function Speech.setEmitter(speaker, part)
+	emitters[speaker] = part
+end
+
+-- Eigene Sprachaufnahme abspielen (aus Config.VOICE_LINES)
+local function playRecording(speaker, recording)
+	local emitter = emitters[speaker]
+	local sound = Instance.new("Sound")
+	sound.Name = "VoiceLine"
+	sound.SoundId = recording.id
+	sound.Volume = 1.3
+	sound.RollOffMinDistance = 10
+	sound.RollOffMaxDistance = 90
+	-- etwas Hall, damit es nach draußen im Wald klingt
+	local reverb = Instance.new("ReverbSoundEffect")
+	reverb.DecayTime = 1.4
+	reverb.Density = 0.8
+	reverb.Diffusion = 0.8
+	reverb.DryLevel = 0
+	reverb.WetLevel = -16
+	reverb.Parent = sound
+	sound.Parent = (emitter and emitter.Parent) and emitter or SoundService
+	sound:Play()
+	sound.Ended:Connect(function()
+		sound:Destroy()
+	end)
+end
+
+function Speech.say(speaker, name, text, duration, voiceName)
 	current += 1
 	local mine = current
 	speakingUntil = os.clock() + duration
@@ -151,7 +181,10 @@ function Speech.say(speaker, name, text, duration)
 			show(false, 0.6)
 		end
 	end)
-	if Config.SPEECH_ENABLED ~= false then
+	local recording = voiceName and Config.VOICE_LINES and Config.VOICE_LINES[voiceName]
+	if recording and recording.id ~= "" then
+		playRecording(speaker, recording)
+	elseif Config.SPEECH_ENABLED ~= false then
 		task.spawn(speak, speaker, text)
 	end
 end

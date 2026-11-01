@@ -139,4 +139,32 @@ Config.VOICES = {
 	},
 }
 
+-- Eigene Sprachaufnahmen (statt Computerstimme). Die Dateien liegen in assets/voice
+-- (fertig bearbeitet als .ogg). Nach dem Hochladen bei Roblox die ID bei `id` eintragen,
+-- z. B. id = "rbxassetid://1234567890". Solange `id` leer ist, spricht die Roblox-Stimme.
+-- `length` = Länge der Aufnahme in Sekunden (nicht ändern).
+Config.VOICE_LINES = {
+	sarp_01_evening = { id = "", length = 1.43 },
+	sarp_02_shouldnt_stop = { id = "", length = 3.25 },
+	sarp_03_the_wagners = { id = "", length = 1.63 },
+	sarp_04_told_me = { id = "", length = 3.21 },
+	sarp_05_im_sarp = { id = "", length = 4.20 },
+	sarp_06_who_am_i = { id = "", length = 2.01 },
+	sarp_07_my_name = { id = "", length = 3.52 },
+	sarp_08_waiting_duo = { id = "", length = 3.13 },
+	sarp_08_waiting_solo = { id = "", length = 3.84 },
+	sarp_09_campsite_duo = { id = "", length = 3.41 },
+	sarp_09_campsite_solo = { id = "", length = 3.32 },
+	sarp_10_small_place = { id = "", length = 3.90 },
+	sarp_11_watched_you = { id = "", length = 4.40 },
+	sarp_12_house_up_path = { id = "", length = 5.50 },
+	sarp_13_come = { id = "", length = 2.48 },
+	sarp_14_no_road = { id = "", length = 2.29 },
+	sarp_15_ill_be_waiting = { id = "", length = 3.76 },
+	sarp_16_long_way = { id = "", length = 3.72 },
+	sarp_17_stay_close = { id = "", length = 4.40 },
+	sarp_18_leave_you = { id = "", length = 4.20 },
+	sarp_19_sleep_well = { id = "", length = 3.20 },
+}
+
 return Config
