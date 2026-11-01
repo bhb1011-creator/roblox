@@ -70,6 +70,10 @@ Config.SNACKS = {
 	{ title = "Chips", description = "Einfach lecker. Hilft gegen Hunger.", price = 15, color = Color3.fromRGB(230, 200, 60) },
 }
 
+-- Womit das Level startet: 1 = Kapitel 1 (Fahrt durch den Wald, Sarp),
+-- 2 = Kapitel 2 (man steht vor der Haustür der Wagners). Zum Testen einfach umstellen.
+Config.START_CHAPTER = 2
+
 -- Sounds für Level 1. Die Dateien liegen im Ordner assets/audio. Nach dem Hochladen bei
 -- Roblox die ID hier eintragen, z. B. "rbxassetid://1234567890". Leer = Sound fällt weg.
 Config.SOUNDS = {
@@ -111,6 +115,10 @@ Config.SOUNDS = {
 	stepGravel = "", -- step_gravel.ogg (Schritt auf Schotter)
 	stepDirt = "", -- step_dirt.ogg (Schritt auf Waldboden)
 	stepWood = "", -- step_wood.ogg (Schritt auf Holz, z. B. Veranda)
+	-- Kapitel 2: die Haustür der Wagners
+	doorCreak = "", -- door_creak.ogg (Tür geht knarrend auf)
+	doorSlam = "", -- door_slam.ogg (Tür fällt hinter einem zu)
+	doorChain = "", -- door_chain.ogg (Türkette wird abgenommen)
 }
 
 -- Sprachausgabe auf Englisch mit der Text-to-Speech-Funktion von Roblox.
@@ -148,6 +156,28 @@ Config.VOICES = {
 		volume = 2.6,
 		effects = {
 			{ "AudioEqualizer", { LowGain = -2, MidGain = 2, HighGain = 3 } },
+		},
+	},
+	-- Kapitel 2: Mrs. Wagner (übertrieben freundlich, langsam, ein bisschen zu süß)
+	mrsWagner = {
+		id = "4",
+		pitch = -1,
+		speed = 0.85,
+		volume = 2.2,
+		effects = {
+			{ "AudioEqualizer", { LowGain = 0, MidGain = 2, HighGain = -2 } },
+			{ "AudioReverb", { DecayTime = 1.1, WetLevel = -14, DryLevel = 0 } },
+		},
+	},
+	-- Kapitel 2: Mr. Wagner (tief, müde, redet wenig und kurz)
+	mrWagner = {
+		id = "5",
+		pitch = -3,
+		speed = 0.8,
+		volume = 2.4,
+		effects = {
+			{ "AudioEqualizer", { LowGain = 3, MidGain = 0, HighGain = -4 } },
+			{ "AudioReverb", { DecayTime = 1.1, WetLevel = -14, DryLevel = 0 } },
 		},
 	},
 	narrator = {

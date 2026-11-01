@@ -13,6 +13,8 @@ local Speech = {}
 local NAME_COLORS = {
 	sarp = Color3.fromRGB(205, 120, 105),
 	player = Color3.fromRGB(150, 190, 225),
+	mrsWagner = Color3.fromRGB(215, 185, 150),
+	mrWagner = Color3.fromRGB(170, 170, 150),
 }
 
 local output

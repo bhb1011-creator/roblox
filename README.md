@@ -35,6 +35,28 @@ Die Lobby wird erst beim **Play** per Code gebaut. Im Bearbeiten-Modus siehst du
 Skripte (z. B. ServerScriptService › Lobby) und die leere Baseplate – das ist normal.
 Die Baseplate wird beim Start automatisch entfernt.
 
+## Kapitel wählen
+
+In `src/shared/Config.lua` steht `Config.START_CHAPTER`:
+
+- `1` = Kapitel 1 (die Fahrt durch den Wald, Sarp)
+- `2` = Kapitel 2 (man steht vor der Haustür der Wagners) – **im Moment eingestellt**
+
+Gestartet wird beides gleich: `rojo serve level.project.json --port 34873`, in Studio verbinden, **Play**.
+
+## Kapitel 2 – „Die Wagners“ (Anfang)
+
+- Man startet auf der Veranda vor der Haustür (wie am Ende von Kapitel 1), läuft selbst in der Ego-Perspektive, Handy als Taschenlampe
+- An der Tür erscheint **„Klopfen“** (Taste **E** oder antippen). Danach: lange Stille, Schritte im Haus, die Tür geht einen Spalt auf – mit Kette
+- **Mrs. Wagner** steht mit einer Kerze dahinter: übertrieben freundlich, starres Lächeln, blinzelt nie, ihr Kopf dreht sich immer mit einem mit
+- Sie nimmt die Kette ab und öffnet ganz. Zwei Antworten wählt, wer geklopft hat (Tasten **1** und **2**)
+- Die Kerze flackert fast aus – danach steht **Mr. Wagner** plötzlich hinter ihr (groß, hager, Bart, blutig verbundene Hand, schaut meist auf den Boden)
+- Sie bitten einen herein; man geht selbst hinein, die Tür fällt hinter einem zu. (Wer draußen bleibt, wird erinnert und nach 40 Sekunden hereingeholt)
+- Eingangshalle: Treppe zur Galerie mit zwei Türen (die erste ist vernagelt – „Not the first one.“), stehen gebliebene Standuhr, Kinderstiefel an der Garderobe, Familienfotos mit zerkratzten Gesichtern, verhängter Spiegel, Durchgänge ins Dunkle, nur Kerzenlicht
+- Stimmen erst mal mit der Roblox-Stimme (Mrs. Wagner: Stimme 4, Mr. Wagner: Stimme 5, siehe `Config.VOICES`)
+- Texte und Ablauf: `src/shared/Kapitel2Dialogue.lua`, Figuren: `src/level/server/Wagners.lua`, Konzept: `docs/konzept/wagners.md`
+- Die Kinder (Tochter und Sohn) kommen später
+
 ## Level 1 – Zwischensequenz „Die Fahrt“
 
 - Man sitzt im Auto: allein am Steuer, zu zweit sitzt der zweite Spieler auf dem Beifahrersitz
@@ -45,7 +67,7 @@ Die Baseplate wird beim Start automatisch entfernt.
 - Das Auto hält in einer Parkbucht mit Waldweg und flackernder Laterne
 - Der Fremde kommt schon beim Einparken langsam aus dem Wald, klopft ans Beifahrerfenster und redet mit einem. Bis er sich als **Sarp** vorstellt, steht in den Untertiteln „???“
 - Drei Antworten wählt der **Fahrer** (Maus/Finger oder Tasten **1** und **2**); nach 25 Sekunden ohne Wahl wird die erste genommen
-- **Ende A – nicht folgen:** Man fährt weiter. Die Straße wendet in einer weiten Kehre (180°) und führt auf der anderen Seite des Waldes zurück; dann biegt man in die Einfahrt der Wagners und fährt den Hang hinauf. Sarp steht schon im Scheinwerferlicht vor der Garage Er sagt „You took the long way.“, geht an der Garage vorbei in den Wald und löst sich auf. Dann wird es kurz schwarz, man steigt aus und steht (selbst laufend) auf der Veranda vor der Haustür.
+- **Ende A – nicht folgen:** Man fährt weiter. Die Straße wendet in einer weiten Kehre (180°) und führt auf der anderen Seite des Waldes zurück; dann biegt man in die Einfahrt der Wagners und fährt den Hang hinauf. Sarp steht schon im Scheinwerferlicht vor der Garage. Er sagt „You took the long way.“, geht an der Garage vorbei in den Wald und löst sich auf. Dann wird es kurz schwarz, man steigt aus und steht (selbst laufend) auf der Veranda vor der Haustür.
 - **Ende B – folgen:** Man steigt aus und **läuft selbst** (WASD oder Stick, Ego-Perspektive, Handy als Taschenlampe, **Shift = rennen** mit Ausdauer) über einen unheimlichen Waldweg quer durch dichten Wald den Hügel hinauf. Der Weg ist hell, mit Randsteinen und schwach leuchtenden Pilzen. Sarp geht gleichmäßig voraus und wartet nicht. An der Veranda verabschiedet er sich und verschwindet im Wald
 - **Das Biest** ist der Fremde in seiner letzten Gestalt (Stufe 3 aus `docs/konzept/der_fremde_stufen.png`): riesig und dürr, ovaler Kopf mit einem Maul vom Scheitel bis zum Kinn, rot glühende Flecken und Adern, Fetzen der olivgrünen Jacke. Wer Sarp nicht folgt (mehr als ~26 Studs zurück oder weit neben dem Weg), hört nach 4 Sekunden ein Knurren im Wald, nach 9 Sekunden näher, und nach 14 Sekunden kommt es und jagt einen. Wer zurück zu Sarp rennt, ist sicher. Wen es erwischt, der stirbt (Schreckmoment, „DU BIST GESTORBEN“) und taucht nach ein paar Sekunden hinter Sarp wieder auf
 - Das Haus der Wagners steht oben auf einem Hügel: großes, altes Holzhaus mit zwei Stockwerken, Veranda, Garage, Schornstein, Zaun, Briefkasten – **kein einziges Licht brennt**
@@ -104,6 +126,7 @@ Die Sounds liegen in `assets/audio` (selbst erzeugt, frei verwendbar):
 | `step_gravel.ogg`, `step_dirt.ogg`, `step_wood.ogg` | Schritte auf Schotter, Waldboden und Holz (Config: `stepGravel`, `stepDirt`, `stepWood`) |
 | `owl_hoot.ogg`, `wolf_howl.ogg`, `raven_caw.ogg`, `fox_scream.ogg` | Tiere weit weg im Wald (Config: `owl`, `wolf`, `raven`, `foxScream`) |
 | `bird_flyaway.ogg` | Vogel fliegt in der Nähe erschrocken auf (Config: `birdFlyaway`) |
+| `door_creak.ogg`, `door_slam.ogg`, `door_chain.ogg` | Kapitel 2: Haustür knarrt, fällt zu, Türkette (Config: `doorCreak`, `doorSlam`, `doorChain`) |
 
 1. Auf **create.roblox.com → Kreationen → Entwicklungsobjekte (Development Items) → Audio** jede Datei hochladen
    (oder in Studio: **Asset Manager → Bulk Import**).
@@ -122,8 +145,8 @@ Fehlt eine ID, wird der Sound einfach weggelassen – das Spiel funktioniert tro
 | `src/shared` | ReplicatedStorage › Shared | `Config.lua` (Einstellungen), `Parts.lua` und `Forest.lua` (Bausteine), `LevelRoute.lua` (Strecke, Haus und Wege von Level 1), `Dialogue.lua` (alle Texte), `Beast.lua` (das Biest) |
 | `src/lobby/server` | ServerScriptService › Lobby | Bauen der Lobby (Environment, Road, ParkingLot, Camp, Buildings, Decor, Car) und Autos (CarQueue) |
 | `src/lobby/client` | StarterPlayerScripts › Lobby | Knöpfe, Hinweise, Shop-Fenster, Lichteffekte |
-| `src/level/server` | ServerScriptService › Level | Level 1: Welt, Haus der Wagners, Auto, Sarp, Ablauf des Gesprächs (`DialogueRunner`), Waldweg mit Biest (`ForestWalk`) |
-| `src/level/client` | StarterPlayerScripts › Level | Ablauf der Zwischensequenz, Kamera, Sprachausgabe/Untertitel (`Speech`), Antwortauswahl (`Choices`), Biest/Rennen/Tod (`BeastView`), Umgebungsgeräusche (`Ambience`) |
+| `src/level/server` | ServerScriptService › Level | Level 1: Welt, Haus der Wagners, Auto, Sarp, Ablauf des Gesprächs (`DialogueRunner`), Waldweg mit Biest (`ForestWalk`). Kapitel 2: Ablauf (`Kapitel2`), Eingangshalle (`HouseInterior`), die Wagners (`Wagners`) |
+| `src/level/client` | StarterPlayerScripts › Level | Ablauf der Zwischensequenz, Kamera, Sprachausgabe/Untertitel (`Speech`), Antwortauswahl (`Choices`), Biest/Rennen/Tod (`BeastView`), Umgebungsgeräusche (`Ambience`), Kapitel 2 (`Kapitel2`) |
 
 ## Robux-Produkte einrichten (Kasse)
 

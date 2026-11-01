@@ -9,6 +9,18 @@ local Route = require(ReplicatedStorage.Shared.LevelRoute)
 
 local House = {}
 
+-- true = das Erdgeschoss hat eine begehbare Eingangshalle mit Treppe und die Haustür
+-- lässt sich öffnen (Kapitel 2). Sonst ist das Haus innen massiv (Kapitel 1).
+House.interior = false
+
+-- Eingangshalle (relativ zum Haus): x von HALL_X0 bis HALL_X1, z von der Innenseite der
+-- Vorderwand bis HALL_Z1. Die Wände sind 0.8 dick.
+House.HALL_X0, House.HALL_X1, House.HALL_Z1 = -8, 4, 3
+House.WALL = 0.8
+House.BASE = 1.6
+House.STORY = 10
+House.DOOR_HINGE = Vector3.new(-4, 1.6, -15.15) -- Scharnier der Haustür (Innenseite)
+
 local Y = Route.GROUND_Y
 local W, D = Route.HOUSE_SIZE.X, Route.HOUSE_SIZE.Z -- Wohnhaus 40 × 30
 local BASE = 1.6 -- Höhe des Steinsockels (Fußboden Erdgeschoss)
@@ -66,7 +78,24 @@ function House.build(parent)
 
 	------------------------------------------------------------------ Wohnhaus: Sockel und Wände
 	block("Foundation", Vector3.new(W + 1, BASE, D + 1), CFrame.new(0, BASE / 2, 0), COLORS.stone, Enum.Material.Cobblestone)
-	block("Walls", Vector3.new(W, 2 * STORY, D), CFrame.new(0, BASE + STORY, 0), COLORS.siding, Enum.Material.WoodPlanks)
+	if House.interior then
+		-- Massive Wände mit einem Loch für die Eingangshalle (und die Haustür)
+		local x0, x1, z1, wall = House.HALL_X0, House.HALL_X1, House.HALL_Z1, House.WALL
+		local front = -D / 2 + wall
+		local height = 2 * STORY
+		local function wallBlock(fromX, toX, fromZ, toZ, fromY, toY)
+			block("Walls", Vector3.new(toX - fromX, toY - fromY, toZ - fromZ), CFrame.new((fromX + toX) / 2, (fromY + toY) / 2, (fromZ + toZ) / 2), COLORS.siding, Enum.Material.WoodPlanks)
+		end
+		wallBlock(-W / 2, x0, -D / 2, D / 2, BASE, BASE + height)
+		wallBlock(x1, W / 2, -D / 2, D / 2, BASE, BASE + height)
+		wallBlock(x0, x1, z1, D / 2, BASE, BASE + height)
+		-- Vorderwand mit Türöffnung (4 breit, 7.8 hoch)
+		wallBlock(x0, -4, -D / 2, front, BASE, BASE + height)
+		wallBlock(0, x1, -D / 2, front, BASE, BASE + height)
+		wallBlock(-4, 0, -D / 2, front, BASE + 7.8, BASE + height)
+	else
+		block("Walls", Vector3.new(W, 2 * STORY, D), CFrame.new(0, BASE + STORY, 0), COLORS.siding, Enum.Material.WoodPlanks)
+	end
 
 	-- Seiten des Hauses: CFrame auf der Wand, LookVector zeigt nach außen
 	local faces = {
@@ -86,7 +115,14 @@ function House.build(parent)
 			-- nicht unter den Zierbrettern und nicht innen in der Garage
 			local underTrim = math.abs(y - (BASE + STORY)) < 0.45
 			local inGarage = name == "right" and y < GH + 4.5
-			if not underTrim and not inGarage then
+			-- mit begehbarem Haus: vorne nicht quer über die Türöffnung
+			local overDoor = House.interior and name == "front" and y < BASE + 8.8
+			if overDoor and not underTrim then
+				local leftEnd, rightStart = -4.7, 0.7 -- Türrahmen bei x = -4.6 bis 0.6
+				local from, to = -face.width / 2 + 0.4, face.width / 2 - 0.4
+				block("Siding", Vector3.new(leftEnd - from, 0.12, 0.12), face.cframe * CFrame.new((from + leftEnd) / 2, y, -0.06), COLORS.sidingLine, Enum.Material.Wood)
+				block("Siding", Vector3.new(to - rightStart, 0.12, 0.12), face.cframe * CFrame.new((rightStart + to) / 2, y, -0.06), COLORS.sidingLine, Enum.Material.Wood)
+			elseif not underTrim and not inGarage then
 				block("Siding", Vector3.new(face.width - 0.8, 0.12, 0.12), face.cframe * CFrame.new(0, y, -0.06), COLORS.sidingLine, Enum.Material.Wood)
 			end
 		end
@@ -161,12 +197,34 @@ function House.build(parent)
 	------------------------------------------------------------------ Haustür
 	local doorX = -2
 	local door = faces.front.cframe * CFrame.new(doorX, BASE, 0)
-	block("DoorFrame", Vector3.new(5.2, 8.6, 0.4), door * CFrame.new(0, 4.3, -0.15), COLORS.trim, Enum.Material.Wood)
-	block("Door", Vector3.new(4, 7.8, 0.3), door * CFrame.new(0, 3.9, -0.3), COLORS.darkWood, Enum.Material.WoodPlanks)
-	for _, y in { 2, 5.6 } do
-		block("DoorPanel", Vector3.new(2.8, 2.6, 0.12), door * CFrame.new(0, y, -0.5), Color3.fromRGB(44, 34, 26), Enum.Material.Wood)
+	if House.interior then
+		-- Rahmen mit Öffnung; die Tür ist ein eigenes Modell, das sich am Scharnier dreht
+		for _, side in { -1, 1 } do
+			block("DoorFrame", Vector3.new(0.65, 7.8, 0.4), door * CFrame.new(side * 2.275, 3.9, -0.15), COLORS.trim, Enum.Material.Wood)
+		end
+		-- Sturz etwas dicker als die Pfosten (keine gleichen Flächen an den Ecken)
+		block("DoorFrame", Vector3.new(5.24, 0.85, 0.44), door * CFrame.new(0, 8.175, -0.15), COLORS.trim, Enum.Material.Wood)
+		block("Threshold", Vector3.new(4, 0.1, House.WALL + 0.2), door * CFrame.new(0, 0.05, House.WALL / 2 - 0.1), COLORS.darkWood, Enum.Material.Wood)
+		local doorModel = Instance.new("Model")
+		doorModel.Name = "FrontDoor"
+		local doorBlock = Parts.builder(doorModel, origin)
+		local hinge = doorBlock("Hinge", Vector3.new(0.2, 0.2, 0.2), CFrame.new(House.DOOR_HINGE), COLORS.metal, Enum.Material.Metal, { Transparency = 1, CanCollide = false, CanQuery = false })
+		doorBlock("Door", Vector3.new(3.96, 7.7, 0.3), door * CFrame.new(0, 3.85, -0.3), COLORS.darkWood, Enum.Material.WoodPlanks)
+		for _, y in { 2, 5.6 } do
+			doorBlock("DoorPanel", Vector3.new(2.8, 2.6, 0.12), door * CFrame.new(0, y, -0.5), Color3.fromRGB(44, 34, 26), Enum.Material.Wood)
+		end
+		doorBlock("DoorKnob", Vector3.new(0.3, 0.3, 0.3), door * CFrame.new(1.4, 3.8, -0.55), COLORS.metal, Enum.Material.Metal, { Shape = Enum.PartType.Ball })
+		doorBlock("DoorKnob", Vector3.new(0.3, 0.3, 0.3), door * CFrame.new(1.4, 3.8, -0.03), COLORS.metal, Enum.Material.Metal, { Shape = Enum.PartType.Ball })
+		doorModel.PrimaryPart = hinge
+		doorModel.Parent = model
+	else
+		block("DoorFrame", Vector3.new(5.2, 8.6, 0.4), door * CFrame.new(0, 4.3, -0.15), COLORS.trim, Enum.Material.Wood)
+		block("Door", Vector3.new(4, 7.8, 0.3), door * CFrame.new(0, 3.9, -0.3), COLORS.darkWood, Enum.Material.WoodPlanks)
+		for _, y in { 2, 5.6 } do
+			block("DoorPanel", Vector3.new(2.8, 2.6, 0.12), door * CFrame.new(0, y, -0.5), Color3.fromRGB(44, 34, 26), Enum.Material.Wood)
+		end
+		block("DoorKnob", Vector3.new(0.3, 0.3, 0.3), door * CFrame.new(1.4, 3.8, -0.55), COLORS.metal, Enum.Material.Metal, { Shape = Enum.PartType.Ball })
 	end
-	block("DoorKnob", Vector3.new(0.3, 0.3, 0.3), door * CFrame.new(1.4, 3.8, -0.55), COLORS.metal, Enum.Material.Metal, { Shape = Enum.PartType.Ball })
 	block("DoorWindow", Vector3.new(3.9, 1, 0.2), door * CFrame.new(0, 8.2, -0.1), COLORS.glass, Enum.Material.Glass)
 	block("HouseNumber", Vector3.new(1.2, 0.8, 0.1), door * CFrame.new(0, 9.2, -0.1), COLORS.metal, Enum.Material.Metal)
 	block("DoorMat", Vector3.new(3.6, 0.06, 2), CFrame.new(doorX, BASE + 0.1, -D / 2 - 1.4), Color3.fromRGB(70, 56, 40), Enum.Material.Fabric)
@@ -377,6 +435,10 @@ function House.build(parent)
 			Size = UDim2.fromScale(0.9, 0.5),
 			Position = UDim2.fromScale(0.05, 0.25),
 		})
+	end
+
+	if House.interior then
+		require(script.Parent.HouseInterior).build(model, origin)
 	end
 
 	model.Parent = parent
