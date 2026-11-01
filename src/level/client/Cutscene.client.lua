@@ -106,6 +106,7 @@ local chapterTitle = label({
 })
 Speech.init(gui)
 Speech.preload() -- eigene Sprachaufnahmen schon jetzt laden
+Speech.debugPanel(gui) -- in Studio: Taste J = Audio-Prüfung, Taste K = alle Aufnahmen anhören
 Choices.init(gui)
 
 local function showText(target, visible, duration)

@@ -141,10 +141,29 @@ end
 -- Alle eigenen Sprachaufnahmen gleich zu Beginn laden, damit sie rechtzeitig bereit
 -- sind. Was nicht lädt (z. B. noch in Prüfung bei Roblox oder keine Berechtigung),
 -- steht danach im Output; für diese Sätze spricht dann die Roblox-Stimme.
-local recordings = {} -- Name -> geladene Vorlage (Sound)
+local recordings = {} -- Name -> Vorlage (Sound)
 local recordingFolder = Instance.new("Folder")
 recordingFolder.Name = "VoiceLines"
 recordingFolder.Parent = SoundService
+
+-- Zustand einer Aufnahme: "geladen", "lädt …" oder der Fehler von Roblox
+local function statusOf(name)
+	local sound = recordings[name]
+	if not sound then
+		return "keine ID"
+	end
+	if sound.IsLoaded then
+		return "geladen"
+	end
+	local ok, fetch = pcall(ContentProvider.GetAssetFetchStatus, ContentProvider, sound.SoundId)
+	if ok and fetch == Enum.AssetFetchStatus.Failure then
+		return "FEHLER (keine Berechtigung, abgelehnt oder noch in Prüfung)"
+	elseif ok and fetch == Enum.AssetFetchStatus.TimedOut then
+		return "FEHLER (Zeitüberschreitung)"
+	end
+	return "lädt …"
+end
+Speech.statusOf = statusOf
 
 function Speech.preload()
 	local list = {}
@@ -162,33 +181,47 @@ function Speech.preload()
 		return
 	end
 	task.spawn(function()
-		local failed = {}
 		pcall(function()
-			ContentProvider:PreloadAsync(list, function(assetId, status)
-				if status ~= Enum.AssetFetchStatus.Success then
-					table.insert(failed, assetId)
-				end
-			end)
+			ContentProvider:PreloadAsync(list)
 		end)
-		local missing = {}
-		for name, sound in recordings do
-			if not sound.IsLoaded then
-				table.insert(missing, name .. " (" .. sound.SoundId .. ")")
+		-- Dem Laden noch etwas Zeit geben, dann das Ergebnis in den Output schreiben
+		local deadline = os.clock() + 10
+		local missing
+		repeat
+			missing = {}
+			for name in recordings do
+				if statusOf(name) ~= "geladen" then
+					table.insert(missing, name)
+				end
 			end
-		end
+			task.wait(0.5)
+		until #missing == 0 or os.clock() > deadline
 		table.sort(missing)
 		if #missing > 0 then
-			warn(string.format("Sprachaufnahmen: %d von %d laden nicht, dort spricht die Roblox-Stimme:\n  %s", #missing, #list, table.concat(missing, "\n  ")))
+			local lines = {}
+			for _, name in missing do
+				table.insert(lines, string.format("%s (%s): %s", name, recordings[name].SoundId, statusOf(name)))
+			end
+			warn(string.format("Sprachaufnahmen: %d von %d laden nicht, dort spricht die Roblox-Stimme:\n  %s", #missing, #list, table.concat(lines, "\n  ")))
 		else
 			print(string.format("Sprachaufnahmen: alle %d geladen.", #list))
 		end
 	end)
 end
 
--- Eigene Sprachaufnahme abspielen. Gibt false zurück, wenn sie (noch) nicht geladen ist.
+-- Eigene Sprachaufnahme abspielen. Lädt sie noch, wird bis zu 2,5 Sekunden gewartet.
+-- Gibt false zurück, wenn sie nicht spielbar ist (dann spricht die Roblox-Stimme).
 local function playRecording(speaker, name)
 	local template = recordings[name]
-	if not template or not template.IsLoaded then
+	if not template then
+		return false
+	end
+	local deadline = os.clock() + 2.5
+	while not template.IsLoaded and os.clock() < deadline and statusOf(name) == "lädt …" do
+		task.wait(0.1)
+	end
+	if not template.IsLoaded then
+		warn("Sprachaufnahme nicht spielbar:", name, template.SoundId, statusOf(name))
 		return false
 	end
 	local emitter = emitters[speaker]
@@ -233,10 +266,109 @@ function Speech.say(speaker, name, text, duration, voiceName)
 			show(false, 0.6)
 		end
 	end)
-	local played = voiceName and playRecording(speaker, voiceName)
-	if not played and Config.SPEECH_ENABLED ~= false then
-		task.spawn(speak, speaker, text)
+	task.spawn(function()
+		local played = voiceName and playRecording(speaker, voiceName)
+		if not played and Config.SPEECH_ENABLED ~= false then
+			speak(speaker, text)
+		end
+	end)
+end
+
+------------------------------------------------------------------ Audio-Prüfung (nur in Studio)
+-- Taste J zeigt eine Liste aller Aufnahmen mit ihrem Zustand, Taste K spielt alle nacheinander ab.
+function Speech.debugPanel(gui)
+	local RunService = game:GetService("RunService")
+	local UserInputService = game:GetService("UserInputService")
+	if not RunService:IsStudio() then
+		return
 	end
+	local panel = Instance.new("ScrollingFrame")
+	panel.Name = "AudioCheck"
+	panel.AnchorPoint = Vector2.new(1, 0)
+	panel.Position = UDim2.new(1, -12, 0, 70)
+	panel.Size = UDim2.new(0, 520, 0.8, 0)
+	panel.BackgroundColor3 = Color3.fromRGB(10, 10, 12)
+	panel.BackgroundTransparency = 0.15
+	panel.BorderSizePixel = 0
+	panel.ScrollBarThickness = 6
+	panel.AutomaticCanvasSize = Enum.AutomaticSize.Y
+	panel.CanvasSize = UDim2.new()
+	panel.Visible = false
+	panel.ZIndex = 20
+	panel.Parent = gui
+	local layout = Instance.new("UIListLayout")
+	layout.SortOrder = Enum.SortOrder.Name
+	layout.Parent = panel
+	local hint = Instance.new("TextLabel")
+	hint.Name = "!Hint"
+	hint.Size = UDim2.new(1, -10, 0, 40)
+	hint.BackgroundTransparency = 1
+	hint.Font = Enum.Font.Code
+	hint.TextSize = 14
+	hint.TextWrapped = true
+	hint.TextXAlignment = Enum.TextXAlignment.Left
+	hint.TextColor3 = Color3.fromRGB(255, 255, 255)
+	hint.Text = "AUDIO-PRÜFUNG  (J = ein/aus, K = alle nacheinander anhören)"
+	hint.ZIndex = 21
+	hint.Parent = panel
+	local rows = {}
+	local names = {}
+	for name in Config.VOICE_LINES or {} do
+		table.insert(names, name)
+	end
+	table.sort(names)
+	for _, name in names do
+		local row = Instance.new("TextLabel")
+		row.Name = name
+		row.Size = UDim2.new(1, -10, 0, 18)
+		row.BackgroundTransparency = 1
+		row.Font = Enum.Font.Code
+		row.TextSize = 13
+		row.TextXAlignment = Enum.TextXAlignment.Left
+		row.ZIndex = 21
+		row.Parent = panel
+		rows[name] = row
+	end
+	task.spawn(function()
+		while panel.Parent do
+			if panel.Visible then
+				for name, row in rows do
+					local status = statusOf(name)
+					row.Text = string.format("%-24s %s", name, status)
+					row.TextColor3 = status == "geladen" and Color3.fromRGB(120, 230, 120)
+						or status == "lädt …" and Color3.fromRGB(240, 210, 90)
+						or Color3.fromRGB(255, 90, 80)
+				end
+			end
+			task.wait(0.5)
+		end
+	end)
+	local playingAll = false
+	UserInputService.InputBegan:Connect(function(input)
+		if input.KeyCode == Enum.KeyCode.J then
+			panel.Visible = not panel.Visible
+		elseif input.KeyCode == Enum.KeyCode.K and not playingAll then
+			playingAll = true
+			panel.Visible = true
+			task.spawn(function()
+				for _, name in names do
+					local row = rows[name]
+					row.Text = "> " .. name .. "   (spielt)"
+					local sound = recordings[name]
+					if sound and sound.IsLoaded then
+						local copy = sound:Clone()
+						copy.Parent = SoundService
+						copy:Play()
+						task.wait(math.min(copy.TimeLength, 8) + 0.3)
+						copy:Destroy()
+					else
+						task.wait(0.3)
+					end
+				end
+				playingAll = false
+			end)
+		end
+	end)
 end
 
 function Speech.isSpeaking()
