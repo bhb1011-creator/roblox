@@ -15,6 +15,9 @@ Sarp ist „der Fremde“ und die zentrale Figur des Spiels. Bild der Stufen:
   Wald ist seine letzte Gestalt.
 - Der Spieler hat noch einen eigenen Plan dafür, wie Sarp und das Biest in der Story
   zusammenhängen. Nichts daran ändern, ohne vorher zu fragen.
+- **Festgelegt:** Sarp ist ein **Dämon**, die Familie Wagner ist von ihm besessen. Erst wirkt
+  Sarp wie der Böse, später merkt man, dass die Wagners die Bösen sind. Siehe
+  `docs/konzept/wagners.md`.
 
 ## Die drei Stufen
 

@@ -84,6 +84,10 @@ end
 
 local function newBody(name, colors, scale)
 	local description = Instance.new("HumanoidDescription")
+	pcall(function()
+		description.Face = 0 -- kein Roblox-Gesicht
+		description.Head = 0 -- klassischer runder Kopf
+	end)
 	description.HeadColor = colors.skin
 	description.TorsoColor = colors.torso
 	description.LeftArmColor = colors.arms
@@ -112,10 +116,21 @@ local function newBody(name, colors, scale)
 	if animate then
 		animate:Destroy()
 	end
-	local face = model.Head:FindFirstChildOfClass("Decal")
-	if face then
-		face:Destroy()
+	-- Das Roblox-Gesicht komplett entfernen (Aufkleber, Gesichtssteuerung und das
+	-- Gesicht, das bei neueren Köpfen direkt in der Kopf-Textur steckt). Sonst sieht man
+	-- es unter dem eigenen Gesicht durchscheinen.
+	local head = model.Head
+	for _, child in head:GetDescendants() do
+		if child:IsA("Decal") or child:IsA("FaceControls") or child.Name == "face" then
+			child:Destroy()
+		end
 	end
+	pcall(function()
+		head.TextureID = ""
+	end)
+	pcall(function()
+		head.Color = colors.skin
+	end)
 	for _, partName in { "LeftHand", "RightHand" } do
 		local hand = model:FindFirstChild(partName)
 		if hand then

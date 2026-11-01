@@ -3,6 +3,14 @@
 Die Gastfamilie, bei der man nach dem Campingausflug eine Nacht bleiben soll. Vier Personen:
 Vater, Mutter, Tochter und Sohn. Jeder bekommt eine eigene Figur und eine eigene Stimme.
 
+## Die Geschichte (vom Spieler festgelegt)
+
+- **Sarp ist ein Dämon.** Die ganze Familie Wagner ist von ihm **besessen** – deshalb sind
+  sie alle so komisch.
+- Erst glaubt man, **Sarp ist der Böse** (und die Familie hat Angst vor ihm). Im Laufe der
+  Geschichte merkt man: **Die Wagners sind die Bösen**, sie gehören zu ihm.
+- Irgendwann muss man **vor der Familie fliehen**.
+
 ## Grundgefühl
 
 Alles ist düster bei ihnen, irgendwie komisch. Sie sind freundlich, aber es stimmt nicht:
@@ -19,8 +27,15 @@ Alles ist düster bei ihnen, irgendwie komisch. Sie sind freundlich, aber es sti
 |---|---|---|---|
 | **Mrs. Wagner (Margaret)** | um die 45, dunkelgrünes Kleid, graubraune Strickjacke, Spitzenkragen, Medaillon, Haare streng zu einem Knoten, graue Strähnen. Sehr blass, dunkle Ringe unter den Augen, winzige starre Pupillen | übertrieben freundlich, langsam, ein bisschen zu süß. Lächelt immer. Schaut einen ständig an. Hält eine Kerze | Stimme 4 (amerikanisch, Frau), etwas tiefer, langsam |
 | **Mr. Wagner (Richard)** | groß und hager, schmutziges Hemd mit hochgekrempelten Ärmeln, Hosenträger, ungepflegter Bart, müde Augen. Linke Hand verbunden, der Verband ist blutig | redet wenig und kurz, schaut meist auf den Boden. Scheint Angst vor etwas zu haben („He shouldn't have.“). Seine Frau unterbricht ihn („Richard.“) | Stimme 5 (amerikanisch, Mann), tief, müde |
-| **Tochter** | kommt später | | |
-| **Sohn** | kommt später | | |
+| **Tochter** (Vorschlag: Lucy, ca. 12) | noch offen | steht beim Ankommen oben an der Galerie und schaut, obwohl sie angeblich schläft. Lächelt wie die Mutter | noch offen |
+| **Sohn** (Vorschlag: Tommy, ca. 7) | noch offen | spielt im Salon immer denselben Klavierton, malt Bilder von Sarp | noch offen |
+
+## Das Haus
+
+Bauplan (Entwurf, noch nicht gebaut): `docs/konzept/hausplan.html`. Keller, Erdgeschoss und
+Obergeschoss, innen gut doppelt so groß wie außen (84 × 64 statt 40 × 30). Vorschlag: Wenn
+die Tür hinter einem zufällt, wird es kurz schwarz und man steht im großen Haus, in einer
+Eingangshalle, die genau gleich aussieht.
 
 ## Kapitel 2 – Anfang (gebaut)
 
