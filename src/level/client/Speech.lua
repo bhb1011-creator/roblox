@@ -2,6 +2,7 @@
 -- Klappt die Sprachausgabe nicht (z. B. weil Roblox sie im Spiel noch nicht erlaubt),
 -- erscheint eine Warnung im Output und man sieht nur die Untertitel.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ContentProvider = game:GetService("ContentProvider")
 local SoundService = game:GetService("SoundService")
 local TweenService = game:GetService("TweenService")
 
@@ -137,15 +138,65 @@ function Speech.setEmitter(speaker, part)
 	emitters[speaker] = part
 end
 
--- Eigene Sprachaufnahme abspielen (aus Config.VOICE_LINES)
-local function playRecording(speaker, recording)
+-- Alle eigenen Sprachaufnahmen gleich zu Beginn laden, damit sie rechtzeitig bereit
+-- sind. Was nicht lädt (z. B. noch in Prüfung bei Roblox oder keine Berechtigung),
+-- steht danach im Output; für diese Sätze spricht dann die Roblox-Stimme.
+local recordings = {} -- Name -> geladene Vorlage (Sound)
+local recordingFolder = Instance.new("Folder")
+recordingFolder.Name = "VoiceLines"
+recordingFolder.Parent = SoundService
+
+function Speech.preload()
+	local list = {}
+	for name, recording in Config.VOICE_LINES or {} do
+		if recording.id ~= "" then
+			local sound = Instance.new("Sound")
+			sound.Name = name
+			sound.SoundId = recording.id
+			sound.Parent = recordingFolder
+			recordings[name] = sound
+			table.insert(list, sound)
+		end
+	end
+	if #list == 0 then
+		return
+	end
+	task.spawn(function()
+		local failed = {}
+		pcall(function()
+			ContentProvider:PreloadAsync(list, function(assetId, status)
+				if status ~= Enum.AssetFetchStatus.Success then
+					table.insert(failed, assetId)
+				end
+			end)
+		end)
+		local missing = {}
+		for name, sound in recordings do
+			if not sound.IsLoaded then
+				table.insert(missing, name .. " (" .. sound.SoundId .. ")")
+			end
+		end
+		table.sort(missing)
+		if #missing > 0 then
+			warn(string.format("Sprachaufnahmen: %d von %d laden nicht, dort spricht die Roblox-Stimme:\n  %s", #missing, #list, table.concat(missing, "\n  ")))
+		else
+			print(string.format("Sprachaufnahmen: alle %d geladen.", #list))
+		end
+	end)
+end
+
+-- Eigene Sprachaufnahme abspielen. Gibt false zurück, wenn sie (noch) nicht geladen ist.
+local function playRecording(speaker, name)
+	local template = recordings[name]
+	if not template or not template.IsLoaded then
+		return false
+	end
 	local emitter = emitters[speaker]
-	local sound = Instance.new("Sound")
+	local sound = template:Clone()
 	sound.Name = "VoiceLine"
-	sound.SoundId = recording.id
 	sound.Volume = 1.3
-	sound.RollOffMinDistance = 10
-	sound.RollOffMaxDistance = 90
+	sound.RollOffMinDistance = 14
+	sound.RollOffMaxDistance = 150
 	-- etwas Hall, damit es nach draußen im Wald klingt
 	local reverb = Instance.new("ReverbSoundEffect")
 	reverb.DecayTime = 1.4
@@ -159,6 +210,7 @@ local function playRecording(speaker, recording)
 	sound.Ended:Connect(function()
 		sound:Destroy()
 	end)
+	return true
 end
 
 function Speech.say(speaker, name, text, duration, voiceName)
@@ -181,10 +233,8 @@ function Speech.say(speaker, name, text, duration, voiceName)
 			show(false, 0.6)
 		end
 	end)
-	local recording = voiceName and Config.VOICE_LINES and Config.VOICE_LINES[voiceName]
-	if recording and recording.id ~= "" then
-		playRecording(speaker, recording)
-	elseif Config.SPEECH_ENABLED ~= false then
+	local played = voiceName and playRecording(speaker, voiceName)
+	if not played and Config.SPEECH_ENABLED ~= false then
 		task.spawn(speak, speaker, text)
 	end
 end

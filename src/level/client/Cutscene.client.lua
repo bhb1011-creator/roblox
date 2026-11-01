@@ -105,6 +105,7 @@ local chapterTitle = label({
 	TextColor3 = Color3.fromRGB(240, 230, 215),
 })
 Speech.init(gui)
+Speech.preload() -- eigene Sprachaufnahmen schon jetzt laden
 Choices.init(gui)
 
 local function showText(target, visible, duration)
