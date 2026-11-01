@@ -32,7 +32,8 @@ Sarp ist „der Fremde“ und die zentrale Figur des Spiels. Bild der Stufen:
 - Gespräch mit 3 Antworten (wählt der Fahrer), danach zwei Enden:
   - **Nicht folgen:** „There is no road to the house. But go ahead. I'll be waiting.“
     Er schaut dem Auto nach und steht dann plötzlich im Scheinwerferlicht vor der Garage:
-    „You took the long way.“
+    „You took the long way.“ Dann geht er an der Garage vorbei in den Wald und löst sich
+    auf. Die Spieler steigen aus und stehen vor der Haustür.
   - **Folgen:** Er geht gleichmäßig voraus, dreht sich nicht um und wartet nicht. Wer
     zurückbleibt, hört das Biest und wird gejagt. An der Veranda dreht er sich um:
     „This is where I leave you. Sleep well. And lock your door.“ Dann geht er in den

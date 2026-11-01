@@ -47,6 +47,7 @@ local function spawnWalker(player, cframe)
 	end
 	player.ReplicationFocus = nil
 end
+ForestWalk.spawnWalker = spawnWalker -- auch fürs Aussteigen vor der Haustür (Ende "drive")
 
 -- Läuft, bis jemand an der Veranda ankommt. onProgress(anteil) meldet, wie weit der
 -- vorderste Spieler ist (für die Erzählung).

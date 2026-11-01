@@ -495,6 +495,29 @@ function LevelRoute.leaveLine()
 	}), 1)
 end
 
+-- Ende "drive": Sarp geht von der Garage vor den Scheinwerfern vorbei, rechts an der
+-- Garage entlang (an Mülltonnen und Brennholz vorbei) nach hinten in den Wald
+function LevelRoute.garageLeaveLine()
+	local garageFront = -LevelRoute.GARAGE_SIZE.Z / 2
+	return LevelRoute.polyline(onHill({
+		LevelRoute.housePoint(LevelRoute.GARAGE_X, garageFront - 3.5),
+		LevelRoute.housePoint(LevelRoute.GARAGE_X + 15, garageFront - 5),
+		LevelRoute.housePoint(LevelRoute.GARAGE_X + 18, 0),
+		LevelRoute.housePoint(LevelRoute.GARAGE_X + 21, 18),
+		LevelRoute.housePoint(LevelRoute.GARAGE_X + 31, 34),
+	}), 1)
+end
+
+-- Ende "drive": Hier stehen die Spieler nach dem Aussteigen, auf der Veranda vor der
+-- Haustür, mit Blick zur Tür (index 1 links, 2 rechts)
+local PORCH_TOP = 1.64 -- Höhe der Veranda über dem Hof
+function LevelRoute.doorSpawn(index)
+	local x = -2 + ((index == 1) and -1.6 or 1.6)
+	local spot = LevelRoute.housePoint(x, -LevelRoute.HOUSE_SIZE.Z / 2 - 3.2) + Vector3.new(0, PORCH_TOP, 0)
+	local door = LevelRoute.housePoint(x, 0) + Vector3.new(0, PORCH_TOP, 0)
+	return CFrame.lookAt(spot, door)
+end
+
 ------------------------------------------------------------------ Abstände zu Weg und Einfahrt
 local drivewaySamples = {}
 do

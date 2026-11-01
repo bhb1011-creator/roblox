@@ -108,7 +108,12 @@ function DialogueRunner.start(cutscene, startTime, duo)
 		end)
 		for _, entry in timed do
 			waitUntil(entry.time)
-			if entry.step.finish then
+			if entry.step.exitCar then
+				-- aussteigen: echte Spielfiguren auf der Veranda vor der Haustür
+				for index, player in Players:GetPlayers() do
+					task.spawn(ForestWalk.spawnWalker, player, Route.doorSpawn(index))
+				end
+			elseif entry.step.finish then
 				cutscene:SetAttribute("Finished", true)
 				for _, player in Players:GetPlayers() do
 					local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")

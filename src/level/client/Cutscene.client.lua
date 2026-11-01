@@ -432,6 +432,14 @@ local leaveLine = Route.leaveLine()
 local walkSetup = 1.2 -- Sekunden nach Beginn von "follow": jetzt ist alles schwarz, man steigt aus
 local freeWalk = false -- true, sobald man selbst läuft
 local garageSpot = Route.housePoint(Route.GARAGE_X, -Route.GARAGE_SIZE.Z / 2 - 3.5)
+local garageLeaveLine = Route.garageLeaveLine()
+-- Ende "drive": wann man aussteigt (Sekunden nach Beginn des Endes, siehe Dialogue `exitCar`)
+local driveExit = math.huge
+for _, step in Dialogue.ENDINGS.drive do
+	if step.exitCar then
+		driveExit = Route.driveDuration() + step.arrive
+	end
+end
 
 local function flat(position, height)
 	return Vector3.new(position.X, height, position.Z)
@@ -539,7 +547,7 @@ local function makeLight(parent, range, brightness)
 	return beam
 end
 
-local function setupWalk()
+local function setupWalk(hint)
 	-- Die Puppen im Auto werden nicht mehr gebraucht: der Mitfahrer läuft jetzt echt mit
 	for other, info in seatedPlayers do
 		if type(info) == "table" then
@@ -573,9 +581,11 @@ local function setupWalk()
 		flashlight.CFrame = camera.CFrame
 		freeWalk = true
 		TweenService:Create(fade, TweenInfo.new(1.5), { BackgroundTransparency = 1 }):Play()
-		task.delay(1.5, function()
-			BeastView.hint("Folge Sarp und bleib in seiner Nähe.   Shift = rennen", 6)
-		end)
+		if hint then
+			task.delay(1.5, function()
+				BeastView.hint(hint, 6)
+			end)
+		end
 	end)
 
 	-- Die anderen Spieler leuchten auch mit dem Handy (Licht am Kopf)
@@ -611,25 +621,29 @@ local function updateStranger(t, bt, deltaTime, carPosition, driveS)
 		end
 	end
 
+	-- Er geht weg und löst sich nach ein paar Sekunden auf
+	local function leaveAlong(line)
+		local elapsed = os.clock() - sarpLeaveStart
+		setStrangerWalking(true, 0.5)
+		step(0.8)
+		strangerRoot.CFrame = line.cframeAt(elapsed * 4.5) + strangerHeight
+		local vanish = math.clamp((elapsed - 4) / 2.5, 0, 1)
+		for _, part in stranger:GetDescendants() do
+			if part:IsA("BasePart") then
+				part.LocalTransparencyModifier = vanish
+			end
+		end
+		if vanish >= 1 then
+			sarpGone = true
+			stranger:Destroy()
+		end
+	end
+
 	-- Ende "follow": er geht gleichmäßig voraus und wartet nicht. An der Veranda bleibt
 	-- er stehen; erst wenn man ankommt, dreht er sich um, verabschiedet sich und geht.
 	if branch == "follow" and bt and bt >= walkSetup then
 		if sarpLeaveStart then
-			local elapsed = os.clock() - sarpLeaveStart
-			setStrangerWalking(true, 0.5)
-			step(0.8)
-			strangerRoot.CFrame = leaveLine.cframeAt(elapsed * 4.5) + strangerHeight
-			-- zwischen den Bäumen löst er sich auf
-			local vanish = math.clamp((elapsed - 4) / 2.5, 0, 1)
-			for _, part in stranger:GetDescendants() do
-				if part:IsA("BasePart") then
-					part.LocalTransparencyModifier = vanish
-				end
-			end
-			if vanish >= 1 then
-				sarpGone = true
-				stranger:Destroy()
-			end
+			leaveAlong(leaveLine) -- zwischen den Bäumen löst er sich auf
 			return
 		end
 		local sarpStart = cutscene:GetAttribute("SarpStart")
@@ -649,8 +663,14 @@ local function updateStranger(t, bt, deltaTime, carPosition, driveS)
 	end
 
 	-- Ende "drive": er bleibt zurück und schaut dem Auto nach. Hinter der Kurve steht
-	-- er plötzlich vor der Garage im Scheinwerferlicht.
+	-- er plötzlich vor der Garage im Scheinwerferlicht. Dann geht er an der Garage
+	-- vorbei in den Wald und verschwindet.
 	if branch == "drive" and bt and bt >= 0 then
+		if sarpLeaveStart then
+			poseTarget.tilt = 0
+			leaveAlong(garageLeaveLine)
+			return
+		end
 		setStrangerWalking(false)
 		if driveS > Route.DRIVE_HIDE_SARP then
 			poseTarget.tilt = 0.8
@@ -690,7 +710,8 @@ RunService.RenderStepped:Connect(function(deltaTime)
 	local t = now - startTime
 	local bt = branchStart and now - branchStart or nil
 	local driving = branch == "drive" and bt ~= nil and bt >= 0
-	local walking = branch == "follow" and bt ~= nil and bt >= walkSetup
+	-- zu Fuß: im Ende "follow" nach dem Aussteigen, im Ende "drive" vor der Haustür
+	local walking = (branch == "follow" and bt ~= nil and bt >= walkSetup) or (driving and bt >= driveExit)
 
 	-- Wo ist das Auto? Erst die Fahrt in die Parkbucht, im Ende "drive" weiter zum Haus
 	local s, speed, steer, carFrame, moving
@@ -765,7 +786,7 @@ RunService.RenderStepped:Connect(function(deltaTime)
 		carStopped = speed < 1 and t > Route.STOP_TIME,
 		walking = walking,
 		-- totenstill, solange Sarp am Fenster steht und wenn er vor der Garage auftaucht
-		quiet = (strangerArrived and not branch) or (driving and s > driveLine.length - 40),
+		quiet = (strangerArrived and not branch) or (driving and not walking and s > driveLine.length - 40),
 		radioOff = radioOff,
 		carRoot = root,
 		finished = finished,
@@ -880,6 +901,22 @@ RunService.RenderStepped:Connect(function(deltaTime)
 			end
 		end)
 	end
+	-- Ende "drive": Sarp ist weg, abblenden, aussteigen, vor der Haustür aufblenden
+	if driving then
+		if bt >= driveExit - 1.3 then
+			once("exitFadeOut", function()
+				TweenService:Create(fade, TweenInfo.new(1), { BackgroundTransparency = 0 }):Play()
+			end)
+		end
+		if bt >= driveExit then
+			once("exitSetup", setupWalk)
+		end
+		if bt >= driveExit + 8 then
+			once("exitFadeFallback", function()
+				TweenService:Create(fade, TweenInfo.new(1.5), { BackgroundTransparency = 1 }):Play()
+			end)
+		end
+	end
 	-- Ende "follow": abblenden, aussteigen, aufblenden
 	if branch == "follow" and bt then
 		if bt >= 0 then
@@ -888,7 +925,9 @@ RunService.RenderStepped:Connect(function(deltaTime)
 			end)
 		end
 		if bt >= walkSetup then
-			once("followSetup", setupWalk)
+			once("followSetup", function()
+				setupWalk("Folge Sarp und bleib in seiner Nähe.   Shift = rennen")
+			end)
 		end
 		-- falls die Spielfigur ausbleibt, nicht ewig schwarz lassen
 		if bt >= walkSetup + 8 then
