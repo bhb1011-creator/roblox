@@ -124,6 +124,9 @@ Config.SOUNDS = {
 -- `effects` = Klangeffekte, der Reihe nach: `equalizer` (Bass/Mitten/Höhen in dB) und
 -- `reverb` (Hall). Funktioniert die Sprachausgabe nicht, erscheinen trotzdem die Untertitel.
 Config.SPEECH_ENABLED = true
+-- Antworten der Spieler mit der Roblox-Stimme sprechen? false = ohne eigene Aufnahme nur
+-- als Untertitel (die Roblox-Stimme passt nicht zu den echten Aufnahmen).
+Config.PLAYER_TTS = false
 Config.VOICES = {
 	-- Sarp: etwas tiefer, langsam, ruhig – mit Bass, weniger Höhen und dunklem Hall
 	sarp = {
@@ -206,6 +209,17 @@ Config.VOICE_LINES = {
 	erzaehler_18 = { id = "rbxassetid://73503305526717", length = 5.80 },
 	erzaehler_19 = { id = "rbxassetid://106922355096569", length = 6.70 },
 	erzaehler_20 = { id = "rbxassetid://86497146595639", length = 6.20 },
+	-- Antworten der Spieler im Gespräch (gleiche Stimme wie der Erzähler, denn der Erzähler
+	-- ist der Spieler). Noch ohne Aufnahme: bis dahin nur Untertitel.
+	erzaehler_21 = { id = "", length = 0 }, -- I'm looking for the Wagners' house.
+	erzaehler_22 = { id = "", length = 0 }, -- We're looking for the Wagners' house.
+	erzaehler_23 = { id = "", length = 0 }, -- Who are you?
+	erzaehler_24 = { id = "", length = 0 }, -- How do you know that?
+	erzaehler_25 = { id = "", length = 0 }, -- ...Yes.
+	erzaehler_26 = { id = "", length = 0 }, -- I'll drive there myself.
+	erzaehler_27 = { id = "", length = 0 }, -- We'll drive there ourselves.
+	erzaehler_28 = { id = "", length = 0 }, -- ...Okay. Show me the way.
+	erzaehler_29 = { id = "", length = 0 }, -- ...Okay. Show us the way.
 }
 
 return Config

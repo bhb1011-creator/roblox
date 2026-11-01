@@ -44,7 +44,9 @@ function DialogueRunner.start(cutscene, startTime, duo)
 		local recordingName = voiceEntry and Dialogue.text(voiceEntry, duo)
 		local recording = recordingName and Config.VOICE_LINES and Config.VOICE_LINES[recordingName]
 		if recording and recording.id ~= "" then
-			duration = recording.length + 0.25
+			if recording.length > 0 then
+				duration = recording.length + 0.25
+			end
 		else
 			recordingName = nil
 		end
@@ -172,7 +174,7 @@ function DialogueRunner.start(cutscene, startTime, duo)
 			if step.choice then
 				local index, chooser = ask(step.choice)
 				local option = step.choice[index]
-				say("player", option.text, chooser and chooser.DisplayName or "You")
+				say("player", option.text, chooser and chooser.DisplayName or "You", option.voice)
 				for _, line in option.reply do
 					runLine(line)
 				end

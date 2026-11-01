@@ -268,7 +268,9 @@ function Speech.say(speaker, name, text, duration, voiceName)
 	end)
 	task.spawn(function()
 		local played = voiceName and playRecording(speaker, voiceName)
-		if not played and Config.SPEECH_ENABLED ~= false then
+		-- Antworten der Spieler ohne eigene Aufnahme: nur Untertitel, keine Roblox-Stimme
+		local tts = Config.SPEECH_ENABLED ~= false and not (speaker == "player" and Config.PLAYER_TTS == false)
+		if not played and tts then
 			speak(speaker, text)
 		end
 	end)

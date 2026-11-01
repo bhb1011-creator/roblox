@@ -5,7 +5,8 @@
 -- wenn er allein anders lautet als zu zweit ("I" statt "we").
 -- speaker: "narrator" (Erzähler), "sarp" (der Fremde) oder "player" (der Spieler,
 -- der die Antwort ausgewählt hat). `voice` = Name der eigenen Sprachaufnahme
--- (siehe Config.VOICE_LINES); fehlt sie, spricht die Roblox-Stimme.
+-- (siehe Config.VOICE_LINES); fehlt sie, spricht die Roblox-Stimme. Die Antworten der
+-- Spieler werden ohne Aufnahme nur als Untertitel gezeigt (Config.PLAYER_TTS).
 local Dialogue = {}
 
 -- Den passenden Text für allein oder zu zweit holen
@@ -63,6 +64,7 @@ Dialogue.SCRIPT = {
 		choice = {
 			{
 				text = { solo = "I'm looking for the Wagners' house.", duo = "We're looking for the Wagners' house." },
+					voice = { solo = "erzaehler_21", duo = "erzaehler_22" },
 				reply = {
 					{ speaker = "sarp", text = "The Wagners...", voice = "sarp_03_the_wagners", wait = 1.2 },
 					{ speaker = "sarp", text = "Yes. They told me you would come.", voice = "sarp_04_told_me" },
@@ -71,6 +73,7 @@ Dialogue.SCRIPT = {
 			},
 			{
 				text = "Who are you?",
+					voice = "erzaehler_23",
 				reply = {
 					{ speaker = "sarp", text = "Who am I?", voice = "sarp_06_who_am_i", action = "tilt", wait = 1 },
 					{ speaker = "sarp", text = "My name is Sarp. I'm a neighbor of the Wagners.", voice = "sarp_07_my_name", reveal = true },
@@ -84,10 +87,12 @@ Dialogue.SCRIPT = {
 		choice = {
 			{
 				text = "How do you know that?",
+					voice = "erzaehler_24",
 				reply = { { speaker = "sarp", text = "Small place. Word gets around.", voice = "sarp_10_small_place" } },
 			},
 			{
 				text = "...Yes.",
+					voice = "erzaehler_25",
 				reply = { { speaker = "sarp", text = "I know. I watched you pack up your tent this afternoon.", voice = "sarp_11_watched_you" } },
 			},
 		},
@@ -98,6 +103,7 @@ Dialogue.SCRIPT = {
 		choice = {
 			{
 				text = { solo = "I'll drive there myself.", duo = "We'll drive there ourselves." },
+					voice = { solo = "erzaehler_26", duo = "erzaehler_27" },
 				reply = {
 					{ speaker = "sarp", text = "There is no road to the house.", voice = "sarp_14_no_road", action = "stepBack", wait = 1.2 },
 					{ speaker = "sarp", text = "But go ahead. I'll be waiting.", voice = "sarp_15_ill_be_waiting" },
@@ -106,6 +112,7 @@ Dialogue.SCRIPT = {
 			},
 			{
 				text = { solo = "...Okay. Show me the way.", duo = "...Okay. Show us the way." },
+					voice = { solo = "erzaehler_28", duo = "erzaehler_29" },
 				reply = { { speaker = "sarp", text = "Good. Stay close. And don't look into the trees.", voice = "sarp_17_stay_close" } },
 				ending = "follow",
 			},
