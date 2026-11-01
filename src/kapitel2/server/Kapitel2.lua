@@ -41,7 +41,9 @@ end
 
 function Kapitel2.start()
 	House.interior = true
+	print("Kapitel 2: Welt und Haus werden gebaut …")
 	World.build()
+	print("Kapitel 2: Welt fertig.")
 
 	local origin = Route.houseCFrame()
 	local house = workspace:FindFirstChild("WagnerHouse", true)
@@ -387,6 +389,7 @@ function Kapitel2.start()
 	local firstJoin
 	local function onPlayerAdded(player)
 		spawnPlayer(player)
+		print("Kapitel 2: " .. player.Name .. " steht vor der Haustür.")
 		if not firstJoin then
 			firstJoin = os.clock()
 			local joinData = player:GetJoinData()

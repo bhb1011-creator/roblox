@@ -117,6 +117,16 @@ function Kapitel2.run()
 		TextSize = 48,
 		TextColor3 = Color3.fromRGB(240, 230, 215),
 	})
+	local loadingLabel = label({
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.5),
+		Size = UDim2.new(0.8, 0, 0, 30),
+		Font = Enum.Font.SpecialElite,
+		Text = "Lädt …",
+		TextSize = 22,
+		TextColor3 = Color3.fromRGB(170, 165, 155),
+	})
+	loadingLabel.TextTransparency = 0
 	local hintLabel = label({
 		AnchorPoint = Vector2.new(0.5, 0),
 		Position = UDim2.fromScale(0.5, 0.12),
@@ -295,7 +305,12 @@ function Kapitel2.run()
 	local houseInside = false
 	local finished = false
 
+	-- Erst aufblenden, wenn die eigene Spielfigur vor der Haustür steht
 	local function begin()
+		local character = player.Character or player.CharacterAdded:Wait()
+		character:WaitForChild("HumanoidRootPart")
+		task.wait(0.5)
+		loadingLabel.Visible = false
 		setFade(1, 2.5)
 		task.delay(1.5, function()
 			showText(chapter, true, 1.5)
@@ -315,7 +330,7 @@ function Kapitel2.run()
 	local function beginOnce()
 		if not begun then
 			begun = true
-			begin()
+			task.spawn(begin)
 		end
 	end
 
@@ -361,7 +376,13 @@ function Kapitel2.run()
 	if remotes:GetAttribute("Started") then
 		beginOnce()
 	end
-	task.delay(15, beginOnce) -- falls die Startnachricht verloren geht
+	-- falls die Startnachricht verloren geht: sobald die Spielfigur da ist
+	task.spawn(function()
+		local character = player.Character or player.CharacterAdded:Wait()
+		character:WaitForChild("HumanoidRootPart")
+		task.wait(3)
+		beginOnce()
+	end)
 
 	------------------------------------------------------------------ Jedes Bild
 	Ambience.init(makeSound)
