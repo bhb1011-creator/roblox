@@ -78,23 +78,35 @@ function House.build(parent)
 	local garageSide = CFrame.new(GX + GW / 2, 0, 0) * CFrame.Angles(0, -math.pi / 2, 0)
 
 	-- Waagerechte Bretter (Stülpschalung) auf allen vier Seiten
-	for _, face in faces do
-		for y = BASE + 0.9, TOP - 0.2, 1.1 do
-			block("Siding", Vector3.new(face.width + 0.1, 0.12, 0.12), face.cframe * CFrame.new(0, y, -0.06), COLORS.sidingLine, Enum.Material.Wood)
+	-- (Bretter enden unter den Eckbrettern; Zierbretter an den Seiten minimal schmaler,
+	-- damit sich an den Ecken keine Flächen überlagern und flimmern)
+	for name, face in faces do
+		local side = face.width == D
+		for y = BASE + 0.9, TOP - 0.8, 1.1 do
+			-- nicht unter den Zierbrettern und nicht innen in der Garage
+			local underTrim = math.abs(y - (BASE + STORY)) < 0.45
+			local inGarage = name == "right" and y < GH + 4.5
+			if not underTrim and not inGarage then
+				block("Siding", Vector3.new(face.width - 0.8, 0.12, 0.12), face.cframe * CFrame.new(0, y, -0.06), COLORS.sidingLine, Enum.Material.Wood)
+			end
 		end
-		-- Zierbrett zwischen den Stockwerken
-		block("FloorTrim", Vector3.new(face.width + 0.3, 0.6, 0.3), face.cframe * CFrame.new(0, BASE + STORY, -0.15), COLORS.trim, Enum.Material.Wood)
-		block("TopTrim", Vector3.new(face.width + 0.3, 0.7, 0.3), face.cframe * CFrame.new(0, TOP - 0.35, -0.15), COLORS.trim, Enum.Material.Wood)
+		-- Zierbrett zwischen den Stockwerken (rechts liegt es in der Garage)
+		if name ~= "right" then
+			block("FloorTrim", Vector3.new(face.width + 0.3, side and 0.56 or 0.6, 0.3), face.cframe * CFrame.new(0, BASE + STORY, -0.15), COLORS.trim, Enum.Material.Wood)
+		end
+		block("TopTrim", Vector3.new(face.width + 0.3, side and 0.66 or 0.7, 0.3), face.cframe * CFrame.new(0, TOP - 0.35, -0.15), COLORS.trim, Enum.Material.Wood)
 	end
 	for _, x in { -1, 1 } do
 		for _, z in { -1, 1 } do
-			block("CornerBoard", Vector3.new(0.7, 2 * STORY, 0.7), CFrame.new(x * W / 2, BASE + STORY, z * D / 2), COLORS.trim, Enum.Material.Wood)
+			block("CornerBoard", Vector3.new(0.7, 2 * STORY - 0.1, 0.7), CFrame.new(x * W / 2, BASE + STORY, z * D / 2), COLORS.trim, Enum.Material.Wood)
 		end
 	end
 
 	------------------------------------------------------------------ Fenster (alle dunkel)
 	local rng = Random.new(14)
+	local windowCount = 0
 	local function window(face, u, y, options)
+		windowCount += 1
 		options = options or {}
 		local w, h = options.width or 3.4, options.height or 5
 		local base = faces[face].cframe * CFrame.new(u, y, 0)
@@ -105,17 +117,19 @@ function House.build(parent)
 		for _, side in { -1, 1 } do
 			block("WindowFrame", Vector3.new(0.4, h, 0.35), base * CFrame.new(side * (w / 2 + 0.2), 0, -0.15), COLORS.trim, Enum.Material.Wood)
 		end
-		block("WindowBar", Vector3.new(0.15, h, 0.2), base * CFrame.new(0, 0, -0.2), COLORS.trim, Enum.Material.Wood)
-		block("WindowBar", Vector3.new(w, 0.15, 0.2), base * CFrame.new(0, h * 0.1, -0.2), COLORS.trim, Enum.Material.Wood)
-		-- Vorhang hinter dem Glas, manchmal halb zugezogen
+		block("WindowBar", Vector3.new(0.15, h - 0.04, 0.2), base * CFrame.new(0, 0, -0.2), COLORS.trim, Enum.Material.Wood)
+		block("WindowBar", Vector3.new(w - 0.04, 0.15, 0.18), base * CFrame.new(0, h * 0.1, -0.2), COLORS.trim, Enum.Material.Wood)
+		-- Vorhang direkt hinter der Scheibe, manchmal halb zugezogen
 		if options.curtain then
-			block("Curtain", Vector3.new(w * 0.45, h - 0.3, 0.1), base * CFrame.new(-w * 0.27, 0, 0.05), COLORS.curtain, Enum.Material.Fabric)
+			block("Curtain", Vector3.new(w * 0.45, h - 0.3, 0.02), base * CFrame.new(-w * 0.27, 0, -0.19), COLORS.curtain, Enum.Material.Fabric)
 		end
 		-- Fensterläden; ab und zu hängt einer schief
 		if not options.noShutters then
 			for _, side in { -1, 1 } do
-				local tilt = rng:NextNumber() < 0.15 and math.rad(rng:NextNumber(8, 18)) * side or 0
-				block("Shutter", Vector3.new(1.4, h + 0.4, 0.2), base * CFrame.new(side * (w / 2 + 1.2), 0, -0.25) * CFrame.Angles(0, 0, tilt), COLORS.shutter, Enum.Material.WoodPlanks)
+				local tilt = rng:NextNumber() < 0.15 and math.rad(rng:NextNumber(8, 14)) * side or 0
+				-- Läden benachbarter Fenster liegen minimal versetzt (kein Flimmern, falls sie sich berühren)
+				local depth = -0.25 - (windowCount % 2) * 0.05
+				block("Shutter", Vector3.new(1.4, h + 0.4, 0.2), base * CFrame.new(side * (w / 2 + 1.2), 0, depth) * CFrame.Angles(0, 0, tilt), COLORS.shutter, Enum.Material.WoodPlanks)
 			end
 		end
 		-- Mit Brettern vernagelt
@@ -128,10 +142,10 @@ function House.build(parent)
 
 	local groundY, upperY = BASE + 4.6, BASE + STORY + 4.8
 	-- Vorderseite: unten links und rechts der Tür, oben fünf Fenster
-	for _, u in { -14, -8.5, 6, 13.5 } do
+	for _, u in { -16, -8.6, 5.5, 13.5 } do
 		window("front", u, groundY, { curtain = u == 6 })
 	end
-	for i, u in { -14, -7, 0, 7, 14 } do
+	for i, u in { -15.5, -7.5, 0, 7.5, 15.5 } do
 		window("front", u, upperY, { curtain = i == 2 or i == 5, boarded = i == 4 })
 	end
 	for _, u in { -8, 8 } do
@@ -153,16 +167,16 @@ function House.build(parent)
 		block("DoorPanel", Vector3.new(2.8, 2.6, 0.12), door * CFrame.new(0, y, -0.5), Color3.fromRGB(44, 34, 26), Enum.Material.Wood)
 	end
 	block("DoorKnob", Vector3.new(0.3, 0.3, 0.3), door * CFrame.new(1.4, 3.8, -0.55), COLORS.metal, Enum.Material.Metal, { Shape = Enum.PartType.Ball })
-	block("DoorWindow", Vector3.new(4, 1, 0.2), door * CFrame.new(0, 8.2, -0.1), COLORS.glass, Enum.Material.Glass)
-	block("HouseNumber", Vector3.new(1.2, 0.8, 0.1), door * CFrame.new(3.6, 6.4, -0.1), COLORS.metal, Enum.Material.Metal)
-	block("DoorMat", Vector3.new(3.6, 0.06, 2), CFrame.new(doorX, BASE + 0.03, -D / 2 - 1.4), Color3.fromRGB(70, 56, 40), Enum.Material.Fabric)
+	block("DoorWindow", Vector3.new(3.9, 1, 0.2), door * CFrame.new(0, 8.2, -0.1), COLORS.glass, Enum.Material.Glass)
+	block("HouseNumber", Vector3.new(1.2, 0.8, 0.1), door * CFrame.new(0, 9.2, -0.1), COLORS.metal, Enum.Material.Metal)
+	block("DoorMat", Vector3.new(3.6, 0.06, 2), CFrame.new(doorX, BASE + 0.1, -D / 2 - 1.4), Color3.fromRGB(70, 56, 40), Enum.Material.Fabric)
 
 	------------------------------------------------------------------ Veranda
 	local porchW, porchD = 22, 7
 	local porchZ = -D / 2 - porchD / 2
-	block("PorchDeck", Vector3.new(porchW, BASE, porchD), CFrame.new(doorX, BASE / 2, porchZ), COLORS.deck, Enum.Material.WoodPlanks)
+	block("PorchDeck", Vector3.new(porchW, BASE + 0.04, porchD), CFrame.new(doorX, (BASE + 0.04) / 2, porchZ), COLORS.deck, Enum.Material.WoodPlanks)
 	for i = 0, porchW - 1, 1.2 do
-		block("DeckBoard", Vector3.new(0.08, 0.04, porchD), CFrame.new(doorX - porchW / 2 + i, BASE + 0.02, porchZ), COLORS.darkWood, Enum.Material.Wood)
+		block("DeckBoard", Vector3.new(0.08, 0.04, porchD - 0.04), CFrame.new(doorX - porchW / 2 + i, BASE + 0.06, porchZ), COLORS.darkWood, Enum.Material.Wood)
 	end
 	-- Treppe zur Straße hin
 	for step = 1, 3 do
@@ -195,15 +209,15 @@ function House.build(parent)
 	block("PorchRoof", Vector3.new(porchW + 1.5, 0.5, porchD + 1.6), CFrame.new(doorX, roofY + 0.9, porchZ - 0.4) * CFrame.Angles(-porchRoofAngle, 0, 0), COLORS.roof, Enum.Material.Slate)
 	block("PorchBeam", Vector3.new(porchW, 0.7, 0.5), CFrame.new(doorX, roofY + 0.1, -D / 2 - porchD + 0.4), COLORS.trim, Enum.Material.Wood)
 	-- Ausgeschaltete Lampe neben der Tür
-	block("PorchLampBase", Vector3.new(0.5, 0.9, 0.3), door * CFrame.new(-3.4, 6, -0.2), COLORS.metal, Enum.Material.Metal)
-	block("PorchLampGlass", Vector3.new(0.7, 1.1, 0.7), door * CFrame.new(-3.4, 5.6, -0.65), Color3.fromRGB(40, 40, 36), Enum.Material.Glass, { Transparency = 0.2 })
+	block("PorchLampBase", Vector3.new(0.5, 0.9, 0.3), door * CFrame.new(3.4, 6, -0.2), COLORS.metal, Enum.Material.Metal)
+	block("PorchLampGlass", Vector3.new(0.7, 1.1, 0.7), door * CFrame.new(3.4, 5.6, -0.65), Color3.fromRGB(40, 40, 36), Enum.Material.Glass, { Transparency = 0.2 })
 	-- Schaukelstuhl, der zur Straße schaut, und vertrocknete Blumentöpfe
 	local chair = CFrame.new(doorX - 7, BASE, porchZ + 0.5) * CFrame.Angles(0, math.rad(200), 0)
 	block("ChairSeat", Vector3.new(2, 0.25, 2), chair * CFrame.new(0, 1.8, 0), COLORS.darkWood, Enum.Material.Wood)
 	block("ChairBack", Vector3.new(2, 2.8, 0.25), chair * CFrame.new(0, 3.2, 1) * CFrame.Angles(math.rad(-12), 0, 0), COLORS.darkWood, Enum.Material.Wood)
 	for _, x in { -0.9, 0.9 } do
 		block("ChairRocker", Vector3.new(0.2, 0.25, 2.8), chair * CFrame.new(x, 0.2, 0), COLORS.darkWood, Enum.Material.Wood)
-		block("ChairLeg", Vector3.new(0.2, 1.6, 0.2), chair * CFrame.new(x, 1, 0), COLORS.darkWood, Enum.Material.Wood)
+		block("ChairLeg", Vector3.new(0.18, 1.56, 0.18), chair * CFrame.new(x, 1, 0), COLORS.darkWood, Enum.Material.Wood)
 	end
 	for _, x in { doorX + 6, doorX + 9 } do
 		Parts.column({ Name = "FlowerPot", Color = Color3.fromRGB(110, 62, 44), Material = Enum.Material.Concrete, Parent = model }, 1.2, 1.4, origin * CFrame.new(x, BASE, porchZ + 2))
@@ -218,10 +232,10 @@ function House.build(parent)
 		local z = side * (D / 2 + overhang) / 2
 		local y = TOP + RISE - (D / 2 + overhang) / 2 * math.tan(slope) + 0.45
 		local tilt = CFrame.new(0, y, z) * CFrame.Angles(side * slope, 0, 0)
-		block("Roof", Vector3.new(W + 2 * overhang, 0.8, slabLength), tilt, COLORS.roof, Enum.Material.Slate)
+		block("Roof", Vector3.new(W + 2 * overhang + (side + 1) * 0.02, 0.8, slabLength), tilt, COLORS.roof, Enum.Material.Slate)
 		-- Schindelreihen
 		for row = -slabLength / 2 + 1, slabLength / 2 - 0.5, 1.4 do
-			block("Shingles", Vector3.new(W + 2 * overhang, 0.15, 0.25), tilt * CFrame.new(0, 0.45, row), Color3.fromRGB(34, 33, 33), Enum.Material.Slate)
+			block("Shingles", Vector3.new(W + 2 * overhang - 0.1, 0.15, 0.25), tilt * CFrame.new(0, 0.45, row), Color3.fromRGB(34, 33, 33), Enum.Material.Slate)
 		end
 		-- Giebeldreiecke an den Seiten (zwei Keile pro Seite)
 		local gableX = side * W / 2
@@ -231,7 +245,7 @@ function House.build(parent)
 		block("AtticWindow", Vector3.new(0.3, 2.4, 2.4), CFrame.new(gableX + side * 0.5, TOP + 3, 0), COLORS.glass, Enum.Material.Glass, { Shape = Enum.PartType.Cylinder })
 		block("AtticFrame", Vector3.new(0.25, 3, 3), CFrame.new(gableX + side * 0.45, TOP + 3, 0), COLORS.trim, Enum.Material.Wood, { Shape = Enum.PartType.Cylinder })
 	end
-	block("RoofRidge", Vector3.new(W + 2 * overhang, 0.6, 1), CFrame.new(0, TOP + RISE + 0.75, 0), Color3.fromRGB(30, 30, 30), Enum.Material.Slate)
+	block("RoofRidge", Vector3.new(W + 2 * overhang + 0.12, 0.6, 1), CFrame.new(0, TOP + RISE + 0.75, 0), Color3.fromRGB(30, 30, 30), Enum.Material.Slate)
 	block("Chimney", Vector3.new(3.2, 13, 3.2), CFrame.new(-12, TOP + 5.5, 5), COLORS.brick, Enum.Material.Brick)
 	block("ChimneyCap", Vector3.new(3.8, 0.5, 3.8), CFrame.new(-12, TOP + 12.2, 5), COLORS.stone, Enum.Material.Concrete)
 	-- Regenrinne vorne, ein Stück hängt herunter
@@ -245,9 +259,9 @@ function House.build(parent)
 	block("GarageFoundation", Vector3.new(GW + 0.6, 0.6, GD + 0.6), garageCenter * CFrame.new(0, 0.3, 0), COLORS.stone, Enum.Material.Concrete)
 	block("GarageWalls", Vector3.new(GW, GH, GD), garageCenter * CFrame.new(0, GH / 2 + 0.6, 0), COLORS.siding, Enum.Material.WoodPlanks)
 	for y = 1.4, GH, 1.1 do
-		block("Siding", Vector3.new(GW + 0.1, 0.12, 0.12), garageCenter * CFrame.new(0, y, -gHalf - 0.06), COLORS.sidingLine, Enum.Material.Wood)
-		block("Siding", Vector3.new(0.12, 0.12, GD + 0.1), garageCenter * CFrame.new(GW / 2 + 0.06, y, 0), COLORS.sidingLine, Enum.Material.Wood)
-		block("Siding", Vector3.new(GW + 0.1, 0.12, 0.12), garageCenter * CFrame.new(0, y, gHalf + 0.06), COLORS.sidingLine, Enum.Material.Wood)
+		block("Siding", Vector3.new(GW - 0.4, 0.12, 0.12), garageCenter * CFrame.new(0.1, y, -gHalf - 0.06), COLORS.sidingLine, Enum.Material.Wood)
+		block("Siding", Vector3.new(0.12, 0.12, GD - 0.4), garageCenter * CFrame.new(GW / 2 + 0.06, y, 0), COLORS.sidingLine, Enum.Material.Wood)
+		block("Siding", Vector3.new(GW - 0.4, 0.12, 0.12), garageCenter * CFrame.new(0.1, y, gHalf + 0.06), COLORS.sidingLine, Enum.Material.Wood)
 	end
 	-- Flaches Satteldach (First von vorne nach hinten)
 	local garageSlope = math.rad(18)
@@ -255,7 +269,7 @@ function House.build(parent)
 	for _, side in { -1, 1 } do
 		local x = side * (GW / 2 + 1.2) / 2
 		local y = GH + 0.6 + (GW / 2 + 1.2) / 2 * math.tan(garageSlope) + 0.4
-		block("GarageRoof", Vector3.new(garageRoofWidth, 0.7, GD + 2), garageCenter * CFrame.new(x, y, 0) * CFrame.Angles(0, 0, -side * garageSlope), COLORS.roof, Enum.Material.Slate)
+		block("GarageRoof", Vector3.new(garageRoofWidth, 0.7, GD + 2 + (side + 1) * 0.02), garageCenter * CFrame.new(x, y, 0) * CFrame.Angles(0, 0, -side * garageSlope), COLORS.roof, Enum.Material.Slate)
 		local rise = GW / 2 * math.tan(garageSlope)
 		-- Giebel vorne und hinten
 		for _, front in { -1, 1 } do
@@ -267,7 +281,7 @@ function House.build(parent)
 	block("GarageDoorFrame", Vector3.new(15, 9.8, 0.4), gate * CFrame.new(0, 4.9, -0.15), COLORS.trim, Enum.Material.Wood)
 	block("GarageDoor", Vector3.new(14, 9.2, 0.3), gate * CFrame.new(0, 4.6, -0.3), Color3.fromRGB(110, 106, 96), Enum.Material.WoodPlanks)
 	for row = 1, 4 do
-		block("GarageDoorLine", Vector3.new(14, 0.12, 0.1), gate * CFrame.new(0, row * 2.2, -0.48), Color3.fromRGB(70, 66, 58), Enum.Material.Wood)
+		block("GarageDoorLine", Vector3.new(13.9, 0.12, 0.1), gate * CFrame.new(0, row * 2.2, -0.48), Color3.fromRGB(70, 66, 58), Enum.Material.Wood)
 	end
 	for i = -3, 3 do
 		if i ~= 0 then
@@ -317,7 +331,7 @@ function House.build(parent)
 	for _, z in { -2.5, 2.5 } do
 		block("SwingPost", Vector3.new(0.5, 10, 0.5), swing * CFrame.new(0, 5, z), COLORS.darkWood, Enum.Material.Wood)
 	end
-	block("SwingBeam", Vector3.new(0.5, 0.5, 5.5), swing * CFrame.new(0, 10, 0), COLORS.darkWood, Enum.Material.Wood)
+	block("SwingBeam", Vector3.new(0.46, 0.46, 5.7), swing * CFrame.new(0, 10, 0), COLORS.darkWood, Enum.Material.Wood)
 	block("SwingRope", Vector3.new(0.1, 6, 0.1), swing * CFrame.new(0, 7, 0), Color3.fromRGB(110, 100, 80), Enum.Material.Fabric)
 	block("SwingTire", Vector3.new(0.8, 2.4, 2.4), swing * CFrame.new(0, 3.6, 0) * CFrame.Angles(0, math.rad(90), 0), Color3.fromRGB(22, 22, 22), Enum.Material.Rubber, { Shape = Enum.PartType.Cylinder })
 
@@ -331,7 +345,7 @@ function House.build(parent)
 			Parts.new("Part", {
 				Name = "Driveway",
 				Size = Vector3.new(10, 4.2, (b - a).Magnitude + 1),
-				CFrame = CFrame.lookAt(middle, b) * CFrame.new(0, -0.03 - 2.1, 0),
+				CFrame = CFrame.lookAt(middle, b) * CFrame.new(0, -0.03 + (i % 2) * 0.012 - 2.1, 0),
 				Color = COLORS.gravel,
 				Material = Enum.Material.Pebble,
 				Parent = model,
@@ -340,7 +354,7 @@ function House.build(parent)
 	end
 
 	-- Schotterfläche vor dem Garagentor
-	block("Driveway", Vector3.new(15, 4.2, 16), CFrame.new(GX, -0.03 - 2.1, -GD / 2 - 8), COLORS.gravel, Enum.Material.Pebble)
+	block("Driveway", Vector3.new(15, 4.2, 16), CFrame.new(GX, -0.05 - 2.1, -GD / 2 - 8), COLORS.gravel, Enum.Material.Pebble)
 
 	-- Briefkasten an der Einfahrt
 	local mailPosition = Route.sidePoint(Route.HOUSE_S - 50, Route.ROAD_WIDTH / 2 + 2.5, 0)

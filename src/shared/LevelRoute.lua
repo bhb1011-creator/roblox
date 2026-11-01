@@ -428,7 +428,10 @@ function LevelRoute.driveDuration()
 end
 
 ------------------------------------------------------------------ Ende B: selbst durch den Wald laufen
-LevelRoute.WALK_SPEED = 9 -- Laufgeschwindigkeit der Spieler
+LevelRoute.WALK_SPEED = 9 -- Laufgeschwindigkeit der Spieler (mit Shift rennen: SPRINT_SPEED)
+LevelRoute.SPRINT_SPEED = 15
+LevelRoute.SARP_WALK_SPEED = 6 -- Sarp geht gleichmäßig und wartet nicht
+LevelRoute.SARP_START_DELAY = 3 -- so lange nach dem Aussteigen, bis Sarp losgeht
 LevelRoute.ARRIVE_DISTANCE = 14 -- so nah an der Veranda gilt man als angekommen
 
 -- Geglättete Punkte des Waldwegs, jeder genau auf dem Boden (zum Bauen und Laufen)

@@ -90,11 +90,11 @@ function CutsceneCar.build(parent)
 	local front, back = -LENGTH / 2, LENGTH / 2
 
 	------------------------------------------------------------------ Karosserie
-	part("Floor", Vector3.new(WIDTH, 0.4, LENGTH), CFrame.new(0, 0.9, 0), TRIM)
+	part("Floor", Vector3.new(WIDTH - 0.04, 0.38, LENGTH - 0.04), CFrame.new(0, 0.91, 0), TRIM)
 	part("EngineBay", Vector3.new(WIDTH, SILL - 0.7, 4.3), CFrame.new(0, (SILL + 0.7) / 2, front + 2.15), PAINT, nil, paint)
 	wedge("Hood", Vector3.new(WIDTH - 0.2, GLASS_BOTTOM - SILL, 4.3), CFrame.new(0, (SILL + GLASS_BOTTOM) / 2, front + 2.15), PAINT, nil, paint)
 	part("Trunk", Vector3.new(WIDTH, GLASS_BOTTOM - 0.7, back - 5.9), CFrame.new(0, (GLASS_BOTTOM + 0.7) / 2, (5.9 + back) / 2), PAINT, nil, paint)
-	part("Firewall", Vector3.new(WIDTH - 0.8, 2.4, 0.3), CFrame.new(0, 2.1, front + 4.4), DASH)
+	part("Firewall", Vector3.new(WIDTH - 0.88, 2.4, 0.3), CFrame.new(0, 2.1, front + 4.4), DASH)
 	for _, side in { -1, 1 } do
 		local x = side * (WIDTH / 2 - 0.2)
 		-- Türen (außen Lack, innen Verkleidung)
@@ -110,9 +110,9 @@ function CutsceneCar.build(parent)
 		part("SideWindow", Vector3.new(0.12, GLASS_TOP - GLASS_BOTTOM, ROOF_BACK - ROOF_FRONT), CFrame.new(x, (GLASS_BOTTOM + GLASS_TOP) / 2, (ROOF_FRONT + ROOF_BACK) / 2), GLASS, Enum.Material.Glass, glass)
 		beam("APillar", Vector3.new(x, GLASS_BOTTOM, ROOF_FRONT - 2.4), Vector3.new(x, GLASS_TOP, ROOF_FRONT), 0.32, PAINT)
 		beam("APillarTrim", Vector3.new(side * (WIDTH / 2 - 0.45), GLASS_BOTTOM, ROOF_FRONT - 2.3), Vector3.new(side * (WIDTH / 2 - 0.45), GLASS_TOP - 0.05, ROOF_FRONT + 0.05), 0.3, LINER)
-		part("BPillar", Vector3.new(0.4, GLASS_TOP - GLASS_BOTTOM, 0.5), CFrame.new(side * (WIDTH / 2 - 0.3), (GLASS_BOTTOM + GLASS_TOP) / 2, 2.6), DARK)
-		part("DPillar", Vector3.new(0.3, GLASS_TOP - GLASS_BOTTOM, 0.6), CFrame.new(x, (GLASS_BOTTOM + GLASS_TOP) / 2, ROOF_BACK - 0.3), PAINT, nil, paint)
-		part("WindowTrim", Vector3.new(0.15, 0.12, ROOF_BACK - ROOF_FRONT), CFrame.new(side * (WIDTH / 2 - 0.1), GLASS_BOTTOM + 0.05, (ROOF_FRONT + ROOF_BACK) / 2), CHROME, Enum.Material.Metal)
+		part("BPillar", Vector3.new(0.4, GLASS_TOP - GLASS_BOTTOM - 0.03, 0.5), CFrame.new(side * (WIDTH / 2 - 0.3), (GLASS_BOTTOM + GLASS_TOP) / 2, 2.6), DARK)
+		part("DPillar", Vector3.new(0.3, GLASS_TOP - GLASS_BOTTOM + 0.04, 0.6), CFrame.new(x, (GLASS_BOTTOM + GLASS_TOP) / 2, ROOF_BACK - 0.3), PAINT, nil, paint)
+		part("WindowTrim", Vector3.new(0.15, 0.12, ROOF_BACK - ROOF_FRONT - 0.04), CFrame.new(side * (WIDTH / 2 - 0.1), GLASS_BOTTOM + 0.05, (ROOF_FRONT + ROOF_BACK) / 2), CHROME, Enum.Material.Metal)
 		part("SideSkirt", Vector3.new(0.12, 0.45, WHEEL_Z * 2 - 3.2), CFrame.new(side * (WIDTH / 2 + 0.03), 0.95, 0), TRIM)
 		part("Mirror", Vector3.new(0.6, 0.45, 0.9), CFrame.new(side * (WIDTH / 2 + 0.35), GLASS_BOTTOM + 0.3, ROOF_FRONT - 1.9), PAINT, nil, paint)
 		part("MirrorGlass", Vector3.new(0.5, 0.35, 0.05), CFrame.new(side * (WIDTH / 2 + 0.35), GLASS_BOTTOM + 0.3, ROOF_FRONT - 1.43), Color3.fromRGB(90, 100, 110), Enum.Material.Glass, { Reflectance = 0.5 })
@@ -126,7 +126,7 @@ function CutsceneCar.build(parent)
 		-- Lichter
 		local headlight = part("Headlight", Vector3.new(1.4, 0.4, 0.1), CFrame.new(side * 2.3, 2.45, front - 0.02), Color3.fromRGB(255, 248, 230), Enum.Material.Neon)
 		Parts.light("SpotLight", headlight, { Face = Enum.NormalId.Front, Range = 60, Angle = 55, Brightness = 3.2, Color = Color3.fromRGB(255, 244, 220), Shadows = true })
-		part("Indicator", Vector3.new(0.4, 0.25, 0.1), CFrame.new(side * 3.15, 2.45, front - 0.02), Color3.fromRGB(255, 150, 40), Enum.Material.Neon)
+		part("Indicator", Vector3.new(0.4, 0.25, 0.1), CFrame.new(side * 3.22, 2.45, front - 0.02), Color3.fromRGB(255, 150, 40), Enum.Material.Neon)
 		local taillight = part("Taillight", Vector3.new(1.3, 0.45, 0.1), CFrame.new(side * 2.5, 2.5, back + 0.02), Color3.fromRGB(210, 20, 20), Enum.Material.Neon)
 		Parts.light("PointLight", taillight, { Range = 7, Brightness = 0.8, Color = Color3.fromRGB(255, 40, 30) })
 	end
@@ -141,7 +141,7 @@ function CutsceneCar.build(parent)
 	part("FrontBumper", Vector3.new(WIDTH + 0.2, 0.7, 0.5), CFrame.new(0, 1.1, front - 0.2), TRIM)
 	part("RearBumper", Vector3.new(WIDTH + 0.2, 0.7, 0.5), CFrame.new(0, 1.1, back + 0.2), TRIM)
 	part("Grille", Vector3.new(3.2, 0.7, 0.08), CFrame.new(0, 2.1, front - 0.03), DARK, Enum.Material.Metal)
-	part("GrilleBar", Vector3.new(3.2, 0.1, 0.1), CFrame.new(0, 2.1, front - 0.07), CHROME, Enum.Material.Metal)
+	part("GrilleBar", Vector3.new(3.16, 0.1, 0.1), CFrame.new(0, 2.1, front - 0.07), CHROME, Enum.Material.Metal)
 	for _, info in { { "FrontPlate", CFrame.new(0, 1.1, front - 0.47) }, { "RearPlate", CFrame.new(0, 1.9, back + 0.03) * CFrame.Angles(0, math.pi, 0) } } do
 		local plate = part(info[1], Vector3.new(2, 0.5, 0.04), info[2], Color3.fromRGB(235, 235, 230))
 		Parts.text(Parts.surfaceGui(plate, Enum.NormalId.Front), { Text = "WH-K 731", Font = Enum.Font.Code, TextColor3 = Color3.fromRGB(20, 20, 20) })
@@ -156,15 +156,15 @@ function CutsceneCar.build(parent)
 			part("Tire", Vector3.new(1.1, 2.5, 2.5), center, DARK, nil, { Shape = Enum.PartType.Cylinder }, axle)
 			part("Rim", Vector3.new(1.14, 1.5, 1.5), center, CHROME, Enum.Material.Metal, { Shape = Enum.PartType.Cylinder }, axle)
 			for spoke = 0, 4 do
-				part("RimSpoke", Vector3.new(1.16, 0.18, 1.3), center * CFrame.Angles(spoke / 5 * math.pi, 0, 0), Color3.fromRGB(120, 122, 128), Enum.Material.Metal, nil, axle)
+				part("RimSpoke", Vector3.new(1.16 + spoke * 0.03, 0.18, 1.3), center * CFrame.Angles(spoke / 5 * math.pi, 0, 0), Color3.fromRGB(120, 122, 128), Enum.Material.Metal, nil, axle)
 			end
 			part("WheelArch", Vector3.new(0.2, 0.45, 3.1), CFrame.new(side * (WIDTH / 2 + 0.05), 2.55, z), TRIM)
 		end
 	end
 
 	------------------------------------------------------------------ Armaturenbrett
-	part("Dashboard", Vector3.new(WIDTH - 0.8, 0.9, 1.6), CFrame.new(0, 3.65, ROOF_FRONT - 1.7), DASH)
-	part("DashTop", Vector3.new(WIDTH - 0.8, 0.12, 1.2), CFrame.new(0, 4.12, ROOF_FRONT - 1.95), Color3.fromRGB(26, 25, 27), Enum.Material.Fabric)
+	part("Dashboard", Vector3.new(WIDTH - 0.84, 0.9, 1.6), CFrame.new(0, 3.65, ROOF_FRONT - 1.7), DASH)
+	part("DashTop", Vector3.new(WIDTH - 0.92, 0.12, 1.2), CFrame.new(0, 4.12, ROOF_FRONT - 1.95), Color3.fromRGB(26, 25, 27), Enum.Material.Fabric)
 	part("DashLowerDriver", Vector3.new(2.6, 0.9, 0.5), CFrame.new(-1.6, 2.9, ROOF_FRONT - 1.0), DASH)
 	part("GloveBox", Vector3.new(2.4, 0.8, 0.5), CFrame.new(1.6, 3.0, ROOF_FRONT - 1.0), DASH)
 	part("GloveBoxLine", Vector3.new(2.2, 0.04, 0.05), CFrame.new(1.6, 3.35, ROOF_FRONT - 0.74), Color3.fromRGB(12, 12, 12))
@@ -226,7 +226,7 @@ function CutsceneCar.build(parent)
 	Parts.light("PointLight", cluster, { Range = 4, Brightness = 0.9, Color = Color3.fromRGB(255, 170, 90) })
 
 	-- Mittelkonsole: Radio, Lüftungen, Warnblinker, Regler
-	part("CenterStack", Vector3.new(1.6, 1.7, 0.4), CFrame.new(0, 3.15, ROOF_FRONT - 0.95), DASH)
+	part("CenterStack", Vector3.new(1.6, 1.7, 0.44), CFrame.new(0, 3.15, ROOF_FRONT - 0.95), DASH)
 	local radio = part("RadioDisplay", Vector3.new(1.2, 0.35, 0.05), CFrame.new(0, 3.65, ROOF_FRONT - 0.73), Color3.fromRGB(8, 10, 12))
 	local radioGui = Parts.surfaceGui(radio, Enum.NormalId.Back, true)
 	radioGui.PixelsPerStud = 160
@@ -276,10 +276,11 @@ function CutsceneCar.build(parent)
 	local radius, segments = 0.72, 20
 	for i = 0, segments - 1 do
 		local angle = i / segments * math.pi * 2
-		part("WheelRim", Vector3.new(0.17, 2 * math.pi * radius / segments + 0.03, 0.17), steeringBase * CFrame.Angles(0, 0, angle) * CFrame.new(radius, 0, 0), Color3.fromRGB(24, 24, 26), Enum.Material.SmoothPlastic, nil, hub)
+		local thick = 0.17 + (i % 2) * 0.03 -- abwechselnd dicker, damit sich die Enden nicht überlagern
+		part("WheelRim", Vector3.new(thick, 2 * math.pi * radius / segments + 0.03, thick), steeringBase * CFrame.Angles(0, 0, angle) * CFrame.new(radius, 0, 0), Color3.fromRGB(24, 24, 26), Enum.Material.SmoothPlastic, nil, hub)
 	end
-	for _, angle in { 0, math.pi, -math.pi / 2 } do
-		part("WheelSpoke", Vector3.new(radius, 0.14, 0.1), steeringBase * CFrame.Angles(0, 0, angle) * CFrame.new(radius / 2, 0, 0.02), Color3.fromRGB(30, 30, 33), nil, nil, hub)
+	for index, angle in { 0, math.pi, -math.pi / 2 } do
+		part("WheelSpoke", Vector3.new(radius, 0.14 - index * 0.02, 0.1 - index * 0.02), steeringBase * CFrame.Angles(0, 0, angle) * CFrame.new(radius / 2, 0, 0.02), Color3.fromRGB(30, 30, 33), nil, nil, hub)
 	end
 	part("WheelHub", Vector3.new(0.1, 0.42, 0.42), steeringBase * CFrame.new(0, 0, 0.05) * CFrame.Angles(0, math.rad(90), 0), Color3.fromRGB(35, 35, 38), Enum.Material.Metal, { Shape = Enum.PartType.Cylinder }, hub)
 	part("WheelLogo", Vector3.new(0.12, 0.16, 0.16), steeringBase * CFrame.new(0, 0, 0.08) * CFrame.Angles(0, math.rad(90), 0), CHROME, Enum.Material.Metal, { Shape = Enum.PartType.Cylinder }, hub)

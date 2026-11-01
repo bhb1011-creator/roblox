@@ -22,6 +22,7 @@ local Dialogue = require(Shared:WaitForChild("Dialogue"))
 local Route = require(Shared:WaitForChild("LevelRoute"))
 local Speech = require(script.Parent:WaitForChild("Speech"))
 local Choices = require(script.Parent:WaitForChild("Choices"))
+local BeastView = require(script.Parent:WaitForChild("BeastView"))
 local player = Players.LocalPlayer
 local cutscene = ReplicatedStorage:WaitForChild("Cutscene")
 local puppets = cutscene:WaitForChild("Puppets")
@@ -305,21 +306,29 @@ task.spawn(function()
 end)
 
 ------------------------------------------------------------------ Sounds
--- IDs stehen in Config.SOUNDS. Fehlt eine ID, wird ein Ersatz genommen oder der Sound
--- fällt weg. Klopfen und Ast-Knacken klingen ohne eigene ID wie tiefe Schritte.
+-- IDs stehen in Config.SOUNDS. Fehlt eine ID, wird ein Ersatz genommen (ein anderer
+-- Sound, tiefer oder höher abgespielt) oder der Sound fällt weg.
 local FALLBACK_SOUNDS = {
 	footstep = "rbxasset://sounds/action_footsteps_plastic.mp3",
 }
-local FALLBACK_KEYS = { knock = "footstep", twig = "footstep" }
+local FALLBACK_KEYS = {
+	knock = { "footstep", 0.55 },
+	twig = { "footstep", 1.9 },
+	growl = { "engine", 0.3 },
+	roar = { "sting", 0.5 },
+	beastBreath = { "wind", 0.45 },
+	beastStep = { "footstep", 0.4 },
+}
 local function makeSound(key, parent, props)
 	local id = Config.SOUNDS and Config.SOUNDS[key] or ""
-	if id == "" and FALLBACK_KEYS[key] then
-		id = Config.SOUNDS[FALLBACK_KEYS[key]] or ""
+	local fallback = FALLBACK_KEYS[key]
+	if id == "" and fallback then
+		id = Config.SOUNDS[fallback[1]] or ""
 		props = table.clone(props or {})
-		props.PlaybackSpeed = key == "knock" and 0.55 or 1.9
+		props.PlaybackSpeed = fallback[2]
 	end
 	if id == "" then
-		id = FALLBACK_SOUNDS[key] or FALLBACK_SOUNDS[FALLBACK_KEYS[key]]
+		id = FALLBACK_SOUNDS[key] or (fallback and FALLBACK_SOUNDS[fallback[1]])
 	end
 	if not id then
 		return nil
@@ -369,6 +378,7 @@ for _, lens in CollectionService:GetTagged("FlickerLamp") do
 	end
 end
 strangerSteps = stranger and makeSound("footstep", strangerRoot, { Volume = 0.6, RollOffMaxDistance = 60 })
+BeastView.init(gui, makeSound, fade)
 local function strangerStep()
 	if strangerSteps then
 		strangerSteps.PlaybackSpeed = 0.9 + math.random() * 0.2
@@ -414,7 +424,6 @@ local driveLine = Route.driveToHouseLine()
 local walkLine = Route.walkLine()
 local leaveLine = Route.leaveLine()
 local walkSetup = 1.2 -- Sekunden nach Beginn von "follow": jetzt ist alles schwarz, man steigt aus
-local sarpWalkS = 6 -- wo Sarp auf dem Waldweg gerade ist (folgt dem Server-Wert "SarpS")
 local freeWalk = false -- true, sobald man selbst läuft
 local garageSpot = Route.housePoint(Route.GARAGE_X, -Route.GARAGE_SIZE.Z / 2 - 3.5)
 
@@ -494,6 +503,8 @@ dialogueEvent.OnClientEvent:Connect(function(message)
 		end)
 	elseif message.type == "chosen" then
 		Choices.chosen(message.index)
+	else
+		BeastView.handle(message)
 	end
 end)
 
@@ -556,6 +567,9 @@ local function setupWalk()
 		flashlight.CFrame = camera.CFrame
 		freeWalk = true
 		TweenService:Create(fade, TweenInfo.new(1.5), { BackgroundTransparency = 1 }):Play()
+		task.delay(1.5, function()
+			BeastView.hint("Folge Sarp und bleib in seiner Nähe.   Shift = rennen", 6)
+		end)
 	end)
 
 	-- Die anderen Spieler leuchten auch mit dem Handy (Licht am Kopf)
@@ -591,8 +605,8 @@ local function updateStranger(t, bt, deltaTime, carPosition, driveS)
 		end
 	end
 
-	-- Ende "follow": er geht ein Stück vorneweg und wartet, bis man nachkommt. An der
-	-- Veranda dreht er sich um, verabschiedet sich und verschwindet dann im Wald.
+	-- Ende "follow": er geht gleichmäßig voraus und wartet nicht. An der Veranda bleibt
+	-- er stehen; erst wenn man ankommt, dreht er sich um, verabschiedet sich und geht.
 	if branch == "follow" and bt and bt >= walkSetup then
 		if sarpLeaveStart then
 			local elapsed = os.clock() - sarpLeaveStart
@@ -612,16 +626,16 @@ local function updateStranger(t, bt, deltaTime, carPosition, driveS)
 			end
 			return
 		end
-		local target = cutscene:GetAttribute("SarpS") or sarpWalkS
-		local moving = target > sarpWalkS + 0.05
-		sarpWalkS = math.min(target, sarpWalkS + 7.5 * deltaTime)
-		setStrangerWalking(moving, 0.75)
+		local sarpStart = cutscene:GetAttribute("SarpStart")
+		local now = workspace:GetServerTimeNow()
+		local sarpS = math.min(6 + (sarpStart and math.max(0, now - sarpStart) or 0) * Route.SARP_WALK_SPEED, walkLine.length)
+		local moving = sarpStart ~= nil and now > sarpStart and sarpS < walkLine.length
+		setStrangerWalking(moving, 0.65)
 		if moving then
-			step(0.62)
+			step(0.7)
 		end
-		local cframe = walkLine.cframeAt(sarpWalkS)
-		if not moving or sarpFaceGroup then
-			-- er bleibt stehen und schaut zu einem zurück
+		local cframe = walkLine.cframeAt(sarpS)
+		if sarpFaceGroup then
 			cframe = CFrame.lookAt(cframe.Position, flat(camera.CFrame.Position, cframe.Position.Y))
 		end
 		strangerRoot.CFrame = cframe + strangerHeight
@@ -715,6 +729,7 @@ RunService.RenderStepped:Connect(function(deltaTime)
 	-- Kamera: im Auto in den Augen des Spielers. Zu Fuß steuert Roblox die Kamera
 	-- (Ego-Perspektive), dann folgt nur das Handylicht dem Blick.
 	camera.FieldOfView = 74
+	BeastView.update(deltaTime, camera, freeWalk, finished)
 	if freeWalk then
 		if flashlight then
 			local target = camera.CFrame * CFrame.new(0.35, -0.45, -0.3)

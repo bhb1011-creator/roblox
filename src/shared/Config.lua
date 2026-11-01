@@ -87,6 +87,10 @@ Config.SOUNDS = {
 	sting = "rbxassetid://94291824225136", -- sting.ogg
 	knock = "", -- knock.ogg (Klopfen ans Autofenster)
 	twig = "", -- twig_snap.ogg (knackender Ast im Wald)
+	growl = "", -- beast_growl.ogg (das Biest knurrt im Wald)
+	roar = "", -- beast_roar.ogg (das Biest brüllt und jagt einen)
+	beastBreath = "", -- beast_breath_loop.ogg (Atmen des Biests)
+	beastStep = "", -- beast_step.ogg (schwere Schritte des Biests)
 }
 
 -- Sprachausgabe auf Englisch mit der Text-to-Speech-Funktion von Roblox.

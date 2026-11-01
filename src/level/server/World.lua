@@ -24,7 +24,7 @@ local COLORS = {
 	darkMetal = Color3.fromRGB(45, 45, 48),
 	wood = Color3.fromRGB(70, 52, 38),
 	gravel = Color3.fromRGB(112, 106, 98),
-	dirt = Color3.fromRGB(88, 70, 52),
+	dirt = Color3.fromRGB(150, 128, 98), -- heller Waldweg, damit man ihn im Dunkeln sieht
 	lamp = Color3.fromRGB(255, 190, 120),
 }
 
@@ -81,6 +81,10 @@ end
 local function roadSegments()
 	local segments = {}
 	local samples = Route.roadSamples(SEGMENT)
+	-- ein winziges letztes Stück würde mit seinen Nachbarn flimmern
+	if #samples > 2 and samples[#samples] - samples[#samples - 1] < 1 then
+		table.remove(samples, #samples - 1)
+	end
 	for i = 1, #samples - 1 do
 		local from, to = Route.centerAt(samples[i]), Route.centerAt(samples[i + 1])
 		table.insert(segments, {
@@ -163,7 +167,7 @@ local function buildRoad(parent, segments)
 		local length = segment.length + 0.6
 		Parts.new("Part", {
 			Name = "RoadSurface",
-			Size = Vector3.new(WIDTH, 4.2, length),
+			Size = Vector3.new(WIDTH + (index % 2) * 0.08, 4.2, length),
 			CFrame = cf * CFrame.new(0, Y - 2.1, 0),
 			Color = COLORS.asphalt,
 			Material = Enum.Material.Asphalt,
@@ -295,7 +299,7 @@ local function buildStreetLamps(parent, segments)
 			local base = segment.cframe * CFrame.new(WIDTH / 2 + 2.5, 0, 0)
 			Parts.new("Part", { Name = "LampFoot", Size = Vector3.new(1.2, 1.6, 1.2), CFrame = base * CFrame.new(0, 0.3, 0), Color = Color3.fromRGB(120, 118, 112), Material = Enum.Material.Concrete, Parent = folder })
 			Parts.column({ Name = "LampPole", Color = COLORS.darkMetal, Material = Enum.Material.Metal, Parent = folder }, 18, 0.5, base)
-			Parts.new("Part", { Name = "LampArm", Size = Vector3.new(5, 0.35, 0.35), CFrame = base * CFrame.new(-2.5, 17.8, 0), Color = COLORS.darkMetal, Material = Enum.Material.Metal, Parent = folder })
+			Parts.new("Part", { Name = "LampArm", Size = Vector3.new(5, 0.35, 0.35), CFrame = base * CFrame.new(-2.5, 17.75, 0), Color = COLORS.darkMetal, Material = Enum.Material.Metal, Parent = folder })
 			Parts.new("Part", { Name = "LampHead", Size = Vector3.new(2.6, 0.55, 1.4), CFrame = base * CFrame.new(-5.2, 17.7, 0), Color = Color3.fromRGB(35, 35, 38), Material = Enum.Material.Metal, Parent = folder })
 			local lens = Parts.new("Part", {
 				Name = "LampLens",
@@ -385,12 +389,12 @@ local function buildLayby(parent, segments)
 	layby.Parent = parent
 
 	local pathStart = Route.forestPath()[1]
-	for _, segment in segments do
+	for index, segment in segments do
 		if segment.s >= Route.LAYBY_START_S - 8 and segment.s <= Route.LAYBY_END_S then
 			Parts.new("Part", {
 				Name = "Gravel",
 				Size = Vector3.new(Route.LAYBY_WIDTH, 4.2, segment.length + 1.2),
-				CFrame = segment.cframe * CFrame.new(Route.LAYBY_OFFSET, Y - 2.1, 0),
+				CFrame = segment.cframe * CFrame.new(Route.LAYBY_OFFSET, Y + (index % 2) * 0.012 - 2.1, 0),
 				Color = COLORS.gravel,
 				Material = Enum.Material.Pebble,
 				Parent = layby,
@@ -417,11 +421,55 @@ local function buildLayby(parent, segments)
 		Parts.new("Part", {
 			Name = "ForestPath",
 			Size = Vector3.new(5, 4.2, (b - a).Magnitude + 0.8),
-			CFrame = CFrame.lookAt((a + b) / 2, b) * CFrame.new(0, -2.1, 0),
+			-- abwechselnd minimal höher, damit überlappende Stücke nicht flimmern
+			CFrame = CFrame.lookAt((a + b) / 2, b) * CFrame.new(0, (i % 2) * 0.012 - 2.1, 0),
 			Color = COLORS.dirt,
 			Material = Enum.Material.Ground,
 			Parent = layby,
 		})
+	end
+
+	-- Damit man den Weg im Dunkeln findet: helle Randsteine und kleine, schwach leuchtende
+	-- Pilze, die wie eine Spur den Hügel hinauf führen
+	local rng = Random.new(77)
+	for i = 2, #path - 1 do
+		local here, ahead = path[i], path[i + 1]
+		local across = (ahead - here).Unit:Cross(Vector3.yAxis)
+		for _, side in { -1, 1 } do
+			if rng:NextNumber() < 0.8 then
+				local spot = here + across * side * rng:NextNumber(2.7, 3.1)
+				local size = rng:NextNumber(0.5, 0.9)
+				Parts.new("Part", {
+					Name = "PathStone",
+					Size = Vector3.new(size, size * 0.55, size * rng:NextNumber(0.8, 1.2)),
+					CFrame = CFrame.new(spot.X, Route.groundY(spot.X, spot.Z) + size * 0.15, spot.Z) * CFrame.Angles(0, rng:NextNumber(0, math.pi), rng:NextNumber(-0.2, 0.2)),
+					Color = Color3.fromRGB(176, 172, 162),
+					Material = Enum.Material.Slate,
+					Parent = layby,
+				})
+			end
+		end
+		if i % 4 == 0 then
+			local side = (i % 8 == 0) and 1 or -1
+			local spot = here + across * side * rng:NextNumber(3.4, 4.2)
+			for _ = 1, rng:NextInteger(2, 3) do
+				local base = Vector3.new(spot.X + rng:NextNumber(-0.5, 0.5), 0, spot.Z + rng:NextNumber(-0.5, 0.5))
+				local ground = Route.groundY(base.X, base.Z)
+				local height = rng:NextNumber(0.25, 0.5)
+				Parts.new("Part", { Name = "MushroomStem", Size = Vector3.new(0.1, height, 0.1), CFrame = CFrame.new(base.X, ground + height / 2, base.Z), Color = Color3.fromRGB(200, 205, 195), CanCollide = false, Parent = layby })
+				Parts.new("Part", {
+					Name = "MushroomCap",
+					Shape = Enum.PartType.Ball,
+					Size = Vector3.new(0.32, 0.32, 0.32),
+					CFrame = CFrame.new(base.X, ground + height, base.Z),
+					Color = Color3.fromRGB(110, 175, 150),
+					Material = Enum.Material.Neon,
+					CanCollide = false,
+					CastShadow = false,
+					Parent = layby,
+				})
+			end
+		end
 	end
 
 	-- Kaputte Schranke am Anfang des Weges

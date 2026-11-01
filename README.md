@@ -46,7 +46,8 @@ Die Baseplate wird beim Start automatisch entfernt.
 - Der Fremde kommt schon beim Einparken langsam aus dem Wald, klopft ans Beifahrerfenster und redet mit einem. Bis er sich als **Sarp** vorstellt, steht in den Untertiteln „???“
 - Drei Antworten wählt der **Fahrer** (Maus/Finger oder Tasten **1** und **2**); nach 25 Sekunden ohne Wahl wird die erste genommen
 - **Ende A – nicht folgen:** Man fährt weiter. Die Straße wendet in einer weiten Kehre (180°) und führt auf der anderen Seite des Waldes zurück; dann biegt man in die Einfahrt der Wagners und fährt den Hang hinauf. Sarp steht schon im Scheinwerferlicht vor der Garage
-- **Ende B – folgen:** Man steigt aus und **läuft selbst** (WASD oder Stick, Ego-Perspektive, Handy als Taschenlampe) über einen unheimlichen Waldweg quer durch dichten Wald den Hügel hinauf (tote Bäume, hängende Zweigfiguren, Stoffstreifen). Sarp geht ein Stück voraus und wartet, wenn man zurückbleibt. An der Veranda verabschiedet er sich und verschwindet im Wald
+- **Ende B – folgen:** Man steigt aus und **läuft selbst** (WASD oder Stick, Ego-Perspektive, Handy als Taschenlampe, **Shift = rennen** mit Ausdauer) über einen unheimlichen Waldweg quer durch dichten Wald den Hügel hinauf. Der Weg ist hell, mit Randsteinen und schwach leuchtenden Pilzen. Sarp geht gleichmäßig voraus und wartet nicht. An der Veranda verabschiedet er sich und verschwindet im Wald
+- **Das Biest:** Wer Sarp nicht folgt (mehr als ~26 Studs zurück oder weit neben dem Weg), hört nach 4 Sekunden ein Knurren im Wald, nach 9 Sekunden näher, und nach 14 Sekunden kommt es und jagt einen. Wer zurück zu Sarp rennt, ist sicher. Wen es erwischt, der stirbt (Schreckmoment, „DU BIST GESTORBEN“) und taucht nach ein paar Sekunden hinter Sarp wieder auf
 - Das Haus der Wagners steht oben auf einem Hügel: großes, altes Holzhaus mit zwei Stockwerken, Veranda, Garage, Schornstein, Zaun, Briefkasten – **kein einziges Licht brennt**
 - Danach: „Fortsetzung folgt …“
 - Sounds: Musik im Autoradio, Motor, Fahrgeräusche, Blinker, Bremsen, Schotter, Waldgeräusche, Klopfen, knackender Ast; ab der Erzählung über das Funkloch rauscht das Radio
@@ -82,6 +83,8 @@ Die Sounds liegen in `assets/audio` (selbst erzeugt, frei verwendbar):
 | `footstep.ogg`, `lamp_buzz_loop.ogg` | Schritte des Fremden, summende Laterne |
 | `radio_static_loop.ogg`, `sting.ogg` | Radio-Rauschen und Schreck-Akzent, wenn der Fremde ankommt |
 | `knock.ogg`, `twig_snap.ogg` | Klopfen ans Autofenster, knackender Ast im Wald (Config: `knock`, `twig`) |
+| `beast_growl.ogg`, `beast_roar.ogg` | Knurren und Brüllen des Biests (Config: `growl`, `roar`) |
+| `beast_breath_loop.ogg`, `beast_step.ogg` | Atmen und schwere Schritte des Biests (Config: `beastBreath`, `beastStep`) |
 
 1. Auf **create.roblox.com → Kreationen → Entwicklungsobjekte (Development Items) → Audio** jede Datei hochladen
    (oder in Studio: **Asset Manager → Bulk Import**).
@@ -91,17 +94,17 @@ Die Sounds liegen in `assets/audio` (selbst erzeugt, frei verwendbar):
    (Roblox stellt dort viele Lieder kostenlos bereit) und dessen ID eintragen.
 
 Fehlt eine ID, wird der Sound einfach weggelassen – das Spiel funktioniert trotzdem
-(für Klopfen und Ast-Knacken wird so lange ein tiefer Schritt-Sound genommen).
+(für Klopfen, Ast-Knacken und die Geräusche des Biests wird so lange ein anderer Sound tiefer abgespielt).
 
 ## Ordner
 
 | Ordner | Landet in Studio in | Inhalt |
 |---|---|---|
-| `src/shared` | ReplicatedStorage › Shared | `Config.lua` (Einstellungen), `Parts.lua` und `Forest.lua` (Bausteine), `LevelRoute.lua` (Strecke, Haus und Wege von Level 1), `Dialogue.lua` (alle Texte) |
+| `src/shared` | ReplicatedStorage › Shared | `Config.lua` (Einstellungen), `Parts.lua` und `Forest.lua` (Bausteine), `LevelRoute.lua` (Strecke, Haus und Wege von Level 1), `Dialogue.lua` (alle Texte), `Beast.lua` (das Biest) |
 | `src/lobby/server` | ServerScriptService › Lobby | Bauen der Lobby (Environment, Road, ParkingLot, Camp, Buildings, Decor, Car) und Autos (CarQueue) |
 | `src/lobby/client` | StarterPlayerScripts › Lobby | Knöpfe, Hinweise, Shop-Fenster, Lichteffekte |
-| `src/level/server` | ServerScriptService › Level | Level 1: Welt, Haus der Wagners, Auto, Sarp, Ablauf des Gesprächs (`DialogueRunner`) |
-| `src/level/client` | StarterPlayerScripts › Level | Ablauf der Zwischensequenz, Kamera, Sprachausgabe/Untertitel (`Speech`), Antwortauswahl (`Choices`) |
+| `src/level/server` | ServerScriptService › Level | Level 1: Welt, Haus der Wagners, Auto, Sarp, Ablauf des Gesprächs (`DialogueRunner`), Waldweg mit Biest (`ForestWalk`) |
+| `src/level/client` | StarterPlayerScripts › Level | Ablauf der Zwischensequenz, Kamera, Sprachausgabe/Untertitel (`Speech`), Antwortauswahl (`Choices`), Biest/Rennen/Tod (`BeastView`) |
 
 ## Robux-Produkte einrichten (Kasse)
 
