@@ -112,7 +112,9 @@ function Kapitel2.start()
 				Wagners.place(npc, position, facing)
 				for index, hip in hips do
 					local swing = a < 1 and math.sin(elapsed * 6 + index * math.pi) * 0.3 or 0
-					hip.joint.C0 = hip.base * CFrame.Angles(swing, 0, 0)
+					pcall(function()
+						hip.joint.C0 = hip.base * CFrame.Angles(swing, 0, 0)
+					end)
 				end
 				if a >= 1 then
 					break
@@ -328,9 +330,13 @@ function Kapitel2.start()
 		local shoulder = arm and arm:FindFirstChild("RightShoulder")
 		if shoulder then
 			local base = shoulder.C0
-			shoulder.C0 = base * CFrame.Angles(math.rad(-15), 0, math.rad(105))
+			pcall(function()
+				shoulder.C0 = base * CFrame.Angles(math.rad(-15), 0, math.rad(105))
+			end)
 			task.delay(5, function()
-				shoulder.C0 = base
+				pcall(function()
+					shoulder.C0 = base
+				end)
 			end)
 		end
 	end

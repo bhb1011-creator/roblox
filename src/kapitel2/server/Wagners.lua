@@ -40,6 +40,48 @@ local function attach(model, bodyPart, name, size, offset, color, material, shap
 	return part
 end
 
+-- Gelenke, die sich bewegen (Kopf drehen, Arm anwinkeln, Beine beim Gehen). In
+-- manchen Roblox-Versionen sind die Gelenke dieser Figuren schreibgeschützt
+-- ("C0 is read only"). Deshalb werden sie durch eigene, gleichwertige ersetzt.
+local MOVING_JOINTS = {
+	{ "Head", "Neck" },
+	{ "RightUpperArm", "RightShoulder" },
+	{ "RightLowerArm", "RightElbow" },
+	{ "LeftUpperLeg", "LeftHip" },
+	{ "RightUpperLeg", "RightHip" },
+}
+
+local function replaceJoint(model, partName, jointName)
+	local part = model:FindFirstChild(partName)
+	local old = part and part:FindFirstChild(jointName)
+	if not old then
+		return
+	end
+	local part0, part1, c0, c1
+	local ok = pcall(function()
+		part0, part1, c0, c1 = old.Part0, old.Part1, old.C0, old.C1
+	end)
+	if not ok or not part0 then
+		-- neuere Figuren: Gelenk mit zwei Attachments statt C0/C1
+		ok = pcall(function()
+			local a0, a1 = old.Attachment0, old.Attachment1
+			part0, part1, c0, c1 = a0.Parent, a1.Parent, a0.CFrame, a1.CFrame
+		end)
+	end
+	if not ok or not part0 or not part1 then
+		warn("Gelenk konnte nicht ersetzt werden:", partName, jointName)
+		return
+	end
+	local joint = Instance.new("Motor6D")
+	joint.Name = jointName
+	joint.Part0 = part0
+	joint.Part1 = part1
+	joint.C0 = c0
+	joint.C1 = c1
+	old:Destroy()
+	joint.Parent = part
+end
+
 local function newBody(name, colors, scale)
 	local description = Instance.new("HumanoidDescription")
 	description.HeadColor = colors.skin
@@ -87,6 +129,9 @@ local function newBody(name, colors, scale)
 		end
 	end
 	model.HumanoidRootPart.Anchored = true
+	for _, info in MOVING_JOINTS do
+		replaceJoint(model, info[1], info[2])
+	end
 	return model
 end
 
@@ -121,14 +166,19 @@ local function face(model, head, style, colors)
 			attach(model, head, "MouthCorner", Vector3.new(0.12 * s, 0.035 * s, 0.02), CFrame.new(side * 0.24 * s, -0.235 * s, front) * CFrame.Angles(0, 0, math.rad(side * 28)), lips)
 		end
 	else
-		-- Bart mit Schnurrbart, darin ein schmaler, gerader Mund
-		attach(model, head, "Beard", Vector3.new(size.X * 0.82, 0.42 * s, 0.08), CFrame.new(0, -0.33 * s, front + 0.03), colors.beard, Enum.Material.Fabric)
-		attach(model, head, "BeardChin", Vector3.new(size.X * 0.6, 0.22 * s, size.Z * 0.5), CFrame.new(0, -size.Y / 2 + 0.02, -size.Z * 0.22), colors.beard, Enum.Material.Fabric)
-		for _, side in { -1, 1 } do
-			attach(model, head, "BeardSide", Vector3.new(0.12, size.Y * 0.55, size.Z * 0.7), CFrame.new(side * (size.X / 2 + 0.03), -0.15 * s, -0.05), colors.beard, Enum.Material.Fabric)
+		-- runder, ungepflegter Bart um Kinn und Wangen (Ellipsoide statt Platten, damit er
+		-- dem runden Kopf folgt), darüber ein Schnurrbart und ein schmaler, gerader Mund
+		local function round(name, partSize, offset)
+			local part = attach(model, head, name, partSize, offset, colors.beard, Enum.Material.Fabric)
+			local mesh = Instance.new("SpecialMesh")
+			mesh.MeshType = Enum.MeshType.Sphere
+			mesh.Parent = part
+			return part
 		end
-		attach(model, head, "Mustache", Vector3.new(0.48 * s, 0.09 * s, 0.04), CFrame.new(0, -0.14 * s, front - 0.01), colors.beard, Enum.Material.Fabric)
-		attach(model, head, "Mouth", Vector3.new(0.26 * s, 0.03 * s, 0.02), CFrame.new(0, -0.23 * s, front - 0.04), Color3.fromRGB(70, 42, 38))
+		round("Beard", Vector3.new(size.X * 0.86, size.Y * 0.46, size.Z * 0.78), CFrame.new(0, -size.Y * 0.3, -size.Z * 0.1))
+		round("BeardChin", Vector3.new(size.X * 0.5, size.Y * 0.3, size.Z * 0.42), CFrame.new(0, -size.Y * 0.44, -size.Z * 0.28))
+		round("Mustache", Vector3.new(0.5 * s, 0.12 * s, 0.14 * s), CFrame.new(0, -0.15 * s, front + 0.04))
+		attach(model, head, "Mouth", Vector3.new(0.24 * s, 0.035 * s, 0.02), CFrame.new(0, -0.25 * s, front - 0.02), Color3.fromRGB(70, 42, 38))
 	end
 end
 
@@ -170,6 +220,15 @@ function Wagners.buildMrs(parent)
 	-- Rechter Arm angewinkelt (hält die Kerze vor der Brust). Die Kerze wird in der
 	-- Grundhaltung so angebracht, dass sie nach dem Anwinkeln genau senkrecht steht.
 	local up, bend = math.rad(35), math.rad(65)
+	local shoulder = model.RightUpperArm:FindFirstChild("RightShoulder")
+	local elbow = model.RightLowerArm:FindFirstChild("RightElbow")
+	local canBend = shoulder ~= nil and elbow ~= nil and pcall(function()
+		shoulder.C0 = shoulder.C0
+		elbow.C0 = elbow.C0
+	end)
+	if not canBend then
+		up, bend = 0, 0 -- Arm bleibt hängen, die Kerze trotzdem senkrecht
+	end
 	local hand = model.RightHand
 	local upright = CFrame.Angles(-(up + bend), 0, 0)
 	local lift = hand.Size.Y / 2
@@ -184,9 +243,7 @@ function Wagners.buildMrs(parent)
 	light.Color = Color3.fromRGB(255, 160, 85)
 	light.Shadows = true
 	light.Parent = flame
-	local shoulder = model.RightUpperArm:FindFirstChild("RightShoulder")
-	local elbow = model.RightLowerArm:FindFirstChild("RightElbow")
-	if shoulder and elbow then
+	if canBend then
 		shoulder.C0 *= CFrame.Angles(up, 0, 0)
 		elbow.C0 *= CFrame.Angles(bend, 0, 0)
 	end

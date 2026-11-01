@@ -247,7 +247,9 @@ function Kapitel2.run()
 				local blend = math.min(deltaTime * 4, 1)
 				info.yaw += (yaw - info.yaw) * blend
 				info.pitch += (pitch - info.pitch) * blend
-				info.joint.C0 = info.base * CFrame.Angles(info.pitch, info.yaw, 0)
+				pcall(function()
+					info.joint.C0 = info.base * CFrame.Angles(info.pitch, info.yaw, 0)
+				end)
 				Speech.setEmitter(model.Name == "MrsWagner" and "mrsWagner" or "mrWagner", head)
 			end
 		end
