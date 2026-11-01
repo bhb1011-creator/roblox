@@ -135,8 +135,8 @@ Players.PlayerRemoving:Connect(function(player)
 	end
 end)
 
--- Ladepunkte mit dem Auto (oder den Spielern zu Fuß) mitbewegen
-local driveLine, walkLine = Route.driveToHouseLine(), Route.walkLine()
+-- Ladepunkte mit dem Auto mitbewegen
+local driveLine = Route.driveToHouseLine()
 RunService.Heartbeat:Connect(function()
 	local startTime = cutscene:GetAttribute("StartTime")
 	if not startTime then
@@ -148,8 +148,8 @@ RunService.Heartbeat:Connect(function()
 	if branch == "drive" and branchStart then
 		local s = Route.profile(now - branchStart, driveLine.length, Route.DRIVE_TOP_SPEED, Route.DRIVE_ACCELERATION, Route.DRIVE_BRAKE)
 		cframe = driveLine.cframeAt(s)
-	elseif branch == "follow" and branchStart then
-		cframe = walkLine.cframeAt(math.clamp((now - branchStart - Route.WALK_FADE) * Route.WALK_SPEED, 0, walkLine.length))
+	elseif branch == "follow" then
+		return -- zu Fuß lädt Roblox die Welt um die Spielfiguren
 	else
 		cframe = Route.carCFrame(Route.driveDistance(now - startTime))
 	end

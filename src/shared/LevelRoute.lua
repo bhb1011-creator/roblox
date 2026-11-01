@@ -29,11 +29,17 @@ local CONTROL_POINTS = {
 	Vector3.new(25, 0, -1060),
 	Vector3.new(60, 0, -1220),
 	Vector3.new(62, 0, -1420),
-	-- Hinter der Parkbucht macht die Straße eine Rechtskurve; danach liegt rechts das Haus
+	-- Hinter der Parkbucht wendet die Straße in einer weiten Kehre (180°) und führt auf
+	-- der anderen Seite des Waldes zurück. Dort liegt rechts, oben am Hang, das Haus.
 	Vector3.new(80, 0, -1500),
-	Vector3.new(140, 0, -1555),
-	Vector3.new(250, 0, -1580),
-	Vector3.new(380, 0, -1585),
+	Vector3.new(130, 0, -1572),
+	Vector3.new(210, 0, -1598),
+	Vector3.new(285, 0, -1568),
+	Vector3.new(326, 0, -1492),
+	Vector3.new(336, 0, -1390),
+	Vector3.new(332, 0, -1260),
+	Vector3.new(322, 0, -1120),
+	Vector3.new(305, 0, -980),
 }
 
 local function catmullRom(p0, p1, p2, p3, t)
@@ -152,25 +158,99 @@ function LevelRoute.roadSamples(spacing)
 	return samples
 end
 
+------------------------------------------------------------------ Abstände
+local function distanceToPolyline(x, z, polyline)
+	local best = math.huge
+	for i = 1, #polyline - 1 do
+		local a, b = polyline[i], polyline[i + 1]
+		local dx, dz = b.X - a.X, b.Z - a.Z
+		local lengthSquared = dx * dx + dz * dz
+		local t = lengthSquared > 0 and math.clamp(((x - a.X) * dx + (z - a.Z) * dz) / lengthSquared, 0, 1) or 0
+		local px, pz = a.X + dx * t - x, a.Z + dz * t - z
+		best = math.min(best, math.sqrt(px * px + pz * pz))
+	end
+	return best
+end
+
+-- Grobe Straßenmitte (alle 16 Studs) für Abstandsberechnungen
+local coarse = {}
+for _, s in LevelRoute.roadSamples(16) do
+	table.insert(coarse, LevelRoute.centerAt(s))
+end
+local laybyLine = {}
+for s = LevelRoute.LAYBY_START_S, LevelRoute.LAYBY_END_S, 5 do
+	table.insert(laybyLine, LevelRoute.sidePoint(s, LevelRoute.LAYBY_OFFSET, 0))
+end
+
+function LevelRoute.distanceToRoad(x, z)
+	return distanceToPolyline(x, z, coarse)
+end
+
+function LevelRoute.distanceToLayby(x, z)
+	return distanceToPolyline(x, z, laybyLine)
+end
+
 ------------------------------------------------------------------ Haus der Gastfamilie
--- Das Haus der Wagners steht hinter der Rechtskurve rechts der Straße.
+-- Das Haus der Wagners steht nach der Kehre rechts der Straße, oben auf einem Hügel.
 -- Die Vorderseite (mit Veranda) zeigt zur Straße.
-LevelRoute.HOUSE_S = 1620
-LevelRoute.HOUSE_OFFSET = 62
+LevelRoute.HOUSE_S = 2155
+LevelRoute.HOUSE_OFFSET = 120
+LevelRoute.HILL_HEIGHT = 14 -- so hoch liegt das Grundstück über der Straße
 LevelRoute.HOUSE_SIZE = Vector3.new(40, 26, 30) -- Wohnhaus: Breite, Höhe (bis zum First), Tiefe
 LevelRoute.GARAGE_X = 29 -- Mitte der Garage (rechts neben dem Wohnhaus, von vorne gesehen links)
 LevelRoute.GARAGE_SIZE = Vector3.new(18, 13, 24)
 
-function LevelRoute.houseCFrame()
+local houseFrame -- flach auf Straßenhöhe; wird einmal berechnet
+do
 	local center = LevelRoute.sidePoint(LevelRoute.HOUSE_S, LevelRoute.HOUSE_OFFSET, 0)
 	local road = LevelRoute.sidePoint(LevelRoute.HOUSE_S, 0, 0)
-	return CFrame.lookAt(
-		Vector3.new(center.X, LevelRoute.GROUND_Y, center.Z),
-		Vector3.new(road.X, LevelRoute.GROUND_Y, road.Z)
-	)
+	houseFrame = CFrame.lookAt(Vector3.new(center.X, 0, center.Z), Vector3.new(road.X, 0, road.Z))
+end
+local houseInverse = houseFrame:Inverse()
+
+-- Abstand zum Grundstück (Haus, Garage, Veranda und Hof), 0 = darauf
+function LevelRoute.distanceToHouse(x, z)
+	local yard = houseInverse * Vector3.new(x, 0, z)
+	local dx = math.max(math.abs(yard.X - 4) - 43, 0)
+	local dz = math.max(math.abs(yard.Z + 4) - 31, 0)
+	return math.sqrt(dx * dx + dz * dz)
 end
 
--- Punkt relativ zum Haus (x nach rechts, z nach hinten; die Straße liegt bei -z)
+-- Höhe des Geländes über der Straße: flach auf dem Grundstück, ringsum ein Hang, der
+-- gleichmäßig bis zur Straße und zur Parkbucht ausläuft (dort ist alles eben).
+-- `rise` ist 0 am ebenen Rand und 1 am Grundstück, dazwischen steigt es gleichmäßig an.
+function LevelRoute.hillHeight(x, z)
+	local yard = LevelRoute.distanceToHouse(x, z)
+	if yard > 320 then
+		return 0
+	end
+	local edge = math.min(LevelRoute.distanceToRoad(x, z) - 14, LevelRoute.distanceToLayby(x, z) - 10)
+	if edge <= 0 then
+		return 0
+	end
+	local rise = edge / (edge + yard)
+	local fade = math.clamp(1 - (yard - 120) / 200, 0, 1) -- weit weg vom Haus wird es wieder flach
+	return LevelRoute.HILL_HEIGHT * rise * rise * (3 - 2 * rise) * fade
+end
+
+-- Höhe, auf der Dinge stehen (Boden), an der Stelle x, z
+function LevelRoute.groundY(x, z)
+	return LevelRoute.GROUND_Y + LevelRoute.hillHeight(x, z)
+end
+
+local function onHill(points)
+	for i, point in points do
+		points[i] = Vector3.new(point.X, LevelRoute.groundY(point.X, point.Z), point.Z)
+	end
+	return points
+end
+
+-- CFrame des Hauses: Mitte am Boden des Grundstücks, Blick zur Straße
+function LevelRoute.houseCFrame()
+	return houseFrame + Vector3.new(0, LevelRoute.GROUND_Y + LevelRoute.HILL_HEIGHT, 0)
+end
+
+-- Punkt relativ zum Haus (x nach rechts, z nach hinten; die Straße liegt bei -z), auf Grundstückshöhe
 function LevelRoute.housePoint(x, z)
 	return (LevelRoute.houseCFrame() * CFrame.new(x, 0, z)).Position
 end
@@ -180,41 +260,37 @@ function LevelRoute.porchPoint()
 	return LevelRoute.housePoint(-2, -LevelRoute.HOUSE_SIZE.Z / 2 - 11)
 end
 
-local function onGround(points)
-	for i, point in points do
-		points[i] = Vector3.new(point.X, LevelRoute.GROUND_Y, point.Z)
-	end
-	return points
-end
-
--- Waldweg von der Parkbucht quer durch den Wald (Abkürzung durch die Kurve) bis vor das Haus
+-- Waldweg: von der Parkbucht quer durch den Wald den Hügel hinauf, links am Haus vorbei
+-- bis vor die Veranda. Kontrollpunkte (geglättet wird mit `polyline`).
 function LevelRoute.forestPath()
 	local stop = LevelRoute.STOP_S
-	local points = {
-		LevelRoute.sidePoint(stop - 4, LevelRoute.LAYBY_OFFSET + LevelRoute.LAYBY_WIDTH / 2 - 0.5, 0),
-		LevelRoute.sidePoint(stop + 2, 34, 0),
-	}
-	-- dazwischen schlängelt sich der Weg; er kommt links neben dem Haus aus dem Wald
-	local from, corner = points[2], LevelRoute.housePoint(-36, -24)
-	local across = (corner - from).Unit:Cross(Vector3.yAxis)
-	local wiggle = { 6, -5, 7, -3 }
-	for i, sideways in wiggle do
-		table.insert(points, from:Lerp(corner, i / (#wiggle + 1)) + across * sideways)
+	local start = LevelRoute.sidePoint(stop - 4, LevelRoute.LAYBY_OFFSET + LevelRoute.LAYBY_WIDTH / 2 - 0.5, 0)
+	local enter = LevelRoute.sidePoint(stop - 2, 36, 0)
+	local behind = LevelRoute.housePoint(-34, 34) -- hinter dem Haus, links
+	local across = (behind - enter).Unit:Cross(Vector3.yAxis)
+	local points = { start, enter }
+	-- durch den Wald schlängelt sich der Weg in weichen Bögen
+	for i, sideways in { 7, -5, 4 } do
+		table.insert(points, enter:Lerp(behind, i / 4) + across * sideways)
 	end
-	table.insert(points, corner)
+	table.insert(points, behind)
+	table.insert(points, LevelRoute.housePoint(-38, 4))
+	table.insert(points, LevelRoute.housePoint(-30, -24))
 	table.insert(points, LevelRoute.porchPoint())
-	return onGround(points)
+	return onHill(points)
 end
 
--- Einfahrt: biegt am Haus rechts von der Straße ab und endet vor dem Garagentor
+-- Einfahrt: biegt rechts von der Straße ab und windet sich den Hang hinauf bis vor die Garage
 function LevelRoute.drivewayPath()
 	local x = LevelRoute.GARAGE_X
 	local door = -LevelRoute.GARAGE_SIZE.Z / 2
-	return onGround({
-		LevelRoute.sidePoint(LevelRoute.HOUSE_S - 6, 6.5, 0),
-		LevelRoute.sidePoint(LevelRoute.HOUSE_S + 6, 10.5, 0),
-		LevelRoute.housePoint(x - 6, door - 30),
-		LevelRoute.housePoint(x - 1, door - 22),
+	return onHill({
+		LevelRoute.sidePoint(LevelRoute.HOUSE_S - 42, 6.5, 0),
+		LevelRoute.sidePoint(LevelRoute.HOUSE_S - 32, 11, 0),
+		LevelRoute.housePoint(-16, -92),
+		LevelRoute.housePoint(4, -72),
+		LevelRoute.housePoint(20, -54),
+		LevelRoute.housePoint(x - 1, door - 26),
 		LevelRoute.housePoint(x, door - 14),
 	})
 end
@@ -266,15 +342,17 @@ function LevelRoute.polyline(controlPoints, spacing)
 		local span = sums[high] - sums[low]
 		return samples[low]:Lerp(samples[high], span > 0 and (s - sums[low]) / span or 0)
 	end
-	-- Blickrichtung an der Stelle s (leicht vorausschauend)
-	function line.cframeAt(s)
+	-- Blickrichtung an der Stelle s (leicht vorausschauend). Mit `pitched` neigt sie sich
+	-- am Hang mit (für das Auto), sonst bleibt sie waagerecht (für Figuren).
+	function line.cframeAt(s, pitched)
 		local here = line.at(s)
 		local ahead = line.at(s + 3)
 		if (ahead - here).Magnitude < 0.05 then
 			ahead = here + (here - line.at(s - 3))
 		end
-		return CFrame.lookAt(here, Vector3.new(ahead.X, here.Y, ahead.Z))
+		return CFrame.lookAt(here, pitched and ahead or Vector3.new(ahead.X, here.Y, ahead.Z))
 	end
+	line.samples, line.sums = samples, sums
 	return line
 end
 
@@ -324,121 +402,117 @@ end
 LevelRoute.DIALOGUE_DELAY = 2.5 -- so lange starrt er stumm, bevor er klopft
 
 ------------------------------------------------------------------ Ende A: weiterfahren zum Haus
--- Aus der Parkbucht zurück auf die Spur, durch die Kurve, dann die Einfahrt hoch
+-- Aus der Parkbucht zurück auf die Spur, durch die Kehre, dann die Einfahrt hinauf
 function LevelRoute.driveToHouseLine()
 	local points = {}
-	for s = LevelRoute.STOP_S, LevelRoute.HOUSE_S - 14, 6 do
+	for s = LevelRoute.STOP_S, LevelRoute.HOUSE_S - 50, 6 do
 		local t = math.clamp((s - LevelRoute.STOP_S) / 45, 0, 1)
 		local smooth = t * t * (3 - 2 * t)
 		local lateral = LevelRoute.LAYBY_OFFSET + (LevelRoute.LANE_OFFSET - LevelRoute.LAYBY_OFFSET) * smooth
-		table.insert(points, LevelRoute.sidePoint(s, lateral, 0))
+		local point = LevelRoute.sidePoint(s, lateral, 0)
+		table.insert(points, Vector3.new(point.X, LevelRoute.GROUND_Y, point.Z))
 	end
-	for _, point in LevelRoute.drivewayPath() do
+	-- die Einfahrt genau auf dem Boden (Punkte alle 2,5 Studs)
+	for _, point in LevelRoute.drivewaySamples() do
 		table.insert(points, point)
 	end
-	return LevelRoute.polyline(onGround(points), 2)
+	return LevelRoute.polyline(points, 2)
 end
-LevelRoute.DRIVE_TOP_SPEED = 21
-LevelRoute.DRIVE_ACCELERATION = 6
+LevelRoute.DRIVE_TOP_SPEED = 30
+LevelRoute.DRIVE_ACCELERATION = 7
 LevelRoute.DRIVE_BRAKE = 34
+LevelRoute.DRIVE_HIDE_SARP = 220 -- ab dieser Strecke sieht man die Parkbucht nicht mehr
 
 function LevelRoute.driveDuration()
 	return LevelRoute.profileDuration(LevelRoute.driveToHouseLine().length, LevelRoute.DRIVE_TOP_SPEED, LevelRoute.DRIVE_ACCELERATION, LevelRoute.DRIVE_BRAKE)
 end
 
------------------------------------------------------------------- Ende B: zu Fuß durch den Wald
--- Vom Beifahrerfenster über den Waldweg bis vor die Veranda
+------------------------------------------------------------------ Ende B: selbst durch den Wald laufen
+LevelRoute.WALK_SPEED = 9 -- Laufgeschwindigkeit der Spieler
+LevelRoute.ARRIVE_DISTANCE = 14 -- so nah an der Veranda gilt man als angekommen
+
+-- Geglättete Punkte des Waldwegs, jeder genau auf dem Boden (zum Bauen und Laufen)
+local pathSamples = {}
+do
+	local flatLine = LevelRoute.polyline(LevelRoute.forestPath(), 1)
+	for s = 0, flatLine.length, 2.5 do
+		table.insert(pathSamples, flatLine.at(s))
+	end
+	table.insert(pathSamples, flatLine.at(flatLine.length))
+	onHill(pathSamples)
+end
+
+function LevelRoute.forestPathSamples()
+	return pathSamples
+end
+
+-- Wo die Spieler nach dem Aussteigen stehen (neben dem Auto, Blick zum Waldweg)
+function LevelRoute.walkerSpawn(index)
+	local car = LevelRoute.carCFrame(LevelRoute.STOP_S)
+	local spot = (car * CFrame.new(5.2, 0, (index == 1) and -1.5 or 2)).Position
+	local target = pathSamples[3]
+	spot = Vector3.new(spot.X, LevelRoute.GROUND_Y, spot.Z)
+	return CFrame.lookAt(spot, Vector3.new(target.X, spot.Y, target.Z))
+end
+
+-- Sarps Weg: vom Fenster über den Waldweg bis vor die Veranda
 function LevelRoute.walkLine()
-	local points = { LevelRoute.windowPoint() - LevelRoute.carCFrame(LevelRoute.STOP_S).RightVector * 1.5 }
-	for _, point in LevelRoute.forestPath() do
+	local points = { LevelRoute.windowPoint() }
+	for _, point in pathSamples do
 		table.insert(points, point)
 	end
-	return LevelRoute.polyline(points, 2)
+	return LevelRoute.polyline(points, 1)
 end
-LevelRoute.WALK_SPEED = 8.5
-LevelRoute.WALK_EYE_HEIGHT = 4.6
-LevelRoute.WALK_FADE = 3 -- Sekunden (Abblenden, Aussteigen, Aufblenden), bevor man losläuft
-LevelRoute.WALK_STOP_BEFORE = 7 -- so weit vor der Veranda bleibt man stehen
 
-function LevelRoute.walkDuration()
-	return LevelRoute.WALK_FADE + (LevelRoute.walkLine().length - LevelRoute.WALK_STOP_BEFORE) / LevelRoute.WALK_SPEED
+-- Wie weit jemand auf dem Weg ist (Studs) und wie weit er vom Weg entfernt steht
+local walkLineCache
+function LevelRoute.walkProgress(position)
+	walkLineCache = walkLineCache or LevelRoute.walkLine()
+	local samples, sums = walkLineCache.samples, walkLineCache.sums
+	local bestS, bestDistance = 0, math.huge
+	for i = 1, #samples, 2 do
+		local sample = samples[i]
+		local dx, dz = sample.X - position.X, sample.Z - position.Z
+		local distance = dx * dx + dz * dz
+		if distance < bestDistance then
+			bestS, bestDistance = sums[i], distance
+		end
+	end
+	return bestS, math.sqrt(bestDistance)
 end
 
 -- Sarps Abgang: von der Veranda seitlich am Haus vorbei in den Wald
 function LevelRoute.leaveLine()
-	return LevelRoute.polyline(onGround({
+	return LevelRoute.polyline(onHill({
 		LevelRoute.porchPoint(),
-		LevelRoute.housePoint(-26, -26),
-		LevelRoute.housePoint(-32, -4),
-		LevelRoute.housePoint(-36, 20),
-		LevelRoute.housePoint(-42, 44),
+		LevelRoute.housePoint(-26, -30),
+		LevelRoute.housePoint(-50, -36),
+		LevelRoute.housePoint(-72, -30),
+		LevelRoute.housePoint(-95, -20),
 	}), 1)
 end
 
-local function distanceToPolyline(x, z, polyline)
-	local best = math.huge
-	for i = 1, #polyline - 1 do
-		local a, b = polyline[i], polyline[i + 1]
-		local dx, dz = b.X - a.X, b.Z - a.Z
-		local lengthSquared = dx * dx + dz * dz
-		local t = lengthSquared > 0 and math.clamp(((x - a.X) * dx + (z - a.Z) * dz) / lengthSquared, 0, 1) or 0
-		local px, pz = a.X + dx * t - x, a.Z + dz * t - z
-		best = math.min(best, math.sqrt(px * px + pz * pz))
+------------------------------------------------------------------ Abstände zu Weg und Einfahrt
+local drivewaySamples = {}
+do
+	local line = LevelRoute.polyline(LevelRoute.drivewayPath(), 1)
+	for s = 0, line.length, 2.5 do
+		table.insert(drivewaySamples, line.at(s))
 	end
-	return best
+	table.insert(drivewaySamples, line.at(line.length))
+	onHill(drivewaySamples)
 end
 
--- Grobe Straßenmitte (alle 16 Studs) für Abstandsberechnungen
-local coarse = {}
-for _, s in LevelRoute.roadSamples(16) do
-	table.insert(coarse, LevelRoute.centerAt(s))
-end
-local laybyLine = {}
-for s = LevelRoute.LAYBY_START_S, LevelRoute.LAYBY_END_S, 5 do
-	table.insert(laybyLine, LevelRoute.sidePoint(s, LevelRoute.LAYBY_OFFSET, 0))
-end
-
-function LevelRoute.distanceToRoad(x, z)
-	return distanceToPolyline(x, z, coarse)
-end
-
-function LevelRoute.distanceToLayby(x, z)
-	return distanceToPolyline(x, z, laybyLine)
-end
-
-local function samplesOf(line, spacing)
-	local samples = {}
-	for s = 0, line.length, spacing do
-		table.insert(samples, line.at(s))
-	end
-	table.insert(samples, line.at(line.length))
-	return samples
-end
-local drivewayLine = samplesOf(LevelRoute.polyline(LevelRoute.drivewayPath(), 2), 3)
-local pathLine = samplesOf(LevelRoute.polyline(LevelRoute.forestPath(), 2), 3)
-
--- Geglättete Punkte des Waldwegs (zum Bauen)
-function LevelRoute.forestPathSamples()
-	return pathLine
-end
 function LevelRoute.drivewaySamples()
-	return drivewayLine
+	return drivewaySamples
 end
 
 function LevelRoute.distanceToDriveway(x, z)
-	return distanceToPolyline(x, z, drivewayLine)
-end
-
--- Abstand zum Grundstück (Haus, Garage, Veranda und Hof), 0 = am Rand
-function LevelRoute.distanceToHouse(x, z)
-	local yard = LevelRoute.houseCFrame():Inverse() * Vector3.new(x, LevelRoute.GROUND_Y, z)
-	local dx = math.max(math.abs(yard.X - 4) - 42, 0)
-	local dz = math.max(math.abs(yard.Z + 4) - 30, 0)
-	return math.sqrt(dx * dx + dz * dz)
+	return distanceToPolyline(x, z, drivewaySamples)
 end
 
 function LevelRoute.distanceToPath(x, z)
-	return distanceToPolyline(x, z, pathLine)
+	return distanceToPolyline(x, z, pathSamples)
 end
 
 return LevelRoute

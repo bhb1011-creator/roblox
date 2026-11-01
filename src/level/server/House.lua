@@ -307,7 +307,7 @@ function House.build(parent)
 		block("FenceRail", Vector3.new(fenceTo - fenceFrom, 0.3, 0.2), CFrame.new((fenceFrom + fenceTo) / 2, y, fenceZ + 0.15), COLORS.trim, Enum.Material.Wood)
 	end
 	-- Ein umgekipptes Kinderdreirad im Gras
-	local trike = CFrame.new(-24, 0, -D / 2 - 14) * CFrame.Angles(0, math.rad(35), math.rad(80))
+	local trike = CFrame.new(13, 0, -D / 2 - 12) * CFrame.Angles(0, math.rad(35), math.rad(80))
 	block("TrikeFrame", Vector3.new(0.25, 0.25, 2.2), trike * CFrame.new(0, 0.9, 0), Color3.fromRGB(120, 30, 28), Enum.Material.Metal)
 	for _, z in { -1, 1 } do
 		block("TrikeWheel", Vector3.new(0.2, 1.2, 1.2), trike * CFrame.new(0, 0.6, z), Color3.fromRGB(20, 20, 20), Enum.Material.Rubber, { Shape = Enum.PartType.Cylinder })
@@ -343,8 +343,8 @@ function House.build(parent)
 	block("Driveway", Vector3.new(15, 4.2, 16), CFrame.new(GX, -0.03 - 2.1, -GD / 2 - 8), COLORS.gravel, Enum.Material.Pebble)
 
 	-- Briefkasten an der Einfahrt
-	local mailPosition = Route.sidePoint(Route.HOUSE_S - 14, Route.ROAD_WIDTH / 2 + 2.5, 0)
-	local mail = CFrame.lookAt(mailPosition, Route.sidePoint(Route.HOUSE_S - 14, 0, 0))
+	local mailPosition = Route.sidePoint(Route.HOUSE_S - 50, Route.ROAD_WIDTH / 2 + 2.5, 0)
+	local mail = CFrame.lookAt(mailPosition, Route.sidePoint(Route.HOUSE_S - 50, 0, 0))
 	Parts.new("Part", { Name = "MailboxPost", Size = Vector3.new(0.4, 3.6, 0.4), CFrame = mail * CFrame.new(0, Y + 1.8, 0), Color = COLORS.darkWood, Material = Enum.Material.Wood, Parent = model })
 	local box = Parts.new("Part", {
 		Name = "Mailbox",

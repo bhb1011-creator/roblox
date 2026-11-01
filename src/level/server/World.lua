@@ -113,6 +113,21 @@ local function buildTerrain(segments)
 			rng:NextNumber() < 0.7 and Enum.Material.Ground or Enum.Material.Mud
 		)
 	end
+	-- Der Hügel mit dem Haus der Wagners: Säulen aus Gelände, so hoch wie Route.hillHeight
+	local center = Route.houseCFrame().Position
+	local cell = 4
+	local cx0, cz0 = math.floor(center.X / cell) * cell, math.floor(center.Z / cell) * cell
+	for x = cx0 - 340, cx0 + 340, cell do
+		for z = cz0 - 340, cz0 + 340, cell do
+			local px, pz = x + cell / 2, z + cell / 2
+			local height = Route.hillHeight(px, pz)
+			if height > 0.3 then
+				local material = math.noise(px / 34, pz / 34, 0.5) > 0.2 and Enum.Material.Ground or Enum.Material.LeafyGrass
+				terrain:FillBlock(CFrame.new(px, (height - 6) / 2, pz), Vector3.new(cell, height + 6, cell), material)
+			end
+		end
+	end
+
 	-- Erdiger Seitenstreifen, dann unter Straße, Parkbucht und Waldweg das Gelände entfernen
 	for _, segment in segments do
 		terrain:FillBlock(segment.cframe * CFrame.new(0, -2, 0), Vector3.new(WIDTH + 12, 4, segment.length + 2), Enum.Material.Ground)
@@ -126,13 +141,13 @@ local function buildTerrain(segments)
 	local path = Route.forestPathSamples()
 	for i = 1, #path - 1 do
 		local a, b = path[i], path[i + 1]
-		terrain:FillBlock(CFrame.lookAt((a + b) / 2, b), Vector3.new(5.5, 8, (b - a).Magnitude + 2), Enum.Material.Air)
+		terrain:FillBlock(CFrame.lookAt((a + b) / 2, b), Vector3.new(6, 8, (b - a).Magnitude + 2), Enum.Material.Air)
 	end
 end
 
 -- An der Einfahrt zum Haus stehen rechts keine Pfosten und Laternen
 local function nearDriveway(s)
-	return s > Route.HOUSE_S - 30 and s < Route.HOUSE_S + 22
+	return s > Route.HOUSE_S - 62 and s < Route.HOUSE_S - 18
 end
 
 local function buildRoad(parent, segments)
@@ -395,13 +410,13 @@ local function buildLayby(parent, segments)
 		end
 	end
 
-	-- Waldweg (bis zum Haus)
+	-- Waldweg: quer durch den Wald und den Hang hinauf bis zum Haus
 	local path = Route.forestPathSamples()
 	for i = 1, #path - 1 do
 		local a, b = path[i], path[i + 1]
 		Parts.new("Part", {
 			Name = "ForestPath",
-			Size = Vector3.new(4.5, 4.2, (b - a).Magnitude + 0.8),
+			Size = Vector3.new(5, 4.2, (b - a).Magnitude + 0.8),
 			CFrame = CFrame.lookAt((a + b) / 2, b) * CFrame.new(0, -2.1, 0),
 			Color = COLORS.dirt,
 			Material = Enum.Material.Ground,
@@ -465,6 +480,12 @@ local function buildLayby(parent, segments)
 	})
 end
 
+-- Höhe für Bäume und Steine: am Hang etwas eingesunken, damit nichts schwebt
+local function groundLevel(x, z)
+	local height = Route.hillHeight(x, z)
+	return height > 0 and height - 0.5 or 0
+end
+
 local function buildForest(parent)
 	local forest = Instance.new("Folder")
 	forest.Name = "Forest"
@@ -476,7 +497,7 @@ local function buildForest(parent)
 		return Route.distanceToRoad(position.X, position.Z) > WIDTH / 2 + 4 + margin
 			and Route.distanceToLayby(position.X, position.Z) > Route.LAYBY_WIDTH / 2 + 3 + margin
 			and Route.distanceToPath(position.X, position.Z) > 3.5 + (pathMargin or margin)
-			and Route.distanceToDriveway(position.X, position.Z) > 6 + margin
+			and Route.distanceToDriveway(position.X, position.Z) > 6 + (pathMargin or margin)
 			and Route.distanceToHouse(position.X, position.Z) > margin
 	end
 
@@ -488,7 +509,7 @@ local function buildForest(parent)
 			local s = rng:NextNumber(0, Route.TOTAL_LENGTH)
 			local side = rng:NextNumber() < 0.5 and -1 or 1
 			local position = Route.sidePoint(s, side * rng:NextNumber(minDistance, maxDistance), 0)
-			position = Vector3.new(position.X, 0, position.Z)
+			position = Vector3.new(position.X, groundLevel(position.X, position.Z), position.Z)
 			if isClear(position, margin, pathMargin) then
 				build(position)
 				placed += 1
@@ -497,10 +518,10 @@ local function buildForest(parent)
 	end
 
 	-- Große Tannen haben Äste bis ~11 Studs Radius: so weit weg, dass nichts in die Fahrbahn ragt
-	scatter(240, WIDTH / 2 + 17, 55, 4, function(position)
+	scatter(300, WIDTH / 2 + 17, 55, 4, function(position)
 		builders.pine(forest, position, rng:NextNumber(30, 52), rng)
 	end, 12)
-	scatter(380, 55, 170, 4, function(position)
+	scatter(480, 55, 170, 4, function(position)
 		builders.simplePine(forest, position, rng:NextNumber(32, 54), rng)
 	end, 9)
 	scatter(30, 16, 70, 4, function(position)
@@ -508,7 +529,7 @@ local function buildForest(parent)
 	end)
 	scatter(320, WIDTH / 2 + 4, 45, 1, function(position)
 		builders.bush(forest, position, rng)
-	end)
+	end, 3)
 	scatter(90, 14, 80, 2, function(position)
 		builders.rock(forest, position, rng)
 	end)
@@ -516,6 +537,43 @@ local function buildForest(parent)
 		builders.fallenLog(forest, position, rng)
 	end)
 	scatter(30, 14, 60, 2, function(position)
+		builders.stump(forest, position, rng)
+	end)
+
+	-- Dichter Wald links und rechts vom Waldweg: man läuft wirklich durch den Wald
+	local path = Route.forestPathSamples()
+	local function nearPath(count, minDistance, maxDistance, margin, pathMargin, build)
+		local placed, attempts = 0, 0
+		while placed < count and attempts < count * 20 do
+			attempts += 1
+			local index = rng:NextInteger(1, #path - 1)
+			local here, ahead = path[index], path[index + 1]
+			local across = (ahead - here).Unit:Cross(Vector3.yAxis)
+			local side = rng:NextNumber() < 0.5 and -1 or 1
+			local position = here + across * side * rng:NextNumber(minDistance, maxDistance)
+			position = Vector3.new(position.X, groundLevel(position.X, position.Z), position.Z)
+			if isClear(position, margin, pathMargin) then
+				build(position)
+				placed += 1
+			end
+		end
+	end
+	nearPath(110, 15, 60, 4, 12, function(position)
+		builders.pine(forest, position, rng:NextNumber(30, 50), rng)
+	end)
+	nearPath(170, 12, 70, 4, 9, function(position)
+		builders.simplePine(forest, position, rng:NextNumber(30, 50), rng)
+	end)
+	nearPath(130, 6.5, 22, 1, 3, function(position)
+		builders.bush(forest, position, rng)
+	end)
+	nearPath(30, 6, 30, 2, 3, function(position)
+		builders.rock(forest, position, rng)
+	end)
+	nearPath(10, 9, 30, 6, 6, function(position)
+		builders.fallenLog(forest, position, rng)
+	end)
+	nearPath(16, 6, 30, 2, 3, function(position)
 		builders.stump(forest, position, rng)
 	end)
 end
@@ -556,7 +614,7 @@ local function buildCreepyPath(parent)
 		local cframe = line.cframeAt(s)
 		local side = rng:NextNumber() < 0.5 and -1 or 1
 		local spot = (cframe * CFrame.new(side * rng:NextNumber(5.5, 8), 0, 0)).Position
-		spot = Vector3.new(spot.X, 0, spot.Z)
+		spot = Vector3.new(spot.X, groundLevel(spot.X, spot.Z), spot.Z)
 		if Route.distanceToPath(spot.X, spot.Z) > 4.5 and Route.distanceToHouse(spot.X, spot.Z) > 2 then
 			Forest.builders.deadTree(folder, spot, rng)
 			-- ein Ast, der über den Weg ragt, mit einer hängenden Figur
@@ -564,7 +622,7 @@ local function buildCreepyPath(parent)
 				local height = rng:NextNumber(10, 14)
 				local from = spot + Vector3.new(0, height, 0)
 				local over = (cframe * CFrame.new(side * rng:NextNumber(2.6, 3.6), 0, 0)).Position
-				local to = Vector3.new(over.X, height - 1, over.Z)
+				local to = Vector3.new(over.X, spot.Y + height - 1, over.Z)
 				Parts.beam({ Name = "Branch", Color = Color3.fromRGB(66, 58, 50), Material = Enum.Material.Wood, CanCollide = false, Parent = folder }, from, to, 0.4)
 				hangingFigure(to)
 			end
@@ -573,15 +631,15 @@ local function buildCreepyPath(parent)
 		local roll = rng:NextNumber()
 		local edge = (cframe * CFrame.new(-side * 3.2, 0, 0)).Position
 		if roll < 0.3 then
-			Parts.new("Part", { Name = "Stake", Size = Vector3.new(0.3, 3.5, 0.3), CFrame = CFrame.new(edge.X, Y + 1.75, edge.Z) * CFrame.Angles(0.08, 0, -0.1), Color = twig, Material = Enum.Material.Wood, Parent = folder })
-			Parts.new("Part", { Name = "ClothStrip", Size = Vector3.new(0.08, 1.6, 0.4), CFrame = CFrame.new(edge.X + 0.2, Y + 2.6, edge.Z) * CFrame.Angles(0, rng:NextNumber(0, 3), 0.1), Color = cloth, Material = Enum.Material.Fabric, CanCollide = false, Parent = folder })
+			Parts.new("Part", { Name = "Stake", Size = Vector3.new(0.3, 3.5, 0.3), CFrame = CFrame.new(edge.X, Route.groundY(edge.X, edge.Z) + 1.5, edge.Z) * CFrame.Angles(0.08, 0, -0.1), Color = twig, Material = Enum.Material.Wood, Parent = folder })
+			Parts.new("Part", { Name = "ClothStrip", Size = Vector3.new(0.08, 1.6, 0.4), CFrame = CFrame.new(edge.X + 0.2, Route.groundY(edge.X, edge.Z) + 2.4, edge.Z) * CFrame.Angles(0, rng:NextNumber(0, 3), 0.1), Color = cloth, Material = Enum.Material.Fabric, CanCollide = false, Parent = folder })
 		elseif roll < 0.5 then
 			for level = 0, 2 do
 				local size = 1.3 - level * 0.35
 				Parts.new("Part", {
 					Name = "Cairn",
 					Size = Vector3.new(size, 0.5, size),
-					CFrame = CFrame.new(edge.X, Y + 0.25 + level * 0.48, edge.Z) * CFrame.Angles(0, rng:NextNumber(0, 3), 0),
+					CFrame = CFrame.new(edge.X, Route.groundY(edge.X, edge.Z) + 0.1 + level * 0.48, edge.Z) * CFrame.Angles(0, rng:NextNumber(0, 3), 0),
 					Color = Color3.fromRGB(96, 94, 90),
 					Material = Enum.Material.Slate,
 					Parent = folder,

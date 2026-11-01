@@ -3,7 +3,8 @@
 -- hält in der Parkbucht, Sarp kommt aus dem Wald ans Fenster und redet mit einem.
 -- Der Fahrer wählt die Antworten. Danach eines von zwei Enden:
 --   "drive":  weiterfahren, um die Kurve, die Einfahrt hoch – Sarp steht schon da.
---   "follow": zu Fuß mit Handylicht über den Waldweg bis zum Haus, dort verschwindet Sarp.
+--   "follow": aussteigen und selbst mit Handylicht über den Waldweg den Hügel hinauf
+--             laufen; Sarp geht voraus und verschwindet an der Veranda.
 -- Dazu laufen Musik im Autoradio, Motor, Fahrgeräusche, Blinker, Bremsen, Schotter,
 -- Waldgeräusche, Rauschen im Radio und Schreck-Akzente.
 local CollectionService = game:GetService("CollectionService")
@@ -33,8 +34,6 @@ local IDLE_ANIMATION = "rbxassetid://507766388"
 local LOOK_SIDE = math.rad(110)
 local LOOK_UP, LOOK_DOWN = math.rad(40), math.rad(55)
 local SENSITIVITY = 0.0035
-local WALK_LOOK_SIDE = math.rad(160)
-local SIDE_BY_SIDE = { Driver = -1.2, Passenger = 1.2 } -- zu zweit läuft man nebeneinander
 
 for _, coreType in { Enum.CoreGuiType.Backpack, Enum.CoreGuiType.Health, Enum.CoreGuiType.PlayerList } do
 	pcall(StarterGui.SetCoreGuiEnabled, StarterGui, coreType, false)
@@ -348,7 +347,6 @@ sounds = {
 	sting = makeSound("sting", SoundService, { Volume = 0.7 }),
 	knock = makeSound("knock", SoundService, { Volume = 0.9 }),
 	twig = makeSound("twig", SoundService, { Volume = 0.8 }),
-	steps = makeSound("footstep", SoundService, { Volume = 0.3 }),
 }
 -- Das Radio klingt wie aus kleinen Autolautsprechern
 if sounds.music then
@@ -390,8 +388,7 @@ local yaw, pitch = 0, 0
 UserInputService.InputChanged:Connect(function(input)
 	local kind = input.UserInputType
 	if (kind == Enum.UserInputType.MouseMovement or kind == Enum.UserInputType.Touch) and not Choices.isChoosing() then
-		local side = cutscene:GetAttribute("Branch") == "follow" and WALK_LOOK_SIDE or LOOK_SIDE
-		yaw = math.clamp(yaw - input.Delta.X * SENSITIVITY, -side, side)
+		yaw = math.clamp(yaw - input.Delta.X * SENSITIVITY, -LOOK_SIDE, LOOK_SIDE)
 		pitch = math.clamp(pitch - input.Delta.Y * SENSITIVITY, -LOOK_DOWN, LOOK_UP)
 	end
 end)
@@ -412,13 +409,13 @@ local radioOff = false
 local finished = false
 local shakeUntil, shakeStrength = 0, 0
 local sarpStepTimer = 0
-local lastStepIndex = 0
 
 local driveLine = Route.driveToHouseLine()
 local walkLine = Route.walkLine()
 local leaveLine = Route.leaveLine()
-local walkStop = walkLine.length - Route.WALK_STOP_BEFORE
 local walkSetup = 1.2 -- Sekunden nach Beginn von "follow": jetzt ist alles schwarz, man steigt aus
+local sarpWalkS = 6 -- wo Sarp auf dem Waldweg gerade ist (folgt dem Server-Wert "SarpS")
+local freeWalk = false -- true, sobald man selbst läuft
 local garageSpot = Route.housePoint(Route.GARAGE_X, -Route.GARAGE_SIZE.Z / 2 - 3.5)
 
 local function flat(position, height)
@@ -508,11 +505,32 @@ end
 cutscene:GetAttributeChangedSignal("Branch"):Connect(readBranch)
 readBranch()
 
------------------------------------------------------------------- Ende "follow": aussteigen
+------------------------------------------------------------------ Ende "follow": aussteigen und selbst laufen
+-- Der Server gibt jedem Spieler eine echte Spielfigur neben dem Auto. Man läuft selbst
+-- (WASD oder Stick) in der Ego-Perspektive, mit dem Handy als Taschenlampe.
 local flashlight
+local function makeLight(parent, range, brightness)
+	local beam = Instance.new("SpotLight")
+	beam.Name = "PhoneLight"
+	beam.Face = Enum.NormalId.Front
+	beam.Range = range
+	beam.Angle = 55
+	beam.Brightness = brightness
+	beam.Color = Color3.fromRGB(225, 235, 255)
+	beam.Shadows = true
+	beam.Parent = parent
+	return beam
+end
+
 local function setupWalk()
-	yaw, pitch = 0, 0
-	-- Handylicht: folgt dem Blick mit etwas Verzögerung
+	-- Die Puppen im Auto werden nicht mehr gebraucht: der Mitfahrer läuft jetzt echt mit
+	for other, info in seatedPlayers do
+		if type(info) == "table" then
+			info.puppet:Destroy()
+		end
+		seatedPlayers[other] = true
+	end
+
 	flashlight = Instance.new("Part")
 	flashlight.Name = "PhoneLight"
 	flashlight.Size = Vector3.new(0.2, 0.2, 0.2)
@@ -522,14 +540,7 @@ local function setupWalk()
 	flashlight.CanQuery = false
 	flashlight.CastShadow = false
 	flashlight.CFrame = camera.CFrame
-	local beam = Instance.new("SpotLight")
-	beam.Face = Enum.NormalId.Front
-	beam.Range = 42
-	beam.Angle = 55
-	beam.Brightness = 3.2
-	beam.Color = Color3.fromRGB(225, 235, 255)
-	beam.Shadows = true
-	beam.Parent = flashlight
+	makeLight(flashlight, 44, 3.2)
 	local spill = Instance.new("PointLight")
 	spill.Range = 7
 	spill.Brightness = 0.35
@@ -537,49 +548,32 @@ local function setupWalk()
 	spill.Parent = flashlight
 	flashlight.Parent = workspace
 
-	-- Der Mitfahrer steigt auch aus und läuft neben einem her
-	for _, info in seatedPlayers do
-		if type(info) == "table" then
-			if info.weld then
-				info.weld:Destroy()
-			end
-			info.hip.Anchored = true
-			if info.sit then
-				info.sit:Stop(0)
-			end
-			info.walk = loadTrack(info.humanoid, WALK_ANIMATION, true)
-			info.idle = loadTrack(info.humanoid, IDLE_ANIMATION, true)
-			info.height = info.humanoid.HipHeight + info.hip.Size.Y / 2
-			info.walking = false
-			info.puppet.Parent = workspace
-		end
-	end
-end
+	task.spawn(function()
+		local character = player.Character or player.CharacterAdded:Wait()
+		local humanoid = character:WaitForChild("Humanoid")
+		camera.CameraType = Enum.CameraType.Custom
+		camera.CameraSubject = humanoid
+		flashlight.CFrame = camera.CFrame
+		freeWalk = true
+		TweenService:Create(fade, TweenInfo.new(1.5), { BackgroundTransparency = 1 }):Play()
+	end)
 
-local function updatePuppets(walkS, moving)
-	for _, info in seatedPlayers do
-		if type(info) == "table" and info.height then
-			local lateral = SIDE_BY_SIDE[info.seat] or 0
-			info.hip.CFrame = walkLine.cframeAt(walkS) * CFrame.new(lateral, 0, 0) + Vector3.new(0, info.height, 0)
-			if moving ~= info.walking then
-				info.walking = moving
-				local start, stop = info.walk, info.idle
-				if not moving then
-					start, stop = info.idle, info.walk
-				end
-				if stop then
-					stop:Stop(0.3)
-				end
-				if start then
-					start:Play(0.3, 1, moving and 0.8 or 1)
+	-- Die anderen Spieler leuchten auch mit dem Handy (Licht am Kopf)
+	task.spawn(function()
+		while not finished do
+			for _, other in Players:GetPlayers() do
+				local head = other ~= player and other.Character and other.Character:FindFirstChild("Head")
+				if head and not head:FindFirstChild("PhoneLight") then
+					makeLight(head, 36, 2.4)
 				end
 			end
+			task.wait(1)
 		end
-	end
+	end)
 end
 
 ------------------------------------------------------------------ Sarp bewegen
-local function updateStranger(t, bt, deltaTime, carPosition, driveS, walkS)
+local function updateStranger(t, bt, deltaTime, carPosition, driveS)
 	if not stranger or sarpGone then
 		return
 	end
@@ -597,7 +591,8 @@ local function updateStranger(t, bt, deltaTime, carPosition, driveS, walkS)
 		end
 	end
 
-	-- Ende "follow": er geht vorneweg, bleibt an der Veranda stehen und verschwindet dann
+	-- Ende "follow": er geht ein Stück vorneweg und wartet, bis man nachkommt. An der
+	-- Veranda dreht er sich um, verabschiedet sich und verschwindet dann im Wald.
 	if branch == "follow" and bt and bt >= walkSetup then
 		if sarpLeaveStart then
 			local elapsed = os.clock() - sarpLeaveStart
@@ -617,14 +612,16 @@ local function updateStranger(t, bt, deltaTime, carPosition, driveS, walkS)
 			end
 			return
 		end
-		local sarpS = math.min(walkS + 7, walkLine.length)
-		local moving = bt > Route.WALK_FADE and sarpS < walkLine.length - 0.05
+		local target = cutscene:GetAttribute("SarpS") or sarpWalkS
+		local moving = target > sarpWalkS + 0.05
+		sarpWalkS = math.min(target, sarpWalkS + 7.5 * deltaTime)
 		setStrangerWalking(moving, 0.75)
 		if moving then
 			step(0.62)
 		end
-		local cframe = walkLine.cframeAt(sarpS)
-		if sarpFaceGroup then
+		local cframe = walkLine.cframeAt(sarpWalkS)
+		if not moving or sarpFaceGroup then
+			-- er bleibt stehen und schaut zu einem zurück
 			cframe = CFrame.lookAt(cframe.Position, flat(camera.CFrame.Position, cframe.Position.Y))
 		end
 		strangerRoot.CFrame = cframe + strangerHeight
@@ -635,7 +632,7 @@ local function updateStranger(t, bt, deltaTime, carPosition, driveS, walkS)
 	-- er plötzlich vor der Garage im Scheinwerferlicht.
 	if branch == "drive" and bt and bt >= 0 then
 		setStrangerWalking(false)
-		if driveS > 175 then
+		if driveS > Route.DRIVE_HIDE_SARP then
 			poseTarget.tilt = 0.8
 			strangerRoot.CFrame = CFrame.lookAt(garageSpot, flat(carPosition, garageSpot.Y)) + strangerHeight
 		else
@@ -679,7 +676,7 @@ RunService.RenderStepped:Connect(function(deltaTime)
 	local s, speed, steer, carFrame, moving
 	if driving then
 		s, speed = Route.profile(bt, driveLine.length, Route.DRIVE_TOP_SPEED, Route.DRIVE_ACCELERATION, Route.DRIVE_BRAKE)
-		carFrame, steer = driveLine.cframeAt(s), lineSteer(driveLine, s)
+		carFrame, steer = driveLine.cframeAt(s, true), lineSteer(driveLine, s)
 		moving = math.clamp(speed / 30, 0, 1)
 	else
 		s, speed = Route.driveDistance(t)
@@ -715,41 +712,23 @@ RunService.RenderStepped:Connect(function(deltaTime)
 		rpmNeedle.Rotation = -120 + rpm * 240
 	end
 
-	-- Kamera: im Auto in den Augen des Spielers, zu Fuß auf Augenhöhe mit Schrittwippen
-	camera.CameraType = Enum.CameraType.Scriptable
+	-- Kamera: im Auto in den Augen des Spielers. Zu Fuß steuert Roblox die Kamera
+	-- (Ego-Perspektive), dann folgt nur das Handylicht dem Blick.
 	camera.FieldOfView = 74
-	local shake = os.clock() < shakeUntil and shakeStrength or 0
-	local headShake = Vector3.new(
-		math.noise(t * 1.3, 0.5) * 0.03 + (math.random() - 0.5) * shake,
-		math.noise(t * 1.1, 2.5) * 0.03 + (math.random() - 0.5) * shake,
-		0
-	)
-	local look = CFrame.Angles(0, yaw, 0) * CFrame.Angles(pitch, 0, 0)
-	local walkS = 0
-	if walking then
-		walkS = math.clamp((bt - Route.WALK_FADE) * Route.WALK_SPEED, 0, walkStop)
-		local stepping = bt > Route.WALK_FADE and walkS < walkStop
-		local phase = walkS * 1.1
-		local lateral = duo and SIDE_BY_SIDE[seatName] or 0
-		camera.CFrame = walkLine.cframeAt(walkS)
-			* CFrame.new(lateral + math.sin(phase) * 0.06, Route.WALK_EYE_HEIGHT + math.abs(math.sin(phase)) * 0.16, 0)
-			* CFrame.new(headShake)
-			* look
-		local stepIndex = math.floor(phase / math.pi)
-		if stepIndex ~= lastStepIndex then
-			lastStepIndex = stepIndex
-			if stepping and sounds.steps then
-				sounds.steps.PlaybackSpeed = 0.85 + math.random() * 0.2
-				sounds.steps:Play()
-			end
-		end
-		updatePuppets(walkS, stepping)
+	if freeWalk then
 		if flashlight then
 			local target = camera.CFrame * CFrame.new(0.35, -0.45, -0.3)
 			flashlight.CFrame = flashlight.CFrame:Lerp(target, math.min(deltaTime * 10, 1))
 		end
-	else
-		camera.CFrame = root.CFrame * Route.CAR_EYES[seatName] * CFrame.new(headShake) * look
+	elseif not walking then
+		camera.CameraType = Enum.CameraType.Scriptable
+		local shake = os.clock() < shakeUntil and shakeStrength or 0
+		local headShake = Vector3.new(
+			math.noise(t * 1.3, 0.5) * 0.03 + (math.random() - 0.5) * shake,
+			math.noise(t * 1.1, 2.5) * 0.03 + (math.random() - 0.5) * shake,
+			0
+		)
+		camera.CFrame = root.CFrame * Route.CAR_EYES[seatName] * CFrame.new(headShake) * CFrame.Angles(0, yaw, 0) * CFrame.Angles(pitch, 0, 0)
 	end
 	if Choices.isChoosing() then
 		UserInputService.MouseBehavior = Enum.MouseBehavior.Default
@@ -759,7 +738,7 @@ RunService.RenderStepped:Connect(function(deltaTime)
 		UserInputService.MouseIconEnabled = false
 	end
 
-	updateStranger(t, bt, deltaTime, root.Position, driving and s or 0, walkS)
+	updateStranger(t, bt, deltaTime, root.Position, driving and s or 0)
 
 	-- Sounds: Motor, Fahrgeräusche, Wald und Radio. Am Ende wird alles leise.
 	local master = finished and 0 or 1
@@ -872,8 +851,9 @@ RunService.RenderStepped:Connect(function(deltaTime)
 		if bt >= walkSetup then
 			once("followSetup", setupWalk)
 		end
-		if bt >= walkSetup + 1 then
-			once("followFadeIn", function()
+		-- falls die Spielfigur ausbleibt, nicht ewig schwarz lassen
+		if bt >= walkSetup + 8 then
+			once("followFadeFallback", function()
 				TweenService:Create(fade, TweenInfo.new(1.5), { BackgroundTransparency = 1 }):Play()
 			end)
 		end

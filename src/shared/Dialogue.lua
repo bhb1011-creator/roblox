@@ -108,7 +108,8 @@ Dialogue.SCRIPT = {
 	},
 }
 
--- Die beiden Enden. `at` = Sekunden nach Beginn des Endes,
+-- Die beiden Enden. `at` = Sekunden nach Beginn des Endes, `progress` = wenn der erste
+-- Spieler diesen Anteil des Waldwegs geschafft hat (0.5 = Hälfte),
 -- `arrive` = Sekunden nach der Ankunft am Haus. `finish` blendet aus.
 Dialogue.ENDINGS = {
 	-- Nicht folgen: weiterfahren, um die Kurve, die Einfahrt hoch. Sarp steht schon da.
@@ -119,6 +120,14 @@ Dialogue.ENDINGS = {
 			text = {
 				solo = "I drove on. In the mirror, he just stood there. Watching me go.",
 				duo = "We drove on. In the mirror, he just stood there. Watching us go.",
+			},
+		},
+		{
+			at = 15,
+			speaker = "narrator",
+			text = {
+				solo = "The road turned all the way around, back through the forest. As if it didn't want to let me leave.",
+				duo = "The road turned all the way around, back through the forest. As if it didn't want to let us leave.",
 			},
 		},
 		{ arrive = 1.5, speaker = "sarp", text = "You took the long way." },
@@ -132,17 +141,23 @@ Dialogue.ENDINGS = {
 		},
 		{ arrive = 12.5, finish = true },
 	},
-	-- Folgen: zu Fuß über den Waldweg bis zur Veranda, dort verschwindet Sarp.
+	-- Folgen: selbst zu Fuß über den Waldweg den Hügel hinauf bis zur Veranda,
+	-- Sarp geht voraus. An der Veranda verschwindet er.
 	follow = {
-		{ at = 4, speaker = "narrator", text = "He walked fast. He never once looked back." },
-		{ at = 12, action = "crack" },
+		{ progress = 0.06, speaker = "narrator", text = "He walked fast. He never once looked back." },
+		{ progress = 0.37, action = "crack" },
 		{
-			at = 13,
+			progress = 0.38,
 			speaker = "narrator",
 			text = {
 				solo = "Something moved between the trees. Something that kept pace with me.",
 				duo = "Something moved between the trees. Something that kept pace with us.",
 			},
+		},
+		{
+			progress = 0.7,
+			speaker = "narrator",
+			text = "The path climbed up the hill. With every step, the forest got quieter.",
 		},
 		{ arrive = 0.5, action = "faceGroup" },
 		{ arrive = 1.2, speaker = "sarp", text = "This is where I leave you." },

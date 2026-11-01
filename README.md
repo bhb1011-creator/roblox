@@ -45,9 +45,9 @@ Die Baseplate wird beim Start automatisch entfernt.
 - Das Auto hält in einer Parkbucht mit Waldweg und flackernder Laterne
 - Der Fremde kommt schon beim Einparken langsam aus dem Wald, klopft ans Beifahrerfenster und redet mit einem. Bis er sich als **Sarp** vorstellt, steht in den Untertiteln „???“
 - Drei Antworten wählt der **Fahrer** (Maus/Finger oder Tasten **1** und **2**); nach 25 Sekunden ohne Wahl wird die erste genommen
-- **Ende A – nicht folgen:** Man fährt weiter, die Straße macht eine Rechtskurve, dann biegt man in die Einfahrt der Wagners. Sarp steht schon im Scheinwerferlicht vor der Garage
-- **Ende B – folgen:** Man steigt aus und läuft mit dem Handylicht über einen unheimlichen Waldweg (tote Bäume, hängende Zweigfiguren, Stoffstreifen) bis zur Veranda. Dort verabschiedet sich Sarp und verschwindet im Wald
-- Das Haus der Wagners: großes, altes Holzhaus mit zwei Stockwerken, Veranda, Garage, Schornstein, Zaun, Briefkasten – **kein einziges Licht brennt**
+- **Ende A – nicht folgen:** Man fährt weiter. Die Straße wendet in einer weiten Kehre (180°) und führt auf der anderen Seite des Waldes zurück; dann biegt man in die Einfahrt der Wagners und fährt den Hang hinauf. Sarp steht schon im Scheinwerferlicht vor der Garage
+- **Ende B – folgen:** Man steigt aus und **läuft selbst** (WASD oder Stick, Ego-Perspektive, Handy als Taschenlampe) über einen unheimlichen Waldweg quer durch dichten Wald den Hügel hinauf (tote Bäume, hängende Zweigfiguren, Stoffstreifen). Sarp geht ein Stück voraus und wartet, wenn man zurückbleibt. An der Veranda verabschiedet er sich und verschwindet im Wald
+- Das Haus der Wagners steht oben auf einem Hügel: großes, altes Holzhaus mit zwei Stockwerken, Veranda, Garage, Schornstein, Zaun, Briefkasten – **kein einziges Licht brennt**
 - Danach: „Fortsetzung folgt …“
 - Sounds: Musik im Autoradio, Motor, Fahrgeräusche, Blinker, Bremsen, Schotter, Waldgeräusche, Klopfen, knackender Ast; ab der Erzählung über das Funkloch rauscht das Radio
 
