@@ -66,8 +66,18 @@ function Kapitel2.start()
 	local family = Instance.new("Folder")
 	family.Name = "Wagners"
 	family.Parent = workspace
-	local mrs = Wagners.buildMrs(family)
-	local mr = Wagners.buildMr(family)
+	-- Geht beim Bauen einer Figur etwas schief, läuft das Kapitel trotzdem weiter
+	-- (der Fehler steht dann im Output)
+	local function build(name, builder)
+		local ok, result = xpcall(builder, debug.traceback, family)
+		if not ok then
+			warn("Kapitel 2: " .. name .. " konnte nicht gebaut werden:\n" .. tostring(result))
+			return nil
+		end
+		return result
+	end
+	local mrs = build("Mrs. Wagner", Wagners.buildMrs)
+	local mr = build("Mr. Wagner", Wagners.buildMr)
 	local hiddenSpot = Route.housePoint(-2, -6) - Vector3.new(0, 80, 0)
 	if mrs then
 		Wagners.place(mrs, hall(SPOTS.mrsStart), facing)
