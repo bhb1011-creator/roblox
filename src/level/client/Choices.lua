@@ -33,6 +33,7 @@ function Choices.init(gui)
 
 	for index = 1, 2 do
 		local button = Instance.new("TextButton")
+		button.AutoLocalize = false -- die Antworten sind englische Sätze
 		button.Name = "Option" .. index
 		button.Position = UDim2.new(0, 0, 0, 30 + (index - 1) * 55)
 		button.Size = UDim2.new(1, 0, 0, 48)

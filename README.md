@@ -47,7 +47,7 @@ Die Baseplate wird beim Start automatisch entfernt.
 - Drei Antworten wählt der **Fahrer** (Maus/Finger oder Tasten **1** und **2**); nach 25 Sekunden ohne Wahl wird die erste genommen
 - **Ende A – nicht folgen:** Man fährt weiter. Die Straße wendet in einer weiten Kehre (180°) und führt auf der anderen Seite des Waldes zurück; dann biegt man in die Einfahrt der Wagners und fährt den Hang hinauf. Sarp steht schon im Scheinwerferlicht vor der Garage
 - **Ende B – folgen:** Man steigt aus und **läuft selbst** (WASD oder Stick, Ego-Perspektive, Handy als Taschenlampe, **Shift = rennen** mit Ausdauer) über einen unheimlichen Waldweg quer durch dichten Wald den Hügel hinauf. Der Weg ist hell, mit Randsteinen und schwach leuchtenden Pilzen. Sarp geht gleichmäßig voraus und wartet nicht. An der Veranda verabschiedet er sich und verschwindet im Wald
-- **Das Biest:** Wer Sarp nicht folgt (mehr als ~26 Studs zurück oder weit neben dem Weg), hört nach 4 Sekunden ein Knurren im Wald, nach 9 Sekunden näher, und nach 14 Sekunden kommt es und jagt einen. Wer zurück zu Sarp rennt, ist sicher. Wen es erwischt, der stirbt (Schreckmoment, „DU BIST GESTORBEN“) und taucht nach ein paar Sekunden hinter Sarp wieder auf
+- **Das Biest** ist der Fremde in seiner letzten Gestalt (Stufe 3 aus `docs/konzept/der_fremde_stufen.png`): riesig und dürr, ovaler Kopf mit einem Maul vom Scheitel bis zum Kinn, rot glühende Flecken und Adern, Fetzen der olivgrünen Jacke. Wer Sarp nicht folgt (mehr als ~26 Studs zurück oder weit neben dem Weg), hört nach 4 Sekunden ein Knurren im Wald, nach 9 Sekunden näher, und nach 14 Sekunden kommt es und jagt einen. Wer zurück zu Sarp rennt, ist sicher. Wen es erwischt, der stirbt (Schreckmoment, „DU BIST GESTORBEN“) und taucht nach ein paar Sekunden hinter Sarp wieder auf
 - Das Haus der Wagners steht oben auf einem Hügel: großes, altes Holzhaus mit zwei Stockwerken, Veranda, Garage, Schornstein, Zaun, Briefkasten – **kein einziges Licht brennt**
 - Danach: „Fortsetzung folgt …“
 - Sounds: Musik im Autoradio, Motor, Fahrgeräusche, Blinker, Bremsen, Schotter, Waldgeräusche, Klopfen, knackender Ast; ab der Erzählung über das Funkloch rauscht das Radio
@@ -57,7 +57,8 @@ Die Baseplate wird beim Start automatisch entfernt.
 Gesprochen wird mit der Text-to-Speech-Funktion von Roblox (`AudioTextToSpeech`). Die Stimmen stehen in
 `src/shared/Config.lua` unter `Config.VOICES` (`id` = Nummer der Stimme, `pitch` = Tonhöhe, `speed` = Tempo,
 `effects` = Bass/Höhen und Hall). Sarp hat eine tiefe, langsame Männerstimme mit Hall, die Spieler und der
-Erzähler eine hellere Stimme. Die Liste aller Stimmen steht direkt darüber in der Config. Geht die Sprachausgabe in Studio nicht, steht im
+Erzähler eine hellere Stimme. Die Liste aller Stimmen steht direkt darüber in der Config. Die automatische Übersetzung von Roblox (`AutoLocalize`) ist für Stimmen und Untertitel ausgeschaltet,
+damit sie auch bei deutschen Spielern Englisch bleiben. Geht die Sprachausgabe in Studio nicht, steht im
 **Output** eine gelbe Warnung – dann gibt es nur Untertitel, der Ablauf funktioniert trotzdem.
 Alle Texte stehen in `src/shared/Dialogue.lua`.
 

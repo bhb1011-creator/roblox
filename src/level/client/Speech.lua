@@ -60,7 +60,9 @@ local function speak(speaker, text)
 		tts.Text = text
 		tts.VoiceId = voice.id or "1"
 		-- Nicht jede Roblox-Version kennt alle Einstellungen, deshalb einzeln versuchen
-		for property, value in { Pitch = voice.pitch, Speed = voice.speed, Volume = voice.volume } do
+		-- AutoLocalize aus: sonst übersetzt Roblox den Text in die Sprache des Spielers
+		-- (z. B. Deutsch) und spricht ihn mit einer anderen Stimme. Hier bleibt alles Englisch.
+		for property, value in { AutoLocalize = false, Pitch = voice.pitch, Speed = voice.speed, Volume = voice.volume } do
 			pcall(function()
 				tts[property] = value
 			end)
@@ -93,6 +95,7 @@ function Speech.init(gui)
 	frame.Parent = gui
 
 	nameLabel = Instance.new("TextLabel")
+	nameLabel.AutoLocalize = false
 	nameLabel.Size = UDim2.new(1, 0, 0, 26)
 	nameLabel.BackgroundTransparency = 1
 	nameLabel.Font = Enum.Font.SpecialElite
@@ -103,6 +106,7 @@ function Speech.init(gui)
 	nameLabel.Parent = frame
 
 	textLabel = Instance.new("TextLabel")
+	textLabel.AutoLocalize = false -- Untertitel bleiben Englisch wie die Stimmen
 	textLabel.Position = UDim2.fromOffset(0, 26)
 	textLabel.Size = UDim2.new(1, 0, 1, -26)
 	textLabel.BackgroundTransparency = 1

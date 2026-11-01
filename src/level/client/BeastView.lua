@@ -13,7 +13,7 @@ local Route = require(Shared:WaitForChild("LevelRoute"))
 local BeastView = {}
 
 local HIDDEN = CFrame.new(0, -200, 0) -- unter der Welt (aber über der Grenze, ab der Roblox Teile löscht)
-local STRIDE = 7 -- Studs pro Laufschritt-Paar
+local STRIDE = 9 -- Studs pro Laufschritt-Paar (lange Beine)
 local SPRINT_TIME, RECOVER_TIME = 5, 8 -- Sekunden Rennen, bis die Ausdauer leer ist / wieder voll
 
 local player = Players.LocalPlayer
@@ -229,7 +229,8 @@ function BeastView.update(deltaTime, camera, walkingFreely, finished)
 	-- Schreckmoment: das Biest direkt vor dem Gesicht, Maul weit offen
 	if jumpscareUntil and os.clock() < jumpscareUntil then
 		local shake = CFrame.new((math.random() - 0.5) * 0.4, (math.random() - 0.5) * 0.4, 0)
-		model:PivotTo(camera.CFrame * shake * CFrame.new(0, -8.3, -6.2) * CFrame.Angles(0, math.pi, 0))
+		-- so drehen und verschieben, dass der Kopf 2,4 Studs vor der Kamera ist
+		model:PivotTo(camera.CFrame * shake * CFrame.new(0, -Beast.HEAD.Y, -2.4 + Beast.HEAD.Z) * CFrame.Angles(0, math.pi, 0))
 		Beast.pose(joints, 0, 0, 1, math.sin(os.clock() * 40) * 0.15)
 		if sounds.breath and not sounds.breath.IsPlaying then
 			sounds.breath:Play()
