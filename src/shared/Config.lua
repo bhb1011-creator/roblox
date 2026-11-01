@@ -90,15 +90,49 @@ Config.SOUNDS = {
 }
 
 -- Sprachausgabe auf Englisch mit der Text-to-Speech-Funktion von Roblox.
--- `id` = Nummer der Roblox-Stimme ("1", "2", "3" …). Klingt eine Stimme nicht passend,
--- einfach eine andere Nummer ausprobieren. `pitch` = Tonhöhe in Halbtönen (0 = normal,
--- minus = tiefer), `speed` = Sprechtempo (1 = normal), `volume` = Lautstärke.
--- Funktioniert die Sprachausgabe nicht, erscheinen trotzdem die Untertitel.
+-- `id` = Nummer der Roblox-Stimme:
+--   "1" britisch, Mann     "2" britisch, Frau
+--   "3" amerikanisch, Mann  "4" amerikanisch, Frau
+--   "5" amerikanisch, Mann  "6" amerikanisch, Frau
+--   "7" australisch, Mann   "8" australisch, Frau
+-- `pitch` = Tonhöhe in Halbtönen (-12 bis 12, 0 = normal, minus = tiefer, plus = heller),
+-- `speed` = Sprechtempo (0.5 bis 2, 1 = normal), `volume` = Lautstärke.
+-- `effects` = Klangeffekte, der Reihe nach: `equalizer` (Bass/Mitten/Höhen in dB) und
+-- `reverb` (Hall). Funktioniert die Sprachausgabe nicht, erscheinen trotzdem die Untertitel.
 Config.SPEECH_ENABLED = true
 Config.VOICES = {
-	narrator = { id = "1", pitch = -1, speed = 0.92, volume = 1.4 },
-	sarp = { id = "2", pitch = -3, speed = 0.85, volume = 1.5 },
-	player = { id = "3", pitch = 0, speed = 1, volume = 1.2 },
+	-- Sarp: tief, langsam, ruhig – mit viel Bass, wenig Höhen und dunklem Hall
+	sarp = {
+		id = "1",
+		pitch = -5,
+		speed = 0.8,
+		volume = 1.6,
+		effects = {
+			{ "AudioEqualizer", { LowGain = 6, MidGain = -1, HighGain = -9 } },
+			{ "AudioReverb", { DecayTime = 1.8, WetLevel = -8, DryLevel = 0, HighCutFrequency = 3500 } },
+		},
+	},
+	-- Die Spieler (Antworten) und der Erzähler (das sind auch die Spieler: "we", "I"):
+	-- eine hellere, jüngere Stimme
+	player = {
+		id = "3",
+		pitch = 3,
+		speed = 1.05,
+		volume = 1.3,
+		effects = {
+			{ "AudioEqualizer", { LowGain = -4, MidGain = 0, HighGain = 3 } },
+		},
+	},
+	narrator = {
+		id = "3",
+		pitch = 3,
+		speed = 0.95,
+		volume = 1.3,
+		effects = {
+			{ "AudioEqualizer", { LowGain = -4, MidGain = 0, HighGain = 3 } },
+			{ "AudioReverb", { DecayTime = 0.6, WetLevel = -18, DryLevel = 0 } },
+		},
+	},
 }
 
 return Config

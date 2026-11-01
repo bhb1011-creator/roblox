@@ -27,21 +27,25 @@ local function connect(source, target)
 	wire.Parent = source
 end
 
--- Sarp klingt mit etwas Hall, als stünde er zu nah am offenen Fenster
-local function effectChain(speaker, source)
-	if speaker ~= "sarp" then
-		return source
+-- Klangeffekte aus Config.VOICES hintereinander schalten (z. B. Sarp: Bass und Hall).
+-- Kennt Roblox einen Effekt oder eine Einstellung nicht, wird sie einfach übersprungen.
+local function effectChain(voice, source)
+	local last = source
+	for _, effect in voice.effects or {} do
+		local className, settings = effect[1], effect[2]
+		local ok, instance = pcall(Instance.new, className)
+		if ok then
+			for property, value in settings or {} do
+				pcall(function()
+					instance[property] = value
+				end)
+			end
+			instance.Parent = source
+			connect(last, instance)
+			last = instance
+		end
 	end
-	local ok, reverb = pcall(function()
-		local effect = Instance.new("AudioReverb")
-		effect.Parent = source
-		return effect
-	end)
-	if not ok then
-		return source
-	end
-	connect(source, reverb)
-	return reverb
+	return last
 end
 
 local function speak(speaker, text)
@@ -62,7 +66,7 @@ local function speak(speaker, text)
 			end)
 		end
 		tts.Parent = SoundService
-		connect(effectChain(speaker, tts), output)
+		connect(effectChain(voice, tts), output)
 		local status = tts:LoadAsync()
 		if status ~= Enum.AssetFetchStatus.Success then
 			error("Laden fehlgeschlagen: " .. tostring(status))

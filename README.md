@@ -54,8 +54,9 @@ Die Baseplate wird beim Start automatisch entfernt.
 ### Sprachausgabe (Text-to-Speech)
 
 Gesprochen wird mit der Text-to-Speech-Funktion von Roblox (`AudioTextToSpeech`). Die Stimmen stehen in
-`src/shared/Config.lua` unter `Config.VOICES` (`id` = Nummer der Stimme, `pitch` = Tonhöhe, `speed` = Tempo).
-Klingt eine Stimme unpassend, eine andere Nummer eintragen. Geht die Sprachausgabe in Studio nicht, steht im
+`src/shared/Config.lua` unter `Config.VOICES` (`id` = Nummer der Stimme, `pitch` = Tonhöhe, `speed` = Tempo,
+`effects` = Bass/Höhen und Hall). Sarp hat eine tiefe, langsame Männerstimme mit Hall, die Spieler und der
+Erzähler eine hellere Stimme. Die Liste aller Stimmen steht direkt darüber in der Config. Geht die Sprachausgabe in Studio nicht, steht im
 **Output** eine gelbe Warnung – dann gibt es nur Untertitel, der Ablauf funktioniert trotzdem.
 Alle Texte stehen in `src/shared/Dialogue.lua`.
 
