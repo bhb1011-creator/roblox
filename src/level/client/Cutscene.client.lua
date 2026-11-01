@@ -23,6 +23,7 @@ local Route = require(Shared:WaitForChild("LevelRoute"))
 local Speech = require(script.Parent:WaitForChild("Speech"))
 local Choices = require(script.Parent:WaitForChild("Choices"))
 local BeastView = require(script.Parent:WaitForChild("BeastView"))
+local Ambience = require(script.Parent:WaitForChild("Ambience"))
 local player = Players.LocalPlayer
 local cutscene = ReplicatedStorage:WaitForChild("Cutscene")
 local puppets = cutscene:WaitForChild("Puppets")
@@ -380,6 +381,7 @@ for _, lens in CollectionService:GetTagged("FlickerLamp") do
 end
 strangerSteps = stranger and makeSound("footstep", strangerRoot, { Volume = 0.6, RollOffMaxDistance = 60 })
 BeastView.init(gui, makeSound, fade)
+Ambience.init(makeSound)
 local function strangerStep()
 	if strangerSteps then
 		strangerSteps.PlaybackSpeed = 0.9 + math.random() * 0.2
@@ -755,6 +757,16 @@ RunService.RenderStepped:Connect(function(deltaTime)
 	end
 
 	updateStranger(t, bt, deltaTime, root.Position, driving and s or 0)
+	Ambience.update(deltaTime, {
+		camera = camera,
+		carStopped = speed < 1 and t > Route.STOP_TIME,
+		walking = walking,
+		-- totenstill, solange Sarp am Fenster steht und wenn er vor der Garage auftaucht
+		quiet = (strangerArrived and not branch) or (driving and s > driveLine.length - 40),
+		radioOff = radioOff,
+		carRoot = root,
+		finished = finished,
+	})
 
 	-- Sounds: Motor, Fahrgeräusche, Wald und Radio. Am Ende wird alles leise.
 	local master = finished and 0 or 1
@@ -771,7 +783,7 @@ RunService.RenderStepped:Connect(function(deltaTime)
 	blend(sounds.road, (onGravel and 0 or 0.45 * moving) * master, 3, deltaTime)
 	blend(sounds.wind, 0.22 * moving * moving * master, 3, deltaTime)
 	blend(sounds.gravel, (onGravel and 0.5 * moving or 0) * master, 5, deltaTime)
-	blend(sounds.forest, (walking and 0.6 or speed < 1 and 0.45 or 0.1) * master, 0.8, deltaTime)
+	blend(sounds.forest, (walking and 0.6 or speed < 1 and 0.45 or 0.1) * Ambience.forestFactor * master, 0.8, deltaTime)
 	local musicVolume = (t < 0 or radioOff) and 0 or (Speech.isSpeaking() and 0.14 or 0.32)
 	blend(sounds.music, musicVolume * master, radioOff and 1.5 or 0.6, deltaTime)
 	blend(sounds.radioStatic, (radioOff and not walking and 0.22 or 0) * master, 1.5, deltaTime)

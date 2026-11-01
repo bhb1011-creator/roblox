@@ -94,6 +94,12 @@ Die Sounds liegen in `assets/audio` (selbst erzeugt, frei verwendbar):
 | `knock.ogg`, `twig_snap.ogg` | Klopfen ans Autofenster, knackender Ast im Wald (Config: `knock`, `twig`) |
 | `beast_growl.ogg`, `beast_roar.ogg` | Knurren und Brüllen des Biests (Config: `growl`, `roar`) |
 | `beast_breath_loop.ogg`, `beast_step.ogg` | Atmen und schwere Schritte des Biests (Config: `beastBreath`, `beastStep`) |
+| `forest_wind_loop.ogg` | Wind in den Tannen (Config: `forestWind`) |
+| `leaves_rustle.ogg`, `tree_creak.ogg` | Rascheln und knarrende Bäume aus zufälligen Richtungen (Config: `rustle`, `treeCreak`) |
+| `house_creak.ogg`, `swing_creak_loop.ogg`, `shutter_rattle_loop.ogg` | Knarrendes Haus, quietschende Schaukel, klappernder Fensterladen (Config: `houseCreak`, `swingCreak`, `shutterRattle`) |
+| `car_tick_loop.ogg`, `radio_voices.ogg` | Abkühlender Motor, Stimmen im Radiorauschen (Config: `carTick`, `radioVoices`) |
+| `heartbeat_loop.ogg`, `scared_breath_loop.ogg` | Herzschlag und panisches Atmen, wenn das Biest nah ist (Config: `heartbeat`, `scaredBreath`) |
+| `step_gravel.ogg`, `step_dirt.ogg`, `step_wood.ogg` | Schritte auf Schotter, Waldboden und Holz (Config: `stepGravel`, `stepDirt`, `stepWood`) |
 
 1. Auf **create.roblox.com → Kreationen → Entwicklungsobjekte (Development Items) → Audio** jede Datei hochladen
    (oder in Studio: **Asset Manager → Bulk Import**).
@@ -113,7 +119,7 @@ Fehlt eine ID, wird der Sound einfach weggelassen – das Spiel funktioniert tro
 | `src/lobby/server` | ServerScriptService › Lobby | Bauen der Lobby (Environment, Road, ParkingLot, Camp, Buildings, Decor, Car) und Autos (CarQueue) |
 | `src/lobby/client` | StarterPlayerScripts › Lobby | Knöpfe, Hinweise, Shop-Fenster, Lichteffekte |
 | `src/level/server` | ServerScriptService › Level | Level 1: Welt, Haus der Wagners, Auto, Sarp, Ablauf des Gesprächs (`DialogueRunner`), Waldweg mit Biest (`ForestWalk`) |
-| `src/level/client` | StarterPlayerScripts › Level | Ablauf der Zwischensequenz, Kamera, Sprachausgabe/Untertitel (`Speech`), Antwortauswahl (`Choices`), Biest/Rennen/Tod (`BeastView`) |
+| `src/level/client` | StarterPlayerScripts › Level | Ablauf der Zwischensequenz, Kamera, Sprachausgabe/Untertitel (`Speech`), Antwortauswahl (`Choices`), Biest/Rennen/Tod (`BeastView`), Umgebungsgeräusche (`Ambience`) |
 
 ## Robux-Produkte einrichten (Kasse)
 

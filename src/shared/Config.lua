@@ -91,6 +91,21 @@ Config.SOUNDS = {
 	roar = "", -- beast_roar.ogg (das Biest brüllt und jagt einen)
 	beastBreath = "", -- beast_breath_loop.ogg (Atmen des Biests)
 	beastStep = "", -- beast_step.ogg (schwere Schritte des Biests)
+	-- Umgebung
+	forestWind = "", -- forest_wind_loop.ogg (Wind in den Tannen)
+	rustle = "", -- leaves_rustle.ogg (Rascheln im Laub, aus zufälligen Richtungen)
+	treeCreak = "", -- tree_creak.ogg (knarrender Baum)
+	houseCreak = "", -- house_creak.ogg (das Haus knarrt, als wäre jemand drin)
+	swingCreak = "", -- swing_creak_loop.ogg (quietschende Reifenschaukel)
+	shutterRattle = "", -- shutter_rattle_loop.ogg (klappernder Fensterladen)
+	carTick = "", -- car_tick_loop.ogg (abkühlender Motor)
+	radioVoices = "", -- radio_voices.ogg (verzerrte Stimmen im Radiorauschen)
+	-- Spieler
+	heartbeat = "", -- heartbeat_loop.ogg (Herzschlag, wenn das Biest nah ist)
+	scaredBreath = "", -- scared_breath_loop.ogg (panisches Atmen bei der Jagd)
+	stepGravel = "", -- step_gravel.ogg (Schritt auf Schotter)
+	stepDirt = "", -- step_dirt.ogg (Schritt auf Waldboden)
+	stepWood = "", -- step_wood.ogg (Schritt auf Holz, z. B. Veranda)
 }
 
 -- Sprachausgabe auf Englisch mit der Text-to-Speech-Funktion von Roblox.
