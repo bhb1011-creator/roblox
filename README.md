@@ -100,6 +100,8 @@ Die Sounds liegen in `assets/audio` (selbst erzeugt, frei verwendbar):
 | `car_tick_loop.ogg`, `radio_voices.ogg` | Abkühlender Motor, Stimmen im Radiorauschen (Config: `carTick`, `radioVoices`) |
 | `heartbeat_loop.ogg`, `scared_breath_loop.ogg` | Herzschlag und panisches Atmen, wenn das Biest nah ist (Config: `heartbeat`, `scaredBreath`) |
 | `step_gravel.ogg`, `step_dirt.ogg`, `step_wood.ogg` | Schritte auf Schotter, Waldboden und Holz (Config: `stepGravel`, `stepDirt`, `stepWood`) |
+| `owl_hoot.ogg`, `wolf_howl.ogg`, `raven_caw.ogg`, `fox_scream.ogg` | Tiere weit weg im Wald (Config: `owl`, `wolf`, `raven`, `foxScream`) |
+| `bird_flyaway.ogg` | Vogel fliegt in der Nähe erschrocken auf (Config: `birdFlyaway`) |
 
 1. Auf **create.roblox.com → Kreationen → Entwicklungsobjekte (Development Items) → Audio** jede Datei hochladen
    (oder in Studio: **Asset Manager → Bulk Import**).

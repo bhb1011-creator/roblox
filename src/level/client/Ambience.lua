@@ -16,6 +16,7 @@ Ambience.forestFactor = 1
 local makeSound
 local loops = {}
 local nextOneShot = 0
+local nextAnimal = 0
 local nextHouseCreak = 0
 local nextRadioVoice = 0
 local carTickStarted
@@ -45,7 +46,7 @@ local function blend(sound, volume, speed, deltaTime)
 end
 
 -- Einmaliges 3D-Geräusch an einer Stelle in der Welt
-local function playAt(key, position, volume, maxDistance, speed)
+local function playAt(key, position, volume, maxDistance, speed, minDistance)
 	local holder = Instance.new("Part")
 	holder.Name = "AmbientSound"
 	holder.Anchored = true
@@ -56,7 +57,7 @@ local function playAt(key, position, volume, maxDistance, speed)
 	holder.Size = Vector3.new(0.5, 0.5, 0.5)
 	holder.CFrame = CFrame.new(position)
 	holder.Parent = workspace
-	local sound = makeSound(key, holder, { Volume = volume, RollOffMinDistance = 8, RollOffMaxDistance = maxDistance or 80 })
+	local sound = makeSound(key, holder, { Volume = volume, RollOffMinDistance = minDistance or 8, RollOffMaxDistance = maxDistance or 80 })
 	if sound then
 		if speed then
 			sound.PlaybackSpeed *= speed
@@ -194,6 +195,27 @@ function Ambience.update(deltaTime, state)
 		end
 	elseif not outside or Ambience.forestFactor <= 0.5 then
 		nextOneShot = math.max(nextOneShot, now + 2)
+	end
+
+	-- Tiere im Hintergrund: weit weg im Wald, aber gut zu hören. Der Vogel flattert
+	-- dagegen ganz in der Nähe auf, wenn man zu Fuß unterwegs ist.
+	if outside and not state.finished and Ambience.forestFactor > 0.5 and now >= nextAnimal then
+		nextAnimal = now + math.random(120, 260) / 10
+		local roll = math.random()
+		local volume = state.walking and 1 or 0.75
+		if roll < 0.32 then
+			playAt("owl", aroundYou(camera, 55, 95) + Vector3.new(0, 14, 0), 1.1 * volume, 320, 0.95 + math.random() * 0.1, 45)
+		elseif roll < 0.52 then
+			playAt("raven", aroundYou(camera, 40, 80) + Vector3.new(0, 18, 0), 1 * volume, 300, 0.9 + math.random() * 0.2, 40)
+		elseif roll < 0.68 then
+			playAt("wolf", aroundYou(camera, 90, 140), 1.2 * volume, 420, 0.95 + math.random() * 0.1, 70)
+		elseif roll < 0.8 then
+			playAt("foxScream", aroundYou(camera, 70, 120), 1.1 * volume, 380, 1, 55)
+		elseif state.walking then
+			playAt("birdFlyaway", aroundYou(camera, 8, 16) + Vector3.new(0, 6, 0), 1, 80, 0.9 + math.random() * 0.2, 10)
+		end
+	elseif not outside or Ambience.forestFactor <= 0.5 then
+		nextAnimal = math.max(nextAnimal, now + 6)
 	end
 
 	-- Stimmen im Radiorauschen, solange man im Auto sitzt

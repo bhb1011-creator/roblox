@@ -100,6 +100,11 @@ Config.SOUNDS = {
 	shutterRattle = "", -- shutter_rattle_loop.ogg (klappernder Fensterladen)
 	carTick = "", -- car_tick_loop.ogg (abkühlender Motor)
 	radioVoices = "", -- radio_voices.ogg (verzerrte Stimmen im Radiorauschen)
+	owl = "", -- owl_hoot.ogg (Waldkauz in der Ferne)
+	wolf = "", -- wolf_howl.ogg (Wolf heult weit weg)
+	raven = "", -- raven_caw.ogg (Rabe)
+	foxScream = "", -- fox_scream.ogg (Fuchs-Schrei, klingt fast wie ein Mensch)
+	birdFlyaway = "", -- bird_flyaway.ogg (Vogel fliegt erschrocken auf, ganz nah)
 	-- Spieler
 	heartbeat = "", -- heartbeat_loop.ogg (Herzschlag, wenn das Biest nah ist)
 	scaredBreath = "", -- scared_breath_loop.ogg (panisches Atmen bei der Jagd)
