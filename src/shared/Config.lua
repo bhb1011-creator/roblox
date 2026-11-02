@@ -149,7 +149,11 @@ Config.VOICES = {
 			{ "AudioEqualizer", { LowGain = 4, MidGain = 0, HighGain = -6 } },
 			{ "AudioReverb", { DecayTime = 1.8, WetLevel = -8, DryLevel = 0, HighCutFrequency = 3500 } },
 		},
-	},	-- Sarp in seiner zweiten Gestalt: tief, verzerrt, mit Hall
+	},
+	-- die Kinder der Wagners
+	lucy = { id = "2", pitch = 3, speed = 0.9, volume = 1.8 },
+	tommy = { id = "3", pitch = 5, speed = 0.95, volume = 1.8 },
+	-- Sarp in seiner zweiten Gestalt: tief, verzerrt, mit Hall
 	sarpDemon = {
 		id = "1",
 		pitch = -7,

@@ -16,6 +16,8 @@ local NAME_COLORS = {
 	mrsWagner = Color3.fromRGB(215, 185, 150),
 	mrWagner = Color3.fromRGB(170, 170, 150),
 	sarpDemon = Color3.fromRGB(220, 60, 50),
+	lucy = Color3.fromRGB(200, 170, 200),
+	tommy = Color3.fromRGB(160, 190, 220),
 }
 
 local output

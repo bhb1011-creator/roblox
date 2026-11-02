@@ -26,6 +26,8 @@ Kapitel2Dialogue.NAMES = {
 	mrsWagner = "Mrs. Wagner",
 	mrWagner = "Mr. Wagner",
 	sarpDemon = "Sarp",
+	lucy = "Lucy",
+	tommy = "Tommy",
 }
 
 Kapitel2Dialogue.SCRIPT = {
@@ -112,9 +114,11 @@ Kapitel2Dialogue.NIGHT_WAKE = {
 
 Kapitel2Dialogue.NIGHT_DINNER = {
 	{ action = "sitDown", wait = 1 },
-	{ speaker = "mrsWagner", look = "player", text = "Sit, sit. You must be starving.", wait = 1.2 },
+	{ speaker = "mrsWagner", look = "player", text = "Sit, sit. You must be starving.", wait = 0.8 },
+	{ speaker = "lucy", look = "player", text = "We waited for you.", wait = 1 },
 	{ speaker = "mrWagner", look = "down", text = "We don't get many guests anymore.", wait = 0.8 },
 	{ speaker = "mrsWagner", text = "Sarp sends them to us. He always does.", wait = 0.6 },
+	{ speaker = "tommy", look = "down", text = "He likes the new ones.", wait = 0.8 },
 	{ speaker = "mrWagner", look = "player", text = "Margaret. Not now.", wait = 1 },
 	{
 		choice = {

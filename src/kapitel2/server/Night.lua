@@ -87,6 +87,28 @@ function Night.run(ctx)
 		Wagners.place(mr, point(67, 40.9), point(67, 30))
 		mr:SetAttribute("Look", "down")
 	end
+	-- die Kinder sitzen schon am Tisch (stehen neben ihren Stühlen)
+	local family = (mrs and mrs.Parent) or (mr and mr.Parent) or workspace
+	local function buildKid(name, builder)
+		local ok, model = pcall(builder, family)
+		if not ok then
+			warn("Kapitel 2: " .. name .. " konnte nicht gebaut werden: " .. tostring(model))
+			return nil
+		end
+		return model
+	end
+	local lucy = buildKid("Lucy", Wagners.buildLucy)
+	local tommy = buildKid("Tommy", Wagners.buildTommy)
+	if lucy then
+		Wagners.place(lucy, point(63.1, 34.5), point(67, 34.5))
+		lucy:SetAttribute("Look", "player")
+	end
+	if tommy then
+		Wagners.place(tommy, point(70.9, 34.5), point(67, 34.5))
+		tommy:SetAttribute("Look", "down")
+	end
+	ctx.npcs.lucy = lucy
+	ctx.npcs.tommy = tommy
 	ctx.remotes:SetAttribute("Phase", "wake")
 	event:FireAllClients({ type = "wake" })
 	task.wait(3)
@@ -221,7 +243,7 @@ function Night.run(ctx)
 				humanoid.Sit = false
 			end
 		end
-		for _, npc in { mrs, mr } do
+		for _, npc in { mrs, mr, lucy, tommy } do
 			if npc then
 				npc:SetAttribute("Look", "down")
 			end
@@ -232,6 +254,12 @@ function Night.run(ctx)
 			done += 1
 		end)
 		task.spawn(function()
+			ctx.walkPath(lucy, { P(61.5, 36.5), P(57, 37.6), P(51, 37.6), P(46, 35.5) }, 10, steps)
+		end)
+		task.spawn(function()
+			ctx.walkPath(tommy, { P(71, 38.2), P(62, 39.2), P(57, 38.8), P(51, 38.8), P(46, 37.5) }, 10, steps)
+		end)
+		task.spawn(function()
 			ctx.walkPath(mr, { P(61, 40), P(57, 38.4), P(51, 38.4), P(46, 37) }, 10, steps)
 			done += 1
 		end)
@@ -239,7 +267,7 @@ function Night.run(ctx)
 		while done < 2 and os.clock() < deadline do
 			task.wait(0.1)
 		end
-		for _, npc in { mrs, mr } do
+		for _, npc in { mrs, mr, lucy, tommy } do
 			if npc then
 				Wagners.place(npc, ctx.hiddenSpot, ctx.facing)
 			end
