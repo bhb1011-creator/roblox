@@ -2,9 +2,10 @@
 -- kommen später. Beide sind verankert und werden vom Server gestellt und bewegt
 -- (Kapitel2.lua); die Clients drehen nur ihre Köpfe (Attribut "Look").
 --
--- Beide sehen erst einmal ganz normal und freundlich aus – dass sie von Sarp besessen
+-- Beide sehen erst einmal ganz normal und freundlich aus (runde, menschliche Körper und
+-- echte Gesichter statt der eckigen Roblox-Figuren) – dass sie von Sarp besessen
 -- sind, merkt man nur an dem, was sie sagen und tun.
--- Mrs. Wagner (Margaret): um die 45, dunkelblaues Kleid, helle Strickjacke, braune Haare
+-- Mrs. Wagner (Margaret): um die 45, dunkelblaues Kleid, graugrüne Strickjacke, braune Haare
 --   locker hochgesteckt, freundliches Lächeln. Hält eine Kerze.
 -- Mr. Wagner (Richard): groß, hellblaues Hemd mit hochgekrempelten Ärmeln, Hosenträger,
 --   kurzer gepflegter Bart, Armbanduhr.
@@ -151,6 +152,140 @@ local function newBody(name, colors, scale)
 end
 
 -- Augen, Brauen, Mund. `style`: "smile" (Mrs. Wagner) oder "tired" (Mr. Wagner)
+
+-- Runde Form (Ellipsoid oder Zylinder) an einem Körperteil. Zylinder stehen senkrecht.
+local function rounded(model, bodyPart, name, size, offset, color, material, kind)
+	local vertical = kind == "Cylinder"
+	local partSize = vertical and Vector3.new(size.Y, size.X, size.Z) or size
+	local frame = vertical and offset * CFrame.Angles(0, 0, math.rad(90)) or offset
+	local part = attach(model, bodyPart, name, partSize, frame, color, material or Enum.Material.SmoothPlastic)
+	local mesh = Instance.new("SpecialMesh")
+	mesh.MeshType = vertical and Enum.MeshType.Cylinder or Enum.MeshType.Sphere
+	mesh.Parent = part
+	return part
+end
+
+-- Statt der eckigen Roblox-Standardkörper: weiche, menschliche Formen (die eigentlichen
+-- Körperteile werden unsichtbar, bewegen aber weiterhin alles, was daran hängt)
+local function smoothBody(model, colors)
+	local function part(name)
+		return model:FindFirstChild(name)
+	end
+	for _, name in { "Head", "UpperTorso", "LowerTorso", "LeftUpperArm", "LeftLowerArm", "LeftHand", "RightUpperArm", "RightLowerArm", "RightHand", "LeftUpperLeg", "LeftLowerLeg", "LeftFoot", "RightUpperLeg", "RightLowerLeg", "RightFoot" } do
+		local bodyPart = part(name)
+		if bodyPart then
+			bodyPart.Transparency = 1
+		end
+	end
+	local fabric = Enum.Material.Fabric
+	local skin = colors.skin
+	-- Kopf: etwas schmaler als hoch, wie ein echter Kopf
+	local head = part("Head")
+	if head then
+		local hs = head.Size
+		rounded(model, head, "HeadShape", Vector3.new(hs.X * 0.8, hs.Y * 1.04, hs.Z * 0.92), CFrame.new(0, 0.02, 0), skin)
+	end
+	local torso = part("UpperTorso")
+	if torso then
+		local t = torso.Size
+		rounded(model, torso, "Chest", Vector3.new(t.X * 0.9, t.Y * 1.16, t.Z * 0.9), CFrame.new(0, t.Y * 0.03, 0), colors.torso, fabric)
+		rounded(model, torso, "Waist", Vector3.new(t.X * 0.66, t.Y * 0.55, t.Z * 0.78), CFrame.new(0, -t.Y * 0.32, 0), colors.torso, fabric, "Cylinder")
+		for _, side in { -1, 1 } do
+			rounded(model, torso, "Shoulder", Vector3.new(t.Z * 0.62, t.Z * 0.6, t.Z * 0.66), CFrame.new(side * (t.X * 0.5 - t.Z * 0.12), t.Y * 0.3, 0), colors.arms, fabric)
+		end
+		rounded(model, torso, "Neck", Vector3.new(t.X * 0.24, t.Y * 0.32, t.Z * 0.42), CFrame.new(0, t.Y * 0.56, 0.02), skin, nil, "Cylinder")
+	end
+	local hips = part("LowerTorso")
+	if hips then
+		local h = hips.Size
+		rounded(model, hips, "Hips", Vector3.new(h.X * 0.9, h.Y * 2.2, h.Z * 0.8), CFrame.new(0, -h.Y * 0.1, 0), colors.legs, fabric, "Cylinder")
+	end
+	for _, side in { "Left", "Right" } do
+		local upper, lower, hand = part(side .. "UpperArm"), part(side .. "LowerArm"), part(side .. "Hand")
+		-- Die Roblox-Arme sind breit; die runden Arme rücken näher an den Körper
+		local inward = side == "Left" and 1 or -1
+		if upper then
+			local u = upper.Size
+			local x = inward * u.X * 0.36
+			rounded(model, upper, "Arm", Vector3.new(u.X * 0.46, u.Y * 1.02, u.Z * 0.5), CFrame.new(x, 0, 0), colors.arms, fabric, "Cylinder")
+			rounded(model, upper, "Elbow", Vector3.new(u.X * 0.42, u.X * 0.42, u.Z * 0.46), CFrame.new(x, -u.Y / 2, 0), colors.lowerArms or colors.arms, fabric)
+		end
+		if lower then
+			local l = lower.Size
+			rounded(model, lower, "Forearm", Vector3.new(l.X * 0.4, l.Y * 1.02, l.Z * 0.42), CFrame.new(inward * l.X * 0.36, 0, 0), colors.lowerArms or colors.arms, fabric, "Cylinder")
+		end
+		if hand then
+			local h = hand.Size
+			rounded(model, hand, "Hand", Vector3.new(h.X * 0.3, h.Y * 1.7, h.Z * 0.2), CFrame.new(inward * h.X * 0.36, -h.Y * 0.2, 0), colors.hands or skin)
+		end
+		local thigh, shin, foot = part(side .. "UpperLeg"), part(side .. "LowerLeg"), part(side .. "Foot")
+		if thigh then
+			local u = thigh.Size
+			rounded(model, thigh, "Thigh", Vector3.new(u.X * 0.72, u.Y * 1.04, u.Z * 0.74), CFrame.new(0, 0, 0), colors.legs, fabric, "Cylinder")
+			rounded(model, thigh, "Knee", Vector3.new(u.X * 0.62, u.X * 0.6, u.Z * 0.64), CFrame.new(0, -u.Y / 2, 0), colors.lowerLegs or colors.legs, fabric)
+		end
+		if shin then
+			local l = shin.Size
+			rounded(model, shin, "Shin", Vector3.new(l.X * 0.56, l.Y * 1.04, l.Z * 0.58), CFrame.new(0, 0, 0), colors.lowerLegs or colors.legs, fabric, "Cylinder")
+		end
+		if foot then
+			local f = foot.Size
+			rounded(model, foot, "Shoe", Vector3.new(f.X * 0.56, f.Y * 1.5, f.Z * 1.1), CFrame.new(0, -f.Y * 0.1, -f.Z * 0.12), colors.shoes, Enum.Material.Leather)
+		end
+	end
+end
+
+-- Echtes Gesicht auf dem runden Kopf: Augen mit Lidern, Nase, Ohren, Lippen.
+-- `look` = "woman" oder "man"
+local function realFace(model, head, colors, look)
+	local size = head.Size
+	local hw, hh, hd = size.X * 0.4, size.Y * 0.52, size.Z * 0.46 -- Halbachsen der Kopfform
+	local cy = 0.02
+	local s = size.Y / 1.2
+	-- wie weit vorne die Kopfoberfläche an dieser Stelle ist
+	local function surface(x, y)
+		local k = 1 - (x / hw) ^ 2 - ((y - cy) / hh) ^ 2
+		return -hd * math.sqrt(math.max(k, 0.05))
+	end
+	local function piece(name, partSize, x, y, depth, color, material)
+		return rounded(model, head, name, partSize, CFrame.new(x, y, surface(x, y) + depth), color, material)
+	end
+	local darker = colors.skin:Lerp(Color3.fromRGB(120, 80, 60), 0.18)
+	local iris = colors.eyes or Color3.fromRGB(86, 64, 44)
+	local eyeY = 0.07 * s
+	for _, side in { -1, 1 } do
+		local x = side * 0.17 * s
+		piece("EyeWhite", Vector3.new(0.15 * s, 0.075 * s, 0.06), x, eyeY, 0.012, Color3.fromRGB(238, 234, 228))
+		piece("Iris", Vector3.new(0.07 * s, 0.07 * s, 0.03), x, eyeY - 0.004, -0.008, iris)
+		piece("Pupil", Vector3.new(0.032 * s, 0.032 * s, 0.02), x, eyeY - 0.004, -0.016, Color3.fromRGB(16, 12, 10))
+		piece("EyeShine", Vector3.new(0.014 * s, 0.014 * s, 0.01), x + 0.012 * s, eyeY + 0.012 * s, -0.022, Color3.fromRGB(250, 250, 250))
+		piece("Eyelid", Vector3.new(0.17 * s, 0.04 * s, 0.07), x, eyeY + 0.042 * s, 0.006, darker)
+		if look == "woman" then
+			piece("Lashes", Vector3.new(0.16 * s, 0.012 * s, 0.05), x, eyeY + 0.03 * s, -0.004, Color3.fromRGB(40, 28, 24))
+		end
+		local brow = piece("Brow", Vector3.new(0.18 * s, (look == "man" and 0.04 or 0.026) * s, 0.05), x, eyeY + 0.12 * s, 0.004, colors.brows or colors.hair)
+		brow.CFrame *= CFrame.Angles(0, 0, math.rad(side * (look == "man" and 4 or 7)))
+		-- Ohren an den Seiten
+		rounded(model, head, "Ear", Vector3.new(0.08 * s, 0.26 * s, 0.18 * s), CFrame.new(side * hw * 0.98, 0.02 * s, 0.04 * s), colors.skin)
+		if look == "woman" then
+			piece("Cheek", Vector3.new(0.12 * s, 0.07 * s, 0.03), side * 0.21 * s, -0.08 * s, 0.006, colors.skin:Lerp(Color3.fromRGB(214, 140, 130), 0.4))
+		end
+	end
+	-- Nase: Rücken und Spitze
+	piece("Nose", Vector3.new(0.09 * s, 0.22 * s, 0.14 * s), 0, -0.04 * s, 0.03, colors.skin)
+	piece("NoseTip", Vector3.new(0.11 * s, 0.08 * s, 0.1 * s), 0, -0.13 * s, -0.025, darker)
+	-- Mund
+	local lips = look == "woman" and Color3.fromRGB(176, 96, 96) or colors.skin:Lerp(Color3.fromRGB(120, 60, 56), 0.45)
+	piece("Lips", Vector3.new(0.2 * s, 0.045 * s, 0.05), 0, -0.25 * s, 0.006, lips)
+	if look == "woman" then
+		for _, side in { -1, 1 } do
+			local corner = piece("MouthCorner", Vector3.new(0.05 * s, 0.022 * s, 0.04), side * 0.11 * s, -0.24 * s, 0.004, lips)
+			corner.CFrame *= CFrame.Angles(0, 0, math.rad(side * 25))
+		end
+	end
+	return hw, hh, hd
+end
+
 local function face(model, head, style, colors)
 	local size = head.Size
 	local front = -size.Z / 2 - 0.005
@@ -240,39 +375,41 @@ end
 function Wagners.buildMrs(parent)
 	-- ganz normale, freundliche Frau – dass sie besessen ist, sieht man ihr nicht an
 	local colors = {
-		skin = Color3.fromRGB(234, 196, 168),
+		skin = Color3.fromRGB(232, 194, 168),
 		torso = Color3.fromRGB(58, 78, 112), -- dunkelblaues Kleid
-		arms = Color3.fromRGB(196, 176, 146), -- helle, beige Strickjacke
-		legs = Color3.fromRGB(150, 120, 100),
-		shoes = Color3.fromRGB(70, 48, 36),
-		hair = Color3.fromRGB(120, 82, 52),
+		arms = Color3.fromRGB(122, 128, 112), -- graugrüne Strickjacke
+		legs = Color3.fromRGB(58, 78, 112),
+		lowerLegs = Color3.fromRGB(196, 160, 136), -- Strumpfhose
+		shoes = Color3.fromRGB(70, 46, 34),
+		hair = Color3.fromRGB(112, 76, 50),
+		brows = Color3.fromRGB(96, 66, 46),
 		eyes = Color3.fromRGB(70, 100, 80),
 	}
-	local model = newBody("MrsWagner", colors, { HeightScale = 0.96, WidthScale = 0.85, DepthScale = 0.9 })
+	local model = newBody("MrsWagner", colors, { HeightScale = 0.98, WidthScale = 0.8, DepthScale = 0.85, HeadScale = 0.95 })
 	if not model then
 		return nil
 	end
+	smoothBody(model, colors)
 	local head, torso, hips = model.Head, model.UpperTorso, model.LowerTorso
-	face(model, head, "friendly", colors)
-	local size = head.Size
-	-- Haare: locker hochgesteckt, ein paar Strähnen an den Seiten
-	attach(model, head, "Hair", Vector3.new(size.X + 0.08, 0.36, size.Z + 0.08), CFrame.new(0, size.Y / 2 - 0.1, 0.03), colors.hair, Enum.Material.Fabric)
-	attach(model, head, "HairBack", Vector3.new(size.X + 0.08, size.Y * 0.7, 0.32), CFrame.new(0, size.Y * 0.12, size.Z / 2 - 0.08), colors.hair, Enum.Material.Fabric)
-	attach(model, head, "HairBun", Vector3.new(0.75, 0.6, 0.6), CFrame.new(0, size.Y * 0.3, size.Z / 2 + 0.18), colors.hair, Enum.Material.Fabric, Enum.PartType.Ball)
-	for _, side in { -1, 1 } do
-		attach(model, head, "HairSide", Vector3.new(0.14, size.Y * 0.62, 0.3), CFrame.new(side * (size.X / 2 + 0.02), size.Y * 0.06, -0.05), colors.hair, Enum.Material.Fabric)
-	end
-	-- Kleid bis unter die Knie, weißer Kragen, kleine Kette
-	attach(model, hips, "Skirt", Vector3.new(hips.Size.X + 0.45, 2.5, hips.Size.Z + 0.45), CFrame.new(0, -1.15, 0), colors.torso, Enum.Material.Fabric)
-	attach(model, hips, "SkirtHem", Vector3.new(hips.Size.X + 0.55, 0.15, hips.Size.Z + 0.55), CFrame.new(0, -2.33, 0), Color3.fromRGB(46, 62, 92), Enum.Material.Fabric)
-	local chest = -torso.Size.Z / 2 - 0.01
-	attach(model, torso, "Collar", Vector3.new(0.9, 0.16, 0.05), CFrame.new(0, torso.Size.Y / 2 - 0.12, chest), Color3.fromRGB(214, 206, 190), Enum.Material.Fabric)
-	attach(model, torso, "Locket", Vector3.new(0.16, 0.22, 0.04), CFrame.new(0, 0.15, chest - 0.01), Color3.fromRGB(150, 122, 60), Enum.Material.Metal)
-	-- offene Strickjacke über dem Kleid
-	for _, side in { -1, 1 } do
-		attach(model, torso, "Cardigan", Vector3.new(torso.Size.X * 0.3, torso.Size.Y + 0.02, 0.05), CFrame.new(side * torso.Size.X * 0.36, 0, chest - 0.005), colors.arms, Enum.Material.Fabric)
-	end
-	attach(model, torso, "CardiganBack", Vector3.new(torso.Size.X + 0.04, torso.Size.Y + 0.02, 0.05), CFrame.new(0, 0, torso.Size.Z / 2 + 0.015), colors.arms, Enum.Material.Fabric)
+	local hw, hh, hd = realFace(model, head, colors, "woman")
+	local hair, fabric = colors.hair, Enum.Material.Fabric
+	-- Haare: oben voll, hinten locker hochgesteckt, an den Schläfen etwas länger
+	rounded(model, head, "Hair", Vector3.new(hw * 2.12, hh * 1.3, hd * 2.1), CFrame.new(0, hh * 0.66, hd * 0.12), hair, fabric)
+	rounded(model, head, "HairBack", Vector3.new(hw * 2.06, hh * 1.5, hd * 1.2), CFrame.new(0, hh * 0.2, hd * 0.52), hair, fabric)
+	rounded(model, head, "HairBun", Vector3.new(hw * 1.1, hw * 0.95, hw * 0.95), CFrame.new(0, hh * 0.55, hd * 1.08), hair, fabric)
+	-- Seitenscheitel: eine Haarsträhne fällt schräg in die Stirn
+	local fringe = rounded(model, head, "HairFringe", Vector3.new(hw * 1.2, hh * 0.32, hd * 0.5), CFrame.new(hw * 0.25, hh * 0.72, -hd * 0.7), hair, fabric)
+	fringe.CFrame *= CFrame.Angles(math.rad(-25), 0, math.rad(-14))
+	-- Kleid: Rock bis unter die Knie, leicht ausgestellt
+	local h, t = hips.Size, torso.Size
+	rounded(model, hips, "SkirtTop", Vector3.new(h.X * 1.02, 1.1, h.Z * 1.1), CFrame.new(0, 0, 0), colors.torso, fabric)
+	rounded(model, hips, "Skirt", Vector3.new(h.X * 1.02, 2.3, h.Z * 1.12), CFrame.new(0, -1.15, 0), colors.torso, fabric, "Cylinder")
+	rounded(model, hips, "SkirtHem", Vector3.new(h.X * 1.04, 0.1, h.Z * 1.14), CFrame.new(0, -2.27, 0), Color3.fromRGB(46, 62, 92), fabric, "Cylinder")
+	-- offene Strickjacke über dem Kleid: vorne sieht man das blaue Kleid
+	rounded(model, torso, "Cardigan", Vector3.new(t.X * 0.95, t.Y * 1.2, t.Z * 0.95), CFrame.new(0, t.Y * 0.03, 0), colors.arms, fabric)
+	rounded(model, torso, "DressFront", Vector3.new(t.X * 0.46, t.Y * 1.14, t.Z * 0.98), CFrame.new(0, t.Y * 0.03, 0), colors.torso, fabric)
+	rounded(model, torso, "Collar", Vector3.new(t.X * 0.34, t.Y * 0.12, t.Z * 0.62), CFrame.new(0, t.Y * 0.5, -0.04), Color3.fromRGB(226, 220, 206), fabric)
+	rounded(model, torso, "Locket", Vector3.new(0.12, 0.16, 0.06), CFrame.new(0, t.Y * 0.18, -t.Z * 0.45), Color3.fromRGB(176, 146, 70), Enum.Material.Metal)
 
 	-- Rechter Arm angewinkelt (hält die Kerze vor der Brust). Die Kerze wird in der
 	-- Grundhaltung so angebracht, dass sie nach dem Anwinkeln genau senkrecht steht.
@@ -312,51 +449,62 @@ end
 function Wagners.buildMr(parent)
 	local colors = {
 		skin = Color3.fromRGB(222, 182, 152),
-		torso = Color3.fromRGB(120, 140, 168), -- sauberes, hellblaues Hemd
-		arms = Color3.fromRGB(120, 140, 168),
-		legs = Color3.fromRGB(50, 42, 36),
-		shoes = Color3.fromRGB(30, 24, 20),
-		hair = Color3.fromRGB(66, 62, 58),
-		beard = Color3.fromRGB(78, 66, 56),
+		torso = Color3.fromRGB(128, 148, 176), -- sauberes, hellblaues Hemd
+		arms = Color3.fromRGB(128, 148, 176),
+		lowerArms = Color3.fromRGB(222, 182, 152), -- hochgekrempelte Ärmel
+		legs = Color3.fromRGB(56, 50, 46), -- dunkle Stoffhose
+		shoes = Color3.fromRGB(40, 28, 22),
+		hair = Color3.fromRGB(78, 64, 54),
+		beard = Color3.fromRGB(86, 70, 58),
 		eyes = Color3.fromRGB(80, 96, 120),
 	}
-	local model = newBody("MrWagner", colors, { HeightScale = 1.12, WidthScale = 0.86, DepthScale = 0.9 })
+	local model = newBody("MrWagner", colors, { HeightScale = 1.1, WidthScale = 0.86, DepthScale = 0.9, HeadScale = 0.95 })
 	if not model then
 		return nil
 	end
+	smoothBody(model, colors)
 	local head, torso, hips = model.Head, model.UpperTorso, model.LowerTorso
-	face(model, head, "kind", colors)
-	local size = head.Size
-	-- kurze, ordentlich gekämmte Haare
-	attach(model, head, "Hair", Vector3.new(size.X + 0.06, 0.26, size.Z + 0.04), CFrame.new(0, size.Y / 2 - 0.06, 0.02), colors.hair, Enum.Material.Fabric)
-	attach(model, head, "HairBack", Vector3.new(size.X + 0.04, size.Y * 0.45, 0.25), CFrame.new(0, size.Y * 0.15, size.Z / 2 - 0.08), colors.hair, Enum.Material.Fabric)
-	-- Hosenträger und Gürtel
-	local chest, back = -torso.Size.Z / 2 - 0.01, torso.Size.Z / 2 + 0.01
+	local hw, hh, hd = realFace(model, head, colors, "man")
+	local s = head.Size.Y / 1.2
+	local fabric = Enum.Material.Fabric
+	-- kurze Haare, an den Seiten kürzer
+	rounded(model, head, "Hair", Vector3.new(hw * 2.06, hh * 1.1, hd * 2.06), CFrame.new(0, hh * 0.72, hd * 0.06), colors.hair, fabric)
+	rounded(model, head, "HairBack", Vector3.new(hw * 2.04, hh * 1.2, hd * 1.1), CFrame.new(0, hh * 0.25, hd * 0.5), colors.hair, fabric)
 	for _, side in { -1, 1 } do
-		attach(model, torso, "Suspender", Vector3.new(0.13, torso.Size.Y + 0.02, 0.03), CFrame.new(side * 0.34, 0, chest), Color3.fromRGB(46, 32, 26), Enum.Material.Fabric)
-		attach(model, torso, "Suspender", Vector3.new(0.13, torso.Size.Y + 0.02, 0.03), CFrame.new(side * 0.2, 0, back) * CFrame.Angles(0, 0, math.rad(side * 14)), Color3.fromRGB(46, 32, 26), Enum.Material.Fabric)
+		-- kurze Koteletten
+		rounded(model, head, "Sideburn", Vector3.new(hw * 0.2, hh * 0.5, hd * 0.4), CFrame.new(side * hw * 0.95, hh * 0.05, -hd * 0.05), colors.hair, fabric)
 	end
-	attach(model, hips, "Belt", Vector3.new(hips.Size.X + 0.04, 0.16, hips.Size.Z + 0.04), CFrame.new(0, hips.Size.Y / 2 - 0.08, 0), Color3.fromRGB(34, 26, 20), Enum.Material.Leather)
-	-- hochgekrempelte Ärmel: Unterarme in Hautfarbe, Stoffwulst am Ellbogen
+	-- kurz gestutzter Bart um Kinn und Wangen, Schnurrbart, der Mund liegt davor
+	rounded(model, head, "Beard", Vector3.new(hw * 1.9, hh * 1.05, hd * 1.92), CFrame.new(0, -hh * 0.55, -hd * 0.03), colors.beard, fabric)
+	rounded(model, head, "Mustache", Vector3.new(0.3 * s, 0.07 * s, 0.1 * s), CFrame.new(0, -0.19 * s, -hd * 0.93), colors.beard, fabric)
+	rounded(model, head, "LipsOverBeard", Vector3.new(0.18 * s, 0.04 * s, 0.05), CFrame.new(0, -0.255 * s, -hd * 0.97), colors.skin:Lerp(Color3.fromRGB(120, 60, 56), 0.45))
+	-- Hemdkragen, Knopfleiste, Hosenträger, Gürtel
+	local t, h = torso.Size, hips.Size
+	rounded(model, torso, "Collar", Vector3.new(t.X * 0.36, t.Y * 0.14, t.Z * 0.66), CFrame.new(0, t.Y * 0.5, -0.03), Color3.fromRGB(150, 168, 194), fabric)
+	rounded(model, torso, "Placket", Vector3.new(0.1, t.Y * 1.04, t.Z * 0.92), CFrame.new(0, t.Y * 0.04, -0.01), Color3.fromRGB(112, 132, 160), fabric)
+	for _, side in { -1, 1 } do
+		-- schmale Ellipsoide, die der Brust folgen (vorne und hinten sichtbar)
+		rounded(model, torso, "Suspender", Vector3.new(0.13, t.Y * 1.1, t.Z * 0.86), CFrame.new(side * t.X * 0.2, t.Y * 0.05, 0), Color3.fromRGB(52, 36, 28), Enum.Material.Leather)
+	end
+	rounded(model, hips, "Belt", Vector3.new(h.X * 0.88, 0.18, h.Z * 0.92), CFrame.new(0, h.Y * 0.35, 0), Color3.fromRGB(34, 26, 20), Enum.Material.Leather, "Cylinder")
+	rounded(model, hips, "Buckle", Vector3.new(0.18, 0.14, 0.05), CFrame.new(0, h.Y * 0.35, -h.Z * 0.46), Color3.fromRGB(160, 140, 90), Enum.Material.Metal)
+	-- Ärmelaufschläge und Armbanduhr
 	for _, sideName in { "Left", "Right" } do
 		local lower = model:FindFirstChild(sideName .. "LowerArm")
 		if lower then
-			lower.Color = colors.skin
-			attach(model, lower, "Cuff", Vector3.new(lower.Size.X + 0.08, 0.22, lower.Size.Z + 0.08), CFrame.new(0, lower.Size.Y / 2 - 0.1, 0), colors.torso, Enum.Material.Fabric)
+			local inward = sideName == "Left" and 1 or -1
+			rounded(model, lower, "Cuff", Vector3.new(lower.Size.X * 0.5, 0.24, lower.Size.Z * 0.5), CFrame.new(inward * lower.Size.X * 0.36, lower.Size.Y / 2 - 0.12, 0), colors.torso, fabric, "Cylinder")
 		end
 	end
-	-- Armbanduhr
 	local leftLower = model:FindFirstChild("LeftLowerArm")
 	if leftLower then
-		attach(model, leftLower, "Watch", Vector3.new(leftLower.Size.X + 0.06, 0.14, leftLower.Size.Z + 0.06), CFrame.new(0, -leftLower.Size.Y / 2 + 0.12, 0), Color3.fromRGB(60, 44, 32), Enum.Material.Leather)
+		rounded(model, leftLower, "Watch", Vector3.new(leftLower.Size.X * 0.48, 0.14, leftLower.Size.Z * 0.48), CFrame.new(leftLower.Size.X * 0.36, -leftLower.Size.Y / 2 + 0.14, 0), Color3.fromRGB(60, 44, 32), Enum.Material.Leather, "Cylinder")
 	end
 
 	model.Parent = parent
 	return model
 end
 
--- Lucy (Tochter, ca. 12): weißes Nachthemd bis zu den Knöcheln, lange dunkle Haare,
--- barfuß, lächelt genau wie ihre Mutter. Hält eine Puppe.
 function Wagners.buildLucy(parent)
 	local colors = {
 		skin = Color3.fromRGB(220, 206, 196),
