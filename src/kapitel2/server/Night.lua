@@ -777,6 +777,11 @@ function Night.run(ctx)
 	end
 	local axe = Mansion.axe
 	local axePart = axe and axe.PrimaryPart
+	if axePart and Mansion.placeAxe and Mansion.axeSpots then
+		-- jede Nacht liegt die Axt woanders im Keller
+		local spot = Mansion.placeAxe(math.random(1, #Mansion.axeSpots))
+		print("[Kapitel2] Die Axt liegt: " .. spot.name)
+	end
 	if axePart then
 		local prompt = Instance.new("ProximityPrompt")
 		prompt.ObjectText = "Axt"
@@ -881,7 +886,7 @@ function Night.run(ctx)
 		end
 	end
 
-	event:FireAllClients({ type = "hint", text = "Hol die Axt aus dem Keller (Kellertür in der Küche).", seconds = 7 })
+	event:FireAllClients({ type = "hint", text = "Such die Axt im Keller (Kellertür in der Küche). Sie kann überall dort unten liegen.", seconds = 8 })
 
 	-- Sarp läuft durchs Erdgeschoss. Sieht er jemanden mit Licht, verfolgt er ihn und macht
 	-- Schaden, wenn er nah genug ist. Man kann weglaufen – oder das Licht ausmachen (F):
@@ -1038,12 +1043,14 @@ function Night.run(ctx)
 		end)
 	end
 
-	-- Die Familie geistert durchs Haus: steht irgendwo in der Ferne, sagt etwas Seltsames,
-	-- und rennt weg und verschwindet, sobald man ihr zu nahe kommt
+	-- Die Familie geistert durchs Haus: steht irgendwo in der Ferne (an einer Stelle, die man
+	-- gerade nicht sieht, also z. B. hinter der nächsten Ecke), dreht sich langsam mit einem
+	-- mit, sagt etwas Seltsames und läuft weg und verblasst, sobald man ihr zu nahe kommt.
+	-- (Alle Stellen sind geprüft: frei, mit Boden, nicht in Möbeln oder auf der Treppe.)
 	local APPEAR = {
-		{ 46, 63, "E" }, { 38, 50, "E" }, { 24, 52, "E" }, { 70, 63, "E" }, { 42, 28, "E" },
-		{ 49, 57.5, "O" }, { 70, 37, "O" }, { 64, 64, "O" }, { 49, 27, "O" }, { 39, 27, "O" },
-		{ 24, 46, "K" }, { 40, 38, "K" }, { 62, 30, "K" },
+		{ 38, 50, "E" }, { 24, 52, "E" }, { 70, 63, "E" }, { 42, 28, "E" }, { 46, 46, "E" }, { 62, 50, "E" },
+		{ 49, 57.5, "O" }, { 70, 37, "O" }, { 40, 31, "O" }, { 49, 30, "O" }, { 60, 60, "O" }, { 58, 49, "O" }, { 44, 37, "O" }, { 76, 26, "O" },
+		{ 24, 46, "K" }, { 40, 38, "K" }, { 62, 30, "K" }, { 44, 30, "K" },
 	}
 	local LINES = {
 		mrsWagner = { "You shouldn't be up so late.", "Dinner isn't over yet.", "He is so proud of you." },
@@ -1064,11 +1071,90 @@ function Night.run(ctx)
 		end
 		return best, bestDistance
 	end
+	-- freie Sicht zwischen zwei Punkten? (Wände blockieren, Leute und Türblätter nicht)
+	local function clearLine(from, to, ignore)
+		local clear = true
+		pcall(function()
+			local params = RaycastParams.new()
+			params.FilterType = Enum.RaycastFilterType.Exclude
+			params.FilterDescendantsInstances = ignore
+			local hit = workspace:Raycast(from, to - from, params)
+			clear = hit == nil or not hit.Instance.Anchored or hit.Instance.Name:find("Door") ~= nil
+		end)
+		return clear
+	end
+	local function characters()
+		local list = {}
+		for _, player in Players:GetPlayers() do
+			if player.Character then
+				table.insert(list, player.Character)
+			end
+		end
+		return list
+	end
+	-- sieht gerade irgendein Spieler auf diese Stelle?
+	local function anyoneSees(feet, model)
+		local ignore = characters()
+		table.insert(ignore, model)
+		for _, player in Players:GetPlayers() do
+			local root = rootOf(player)
+			if root and (root.Position - feet).Magnitude < 70 and clearLine(root.Position + Vector3.new(0, 1.5, 0), feet + Vector3.new(0, 4, 0), ignore) then
+				return true
+			end
+		end
+		return false
+	end
+	-- langsam sichtbar werden / verblassen (0 = ganz da, 1 = weg)
+	local function setFade(model, amount)
+		for _, item in model:GetDescendants() do
+			if item:IsA("BasePart") or item:IsA("Decal") then
+				local base = item:GetAttribute("BaseTransparency")
+				if base == nil then
+					base = item.Transparency
+					item:SetAttribute("BaseTransparency", base)
+				end
+				item.Transparency = base + (1 - base) * amount
+			elseif item:IsA("Light") then
+				local base = item:GetAttribute("BaseBrightness")
+				if base == nil then
+					base = item.Brightness
+					item:SetAttribute("BaseBrightness", base)
+				end
+				item.Brightness = base * (1 - amount)
+			end
+		end
+	end
+	local function fade(model, from, to, duration)
+		local steps = math.max(1, math.floor(duration / 0.06))
+		for i = 1, steps do
+			setFade(model, from + (to - from) * i / steps)
+			task.wait(duration / steps)
+		end
+	end
+	-- wohin weglaufen: eine freie Richtung, möglichst vom Spieler weg
+	local function escapeDirection(feet, away, model)
+		local best, bestScore
+		local ignore = characters()
+		table.insert(ignore, model)
+		for i = 0, 7 do
+			local angle = i / 8 * math.pi * 2
+			local direction = Vector3.new(math.cos(angle), 0, math.sin(angle))
+			local score = direction:Dot(away)
+			if score > -0.2 and (not bestScore or score > bestScore) then
+				local eye = feet + Vector3.new(0, 2.5, 0)
+				if clearLine(eye, eye + direction * 7, ignore) then
+					best, bestScore = direction, score
+				end
+			end
+		end
+		return best
+	end
 	task.spawn(function()
 		task.wait(12)
 		local lastSpot
 		while not doneWithNight do
-			-- wer erscheint, und wo (nicht direkt neben einem Spieler)
+			-- wer erscheint, und wo (nicht neben einem Spieler, nicht vor seinen Augen,
+			-- aber auf seinem Stockwerk und nicht zu weit weg)
 			local names = {}
 			for name, model in members do
 				if model then
@@ -1081,11 +1167,11 @@ function Night.run(ctx)
 			local name = names[math.random(1, #names)]
 			local model = members[name]
 			local spot
-			for _ = 1, 12 do
+			for _ = 1, 20 do
 				local candidate = APPEAR[math.random(1, #APPEAR)]
 				local feet = point(candidate[1], candidate[2], candidate[3])
 				local _, distance = nearestPlayer(feet)
-				if candidate ~= lastSpot and (not distance or distance > 18) then
+				if candidate ~= lastSpot and distance and distance > 16 and distance < 50 and not anyoneSees(feet, model) then
 					spot = feet
 					lastSpot = candidate
 					break
@@ -1094,31 +1180,57 @@ function Night.run(ctx)
 			if spot then
 				local player = nearestPlayer(spot)
 				local root = player and rootOf(player)
+				setFade(model, 1)
 				Wagners.place(model, spot, root and Vector3.new(root.Position.X, spot.Y, root.Position.Z) or spot + Vector3.new(0, 0, 1))
 				model:SetAttribute("Look", "player")
+				fade(model, 1, 0, 1.2)
 				local spoke = false
+				local vanished = false
+				local facing = root and (root.Position - spot) * Vector3.new(1, 0, 1) or Vector3.new(0, 0, 1)
 				local shownUntil = os.clock() + 40
 				while os.clock() < shownUntil and not doneWithNight do
 					local near, distance = nearestPlayer(spot)
+					local nearRoot = near and rootOf(near)
+					-- langsam mitdrehen, damit sie einen immer anschaut
+					if nearRoot then
+						local wanted = (nearRoot.Position - spot) * Vector3.new(1, 0, 1)
+						if wanted.Magnitude > 0.1 and facing.Magnitude > 0.1 then
+							facing = facing.Unit:Lerp(wanted.Unit, 0.25)
+							if facing.Magnitude > 0.05 then
+								Wagners.place(model, spot, spot + facing)
+							end
+						end
+					end
 					if near and distance < 24 and not spoke then
 						spoke = true
 						local lines = LINES[name]
 						task.spawn(say, name, lines[math.random(1, #lines)])
 					end
-					if near and distance < 10 then
-						-- wegrennen und verschwinden
-						local nearRoot = rootOf(near)
+					if near and distance < 10 and nearRoot then
+						-- umdrehen, wegrennen und dabei verblassen
 						local away = (spot - nearRoot.Position) * Vector3.new(1, 0, 1)
 						away = away.Magnitude > 0.1 and away.Unit or Vector3.new(1, 0, 0)
 						model:SetAttribute("Look", "down")
-						sfx("stepWood", spot + Vector3.new(0, 0.5, 0), { count = 4, interval = 0.18, volume = 0.9 })
-						ctx.walkPath(model, { { at = spot + away * 5 } }, 16)
 						event:FireClient(near, { type = "candleOut", duration = 0.4 })
+						local direction = escapeDirection(spot, away, model)
+						task.spawn(fade, model, 0, 1, 0.9)
+						if direction then
+							sfx("stepWood", spot + Vector3.new(0, 0.5, 0), { count = 4, interval = 0.18, volume = 0.9 })
+							ctx.walkPath(model, { { at = spot + direction * 6 } }, 9)
+						else
+							task.wait(0.9)
+						end
+						vanished = true
 						break
 					end
 					task.wait(0.25)
 				end
+				-- wenn niemand hingeschaut hat: einfach still verblassen
+				if not vanished and not doneWithNight then
+					fade(model, 0, 1, 0.8)
+				end
 				Wagners.place(model, ctx.hiddenSpot, ctx.facing)
+				setFade(model, 0)
 			end
 			task.wait(math.random(14, 26))
 		end

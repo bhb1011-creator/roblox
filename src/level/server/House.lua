@@ -76,14 +76,26 @@ function House.build(parent)
 	if not House.mansion then
 		workspace.Terrain:FillBlock(yardCFrame, Vector3.new(86, 8, 62), Enum.Material.Air)
 	end
-	Parts.new("Part", {
-		Name = "Yard",
-		Size = Vector3.new(86, yardThickness, 62),
-		CFrame = yardCFrame * CFrame.new(0, -0.08 - yardThickness / 2, 0),
-		Color = COLORS.yard,
-		Material = Enum.Material.Ground,
-		Parent = model,
-	})
+	-- Hof-Stück von (x0, z0) bis (x1, z1), in Koordinaten relativ zur Hof-Mitte
+	local function yardPiece(x0, z0, x1, z1)
+		Parts.new("Part", {
+			Name = "Yard",
+			Size = Vector3.new(x1 - x0, yardThickness, z1 - z0),
+			CFrame = yardCFrame * CFrame.new((x0 + x1) / 2, -0.08 - yardThickness / 2, (z0 + z1) / 2),
+			Color = COLORS.yard,
+			Material = Enum.Material.Ground,
+			Parent = model,
+		})
+	end
+	if House.mansion then
+		-- beim Herrenhaus ein Loch über der Kellertreppe lassen (sonst hängt der Hof
+		-- dort als Platte in Kopfhöhe über den Stufen)
+		yardPiece(-43, -31, 43, 27.3)
+		yardPiece(-43, 27.3, -4.1, 31)
+		yardPiece(0.3, 27.3, 43, 31)
+	else
+		yardPiece(-43, -31, 43, 31)
+	end
 
 	------------------------------------------------------------------ Wohnhaus: Sockel und Wände
 	-- Seiten des Hauses: CFrame auf der Wand, LookVector zeigt nach außen
@@ -279,7 +291,7 @@ function House.build(parent)
 	block("PorchRoof", Vector3.new(porchW + 1.5, 0.5, porchD + 1.6), CFrame.new(doorX, roofY + 0.9, porchZ - 0.4) * CFrame.Angles(-porchRoofAngle, 0, 0), COLORS.roof, Enum.Material.Slate)
 	block("PorchBeam", Vector3.new(porchW, 0.7, 0.5), CFrame.new(doorX, roofY + 0.1, -D / 2 - porchD + 0.4), COLORS.trim, Enum.Material.Wood)
 	-- Ausgeschaltete Lampe neben der Tür
-	block("PorchLampBase", Vector3.new(0.5, 0.9, 0.3), door * CFrame.new(3.4, 6, -0.2), COLORS.metal, Enum.Material.Metal)
+	block("PorchLampBase", Vector3.new(0.5, 0.9, 0.3), door * CFrame.new(3.4, 5.97, -0.2), COLORS.metal, Enum.Material.Metal)
 	block("PorchLampGlass", Vector3.new(0.7, 1.1, 0.7), door * CFrame.new(3.4, 5.6, -0.65), Color3.fromRGB(40, 40, 36), Enum.Material.Glass, { Transparency = 0.2 })
 	-- Schaukelstuhl, der zur Straße schaut, und vertrocknete Blumentöpfe
 	local chair = CFrame.new(doorX - 7, BASE, porchZ + 0.5) * CFrame.Angles(0, math.rad(200), 0)

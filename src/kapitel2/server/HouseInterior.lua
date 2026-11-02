@@ -172,7 +172,7 @@ function HouseInterior.build(model, origin, mansion)
 	------------------------------------------------------------------ Galerie oben mit zwei Türen
 	local galleryD = Z1 - 0.1 - GALLERY_Z
 	block("GalleryFloor", Vector3.new(hallW - 0.2, 0.5, galleryD), CFrame.new(midX, GALLERY - 0.25, GALLERY_Z + galleryD / 2), COLORS.floor, Enum.Material.WoodPlanks)
-	block("GalleryFascia", Vector3.new(hallW - 0.2, 0.7, 0.2), CFrame.new(midX, GALLERY - 0.45, GALLERY_Z - 0.11), COLORS.trim, Enum.Material.Wood)
+	block("GalleryFascia", Vector3.new(hallW - 0.2, 0.7, 0.2), CFrame.new(midX, GALLERY - 0.45, GALLERY_Z - 0.14), COLORS.trim, Enum.Material.Wood)
 	local galleryRailZ = GALLERY_Z + 0.15
 	block("GalleryRail", Vector3.new(X1 - 0.12 - STAIRS_X1, 0.25, 0.3), CFrame.new((X1 - 0.12 + STAIRS_X1) / 2, GALLERY + 3.1, galleryRailZ), COLORS.trim, Enum.Material.Wood)
 	for x = STAIRS_X1 + 0.6, X1 - 0.5, 0.9 do

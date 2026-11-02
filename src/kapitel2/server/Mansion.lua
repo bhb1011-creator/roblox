@@ -358,8 +358,9 @@ local function buildWall(floorKey, a, b, kind, openings, topOverride)
 	local extend = kind == "int" and 0.2 or 0
 
 	-- welche Räume liegen links und rechts?
-	local function sideRoom(side)
-		local probe = A + span / 2 + normal * side * (t / 2 + 0.9)
+	-- (`along` = Stelle auf der Wand; ein Wandstück kann an zwei verschiedene Räume grenzen)
+	local function sideRoom(side, along)
+		local probe = A + dir * (along or length / 2) + normal * side * (t / 2 + 0.9)
 		local x, y = toPlan(probe)
 		return roomAt(floorKey, x, y)
 	end
@@ -371,6 +372,7 @@ local function buildWall(floorKey, a, b, kind, openings, topOverride)
 		end
 		local middle = A + dir * ((s0 + s1) / 2) + Vector3.new(0, (ya + yb) / 2, 0)
 		local frame = CFrame.lookAt(middle, middle + normal)
+		local rooms = { [1] = sideRoom(1, (s0 + s1) / 2) or rooms[1], [-1] = sideRoom(-1, (s0 + s1) / 2) or rooms[-1] }
 		local len, height = s1 - s0, yb - ya
 		if kind == "glass" then
 			-- Glaswand: weißer Holzsockel, Glas, Sprossen
@@ -413,6 +415,9 @@ local function buildWall(floorKey, a, b, kind, openings, topOverride)
 					panel("Wallpaper", floorTop + 3.1, ceiling, 0.06, room.wall[1], room.wall[2])
 					panel("Wainscot", floorTop, floorTop + 3.1, 0.12, Color3.fromRGB(46, 36, 28), M.WoodPlanks, 0.02)
 					panel("ChairRail", floorTop + 3.0, floorTop + 3.25, 0.2, Color3.fromRGB(70, 56, 42), M.Wood, 0.04)
+				elseif room.noFloor then
+					-- Treppenschacht ohne Boden: Tapete bis ganz unten, keine Fußleiste in der Luft
+					panel("Wallpaper", ya, ceiling, 0.06, room.wall[1], room.wall[2])
 				elseif room.tiles then
 					panel("Wallpaper", floorTop + 4, ceiling, 0.06, room.wall[1], room.wall[2])
 					panel("WallTiles", floorTop, floorTop + 4, 0.1, Color3.fromRGB(176, 172, 158), M.CeramicTiles)
@@ -1133,12 +1138,12 @@ local function buildFurniture()
 	-- Gästezimmer (euer Zimmer): zwei Betten
 	-- (Mansion.beds: hier kann man sich zum Schlafen hinlegen, siehe Kapitel2.lua)
 	for _, x in { 52, 58.5 } do
-		local bedFrame = at(x, 42.8, O, "S")
+		local bedFrame = at(x, 44, O, "S") -- Kopfteil steckt in der Wand zum Flur, nicht durch
 		Furniture.bed(b, bedFrame, 4, 7, x < 55 and Color3.fromRGB(110, 90, 70) or Color3.fromRGB(90, 96, 80))
 		table.insert(Mansion.beds, { cframe = origin * bedFrame, length = 7, width = 4 })
 	end
-	Furniture.nightstand(b, at(55.2, 41, O, "S"))
-	Furniture.wardrobe(b, at(61.3, 50, O, "W"), 4)
+	Furniture.nightstand(b, at(55.2, 41.2, O, "S"))
+	Furniture.wardrobe(b, at(60.5, 50, O, "W"), 4)
 	Furniture.rug(b, at(55, 49, O), 6, 4, Color3.fromRGB(80, 60, 50))
 
 	-- hinter Tür 1: leer, nur ein Stuhl, der zur Wand schaut, und Kratzer
@@ -1170,7 +1175,7 @@ local function buildFurniture()
 	end
 
 	-- Bad
-	Furniture.bathtub(b, at(56.6, 24, O, "E"))
+	Furniture.bathtub(b, at(57.5, 24, O, "E"))
 	Furniture.sink(b, at(62.4, 18.9, O, "S"))
 	Furniture.mirror(b, at(62.4, 18.54, O + 5.6, "S"), true)
 	Furniture.toilet(b, at(62.9, 30, O, "W"))
@@ -1206,7 +1211,7 @@ local function buildFurniture()
 	Furniture.picture(b, at(14.54, 49, O + 5, "E"), 2.2, 3, Color3.fromRGB(70, 66, 56), true)
 	Furniture.sofa(b, at(36, 56, O, "W"), 3, Color3.fromRGB(80, 70, 60), true)
 	for i = 1, 6 do
-		box("Cobweb", Vector3.new(2.4, 2.4, 0.02), CFrame.new(L(14.6 + (i % 2) * 26.6, 38.6 + i * 3.2, CEIL.O - 1.1)) * CFrame.Angles(0, math.rad(45), math.rad(45)), Color3.fromRGB(200, 200, 196), M.SmoothPlastic, { Transparency = 0.7, CanCollide = false })
+		box("Cobweb", Vector3.new(2.4, 2.4, 0.02), CFrame.new(L(15.2 + (i % 2) * 25.2, 38.6 + i * 3.2, CEIL.O - 1.1)) * CFrame.Angles(0, math.rad(45), math.rad(45)), Color3.fromRGB(200, 200, 196), M.SmoothPlastic, { Transparency = 0.7, CanCollide = false })
 	end
 
 	------------------------------------------------ Keller
@@ -1233,17 +1238,50 @@ local function buildFurniture()
 	Furniture.boiler(b, at(60, 24, Kf, "S"))
 	-- Hackklotz mit der Axt (die erste Nacht: Richard schickt einen hierher)
 	cyl("ChoppingBlock", 1.6, 1.8, at(66, 39, Kf), Color3.fromRGB(96, 72, 48), M.Wood)
+	-- Die Axt: sie kann an verschiedenen Stellen im Keller liegen (Night.lua sucht jede
+	-- Nacht zufällig eine aus, siehe Mansion.placeAxe)
 	local axe = Instance.new("Model")
 	axe.Name = "CellarAxe"
 	local beforeAxe = current
 	current = axe
-	local axeBase = CFrame.new(L(66, 39, Kf + 1.6)) * CFrame.Angles(0, math.rad(30), math.rad(-25))
-	box("AxeHandle", Vector3.new(0.16, 2.8, 0.16), axeBase * CFrame.new(0, 1.2, 0), Color3.fromRGB(120, 86, 52), M.Wood)
-	box("AxeHead", Vector3.new(0.12, 0.6, 0.9), axeBase * CFrame.new(0, 0.15, 0.3), Color3.fromRGB(110, 112, 116), M.Metal)
+	-- `base` = unten am Stiel; der Stiel zeigt nach lokal oben, die Klinge nach lokal +Z
+	local AXE_PIECES = {
+		{ "AxeHandle", Vector3.new(0.16, 2.8, 0.16), CFrame.new(0, 1.2, 0), Color3.fromRGB(120, 86, 52), M.Wood },
+		{ "AxeHead", Vector3.new(0.12, 0.6, 0.9), CFrame.new(0, 0.15, 0.3), Color3.fromRGB(110, 112, 116), M.Metal },
+	}
+	-- an eine Wand gelehnt: `x, y` = Fußpunkt (Plan), `toWall` = Richtung zur Wand
+	local function leaning(x, y, toWallX, toWallY)
+		local foot = L(x, y, Kf + 0.2)
+		local wall = Vector3.new(toWallX, 0, -toWallY)
+		-- lokal +Z (Klinge) zeigt in den Raum, der Stiel kippt zur Wand
+		return CFrame.lookAt(foot, foot + wall) * CFrame.Angles(math.rad(-19), 0, 0)
+	end
+	Mansion.axeSpots = {
+		{ name = "Heizungsraum, im Hackklotz", cframe = CFrame.new(L(66, 39, Kf + 1.6)) * CFrame.Angles(0, math.rad(30), math.rad(-25)) },
+		{ name = "Vorratskeller, an der Wand", cframe = leaning(35.45, 23.5, -1, 0) },
+		{ name = "Waschkeller, neben der Wanne", cframe = leaning(15.45, 41, -1, 0) },
+		{ name = "Waschkeller, hinter der Wäsche", cframe = leaning(26, 58.55, 0, 1) },
+		{ name = "Kellergang, an der Wand", cframe = leaning(40, 40.55, 0, 1) },
+		{ name = "Kriechkeller, auf dem Boden", cframe = CFrame.new(L(76, 28, Kf + 0.09)) * CFrame.Angles(0, math.rad(35), 0) * CFrame.Angles(0, 0, math.rad(90)) },
+	}
+	for _, piece in AXE_PIECES do
+		box(piece[1], piece[2], Mansion.axeSpots[1].cframe * piece[3], piece[4], piece[5])
+	end
 	current = beforeAxe
 	axe.PrimaryPart = axe:FindFirstChild("AxeHandle")
 	axe.Parent = current
 	Mansion.axe = axe
+	-- legt die Axt an Platz Nummer `index` (1 = im Hackklotz)
+	function Mansion.placeAxe(index)
+		local spot = Mansion.axeSpots[index] or Mansion.axeSpots[1]
+		for _, piece in AXE_PIECES do
+			local part = axe:FindFirstChild(piece[1])
+			if part then
+				part.CFrame = origin * spot.cframe * piece[3]
+			end
+		end
+		return spot
+	end
 	for i = 0, 2 do
 		local pipeY = Kf + 7.6 - i * 0.4
 		beam("Pipe", L(55, 20 + i * 2, pipeY), L(69, 20 + i * 2, pipeY), 0.3, COLORS.metal, M.Metal)

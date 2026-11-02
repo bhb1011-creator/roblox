@@ -80,9 +80,9 @@ function Furniture.bed(b, cf, w, l, sheet, frame)
 	frame = frame or C.darkWood
 	b.box("BedFrame", Vector3.new(w, 1.2, l), cf * CFrame.new(0, 0.9, 0), frame, M.Wood)
 	b.box("Mattress", Vector3.new(w - 0.2, 0.6, l - 0.3), cf * CFrame.new(0, 1.8, -0.1), Color3.fromRGB(200, 194, 180), M.Fabric)
-	b.box("Blanket", Vector3.new(w - 0.1, 0.25, l * 0.62), cf * CFrame.new(0, 2.15, -l * 0.18), sheet, M.Fabric)
+	b.box("Blanket", Vector3.new(w - 0.1, 0.25, l * 0.62), cf * CFrame.new(0, 2.15, -l * 0.18 - 0.08), sheet, M.Fabric)
 	b.box("Pillow", Vector3.new(w * 0.7, 0.4, 1.1), cf * CFrame.new(0, 2.3, l / 2 - 0.9), Color3.fromRGB(214, 208, 196), M.Fabric)
-	b.box("Headboard", Vector3.new(w, 2.9, 0.3), cf * CFrame.new(0, 1.45, l / 2 + 0.1), frame, M.Wood) -- bleibt unter der Fensterbank
+	b.box("Headboard", Vector3.new(w, 2.9, 0.4), cf * CFrame.new(0, 1.45, l / 2 + 0.1), frame, M.Wood) -- bleibt unter der Fensterbank
 end
 
 function Furniture.nightstand(b, cf)
@@ -146,8 +146,8 @@ end
 function Furniture.drawing(b, cf)
 	b.box("Drawing", Vector3.new(1.6, 1.2, 0.02), cf, C.paper, M.SmoothPlastic)
 	local function figure(x, height, color)
-		b.box("DrawLine", Vector3.new(0.05, height, 0.01), cf * CFrame.new(x, -0.45 + height / 2, -0.015), color)
-		b.box("DrawHead", Vector3.new(0.14, 0.14, 0.01), cf * CFrame.new(x, -0.45 + height + 0.07, -0.015), color)
+		b.box("DrawLine", Vector3.new(0.05, height, 0.01), cf * CFrame.new(x, -0.45 + height / 2, -0.03), color)
+		b.box("DrawHead", Vector3.new(0.14, 0.14, 0.01), cf * CFrame.new(x, -0.45 + height + 0.07, -0.03), color)
 	end
 	for i, h in { 0.35, 0.33, 0.22, 0.18 } do
 		figure(-0.65 + i * 0.18, h, Color3.fromRGB(60, 80, 140))
@@ -319,7 +319,7 @@ function Furniture.clothesline(b, from, to, rng)
 		local at = from:Lerp(to, t)
 		-- das Laken hängt über der Leine (Oberkante knapp darüber)
 		local sheetHeight = rng:NextNumber(2.2, 3.4)
-		b.boxWorld("HangingSheet", Vector3.new(2.2, sheetHeight, 0.05), CFrame.lookAt(at, at + (to - from):Cross(Vector3.yAxis)) * CFrame.new(0, -sheetHeight / 2 + 0.05, 0), C.sheet, M.Fabric)
+		b.boxWorld("HangingSheet", Vector3.new(2.2, sheetHeight, 0.09), CFrame.lookAt(at, at + (to - from):Cross(Vector3.yAxis)) * CFrame.new(0, -sheetHeight / 2 + 0.05, 0), C.sheet, M.Fabric)
 	end
 end
 
