@@ -978,7 +978,13 @@ local function buildStairs()
 		local height = top - (FLOOR.K - 0.3)
 		box("CellarStair", Vector3.new(4.2, height, run), CFrame.new(L(52.12, y, (FLOOR.K - 0.3) + height / 2)), Color3.fromRGB(70, 56, 42), M.WoodPlanks)
 	end
-	box("CellarHandrail", Vector3.new(0.2, 0.2, 15.6), CFrame.lookAt(L(50.4, 34, FLOOR.E + 3), L(50.4, 22, FLOOR.K + 3)), Color3.fromRGB(46, 36, 28), M.Wood)
+	-- Handlauf an der rechten Wand (die geht bis in den Keller hinunter), genau zwischen
+	-- oberer und unterer Stufe und immer 3 über den Stufen
+	local railTop, railBottom = L(53.85, 33.4, FLOOR.E - 0.5 + 3), L(53.85, 23.2, FLOOR.K + 0.8 + 3)
+	box("CellarHandrail", Vector3.new(0.2, 0.2, (railTop - railBottom).Magnitude), CFrame.lookAt((railTop + railBottom) / 2, railBottom), Color3.fromRGB(46, 36, 28), M.Wood)
+	for _, point in { railTop, railBottom } do
+		box("CellarRailHolder", Vector3.new(0.3, 0.12, 0.12), CFrame.new(point + Vector3.new(0.15, 0, 0)), COLORS.metal, M.Metal)
+	end
 end
 
 ------------------------------------------------------------------ Möbel
@@ -1028,9 +1034,9 @@ local function buildFurniture()
 	for _, y in { 24, 30, 36 } do
 		lit(at(67, y, E + 2.9), 1)
 	end
-	Furniture.shelf(b, at(72, 13, E, "N"), 6, 3.2, "books", rng)
+	Furniture.shelf(b, at(72, 13, E, "S"), 6, 2.9, "books", rng) -- niedrig, unter dem Erkerfenster
 	Furniture.picture(b, at(80.02, 30, E + 6, "W"), 3, 4, Color3.fromRGB(40, 50, 40), true)
-	Furniture.picture(b, at(58, 18.54, E + 6, "S"), 2.4, 3, Color3.fromRGB(56, 46, 40), true)
+	Furniture.picture(b, at(56, 18.54, E + 6, "S"), 2.4, 3, Color3.fromRGB(56, 46, 40), true)
 
 	-- Küche
 	Furniture.counter(b, at(40.5, 21.3, E, "S"), 9)
@@ -1043,25 +1049,26 @@ local function buildFurniture()
 		Furniture.chair(b, at(c[1], c[2], E, c[3]))
 	end
 	-- Töpfe hängen an einer Stange, die mit Ketten an der Decke hängt
-	box("PotRack", Vector3.new(6.8, 0.12, 0.12), CFrame.new(L(38.4, 20.9, E + 7.3)), COLORS.metal, M.Metal)
-	for _, x in { 35.4, 41.4 } do
+	box("PotRack", Vector3.new(6.8, 0.12, 0.12), CFrame.new(L(46.4, 20.9, E + 7.3)), COLORS.metal, M.Metal)
+	for _, x in { 43.4, 49.4 } do
 		box("PotRackChain", Vector3.new(0.06, CEIL.E - (E + 7.3) + 0.2, 0.06), CFrame.new(L(x, 20.9, (CEIL.E + E + 7.3) / 2 + 0.1)), COLORS.metal, M.Metal)
 	end
 	for i = 0, 3 do
-		cyl("HangingPot", 0.8, 0.9, at(36 + i * 1.6, 20.9, E + 6.4), Color3.fromRGB(60, 58, 56), M.Metal)
-		box("PotHook", Vector3.new(0.05, 0.16, 0.05), CFrame.new(L(36 + i * 1.6, 20.9, E + 7.2 + 0.0)), COLORS.metal, M.Metal)
+		cyl("HangingPot", 0.8, 0.9, at(44 + i * 1.6, 20.9, E + 6.4), Color3.fromRGB(60, 58, 56), M.Metal)
+		box("PotHook", Vector3.new(0.05, 0.16, 0.05), CFrame.new(L(44 + i * 1.6, 20.9, E + 7.2)), COLORS.metal, M.Metal)
 	end
 	box("KnifeBlock", Vector3.new(0.6, 0.9, 0.5), CFrame.new(L(43.5, 21.2, E + 3.65)), Color3.fromRGB(40, 30, 22), M.Wood)
 
 	-- Speisekammer
-	Furniture.shelf(b, at(44, 8.9, E, "N"), 7, 7.5, "jars", rng)
-	Furniture.shelf(b, at(51, 8.9, E, "N"), 5, 7.5, "jars", rng)
+	-- Regale links und rechts vom kleinen Fenster, Rückwand an der Wand
+	Furniture.shelf(b, at(42.7, 8.9, E, "S"), 5, 7.5, "jars", rng)
+	Furniture.shelf(b, at(51, 8.9, E, "S"), 5, 7.5, "jars", rng)
 	for i = 0, 2 do
 		box("Sack", Vector3.new(1.6, 2, 1.2), CFrame.new(L(41.5 + i * 1.8, 17, E + 1)) * CFrame.Angles(0, i * 0.4, 0), Color3.fromRGB(150, 130, 96), M.Fabric)
 	end
 
 	-- Salon: Klavier (hier steht Tommy)
-	Furniture.piano(b, at(15.4, 47, E, "E"))
+	Furniture.piano(b, at(15.4, 48.6, E, "E"))
 	Furniture.sofa(b, at(26, 55, E, "N"), 6, Color3.fromRGB(70, 50, 80), true)
 	Furniture.rug(b, at(25, 48, E), 10, 10, Color3.fromRGB(60, 40, 70))
 	local gramo = Furniture.table(b, at(31, 41, E), 2, 2, 2.6)
@@ -1071,7 +1078,7 @@ local function buildFurniture()
 
 	-- Arbeitszimmer (abgeschlossen)
 	Furniture.desk(b, at(22, 68, E, "S"), rng)
-	Furniture.shelf(b, at(10.9, 66, E, "E"), 5, 8, "books", rng)
+	Furniture.shelf(b, at(16, 60.9, E, "S"), 5, 8, "books", rng)
 	Furniture.shelf(b, at(30, 60.9, E, "S"), 5, 8, "books", rng)
 	Furniture.rug(b, at(22, 70, E), 8, 7, Color3.fromRGB(50, 40, 30))
 	box("Map", Vector3.new(4, 2.6, 0.04), CFrame.new(L(35.8, 68, E + 5.5)) * CFrame.Angles(0, math.rad(90), 0), Color3.fromRGB(180, 160, 120), M.SmoothPlastic)
@@ -1132,7 +1139,7 @@ local function buildFurniture()
 	Furniture.bed(b, at(36.6, 23.5, O, "S"), 3.2, 5.6, Color3.fromRGB(60, 80, 120))
 	Furniture.toyBox(b, at(41.5, 23, O, "S"))
 	Furniture.rug(b, at(39, 29, O), 6, 5, Color3.fromRGB(50, 70, 100))
-	for i, p in { { 43.66, 24, "W" }, { 43.66, 28, "W" }, { 38, 20.49, "S" }, { 41, 20.49, "S" }, { 34.49, 30, "E" } } do
+	for i, p in { { 43.66, 24, "W" }, { 43.66, 28, "W" }, { 35.6, 20.49, "S" }, { 42.6, 20.49, "S" }, { 34.49, 30, "E" } } do
 		Furniture.drawing(b, at(p[1], p[2], O + 4.5 + (i % 2) * 0.6, p[3]))
 	end
 	for i = 0, 4 do
@@ -1151,17 +1158,17 @@ local function buildFurniture()
 
 	-- Bad
 	Furniture.bathtub(b, at(56.6, 24, O, "E"))
-	Furniture.sink(b, at(61, 18.9, O, "N"))
-	Furniture.mirror(b, at(61, 18.6, O + 5.6, "N"), true)
+	Furniture.sink(b, at(62.4, 18.9, O, "S"))
+	Furniture.mirror(b, at(62.4, 18.54, O + 5.6, "S"), true)
 	Furniture.toilet(b, at(62.9, 30, O, "W"))
 
 	-- Elternschlafzimmer
 	Furniture.bed(b, at(72, 26, O, "S"), 6, 7, Color3.fromRGB(90, 50, 46))
 	Furniture.nightstand(b, at(68, 21, O, "S"))
 	Furniture.nightstand(b, at(76, 21, O, "S"))
-	Furniture.wardrobe(b, at(79.4, 29.5, O, "W"), 4)
+	Furniture.wardrobe(b, at(79.4, 30.4, O, "W"), 4)
 	Furniture.mirror(b, at(64.4, 26, O + 5.2, "E"))
-	Furniture.picture(b, at(72, 12.54, O + 5, "S"), 4, 3, Color3.fromRGB(60, 50, 44), true) -- Familienfoto, Gesichter zerkratzt
+	Furniture.picture(b, at(64.39, 30.5, O + 5, "E"), 4, 3, Color3.fromRGB(60, 50, 44), true) -- Familienfoto, Gesichter zerkratzt
 
 	-- Spielzimmer
 	Furniture.rockingHorse(b, at(66, 62, O, -60))
@@ -1183,7 +1190,7 @@ local function buildFurniture()
 	Furniture.bed(b, at(18, 44, O, "E"), 4.6, 7, Color3.fromRGB(180, 174, 160))
 	Furniture.wardrobe(b, at(30, 38.9, O, "S"), 4)
 	Furniture.chair(b, at(28, 52, O, 200), Color3.fromRGB(60, 46, 34))
-	Furniture.picture(b, at(14.54, 52, O + 5, "E"), 2.2, 3, Color3.fromRGB(70, 66, 56), true)
+	Furniture.picture(b, at(14.54, 49, O + 5, "E"), 2.2, 3, Color3.fromRGB(70, 66, 56), true)
 	Furniture.sofa(b, at(36, 56, O, "W"), 3, Color3.fromRGB(80, 70, 60), true)
 	for i = 1, 6 do
 		box("Cobweb", Vector3.new(2.4, 2.4, 0.02), CFrame.new(L(14.6 + (i % 2) * 26.6, 38.6 + i * 3.2, CEIL.O - 1.1)) * CFrame.Angles(0, math.rad(45), math.rad(45)), Color3.fromRGB(200, 200, 196), M.SmoothPlastic, { Transparency = 0.7, CanCollide = false })
@@ -1270,10 +1277,12 @@ local function buildTerrainAndTunnel()
 			minY, maxY = math.min(minY, p[2]), math.max(maxY, p[2])
 		end
 		-- unter dem Haus bis unter den Fußboden, draußen nur bis zur eigenen Decke
-		local top = room.id == "ritual" and -2.0 or -0.3
-		local c = L((minX + maxX) / 2, (minY + maxY) / 2, (-8.9 + top) / 2)
+		-- bis deutlich unter den Kellerboden ausheben: Gelände hat 4er-Raster und wölbt
+		-- sich sonst durch den Fußboden
+		local top, bottom = room.id == "ritual" and -2.0 or -0.3, -14
+		local c = L((minX + maxX) / 2, (minY + maxY) / 2, (bottom + top) / 2)
 		breathe()
-		terrain:FillBlock(origin * CFrame.new(c), Vector3.new(maxX - minX + 2, top + 8.9, maxY - minY + 2), Enum.Material.Air)
+		terrain:FillBlock(origin * CFrame.new(c), Vector3.new(maxX - minX + 4, top - bottom, maxY - minY + 4), Enum.Material.Air)
 	end
 	-- Tunnel: windet sich vom Ritualraum hinaus in den Wald, mit Holzstützen. Hinter dem
 	-- Haus fällt das Gelände ab, deshalb geht der Tunnel mit nach unten (immer Erde darüber).
@@ -1292,7 +1301,7 @@ local function buildTerrainAndTunnel()
 		local mid = (a + c) / 2
 		local frame = CFrame.lookAt(mid, c)
 		breathe()
-		terrain:FillBlock(origin * frame * CFrame.new(0, 2.9, 0), Vector3.new(4.6, 5.8, length + 4), Enum.Material.Air)
+		terrain:FillBlock(origin * frame * CFrame.new(0, 1.0, 0), Vector3.new(5.4, 9.6, length + 4), Enum.Material.Air)
 		box("TunnelFloor", Vector3.new(4.6, 0.4, length + 2), frame * CFrame.new(0, -0.2, 0), Color3.fromRGB(70, 56, 40), M.Ground)
 		local count = math.floor(length / 6)
 		for k = 0, count do

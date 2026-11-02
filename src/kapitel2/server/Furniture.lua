@@ -82,7 +82,7 @@ function Furniture.bed(b, cf, w, l, sheet, frame)
 	b.box("Mattress", Vector3.new(w - 0.2, 0.6, l - 0.3), cf * CFrame.new(0, 1.8, -0.1), Color3.fromRGB(200, 194, 180), M.Fabric)
 	b.box("Blanket", Vector3.new(w - 0.1, 0.25, l * 0.62), cf * CFrame.new(0, 2.15, -l * 0.18), sheet, M.Fabric)
 	b.box("Pillow", Vector3.new(w * 0.7, 0.4, 1.1), cf * CFrame.new(0, 2.3, l / 2 - 0.9), Color3.fromRGB(214, 208, 196), M.Fabric)
-	b.box("Headboard", Vector3.new(w, 3.6, 0.3), cf * CFrame.new(0, 1.8, l / 2 + 0.1), frame, M.Wood)
+	b.box("Headboard", Vector3.new(w, 2.9, 0.3), cf * CFrame.new(0, 1.45, l / 2 + 0.1), frame, M.Wood) -- bleibt unter der Fensterbank
 end
 
 function Furniture.nightstand(b, cf)

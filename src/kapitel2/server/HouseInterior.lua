@@ -39,9 +39,11 @@ local FLOOR = BASE + 0.1 -- Oberkante des Fußbodens
 local TOP = BASE + 2 * STORY
 local CEILING = TOP - 0.5
 local GALLERY = BASE + STORY -- Fußboden oben
-local GALLERY_Z = -3 -- Vorderkante der Galerie (tief genug, dass man oben bequem ankommt)
+-- Treppe: unten muss vor der ersten Stufe Platz zum Hinstellen sein (zwischen Haustür-
+-- wand und Treppe), oben genug Galerie. Darum ist sie etwas steiler.
+local GALLERY_Z = -2 -- Vorderkante der Galerie
 local STAIRS_X0, STAIRS_X1 = X0 + 0.35, -4.7 -- Abstand zur Wand (oben ist die Außenwand dicker)
-local STAIRS_Z0 = -13.4 -- erste Stufe
+local STAIRS_Z0 = -10.6 -- erste Stufe (davor knapp 4 Studs Platz)
 local STEPS = 13
 
 HouseInterior.FLOOR = FLOOR
@@ -138,6 +140,12 @@ function HouseInterior.build(model, origin, mansion)
 		-- die Stufen sind nur zum Ansehen, gelaufen wird auf der unsichtbaren Rampe
 		block("Stair", Vector3.new(stairsW - 0.02, height, run), CFrame.new(stairsX + 0.01, FLOOR + height / 2, z), COLORS.stair, Enum.Material.WoodPlanks, { CanCollide = false })
 		block("StairTread", Vector3.new(stairsW + 0.06, 0.08, run + 0.06), CFrame.new(stairsX + 0.03, FLOOR + height + 0.04, z - 0.03), COLORS.tread, Enum.Material.Wood, { CanCollide = false })
+		-- unsichtbarer, fester Kern unter der Rampe: so kann man nicht von der Seite oder
+		-- von hinten in die Treppe hineinlaufen
+		local core = height - 0.9
+		if core > 0.3 then
+			block("StairCore", Vector3.new(stairsW - 0.04, core, run), CFrame.new(stairsX, FLOOR + core / 2, z), COLORS.stair, Enum.Material.WoodPlanks, { Transparency = 1, CastShadow = false })
+		end
 	end
 	-- Unsichtbare Rampe über den Stufenkanten: so läuft man gleichmäßig hoch und bleibt
 	-- nirgends an einer Kante hängen. Oben endet sie genau auf Höhe der Galerie.
