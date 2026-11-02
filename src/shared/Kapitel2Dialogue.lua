@@ -14,7 +14,9 @@
 --   invite      – beide treten zur Seite, man geht selbst hinein, die Tür fällt zu
 --   candles     – jeder Spieler bekommt eine Kerze in die Hand (mehr Licht im Haus)
 --   point       – Mr. Wagner zeigt die Treppe hoch
---   finish      – Ende des Gesprächs: danach kann man sich frei im Haus umsehen
+--   leave       – die Wagners gehen durch die Tür hinter der Halle und schließen sie
+--   finish      – Ende des Gesprächs: danach kann man sich frei im Haus umsehen und
+--                 im Gästezimmer schlafen gehen
 -- `look` = wohin der Sprecher schaut: "player", "down" oder "stairs".
 -- `wait` = Pause danach (Sekunden).
 local Kapitel2Dialogue = {}
@@ -74,7 +76,9 @@ Kapitel2Dialogue.SCRIPT = {
 	{ speaker = "mrWagner", action = "point", look = "stairs", text = "Your room is upstairs. Second door on the left.", wait = 1.3 },
 	{ speaker = "mrWagner", text = "Not the first one.", wait = 1 },
 	{ speaker = "mrWagner", look = "player", text = "And whatever you hear tonight...", wait = 0.7 },
-	{ speaker = "mrWagner", text = "...it's just the house.", wait = 2.5 },
+	{ speaker = "mrWagner", text = "...it's just the house.", wait = 1.5 },
+	{ speaker = "mrsWagner", look = "player", text = "Good night. Sleep well.", wait = 0.4 },
+	{ action = "leave", wait = 1 },
 	{ action = "finish" },
 }
 

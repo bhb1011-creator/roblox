@@ -32,7 +32,7 @@ local SPOTS = {
 	mrsBack = Vector2.new(-0.6, -10.2), -- außerhalb der aufgehenden Tür
 	mrBehind = Vector2.new(-2.5, -8.7), -- plötzlich hinter ihr
 	mrsInside = Vector2.new(1.6, -8),
-	mrInside = Vector2.new(-3.6, -6.4), -- am Fuß der Treppe
+	mrInside = Vector2.new(-3.2, -6.4), -- am Fuß der Treppe
 	pullIn = Vector2.new(-1.6, -10),
 }
 
@@ -57,12 +57,12 @@ function Kapitel2.start()
 
 	House.mansion = true -- das große Herrenhaus statt des kleinen Holzhauses
 	print("Kapitel 2: Welt und Haus werden gebaut …")
-	local started = os.clock()
+	local buildStarted = os.clock()
 	local ok, problem = xpcall(function()
 		World.build()
 		task.wait()
 		local removed = Mansion.clearAround(workspace:FindFirstChild("Level1"))
-		print(string.format("Kapitel 2: Welt fertig nach %.1f s (%d Bäume und Teile ums Haus entfernt).", os.clock() - started, removed or 0))
+		print(string.format("Kapitel 2: Welt fertig nach %.1f s (%d Bäume und Teile ums Haus entfernt).", os.clock() - buildStarted, removed or 0))
 	end, debug.traceback)
 	local house = workspace:FindFirstChild("WagnerHouse", true)
 	local doorModel = house and house:FindFirstChild("FrontDoor")
@@ -106,20 +106,8 @@ function Kapitel2.start()
 	end
 	local npcs = { mrsWagner = mrs, mrWagner = mr }
 
-	-- Die Kinder: Lucy steht oben an der Galerie und schaut herunter (obwohl sie
-	-- angeblich schläft), Tommy steht im Salon am Klavier
-	local lucy = build("Lucy", Wagners.buildLucy)
-	local tommy = build("Tommy", Wagners.buildTommy)
-	if lucy then
-		local gallery = Route.housePoint(-1.2, -1.9) + Vector3.new(0, HouseInterior.FLOOR - 0.1 + House.STORY, 0)
-		Wagners.place(lucy, gallery, Route.housePoint(-1.2, -10))
-		lucy:SetAttribute("Look", "player")
-	end
-	if tommy then
-		local salon = (Mansion.spot(20.4, 47, "E")).Position
-		Wagners.place(tommy, salon, (Mansion.spot(14, 47, "E")).Position)
-		tommy:SetAttribute("Look", "down")
-	end
+	-- Die Kinder (Lucy und Tommy) stehen erst später im Haus – Wagners.buildLucy und
+	-- Wagners.buildTommy sind dafür schon fertig.
 
 	-- Langsam rückwärts oder seitlich gleiten, Blick immer zur Tür (läuft nebenher)
 	local function glide(npc, target, duration)
@@ -154,6 +142,50 @@ function Kapitel2.start()
 				RunService.Heartbeat:Wait()
 			end
 		end)
+	end
+
+	-- Gehen entlang mehrerer Punkte (Hallen-Koordinaten), Blick in Gehrichtung
+	local function walkPath(npc, spots, speed)
+		if not npc then
+			return
+		end
+		local hips = {}
+		for _, name in { "LeftUpperLeg", "RightUpperLeg" } do
+			local part = npc:FindFirstChild(name)
+			local joint = part and part:FindFirstChildOfClass("Motor6D")
+			if joint then
+				table.insert(hips, { joint = joint, base = joint.C0 })
+			end
+		end
+		local position = Wagners.ground(npc)
+		for _, spot in spots do
+			local target = hall(spot)
+			local distance = (target - position).Magnitude
+			if distance > 0.05 then
+				local direction = (target - position).Unit
+				local from = position
+				local start = os.clock()
+				while true do
+					local a = math.min((os.clock() - start) * speed / distance, 1)
+					position = from:Lerp(target, a)
+					Wagners.place(npc, position, position + direction)
+					for index, hip in hips do
+						pcall(function()
+							hip.joint.C0 = hip.base * CFrame.Angles(math.sin(os.clock() * 7 + index * math.pi) * 0.35, 0, 0)
+						end)
+					end
+					if a >= 1 then
+						break
+					end
+					RunService.Heartbeat:Wait()
+				end
+			end
+		end
+		for _, hip in hips do
+			pcall(function()
+				hip.joint.C0 = hip.base
+			end)
+		end
 	end
 
 	------------------------------------------------------------------ Haustür
@@ -322,6 +354,187 @@ function Kapitel2.start()
 		event:FireAllClients(message)
 	end
 
+	------------------------------------------------------------------ Türen im Haus
+	-- Jede Innentür kann man mit E öffnen und schließen; abgeschlossene Türen rütteln nur.
+	-- Tür auf- oder zudrehen (wartet, bis sie fertig ist)
+	local function moveDoor(door, target, duration)
+		if door.moving or not door.model then
+			return
+		end
+		door.moving = true
+		local from = door.angle
+		local start = os.clock()
+		while true do
+			local a = math.min((os.clock() - start) / (duration or 0.7), 1)
+			door.angle = from + (target - from) * (a * a * (3 - 2 * a))
+			door.model:PivotTo(door.frame(door.angle))
+			if a >= 1 then
+				break
+			end
+			RunService.Heartbeat:Wait()
+		end
+		if door.prompt then
+			door.prompt.ActionText = target > 0 and "Schließen" or "Öffnen"
+		end
+		door.moving = false
+	end
+
+	local function setupDoors()
+		for _, door in Mansion.doors do
+			local leaf = door.model and door.model.PrimaryPart
+			if leaf then
+				local prompt = Instance.new("ProximityPrompt")
+				prompt.ObjectText = "Tür"
+				prompt.ActionText = door.locked and "Öffnen" or (door.angle > 0 and "Schließen" or "Öffnen")
+				prompt.HoldDuration = 0
+				prompt.MaxActivationDistance = 7
+				prompt.RequiresLineOfSight = false
+				prompt.Style = Enum.ProximityPromptStyle.Default
+				prompt.Parent = leaf
+				door.prompt = prompt
+				prompt.Triggered:Connect(function(player)
+					if door.moving then
+						return
+					end
+					if door.locked then
+						sfx("knock", leaf.Position, { count = 2, interval = 0.13, volume = 0.5 })
+						event:FireClient(player, { type = "hint", text = "Abgeschlossen.", seconds = 2 })
+						return
+					end
+					sfx("doorCreak", leaf.Position, { volume = 0.45 })
+					moveDoor(door, door.angle > 0 and 0 or door.openAngle)
+				end)
+			end
+		end
+	end
+
+	------------------------------------------------------------------ Schlafen
+	-- In den Betten im Gästezimmer kann man sich hinlegen (E). Liegen alle, schlafen sie
+	-- ein – hier geht es später mit der Nacht weiter.
+	local lying = {} -- Spieler -> Bett
+	local asleep = false
+	local exploring = false
+	local function standUp(player)
+		local bed = lying[player]
+		lying[player] = nil
+		local character = player.Character
+		local root = character and character:FindFirstChild("HumanoidRootPart")
+		local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+		if bed then
+			bed.taken = nil
+			if bed.prompt then
+				bed.prompt.ActionText = "Schlafen gehen"
+			end
+		end
+		if root and humanoid then
+			humanoid.PlatformStand = false
+			humanoid.AutoRotate = true
+			humanoid.WalkSpeed = WALK_SPEED
+			root.Anchored = false
+			if bed then
+				-- am Fußende aufstehen
+				local foot = bed.cframe * CFrame.new(0, 3.2, -bed.length / 2 - 1.6)
+				character:PivotTo(CFrame.lookAt(foot.Position, foot.Position + bed.cframe.LookVector))
+			end
+		end
+	end
+	local function fallAsleep()
+		if asleep then
+			return
+		end
+		asleep = true
+		remotes:SetAttribute("Night", true)
+		event:FireAllClients({ type = "sleep" })
+		print("Kapitel 2: Alle liegen im Bett – die Nacht beginnt (hier geht es später weiter).")
+	end
+	local function checkAllAsleep()
+		local players = Players:GetPlayers()
+		if #players == 0 then
+			return
+		end
+		for _, player in players do
+			if not lying[player] then
+				for _, other in players do
+					if lying[other] and other ~= player then
+						event:FireClient(player, { type = "hint", text = other.DisplayName .. " liegt schon im Bett.", seconds = 4 })
+					end
+				end
+				return
+			end
+		end
+		task.delay(2.5, function()
+			-- immer noch alle im Bett?
+			for _, player in Players:GetPlayers() do
+				if not lying[player] then
+					return
+				end
+			end
+			fallAsleep()
+		end)
+	end
+	local function lieDown(player, bed)
+		local character = player.Character
+		local root = character and character:FindFirstChild("HumanoidRootPart")
+		local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+		if not (root and humanoid) or bed.taken then
+			return
+		end
+		bed.taken = player
+		lying[player] = bed
+		bed.prompt.ActionText = "Aufstehen"
+		humanoid.WalkSpeed = 0
+		humanoid.AutoRotate = false
+		humanoid.PlatformStand = true
+		root.Anchored = true
+		-- auf dem Rücken liegen, Kopf auf dem Kissen
+		local headward = -bed.cframe.LookVector -- zum Kopfende
+		local center = bed.cframe * Vector3.new(0, 2.85, bed.length / 2 - 2.9)
+		-- Gesicht nach oben, Kopf zum Kissen
+		character:PivotTo(CFrame.lookAt(center, center + Vector3.new(0, 1, 0), headward))
+		event:FireClient(player, { type = "hint", text = "Gute Nacht …", seconds = 3 })
+		humanoid.Died:Connect(function()
+			if lying[player] == bed then
+				lying[player] = nil
+				bed.taken = nil
+				bed.prompt.ActionText = "Schlafen gehen"
+			end
+		end)
+		checkAllAsleep()
+	end
+	local function setupBeds()
+		for _, bed in Mansion.beds do
+			local anchor = Instance.new("Part")
+			anchor.Name = "BedPrompt"
+			anchor.Size = Vector3.new(1, 1, 1)
+			anchor.Transparency = 1
+			anchor.Anchored = true
+			anchor.CanCollide = false
+			anchor.CanQuery = false
+			anchor.CanTouch = false
+			anchor.CFrame = bed.cframe * CFrame.new(0, 2.6, 0)
+			anchor.Parent = workspace:FindFirstChild("WagnerHouse", true) or workspace
+			local prompt = Instance.new("ProximityPrompt")
+			prompt.ObjectText = "Bett"
+			prompt.ActionText = "Schlafen gehen"
+			prompt.HoldDuration = 0.4
+			prompt.MaxActivationDistance = 7
+			prompt.RequiresLineOfSight = false
+			prompt.Enabled = false -- erst nach dem Gespräch
+			prompt.Parent = anchor
+			bed.prompt = prompt
+			prompt.Triggered:Connect(function(player)
+				if asleep then
+					return
+				end
+				if lying[player] == bed then
+					standUp(player)
+				elseif not lying[player] then
+					lieDown(player, bed)
+				end
+			end)
+		end
+	end
+
 	------------------------------------------------------------------ Aktionen
 	local actions = {}
 	function actions.knock()
@@ -409,6 +622,33 @@ function Kapitel2.start()
 		remotes:SetAttribute("Inside", true)
 		event:FireAllClients({ type = "inside" })
 	end
+	-- Die Wagners gehen durch die Tür hinter der Halle und schließen sie hinter sich
+	function actions.leave()
+		local door = Mansion.doorAt(51.4, 54.15, "E") -- Halle -> Flur
+		if door and door.angle == 0 then
+			moveDoor(door, door.openAngle, 0.6)
+		end
+		for _, npc in { mrs, mr } do
+			if npc then
+				npc:SetAttribute("Look", "down")
+			end
+		end
+		local through = { Vector2.new(1.4, 1), Vector2.new(1.4, 6.5), Vector2.new(2.6, 9) }
+		task.spawn(walkPath, mrs, { through[1], through[2], through[3] }, 4.5)
+		task.wait(0.9)
+		walkPath(mr, { Vector2.new(0, -2), through[1], through[2], Vector2.new(0.2, 9) }, 4.5)
+		task.wait(0.4)
+		if door then
+			sfx("doorSlam", door.model.PrimaryPart.Position, { volume = 0.5 })
+			moveDoor(door, 0, 0.5)
+		end
+		-- danach sind sie weg (in ihrem Zimmer)
+		for _, npc in { mrs, mr } do
+			if npc then
+				Wagners.place(npc, hiddenSpot, facing)
+			end
+		end
+	end
 	function actions.candles()
 		candlesGiven = true
 		for _, player in Players:GetPlayers() do
@@ -433,6 +673,12 @@ function Kapitel2.start()
 	-- Ende des Gesprächs: Jetzt darf man sich frei im Haus umsehen
 	function actions.finish()
 		setMovement(true)
+		exploring = true
+		for _, bed in Mansion.beds do
+			if bed.prompt then
+				bed.prompt.Enabled = true
+			end
+		end
 		if not candlesGiven then
 			actions.candles()
 		end
@@ -494,6 +740,27 @@ function Kapitel2.start()
 	end
 
 	------------------------------------------------------------------ Start
+	local doorsOk, doorProblem = pcall(setupDoors)
+	if not doorsOk then
+		warn("Kapitel 2: Türen konnten nicht eingerichtet werden: " .. tostring(doorProblem))
+	end
+	local bedsOk, bedProblem = pcall(setupBeds)
+	if not bedsOk then
+		warn("Kapitel 2: Betten konnten nicht eingerichtet werden: " .. tostring(bedProblem))
+	end
+	Players.PlayerRemoving:Connect(function(player)
+		local bed = lying[player]
+		if bed then
+			bed.taken = nil
+			lying[player] = nil
+			if bed.prompt then
+				bed.prompt.ActionText = "Schlafen gehen"
+			end
+		end
+		if exploring and not asleep then
+			task.defer(checkAllAsleep)
+		end
+	end)
 	-- Klopfen: Hinweis an der Tür (E drücken oder antippen)
 	local prompt = Instance.new("ProximityPrompt")
 	prompt.ActionText = "Klopfen"

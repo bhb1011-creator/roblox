@@ -14,6 +14,8 @@ local Furniture = require(script.Parent.Furniture)
 local HouseInterior = require(script.Parent.HouseInterior)
 
 local Mansion = {}
+Mansion.doors = {}
+Mansion.beds = {}
 
 local BASE, STORY = 1.6, 10
 local TOP = BASE + 2 * STORY -- Oberkante Wände Obergeschoss
@@ -323,7 +325,8 @@ end
 
 ------------------------------------------------------------------ Wände
 -- Öffnungen: { x, y, kind, w = Breite, h = Höhe, sill = Brüstung, angle = Tür offen (Grad),
--- swing = in welchen Raum die Tür aufgeht (id), boards = vernagelt (zu welchem Raum hin) }
+-- swing = in welchen Raum die Tür aufgeht (id), boards = vernagelt (zu welchem Raum hin),
+-- locked = abgeschlossen (alle anderen Türen kann man mit E öffnen und schließen) }
 local DOOR_W, DOOR_H = 3.6, 7.6
 local WINDOW_W, WINDOW_H, SILL = 3.2, 5.2, 3.0
 
@@ -397,23 +400,25 @@ local function buildWall(floorKey, a, b, kind, openings, topOverride)
 			local offset = side * t / 2
 			if room and room.wall then
 				local ceiling = room.ceiling or CEIL[floorKey]
-				local function panel(name, from, to, depth, panelColor, panelMaterial)
+				-- `grow` = etwas länger als die Wand, damit die Enden nicht genau mit der Tapete
+				-- abschließen (sonst flackern die Flächen in Roblox)
+				local function panel(name, from, to, depth, panelColor, panelMaterial, grow)
 					local lo, hi = math.max(from, ya), math.min(to, yb)
 					if hi - lo > 0.02 then
 						local pc = A + dir * ((s0 + s1) / 2) + normal * (offset + side * (0.02 + depth / 2)) + Vector3.new(0, (lo + hi) / 2, 0)
-						box(name, Vector3.new(len, hi - lo, depth), CFrame.lookAt(pc, pc + normal), panelColor, panelMaterial)
+						box(name, Vector3.new(len + (grow or 0), hi - lo, depth), CFrame.lookAt(pc, pc + normal), panelColor, panelMaterial)
 					end
 				end
 				if room.wainscot then
 					panel("Wallpaper", floorTop + 3.1, ceiling, 0.06, room.wall[1], room.wall[2])
-					panel("Wainscot", floorTop, floorTop + 3.1, 0.12, Color3.fromRGB(46, 36, 28), M.WoodPlanks)
-					panel("ChairRail", floorTop + 3.0, floorTop + 3.25, 0.2, Color3.fromRGB(70, 56, 42), M.Wood)
+					panel("Wainscot", floorTop, floorTop + 3.1, 0.12, Color3.fromRGB(46, 36, 28), M.WoodPlanks, 0.02)
+					panel("ChairRail", floorTop + 3.0, floorTop + 3.25, 0.2, Color3.fromRGB(70, 56, 42), M.Wood, 0.04)
 				elseif room.tiles then
 					panel("Wallpaper", floorTop + 4, ceiling, 0.06, room.wall[1], room.wall[2])
 					panel("WallTiles", floorTop, floorTop + 4, 0.1, Color3.fromRGB(176, 172, 158), M.CeramicTiles)
 				else
 					panel("Wallpaper", floorTop + 0.45, ceiling, 0.06, room.wall[1], room.wall[2])
-					panel("Baseboard", floorTop, floorTop + 0.45, 0.14, Color3.fromRGB(46, 36, 28), M.Wood)
+					panel("Baseboard", floorTop, floorTop + 0.45, 0.14, Color3.fromRGB(46, 36, 28), M.Wood, 0.03)
 				end
 			elseif not room and kind == "ext" then
 				-- außen: waagerechte Bretter und ein Steinsockel
@@ -469,6 +474,19 @@ local function buildWall(floorKey, a, b, kind, openings, topOverride)
 			bottom = floorTop
 			top = floorTop + (o.h or DOOR_H)
 		end
+		if o.kind ~= "window" then
+			-- für Tests: alle Türen und Durchgänge (offen = man kann durchgehen)
+			table.insert(Mansion.doors, {
+				floor = floorKey,
+				x = o[1],
+				y = o[2],
+				middle = A + dir * item.s,
+				normal = normal,
+				width = item.w,
+				kind = o.kind,
+				open = o.kind == "opening" or o.kind == "frontdoor" or (o.angle or 0) > 0,
+			})
+		end
 		piece(s0, s1, y0, bottom - (o.kind == "window" and 0 or 0.05))
 		piece(s0, s1, top, y1)
 		cursor = s1
@@ -506,7 +524,7 @@ local function buildWall(floorKey, a, b, kind, openings, topOverride)
 						end
 					end
 				else
-					onSide(side, bottom - 0.08, Vector3.new(item.w + 0.4, 0.16, 0.5), "InnerSill", Color3.fromRGB(70, 56, 42), M.Wood, 0.25)
+					onSide(side, bottom - 0.05, Vector3.new(item.w + 0.43, 0.16, 0.5), "InnerSill", Color3.fromRGB(70, 56, 42), M.Wood, 0.26)
 					if rng:NextNumber() < 0.6 then
 						onSide(side, mid, Vector3.new(item.w * 0.45, h, 0.04), "Curtain", COLORS.curtain, M.Fabric, 0.12)
 					end
@@ -517,10 +535,10 @@ local function buildWall(floorKey, a, b, kind, openings, topOverride)
 			for _, side in { 1, -1 } do
 				if rooms[side] then
 					for _, e in { -1, 1 } do
-						local c = middle + dir * e * (item.w / 2 + 0.15) + normal * side * (t / 2 + 0.08) + Vector3.new(0, bottom + (top - bottom) / 2, 0)
-						box("DoorCasing", Vector3.new(0.3, top - bottom + 0.1, 0.16), CFrame.lookAt(c, c + normal * side), Color3.fromRGB(70, 56, 42), M.Wood)
+						local c = middle + dir * e * (item.w / 2 + 0.1) + normal * side * (t / 2 + 0.09) + Vector3.new(0, bottom + (top - bottom) / 2, 0)
+						box("DoorCasing", Vector3.new(0.3, top - bottom + 0.1, 0.18), CFrame.lookAt(c, c + normal * side), Color3.fromRGB(70, 56, 42), M.Wood)
 					end
-					onSide(side, top + 0.2, Vector3.new(item.w + 0.6, 0.3, 0.16), "DoorCasing", Color3.fromRGB(70, 56, 42), M.Wood, 0.08)
+					onSide(side, top + 0.2, Vector3.new(item.w + 0.6, 0.3, 0.18), "DoorCasing", Color3.fromRGB(70, 56, 42), M.Wood, 0.09)
 				end
 			end
 			if o.kind == "door" then
@@ -528,14 +546,22 @@ local function buildWall(floorKey, a, b, kind, openings, topOverride)
 				if o.swing then
 					swingSide = (rooms[-1] and rooms[-1].id == o.swing) and -1 or 1
 				end
-				-- offene Türen stehen ganz offen (sonst versperrt das Türblatt den Weg)
-				local angle = math.rad((o.angle or 0) > 0 and 95 or 0)
+				-- Das Türblatt wird geschlossen gebaut und dann um die Angel gedreht.
+				-- Offene Türen stehen ganz offen (sonst versperrt das Türblatt den Weg).
 				local hinge = A + dir * s0
-				local leafDir = dir * math.cos(angle) + normal * swingSide * math.sin(angle)
-				local leafNormal = Vector3.new(-leafDir.Z, 0, leafDir.X)
-				local leafCenter = hinge + leafDir * (item.w / 2) + Vector3.new(0, bottom + (top - bottom) / 2, 0)
-				local lcf = CFrame.lookAt(leafCenter, leafCenter + leafNormal)
-				box("DoorLeaf", Vector3.new(item.w - 0.15, top - bottom - 0.08, 0.16), lcf, o.glassDoor and COLORS.trim or COLORS.door, M.WoodPlanks)
+				local function leafFrame(angle)
+					local leafDir = dir * math.cos(angle) + normal * swingSide * math.sin(angle)
+					local leafNormal = Vector3.new(-leafDir.Z, 0, leafDir.X)
+					local leafCenter = hinge + leafDir * (item.w / 2) + Vector3.new(0, bottom + (top - bottom) / 2, 0)
+					return CFrame.lookAt(leafCenter, leafCenter + leafNormal)
+				end
+				local lcf = leafFrame(0)
+				local wallFolder = current
+				local doorModel = Instance.new("Model")
+				doorModel.Name = "InnerDoor"
+				doorModel.Parent = wallFolder
+				current = doorModel
+				local leaf = box("DoorLeaf", Vector3.new(item.w - 0.15, top - bottom - 0.08, 0.16), lcf, o.glassDoor and COLORS.trim or COLORS.door, M.WoodPlanks)
 				if o.glassDoor then
 					box("DoorGlass", Vector3.new(item.w - 1, top - bottom - 2, 0.2), lcf * CFrame.new(0, 0.4, 0), COLORS.glassHouse, M.Glass, { Transparency = 0.5 })
 				else
@@ -545,6 +571,19 @@ local function buildWall(floorKey, a, b, kind, openings, topOverride)
 				end
 				for _, f in { 1, -1 } do
 					box("DoorKnob", Vector3.new(0.25, 0.25, 0.25), lcf * CFrame.new((item.w / 2 - 0.45) * -1, -0.2, f * 0.16), Color3.fromRGB(120, 96, 52), M.Metal, { Shape = Enum.PartType.Ball })
+				end
+				current = wallFolder
+				doorModel.PrimaryPart = leaf
+				local entry = Mansion.doors[#Mansion.doors]
+				entry.model = doorModel
+				entry.locked = o.locked == true
+				entry.frame = function(angle)
+					return origin * leafFrame(angle)
+				end
+				entry.openAngle = math.rad(95)
+				entry.angle = (o.angle or 0) > 0 and entry.openAngle or 0
+				if entry.angle > 0 then
+					doorModel:PivotTo(entry.frame(entry.angle))
 				end
 				if o.boards then
 					local side = (rooms[-1] and rooms[-1].id == o.boards) and -1 or 1
@@ -594,7 +633,16 @@ local function wallChain(floorKey, kind, points, openings, closed)
 				local d1 = Vector3.new(p[1] - prev[1], 0, p[2] - prev[2])
 				local d2 = Vector3.new(nxt[1] - p[1], 0, nxt[2] - p[2])
 				local turn = math.abs(d1.Unit:Dot(d2.Unit))
-				if turn < 0.995 then
+				-- nur an Außenecken (sonst steht die Säule innen als Pfosten im Raum)
+				local inside = 0
+				for _, dx in { -1, 1 } do
+					for _, dy in { -1, 1 } do
+						if roomAt(floorKey, p[1] + dx, p[2] + dy) then
+							inside += 1
+						end
+					end
+				end
+				if turn < 0.995 and inside <= 2 then
 					local diameter = THICK[kind] + 0.35
 					local color = kind == "stone" and COLORS.stone or COLORS.trim
 					local material = kind == "stone" and M.Cobblestone or M.Wood
@@ -733,7 +781,7 @@ local function buildWalls()
 	}, false)
 	-- Wintergarten: Glas
 	wallChain("E", "glass", { { 20, 30 }, HEX[1], HEX[6], HEX[5], HEX[4], { 8, 30 } }, {
-		{ 14, 9.2, kind = DOOR, angle = 0, glassDoor = true },
+		{ 14, 9.2, kind = DOOR, angle = 0, glassDoor = true, locked = true },
 	}, false)
 	buildWall("E", { 8, 30 }, { 20, 30 }, "int", { { 14, 30, kind = DOOR, angle = 70, swing = "winter", glassDoor = true } })
 	for _, p in { { 20, 30 }, { 8, 30 } } do
@@ -758,7 +806,7 @@ local function buildWalls()
 	int({ 40, 20 }, { 54.25, 20 }, { { 47, 20, kind = DOOR, angle = 60, swing = "speise" } })
 	int({ 34, 30 }, { 34, 38 }, { { 34, 34, kind = DOOR, angle = 70, swing = "gartenflur" } })
 	int({ 14, 38 }, { 34, 38 })
-	int({ 14, 60 }, { 34, 60 }, { { 24, 60, kind = DOOR, angle = 0 } }) -- Arbeitszimmer: abgeschlossen
+	int({ 14, 60 }, { 34, 60 }, { { 24, 60, kind = DOOR, angle = 0, locked = true } }) -- Arbeitszimmer: abgeschlossen
 	int({ 34, 60 }, { 41.75, 60 }, { { 39, 60, kind = DOOR, angle = 0 } })
 	int({ 36, 60 }, { 36, 72 })
 	int({ 54.25, 42 }, { 80.56, 42 }, { { 62, 42, kind = DOOR, angle = 0 } })
@@ -790,12 +838,12 @@ local function buildWalls()
 	end
 	intO({ 41.75, 40 }, { 41.75, 54.15 })
 	intO({ 41.75, 54.15 }, { 41.75, 60 })
-	intO({ 41.75, 54.15 }, { 48.6, 54.15 }, { { 46.8, 54.15, kind = DOOR, angle = 0, w = 3.2, boards = "hall" } })
+	intO({ 41.75, 54.15 }, { 48.6, 54.15 }, { { 46.8, 54.15, kind = DOOR, angle = 0, w = 3.2, boards = "hall", locked = true } })
 	intO({ 48.6, 54.15 }, { 54.25, 54.15 }, { { 51.4, 54.15, kind = DOOR, angle = 75, w = 3.2, swing = "gaeste" } })
 	-- vom Ende der Galerie ins Spielzimmer (und von dort in den langen Flur)
 	intO({ 54.25, 54.15 }, { 54.25, 72 }, { { 54.25, 56.2, kind = DOOR, angle = 70, w = 3.2, swing = "spiel" } })
 	intO({ 48.6, 40 }, { 48.6, 54.15 })
-	intO({ 34, 40 }, { 41.75, 40 }, { { 38, 40, kind = DOOR, angle = 0 } }) -- Großmutter: abgeschlossen
+	intO({ 34, 40 }, { 41.75, 40 }, { { 38, 40, kind = DOOR, angle = 0, locked = true } }) -- Großmutter: abgeschlossen
 	intO({ 41.75, 40 }, { 48.6, 40 })
 	intO({ 48.6, 40 }, { 62, 40 })
 	intO({ 62, 40 }, { 62, 52 })
@@ -807,7 +855,7 @@ local function buildWalls()
 		{ 39, 34, kind = DOOR, angle = 25, swing = "tommy" },
 		{ 49, 34, kind = DOOR, angle = 15, swing = "lucy" },
 		{ 59, 34, kind = DOOR, angle = 80, swing = "bad" },
-		{ 72, 34, kind = DOOR, angle = 0 },
+		{ 72, 34, kind = DOOR, angle = 0, locked = true }, -- Eltern: abgeschlossen
 	}
 	for _, segment in { { 34, 44 }, { 44, 54.25 }, { 54.25, 64 }, { 64, 80.56 } } do
 		local mine = {}
@@ -870,7 +918,8 @@ local function buildFloorsAndRoofs()
 			if room.floor and not room.noFloor and not (room.void and floorKey == "O") then
 				local top = FLOOR[floorKey]
 				local thickness = floorKey == "E" and top + 0.5 or floorKey == "K" and 0.3 or 0.5
-				slab("Floor", room.poly, top, thickness, room.floor[1], room.floor[2])
+				-- 0.012 höher als die Wände darunter, sonst flackern deren Oberkanten im Boden
+				slab("Floor", room.poly, top + 0.012, thickness + 0.012, room.floor[1], room.floor[2])
 			end
 			-- Decken
 			if floorKey == "E" and not room.void and not room.glass then
@@ -952,8 +1001,8 @@ local function buildFurniture()
 	Furniture.sofa(b, at(72, 45, E, "S"), 2.6, Color3.fromRGB(96, 36, 34), true)
 	Furniture.sofa(b, at(72, 56, E, "N"), 2.6, Color3.fromRGB(96, 36, 34), true)
 	Furniture.table(b, at(72, 50.5, E), 3, 2, 1.6)
-	Furniture.shelf(b, at(60, 42.9, E, "S"), 6, 7.5, "books", rng)
-	Furniture.shelf(b, at(66, 42.9, E, "S"), 4, 7.5, "books", rng)
+	Furniture.shelf(b, at(57.2, 42.9, E, "S"), 5, 7.5, "books", rng) -- links und rechts der Tür zum Esszimmer
+	Furniture.shelf(b, at(66.6, 42.9, E, "S"), 4, 7.5, "books", rng)
 	Furniture.picture(b, at(55, 66, E + 5.5, "E"), 2, 2.6, Color3.fromRGB(70, 60, 50), true)
 
 	-- Turmzimmer
@@ -1050,8 +1099,12 @@ local function buildFurniture()
 	lit(hallTable)
 
 	-- Gästezimmer (euer Zimmer): zwei Betten
-	Furniture.bed(b, at(52, 42.8, O, "S"), 4, 7, Color3.fromRGB(110, 90, 70))
-	Furniture.bed(b, at(58.5, 42.8, O, "S"), 4, 7, Color3.fromRGB(90, 96, 80))
+	-- (Mansion.beds: hier kann man sich zum Schlafen hinlegen, siehe Kapitel2.lua)
+	for _, x in { 52, 58.5 } do
+		local bedFrame = at(x, 42.8, O, "S")
+		Furniture.bed(b, bedFrame, 4, 7, x < 55 and Color3.fromRGB(110, 90, 70) or Color3.fromRGB(90, 96, 80))
+		table.insert(Mansion.beds, { cframe = origin * bedFrame, length = 7, width = 4 })
+	end
 	Furniture.nightstand(b, at(55.2, 41, O, "S"))
 	Furniture.wardrobe(b, at(61.3, 50, O, "W"), 4)
 	Furniture.rug(b, at(55, 49, O), 6, 4, Color3.fromRGB(80, 60, 50))
@@ -1333,6 +1386,8 @@ end
 ------------------------------------------------------------------ Start
 function Mansion.build(model, houseOrigin)
 	origin = houseOrigin
+	Mansion.doors = {}
+	Mansion.beds = {}
 	Mansion.model = model
 	Mansion.origin = houseOrigin
 	local root = newFolder("Mansion", model)
@@ -1357,6 +1412,16 @@ function Mansion.build(model, houseOrigin)
 	task.wait()
 	lastBreath = os.clock()
 	return root
+end
+
+-- Die Tür an dieser Stelle im Plan (für Szenen, z. B. die Wagners schließen sie)
+function Mansion.doorAt(x, y, floorKey)
+	for _, door in Mansion.doors do
+		if door.model and door.floor == (floorKey or "E") and math.abs(door.x - x) < 0.3 and math.abs(door.y - y) < 0.3 then
+			return door
+		end
+	end
+	return nil
 end
 
 -- Stellen für die Familie (Haus-Koordinaten über dem Boden)

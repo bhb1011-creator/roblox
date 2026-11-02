@@ -451,7 +451,17 @@ function Kapitel2.run()
 		elseif kind == "inside" then
 			houseInside = true
 		elseif kind == "explore" then
-			hint("Sieh dich im Haus um.", 6)
+			hint("Sieh dich im Haus um. Euer Zimmer ist oben – zweite Tür links.", 7)
+		elseif kind == "sleep" then
+			-- alle liegen im Bett: langsam einschlafen (hier geht es später mit der Nacht weiter)
+			finished = true
+			setFade(0, 4)
+			task.delay(4.5, function()
+				chapter.Text = "Ihr schlaft ein …"
+				chapterTitle.Text = "Fortsetzung folgt: die erste Nacht"
+				showText(chapter, true, 1.5)
+				showText(chapterTitle, true, 2)
+			end)
 		elseif kind == "finish" then
 			finished = true
 			setFade(0, 3)

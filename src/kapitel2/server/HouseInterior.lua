@@ -40,7 +40,7 @@ local TOP = BASE + 2 * STORY
 local CEILING = TOP - 0.5
 local GALLERY = BASE + STORY -- Fußboden oben
 local GALLERY_Z = -3 -- Vorderkante der Galerie (tief genug, dass man oben bequem ankommt)
-local STAIRS_X0, STAIRS_X1 = X0, -5
+local STAIRS_X0, STAIRS_X1 = X0 + 0.35, -4.7 -- Abstand zur Wand (oben ist die Außenwand dicker)
 local STAIRS_Z0 = -13.4 -- erste Stufe
 local STEPS = 13
 
@@ -156,7 +156,7 @@ function HouseInterior.build(model, origin, mansion)
 	------------------------------------------------------------------ Galerie oben mit zwei Türen
 	local galleryD = Z1 - 0.1 - GALLERY_Z
 	block("GalleryFloor", Vector3.new(hallW - 0.2, 0.5, galleryD), CFrame.new(midX, GALLERY - 0.25, GALLERY_Z + galleryD / 2), COLORS.floor, Enum.Material.WoodPlanks)
-	block("GalleryFascia", Vector3.new(hallW - 0.2, 0.7, 0.2), CFrame.new(midX, GALLERY - 0.45, GALLERY_Z - 0.1), COLORS.trim, Enum.Material.Wood)
+	block("GalleryFascia", Vector3.new(hallW - 0.2, 0.7, 0.2), CFrame.new(midX, GALLERY - 0.45, GALLERY_Z - 0.11), COLORS.trim, Enum.Material.Wood)
 	local galleryRailZ = GALLERY_Z + 0.15
 	block("GalleryRail", Vector3.new(X1 - 0.12 - STAIRS_X1, 0.25, 0.3), CFrame.new((X1 - 0.12 + STAIRS_X1) / 2, GALLERY + 3.1, galleryRailZ), COLORS.trim, Enum.Material.Wood)
 	for x = STAIRS_X1 + 0.6, X1 - 0.5, 0.9 do
@@ -177,7 +177,7 @@ function HouseInterior.build(model, origin, mansion)
 			end
 		end
 	end
-	HouseInterior.candle(folder, origin * CFrame.new(X1 - 0.6, GALLERY, Z1 - 0.8), 0.6, 8, 0.7)
+	HouseInterior.candle(folder, origin * CFrame.new(-0.9, GALLERY, Z1 - 0.8), 0.6, 8, 0.7) -- zwischen den Türen, nicht vor der Spielzimmertür
 
 	------------------------------------------------------------------ Rechte Wand: Uhr, Garderobe, Durchgang, Tischchen
 	local wallX = X1 - 0.1
