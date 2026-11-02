@@ -111,7 +111,7 @@ function Kapitel2.start()
 	local lucy = build("Lucy", Wagners.buildLucy)
 	local tommy = build("Tommy", Wagners.buildTommy)
 	if lucy then
-		local gallery = Route.housePoint(-1.2, 1.3) + Vector3.new(0, HouseInterior.FLOOR - 0.1 + House.STORY, 0)
+		local gallery = Route.housePoint(-1.2, -1.9) + Vector3.new(0, HouseInterior.FLOOR - 0.1 + House.STORY, 0)
 		Wagners.place(lucy, gallery, Route.housePoint(-1.2, -10))
 		lucy:SetAttribute("Look", "player")
 	end
@@ -192,6 +192,53 @@ function Kapitel2.start()
 		end
 	end
 
+	-- Eigene Kerze in der Hand (bekommt man von Mrs. Wagner). Die anderen sehen sie an
+	-- der Hand, man selbst sieht sie unten links im Bild (macht Scene.lua auf dem Client).
+	local candlesGiven = false
+	local function giveCandle(player)
+		local character = player.Character
+		local hand = character and (character:FindFirstChild("RightHand") or character:FindFirstChild("Right Arm"))
+		local root = character and character:FindFirstChild("HumanoidRootPart")
+		if not (hand and root) or character:FindFirstChild("PlayerCandle") then
+			return
+		end
+		local model = Instance.new("Model")
+		model.Name = "PlayerCandle"
+		local base = CFrame.new(hand.Position) * root.CFrame.Rotation * CFrame.new(0, -0.2, -0.35)
+		local function piece(name, shape, size, cframe, color, material)
+			local part = Instance.new("Part")
+			part.Name = name
+			part.Shape = shape
+			part.Size = size
+			part.CFrame = cframe
+			part.Color = color
+			part.Material = material
+			part.CanCollide = false
+			part.CanQuery = false
+			part.CanTouch = false
+			part.Massless = true
+			part.CastShadow = false
+			part.Parent = model
+			local weld = Instance.new("WeldConstraint")
+			weld.Part0 = hand
+			weld.Part1 = part
+			weld.Parent = part
+			return part
+		end
+		local upright = CFrame.Angles(0, 0, math.rad(90)) -- Zylinder stehen in Roblox auf der Seite
+		piece("CandleHolder", Enum.PartType.Cylinder, Vector3.new(0.12, 0.6, 0.6), base * upright, Color3.fromRGB(120, 96, 52), Enum.Material.Metal)
+		piece("Candle", Enum.PartType.Cylinder, Vector3.new(0.8, 0.22, 0.22), base * CFrame.new(0, 0.46, 0) * upright, Color3.fromRGB(225, 215, 190), Enum.Material.SmoothPlastic)
+		local flame = piece("CandleFlame", Enum.PartType.Ball, Vector3.new(0.16, 0.16, 0.16), base * CFrame.new(0, 0.95, 0), Color3.fromRGB(255, 170, 70), Enum.Material.Neon)
+		local light = Instance.new("PointLight")
+		light.Name = "CandleLight"
+		light.Range = 16
+		light.Brightness = 1.3
+		light.Color = Color3.fromRGB(255, 180, 110)
+		light.Shadows = true
+		light.Parent = flame
+		model.Parent = character
+	end
+
 	local function spawnPlayer(player)
 		local index = table.find(Players:GetPlayers(), player) or 1
 		local cframe
@@ -206,6 +253,9 @@ function Kapitel2.start()
 		if humanoid then
 			humanoid.WalkSpeed = frozen and 0 or WALK_SPEED
 			humanoid.JumpHeight = frozen and 0 or 2
+			if candlesGiven then
+				giveCandle(player)
+			end
 			humanoid.Died:Connect(function()
 				task.delay(3, function()
 					if player.Parent then
@@ -224,9 +274,10 @@ function Kapitel2.start()
 			return true
 		end
 		local p = origin:Inverse() * root.Position
-		local inHall = p.X > House.HALL_X0 + 0.4 and p.X < House.HALL_X1 - 0.4 and p.Z > -Route.HOUSE_SIZE.Z / 2 + House.WALL + 0.3 and p.Z < House.HALL_Z1
+		-- irgendwo im Haus (nicht nur in der Halle) und nicht dort, wo die Tür zufällt
+		local inHouse = Mansion.isInside(root.Position)
 		local dx, dz = p.X - hinge.X, p.Z - hinge.Y
-		return inHall and math.sqrt(dx * dx + dz * dz) > 4.8
+		return inHouse and math.sqrt(dx * dx + dz * dz) > 4.8
 	end
 
 	------------------------------------------------------------------ Sprechen und Antworten
@@ -327,10 +378,10 @@ function Kapitel2.start()
 					allIn = false
 				end
 			end
-			if allIn then
+			local waited = os.clock() - start
+			if allIn or waited > PULL_IN_AFTER + 8 then
 				break
 			end
-			local waited = os.clock() - start
 			if not reminded and waited > REMIND_AFTER then
 				reminded = true
 				task.spawn(say, Script.COME_INSIDE.speaker, Script.COME_INSIDE.text)
@@ -355,7 +406,14 @@ function Kapitel2.start()
 		inside = true
 		sfx("doorSlam", doorFront, { volume = 1 })
 		swingDoor(0, 0.4, true)
+		remotes:SetAttribute("Inside", true)
 		event:FireAllClients({ type = "inside" })
+	end
+	function actions.candles()
+		candlesGiven = true
+		for _, player in Players:GetPlayers() do
+			giveCandle(player)
+		end
 	end
 	function actions.point()
 		local arm = mr and mr:FindFirstChild("RightUpperArm")
@@ -375,6 +433,10 @@ function Kapitel2.start()
 	-- Ende des Gesprächs: Jetzt darf man sich frei im Haus umsehen
 	function actions.finish()
 		setMovement(true)
+		if not candlesGiven then
+			actions.candles()
+		end
+		remotes:SetAttribute("Explore", true)
 		event:FireAllClients({ type = "explore" })
 	end
 
@@ -388,7 +450,11 @@ function Kapitel2.start()
 			end
 		end
 		if line.action and actions[line.action] then
-			actions[line.action]()
+			-- Geht bei einer Aktion etwas schief, läuft das Gespräch trotzdem weiter
+			local ok, problem = xpcall(actions[line.action], debug.traceback)
+			if not ok then
+				warn("Kapitel 2: Aktion '" .. line.action .. "' hatte einen Fehler:\n" .. tostring(problem))
+			end
 		end
 		if line.text then
 			say(line.speaker, line.text)
@@ -400,17 +466,30 @@ function Kapitel2.start()
 
 	local function runScene()
 		duo = #Players:GetPlayers() >= 2
-		for _, step in Script.SCRIPT do
-			if step.choice then
-				local index, chooser = ask(step.choice)
-				local option = step.choice[index]
-				say("player", option.text, chooser and chooser.DisplayName or "You")
-				for _, line in option.reply do
-					runLine(line)
+		local finishedScene = false
+		for number, step in Script.SCRIPT do
+			local ok, problem = xpcall(function()
+				if step.choice then
+					local index, chooser = ask(step.choice)
+					local option = step.choice[index]
+					say("player", option.text, chooser and chooser.DisplayName or "You")
+					for _, line in option.reply or {} do
+						runLine(line)
+					end
+				else
+					runLine(step)
 				end
-			else
-				runLine(step)
+			end, debug.traceback)
+			if not ok then
+				warn("Kapitel 2: Fehler im Gespräch bei Schritt " .. number .. ":\n" .. tostring(problem))
 			end
+			if step.action == "finish" then
+				finishedScene = true
+			end
+		end
+		-- Sicherheitsnetz: Niemand bleibt eingefroren, auch wenn etwas schiefging
+		if not finishedScene or frozen then
+			actions.finish()
 		end
 	end
 
@@ -423,7 +502,7 @@ function Kapitel2.start()
 	prompt.MaxActivationDistance = 8
 	prompt.RequiresLineOfSight = false
 	prompt.Enabled = false
-	prompt.Parent = doorModel:FindFirstChild("Door")
+	prompt.Parent = doorModel:FindFirstChild("Door") or doorModel.PrimaryPart
 	local started = false
 	prompt.Triggered:Connect(function(player)
 		if started then

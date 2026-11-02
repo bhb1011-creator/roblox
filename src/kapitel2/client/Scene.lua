@@ -197,14 +197,86 @@ function Kapitel2.run()
 		end
 	end)
 
+	------------------------------------------------------------------ Eigene Kerze
+	-- Der Server hängt die Kerze an die Hand (für die anderen). Man selbst sieht sie
+	-- unten links im Bild, mit eigenem Licht; die Kerze an der Hand bleibt unsichtbar.
+	local candleDim, candleDimUntil = 1, 0 -- 1 = normal, kleiner = Kerzen fast aus
+	local held = create("Model", { Name = "HeldCandle" })
+	local heldParts = {}
+	local function heldPiece(name, shape, size, color, material, offset)
+		local part = create("Part", {
+			Name = name,
+			Shape = shape,
+			Size = size,
+			Color = color,
+			Material = material,
+			Anchored = true,
+			CanCollide = false,
+			CanQuery = false,
+			CanTouch = false,
+			CastShadow = false,
+			Parent = held,
+		})
+		table.insert(heldParts, { part = part, offset = offset })
+		return part
+	end
+	local upright = CFrame.Angles(0, 0, math.rad(90))
+	heldPiece("CandleHolder", Enum.PartType.Cylinder, Vector3.new(0.08, 0.42, 0.42), Color3.fromRGB(120, 96, 52), Enum.Material.Metal, upright)
+	heldPiece("Candle", Enum.PartType.Cylinder, Vector3.new(0.55, 0.15, 0.15), Color3.fromRGB(225, 215, 190), Enum.Material.SmoothPlastic, CFrame.new(0, 0.31, 0) * upright)
+	local heldFlame = heldPiece("CandleFlame", Enum.PartType.Ball, Vector3.new(0.1, 0.1, 0.1), Color3.fromRGB(255, 170, 70), Enum.Material.Neon, CFrame.new(0, 0.65, 0))
+	local heldLight = create("PointLight", {
+		Name = "OwnCandleLight",
+		Range = 18,
+		Brightness = 1.4,
+		Color = Color3.fromRGB(255, 180, 110),
+		Shadows = true,
+		Parent = heldFlame,
+	})
+	local heldSeed = math.random() * 100
+	local heldSway = CFrame.new()
+	local function updateHeldCandle(deltaTime, now)
+		local character = player.Character
+		local serverCandle = character and character:FindFirstChild("PlayerCandle")
+		if not serverCandle then
+			held.Parent = nil
+			return
+		end
+		-- die Kerze an der eigenen Hand ausblenden (Licht kommt von der Kerze im Bild)
+		for _, part in serverCandle:GetDescendants() do
+			if part:IsA("BasePart") then
+				part.LocalTransparencyModifier = 1
+			elseif part:IsA("PointLight") then
+				part.Enabled = false
+			end
+		end
+		held.Parent = workspace -- nur auf diesem Computer (der Server kennt sie nicht)
+		local sway = CFrame.new(math.noise(now * 0.7, 1) * 0.03, math.noise(now * 0.9, 2) * 0.03, 0)
+		heldSway = heldSway:Lerp(sway, math.min(deltaTime * 4, 1))
+		local base = camera.CFrame * CFrame.new(-0.62, -0.72, -1.45) * heldSway
+		-- immer aufrecht, auch wenn man nach oben oder unten schaut
+		base = CFrame.new(base.Position) * CFrame.Angles(0, select(2, camera.CFrame:ToOrientation()), 0)
+		for _, entry in heldParts do
+			entry.part.CFrame = base * entry.offset
+		end
+		local flicker = 0.85 + math.noise(now * 6, heldSeed) * 0.22 + math.noise(now * 17, heldSeed + 3) * 0.07
+		heldLight.Brightness = 1.4 * flicker * candleDim
+		heldFlame.Transparency = 1 - math.clamp(candleDim * 1.2, 0, 1)
+	end
+
 	------------------------------------------------------------------ Kerzen
 	local candles = {} -- Licht -> { base, flame }
-	local candleDim, candleDimUntil = 1, 0
 	-- nur im Haus und bei den Wagners suchen (nicht im ganzen Wald)
 	local house
 	local function scanCandles()
 		house = house or workspace:FindFirstChild("WagnerHouse", true)
-		for _, container in { house, workspace:FindFirstChild("Wagners") } do
+		local containers = { house, workspace:FindFirstChild("Wagners") }
+		for _, other in Players:GetPlayers() do
+			local candle = other ~= player and other.Character and other.Character:FindFirstChild("PlayerCandle")
+			if candle then
+				table.insert(containers, candle)
+			end
+		end
+		for _, container in containers do
 			for _, light in container and container:GetDescendants() or {} do
 				if light:IsA("PointLight") and light.Name == "CandleLight" and not candles[light] then
 					candles[light] = { base = light.Brightness, seed = math.random() * 100 }
@@ -391,9 +463,18 @@ function Kapitel2.run()
 			end)
 		end
 	end)
-	-- Wer später dazukommt, sieht sofort etwas
+	-- Wer später dazukommt, sieht sofort etwas (und weiß, dass man schon im Haus ist)
 	if remotes:GetAttribute("Started") then
 		beginOnce()
+	end
+	houseInside = houseInside or remotes:GetAttribute("Inside") == true
+	remotes:GetAttributeChangedSignal("Inside"):Connect(function()
+		houseInside = remotes:GetAttribute("Inside") == true
+	end)
+	if remotes:GetAttribute("Explore") then
+		task.delay(8, function()
+			hint("Sieh dich im Haus um.", 6)
+		end)
 	end
 	-- falls die Startnachricht verloren geht: sobald die Spielfigur da ist
 	task.spawn(function()
@@ -449,6 +530,7 @@ function Kapitel2.run()
 			end
 		end
 
+		updateHeldCandle(deltaTime, now)
 		updateNecks(deltaTime)
 
 		-- Im Haus ist es still: kein Wind, keine Tiere, nur das Haus knarrt

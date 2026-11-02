@@ -12,6 +12,7 @@
 --   doorOpen    – die Tür geht ganz auf
 --   mrAppears   – die Kerze flackert fast aus; danach steht Mr. Wagner hinter ihr
 --   invite      – beide treten zur Seite, man geht selbst hinein, die Tür fällt zu
+--   candles     – jeder Spieler bekommt eine Kerze in die Hand (mehr Licht im Haus)
 --   point       – Mr. Wagner zeigt die Treppe hoch
 --   finish      – Ende des Gesprächs: danach kann man sich frei im Haus umsehen
 -- `look` = wohin der Sprecher schaut: "player", "down" oder "stairs".
@@ -68,6 +69,8 @@ Kapitel2Dialogue.SCRIPT = {
 	{ speaker = "mrsWagner", text = "Come in. Don't let the cold in." },
 	{ action = "invite", wait = 1.2 },
 	{ speaker = "mrsWagner", text = "The children are already asleep. You'll meet them tomorrow.", wait = 0.6 },
+	{ speaker = "mrsWagner", action = "candles", text = { solo = "Here. Take this candle.", duo = "Here. Take these candles." }, wait = 0.4 },
+	{ speaker = "mrsWagner", text = "The house gets very dark at night.", wait = 0.8 },
 	{ speaker = "mrWagner", action = "point", look = "stairs", text = "Your room is upstairs. Second door on the left.", wait = 1.3 },
 	{ speaker = "mrWagner", text = "Not the first one.", wait = 1 },
 	{ speaker = "mrWagner", look = "player", text = "And whatever you hear tonight...", wait = 0.7 },

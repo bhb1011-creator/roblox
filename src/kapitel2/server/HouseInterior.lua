@@ -39,9 +39,9 @@ local FLOOR = BASE + 0.1 -- Oberkante des Fußbodens
 local TOP = BASE + 2 * STORY
 local CEILING = TOP - 0.5
 local GALLERY = BASE + STORY -- Fußboden oben
-local GALLERY_Z = -0.5 -- Vorderkante der Galerie
+local GALLERY_Z = -3 -- Vorderkante der Galerie (tief genug, dass man oben bequem ankommt)
 local STAIRS_X0, STAIRS_X1 = X0, -5
-local STAIRS_Z0 = -12.5 -- erste Stufe
+local STAIRS_Z0 = -13.4 -- erste Stufe
 local STEPS = 13
 
 HouseInterior.FLOOR = FLOOR

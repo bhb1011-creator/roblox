@@ -622,10 +622,17 @@ end
 
 ------------------------------------------------------------------ Dächer
 -- Walmdach über einem Rechteck (Plan-Koordinaten), Traufe bei `base`
+-- `overhang` = Dachüberstand; eine Zahl für alle Seiten oder eine Tabelle pro Seite
+-- ({ x0 =, x1 =, y0 =, y1 = }). Negativ = das Dach endet vor der Wand (an einer
+-- höheren Hauswand, damit es nicht in den Raum dahinter ragt). Dort gibt es keine Rinne.
 local function hipRoof(x0, y0, x1, y1, base, rise, overhang)
 	overhang = overhang or 1.2
-	local a = L(x0 - overhang, y0 - overhang, base)
-	local c = L(x1 + overhang, y1 + overhang, base)
+	local over = type(overhang) == "table" and overhang or {}
+	local default = type(overhang) == "number" and overhang or 1.2
+	local ox0, ox1 = over.x0 or default, over.x1 or default
+	local oy0, oy1 = over.y0 or default, over.y1 or default
+	local a = L(x0 - ox0, y0 - oy0, base)
+	local c = L(x1 + ox1, y1 + oy1, base)
 	local minX, maxX = math.min(a.X, c.X), math.max(a.X, c.X)
 	local minZ, maxZ = math.min(a.Z, c.Z), math.max(a.Z, c.Z)
 	local w, d = maxX - minX, maxZ - minZ
@@ -663,8 +670,13 @@ local function hipRoof(x0, y0, x1, y1, base, rise, overhang)
 		beam("RoofRidge", r1, r2, 0.6, COLORS.ridge, M.Slate)
 	end
 	-- Regenrinnen an der Traufe
-	for _, edge in { { p1, p2 }, { p2, p3 }, { p3, p4 }, { p4, p1 } } do
-		beam("Gutter", edge[1] - Vector3.new(0, 0.3, 0), edge[2] - Vector3.new(0, 0.3, 0), 0.35, COLORS.metal, M.Metal)
+	-- (p1..p4 liegen bei Haus-x = min/max und Haus-z = min/max; Plan-x wächst mit
+	-- Haus-x, Plan-y wächst gegen Haus-z)
+	local sideOver = { oy1, ox1, oy0, ox0 }
+	for index, edge in { { p1, p2 }, { p2, p3 }, { p3, p4 }, { p4, p1 } } do
+		if sideOver[index] > 0 then
+			beam("Gutter", edge[1] - Vector3.new(0, 0.3, 0), edge[2] - Vector3.new(0, 0.3, 0), 0.35, COLORS.metal, M.Metal)
+		end
 	end
 end
 
@@ -877,8 +889,10 @@ local function buildFloorsAndRoofs()
 	pyramidRoof({ { 66, 18 }, { 68, 12 }, { 76, 12 }, { 78, 18 } }, TOP, 4, 1)
 	-- niedrige Anbauten
 	pyramidRoof({ { 10, 60 }, { 36, 60 }, { 36, 80 }, { 18, 80 }, { 10, 72 } }, BASE + STORY, 5, 1.2)
-	hipRoof(36, 60, 41.75, 72, BASE + STORY, 2.5, 0.8)
-	hipRoof(40, 8, 54.25, 20, BASE + STORY, 3.5, 1)
+	-- WC und Speisekammer stoßen an höhere Wände: dort kein Überstand (sonst ragt das
+	-- Dach in die Eingangshalle über der Treppe bzw. in die Kinderzimmer)
+	hipRoof(36, 60, 41.75, 72, BASE + STORY, 2.5, { x0 = 0.8, x1 = -0.45, y0 = 0.8, y1 = 0.8 })
+	hipRoof(40, 8, 54.25, 20, BASE + STORY, 3.5, { x0 = 1, x1 = 1, y0 = 1, y1 = -0.45 })
 	pyramidRoof({ { 8, 30 }, { 34, 30 }, { 34, 38 }, { 14, 38 }, { 8, 34 } }, BASE + STORY, 3, 1)
 	-- Wintergarten: Glasdach mit weißen Sprossen
 	pyramidRoof(HEX, FLOOR.E + 8, 6, 0.6, COLORS.glassHouse, M.Glass, { Transparency = 0.55 }, "GlassRoof")
@@ -1248,6 +1262,15 @@ local function distanceToSegment(px, py, a, b)
 end
 
 -- Liegt ein Punkt (Welt) im Haus oder näher als `margin` daran?
+-- Steht dieser Punkt im Haus (im Grundriss, nicht tief im Keller oder Tunnel)?
+function Mansion.isInside(worldPosition)
+	if not origin then
+		return false
+	end
+	local relative = origin:Inverse() * worldPosition
+	return relative.Y > -12 and pointInPolygon(relative.X + 50, 57.4 - relative.Z, FOOTPRINT)
+end
+
 function Mansion.covers(worldPosition, margin)
 	local relative = origin:Inverse() * worldPosition
 	local x, y = relative.X + 50, 57.4 - relative.Z
