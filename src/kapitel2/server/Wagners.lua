@@ -372,6 +372,44 @@ local function face(model, head, style, colors)
 	end
 end
 
+-- Rechter Arm angewinkelt, in der Hand eine brennende Kerze (Mrs. Wagner). Die Kerze wird
+-- in der Grundhaltung so angebracht, dass sie nach dem Anwinkeln genau senkrecht steht.
+local function holdCandle(model)
+	local hand = model:FindFirstChild("RightHand") or model:FindFirstChild("Right Arm")
+	if not hand then
+		return
+	end
+	local upperArm = model:FindFirstChild("RightUpperArm")
+	local lowerArm = model:FindFirstChild("RightLowerArm")
+	local up, bend = math.rad(35), math.rad(65)
+	local shoulder = upperArm and upperArm:FindFirstChild("RightShoulder")
+	local elbow = lowerArm and lowerArm:FindFirstChild("RightElbow")
+	local canBend = shoulder ~= nil and elbow ~= nil and pcall(function()
+		shoulder.C0 = shoulder.C0
+		elbow.C0 = elbow.C0
+	end)
+	if not canBend then
+		up, bend = 0, 0 -- Arm bleibt hängen, die Kerze trotzdem senkrecht
+	end
+	local upright = CFrame.Angles(-(up + bend), 0, 0)
+	local lift = hand.Size.Y / 2
+	attach(model, hand, "CandleHolder", Vector3.new(0.12, 0.6, 0.6), upright * CFrame.new(0, lift + 0.06, -0.05) * CFrame.Angles(0, 0, math.rad(90)), Color3.fromRGB(120, 96, 52), Enum.Material.Metal, Enum.PartType.Cylinder)
+	attach(model, hand, "Candle", Vector3.new(0.9, 0.22, 0.22), upright * CFrame.new(0, lift + 0.57, -0.05) * CFrame.Angles(0, 0, math.rad(90)), Color3.fromRGB(225, 215, 190), Enum.Material.SmoothPlastic, Enum.PartType.Cylinder)
+	local flame = attach(model, hand, "CandleFlame", Vector3.new(0.15, 0.15, 0.15), upright * CFrame.new(0, lift + 1.1, -0.05), Color3.fromRGB(255, 170, 70), Enum.Material.Neon, Enum.PartType.Ball)
+	flame.CastShadow = false
+	local light = Instance.new("PointLight")
+	light.Name = "CandleLight"
+	light.Range = 9
+	light.Brightness = 1.3
+	light.Color = Color3.fromRGB(255, 160, 85)
+	light.Shadows = true
+	light.Parent = flame
+	if canBend then
+		shoulder.C0 *= CFrame.Angles(up, 0, 0)
+		elbow.C0 *= CFrame.Angles(bend, 0, 0)
+	end
+end
+
 function Wagners.buildMrs(parent)
 	-- ganz normale, freundliche Frau – dass sie besessen ist, sieht man ihr nicht an
 	local colors = {
@@ -411,36 +449,7 @@ function Wagners.buildMrs(parent)
 	rounded(model, torso, "Collar", Vector3.new(t.X * 0.34, t.Y * 0.12, t.Z * 0.62), CFrame.new(0, t.Y * 0.5, -0.04), Color3.fromRGB(226, 220, 206), fabric)
 	rounded(model, torso, "Locket", Vector3.new(0.12, 0.16, 0.06), CFrame.new(0, t.Y * 0.18, -t.Z * 0.45), Color3.fromRGB(176, 146, 70), Enum.Material.Metal)
 
-	-- Rechter Arm angewinkelt (hält die Kerze vor der Brust). Die Kerze wird in der
-	-- Grundhaltung so angebracht, dass sie nach dem Anwinkeln genau senkrecht steht.
-	local up, bend = math.rad(35), math.rad(65)
-	local shoulder = model.RightUpperArm:FindFirstChild("RightShoulder")
-	local elbow = model.RightLowerArm:FindFirstChild("RightElbow")
-	local canBend = shoulder ~= nil and elbow ~= nil and pcall(function()
-		shoulder.C0 = shoulder.C0
-		elbow.C0 = elbow.C0
-	end)
-	if not canBend then
-		up, bend = 0, 0 -- Arm bleibt hängen, die Kerze trotzdem senkrecht
-	end
-	local hand = model.RightHand
-	local upright = CFrame.Angles(-(up + bend), 0, 0)
-	local lift = hand.Size.Y / 2
-	attach(model, hand, "CandleHolder", Vector3.new(0.12, 0.6, 0.6), upright * CFrame.new(0, lift + 0.06, -0.05) * CFrame.Angles(0, 0, math.rad(90)), Color3.fromRGB(120, 96, 52), Enum.Material.Metal, Enum.PartType.Cylinder)
-	attach(model, hand, "Candle", Vector3.new(0.9, 0.22, 0.22), upright * CFrame.new(0, lift + 0.57, -0.05) * CFrame.Angles(0, 0, math.rad(90)), Color3.fromRGB(225, 215, 190), Enum.Material.SmoothPlastic, Enum.PartType.Cylinder)
-	local flame = attach(model, hand, "CandleFlame", Vector3.new(0.15, 0.15, 0.15), upright * CFrame.new(0, lift + 1.1, -0.05), Color3.fromRGB(255, 170, 70), Enum.Material.Neon, Enum.PartType.Ball)
-	flame.CastShadow = false
-	local light = Instance.new("PointLight")
-	light.Name = "CandleLight"
-	light.Range = 9
-	light.Brightness = 1.3
-	light.Color = Color3.fromRGB(255, 160, 85)
-	light.Shadows = true
-	light.Parent = flame
-	if canBend then
-		shoulder.C0 *= CFrame.Angles(up, 0, 0)
-		elbow.C0 *= CFrame.Angles(bend, 0, 0)
-	end
+	holdCandle(model)
 
 	model.Parent = parent
 	return model
@@ -571,10 +580,78 @@ function Wagners.buildTommy(parent)
 end
 
 -- Figur an eine Stelle stellen: `ground` = Punkt auf dem Boden, `facing` = wohin sie schaut
-function Wagners.place(model, ground, facing)
+-- Abstand von der Mitte des HumanoidRootPart bis zu den Fußsohlen
+local function footOffset(model)
+	local stored = model:GetAttribute("FootOffset")
+	if stored then
+		return stored
+	end
 	local humanoid = model:FindFirstChildOfClass("Humanoid")
+	return humanoid.HipHeight + model.HumanoidRootPart.Size.Y / 2
+end
+
+-- Eigene Figuren aus Studio: Liegt in ServerStorage ein Ordner "Wagners" mit einem Modell
+-- dieses Namens ("MrsWagner" oder "MrWagner"), wird eine Kopie davon benutzt statt der
+-- selbst gebauten Figur. So kann man in Studio echte Roblox-Avatare (mit Kleidung, Haaren
+-- und Gesicht) aussuchen. Skripte darin werden zur Sicherheit entfernt.
+function Wagners.fromStudio(name, parent)
+	local found, folder = pcall(function()
+		return game:GetService("ServerStorage"):FindFirstChild("Wagners")
+	end)
+	folder = found and folder or nil
+	local source = folder and folder:FindFirstChild(name)
+	if not (source and source:IsA("Model")) then
+		return nil
+	end
+	local model = source:Clone()
+	model.Name = name
+	for _, item in model:GetDescendants() do
+		if item:IsA("LuaSourceContainer") then
+			item:Destroy()
+		end
+	end
+	local humanoid = model:FindFirstChildOfClass("Humanoid")
+	local root = model:FindFirstChild("HumanoidRootPart")
+	if not (humanoid and root) then
+		warn("Kapitel 2: ServerStorage.Wagners." .. name .. " ist keine Spielfigur (Humanoid und HumanoidRootPart fehlen) – nehme die eingebaute Figur.")
+		model:Destroy()
+		return nil
+	end
+	humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
+	pcall(function()
+		humanoid.EvaluateStateMachine = false
+	end)
+	-- Abstand Mitte bis Füße messen, solange die Figur noch so steht wie in Studio
+	local lowest = math.huge
+	for _, part in model:GetDescendants() do
+		if part:IsA("BasePart") and part ~= root and part.Transparency < 1 then
+			lowest = math.min(lowest, part.Position.Y - part.Size.Y / 2)
+		end
+	end
+	if lowest < math.huge then
+		model:SetAttribute("FootOffset", root.Position.Y - lowest)
+	end
+	-- Nur die Mitte ist verankert, alles andere hängt an den Gelenken
+	for _, part in model:GetDescendants() do
+		if part:IsA("BasePart") then
+			part.Anchored = part == root
+			part.CanCollide = false
+		end
+	end
+	model.PrimaryPart = root
+	for _, info in MOVING_JOINTS do
+		replaceJoint(model, info[1], info[2])
+	end
+	if name == "MrsWagner" then
+		holdCandle(model)
+	end
+	model.Parent = parent
+	return model
+end
+
+function Wagners.place(model, ground, facing)
 	local root = model.HumanoidRootPart
-	local height = humanoid.HipHeight + root.Size.Y / 2
+	local height = footOffset(model)
 	local target = Vector3.new(facing.X, ground.Y, facing.Z)
 	if (target - ground).Magnitude < 0.01 then
 		target = ground + root.CFrame.LookVector
@@ -584,9 +661,7 @@ end
 
 -- Wo die Füße der Figur gerade stehen
 function Wagners.ground(model)
-	local humanoid = model:FindFirstChildOfClass("Humanoid")
-	local root = model.HumanoidRootPart
-	return root.Position - Vector3.new(0, humanoid.HipHeight + root.Size.Y / 2, 0)
+	return model.HumanoidRootPart.Position - Vector3.new(0, footOffset(model), 0)
 end
 
 return Wagners

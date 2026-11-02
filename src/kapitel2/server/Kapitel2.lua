@@ -93,8 +93,13 @@ function Kapitel2.start()
 		end
 		return result
 	end
-	local mrs = build("Mrs. Wagner", Wagners.buildMrs)
-	local mr = build("Mr. Wagner", Wagners.buildMr)
+	-- eigene Figuren aus ServerStorage.Wagners, sonst die eingebauten
+	local mrs = build("Mrs. Wagner", function(folder)
+		return Wagners.fromStudio("MrsWagner", folder) or Wagners.buildMrs(folder)
+	end)
+	local mr = build("Mr. Wagner", function(folder)
+		return Wagners.fromStudio("MrWagner", folder) or Wagners.buildMr(folder)
+	end)
 	local hiddenSpot = Route.housePoint(-2, -6) - Vector3.new(0, 80, 0)
 	if mrs then
 		Wagners.place(mrs, hall(SPOTS.mrsStart), facing)
