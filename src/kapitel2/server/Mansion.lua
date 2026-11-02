@@ -152,7 +152,20 @@ end
 local origin, current
 local rng = Random.new(1313)
 
+-- Kurz Luft holen: Roblox bricht ein Skript ab, das zu lange ohne Pause läuft
+-- ("Script timeout"). Das Haus hat über 5000 Teile, darum wird zwischendurch
+-- immer wieder einen Moment gewartet.
+local lastBreath = os.clock()
+local function breathe()
+	if os.clock() - lastBreath > 0.1 then
+		task.wait()
+		lastBreath = os.clock()
+	end
+end
+Mansion.breathe = breathe
+
 local function box(name, size, cf, color, material, extra)
+	breathe()
 	local props = { Name = name, Size = size, CFrame = origin * cf, Color = color, Material = material or M.SmoothPlastic, Parent = current }
 	for key, value in extra or {} do
 		props[key] = value
@@ -161,6 +174,7 @@ local function box(name, size, cf, color, material, extra)
 end
 
 local function cyl(name, height, diameter, cf, color, material, extra)
+	breathe()
 	local props = { Name = name, Color = color, Material = material or M.SmoothPlastic, Parent = current }
 	for key, value in extra or {} do
 		props[key] = value
@@ -203,6 +217,7 @@ local function triangle(name, a, b, c, thickness, color, material, extra)
 		if size.Y < 0.01 or size.Z < 0.01 then
 			return
 		end
+		breathe()
 		local props = { Name = name, Size = size, CFrame = origin * cf, Color = color, Material = material or M.SmoothPlastic, Parent = current }
 		for key, value in extra or {} do
 			props[key] = value
@@ -1159,7 +1174,9 @@ local function buildTerrainAndTunnel()
 	-- Gelände unter und um das Haus einebnen (knapp unter dem Hof), Keller ausheben
 	local center = L(46, 44)
 	local size = Vector3.new(104, 0, 96)
+	breathe()
 	terrain:FillBlock(origin * CFrame.new(center.X, -8, center.Z), Vector3.new(size.X, 15.2, size.Z), Enum.Material.Ground)
+	breathe()
 	terrain:FillBlock(origin * CFrame.new(center.X, 22, center.Z), Vector3.new(size.X, 44.8, size.Z), Enum.Material.Air)
 	for _, room in ROOMS.K do
 		local minX, maxX, minY, maxY = math.huge, -math.huge, math.huge, -math.huge
@@ -1170,6 +1187,7 @@ local function buildTerrainAndTunnel()
 		-- unter dem Haus bis unter den Fußboden, draußen nur bis zur eigenen Decke
 		local top = room.id == "ritual" and -2.0 or -0.3
 		local c = L((minX + maxX) / 2, (minY + maxY) / 2, (-8.9 + top) / 2)
+		breathe()
 		terrain:FillBlock(origin * CFrame.new(c), Vector3.new(maxX - minX + 2, top + 8.9, maxY - minY + 2), Enum.Material.Air)
 	end
 	-- Tunnel: windet sich vom Ritualraum hinaus in den Wald, mit Holzstützen. Hinter dem
@@ -1188,6 +1206,7 @@ local function buildTerrainAndTunnel()
 		local length = (c - a).Magnitude
 		local mid = (a + c) / 2
 		local frame = CFrame.lookAt(mid, c)
+		breathe()
 		terrain:FillBlock(origin * frame * CFrame.new(0, 2.9, 0), Vector3.new(4.6, 5.8, length + 4), Enum.Material.Air)
 		box("TunnelFloor", Vector3.new(4.6, 0.4, length + 2), frame * CFrame.new(0, -0.2, 0), Color3.fromRGB(70, 56, 40), M.Ground)
 		local count = math.floor(length / 6)
@@ -1203,6 +1222,7 @@ local function buildTerrainAndTunnel()
 	local last = tunnelFloor(TUNNEL[#TUNNEL][1], TUNNEL[#TUNNEL][2])
 	local surface = groundAt(Vector3.new(last.X, 0, last.Z))
 	local height = surface - last.Y
+	breathe()
 	terrain:FillBlock(origin * CFrame.new(last + Vector3.new(0, height / 2, -1.4)), Vector3.new(4, height, 4), Enum.Material.Air)
 	for k = 0, math.floor((height - 1) / 0.9) do
 		box("LadderRung", Vector3.new(2, 0.2, 0.2), CFrame.new(last + Vector3.new(0, 0.8 + k * 0.9, -1.8)), Color3.fromRGB(90, 70, 46), M.Wood)
@@ -1261,6 +1281,7 @@ function Mansion.clearAround(levelFolder)
 	local removed = 0
 	local function visit(folder)
 		for _, child in folder:GetChildren() do
+			breathe()
 			if child ~= Mansion.model then
 				if child:IsA("Folder") then
 					visit(child)
@@ -1293,18 +1314,25 @@ function Mansion.build(model, houseOrigin)
 	Mansion.origin = houseOrigin
 	local root = newFolder("Mansion", model)
 
-	current = newFolder("Ground", root)
-	buildTerrainAndTunnel()
-	current = newFolder("Walls", root)
-	buildWalls()
-	current = newFolder("FloorsAndRoofs", root)
-	buildFloorsAndRoofs()
-	current = newFolder("Stairs", root)
-	buildStairs()
-	current = newFolder("Furniture", root)
-	buildFurniture()
+	local steps = {
+		{ "Ground", buildTerrainAndTunnel },
+		{ "Walls", buildWalls },
+		{ "FloorsAndRoofs", buildFloorsAndRoofs },
+		{ "Stairs", buildStairs },
+		{ "Furniture", buildFurniture },
+	}
+	for _, step in steps do
+		local started = os.clock()
+		current = newFolder(step[1], root)
+		step[2]()
+		print(string.format("Kapitel 2: Haus – %s fertig (%.1f s)", step[1], os.clock() - started))
+		task.wait()
+		lastBreath = os.clock()
+	end
 	-- Eingangshalle wie bisher: Treppe, Galerie, Uhr, Garderobe, Spiegel …
 	HouseInterior.build(model, origin, true)
+	task.wait()
+	lastBreath = os.clock()
 	return root
 end
 

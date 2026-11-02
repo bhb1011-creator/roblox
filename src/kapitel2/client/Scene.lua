@@ -120,9 +120,10 @@ function Kapitel2.run()
 	local loadingLabel = label({
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		Position = UDim2.fromScale(0.5, 0.5),
-		Size = UDim2.new(0.8, 0, 0, 30),
+		Size = UDim2.new(0.8, 0, 0, 90),
 		Font = Enum.Font.SpecialElite,
 		Text = "Lädt …",
+		TextWrapped = true,
 		TextSize = 22,
 		TextColor3 = Color3.fromRGB(170, 165, 155),
 	})
@@ -301,7 +302,21 @@ function Kapitel2.run()
 	end
 
 	------------------------------------------------------------------ Nachrichten vom Server
-	local remotes = ReplicatedStorage:WaitForChild("Kapitel2")
+	-- Der Server legt diesen Ordner an, sobald er mit dem Bauen beginnt
+	local remotes = ReplicatedStorage:WaitForChild("Kapitel2", 60)
+	if not remotes then
+		loadingLabel.Text = "Der Server startet nicht – bitte im Output nach roten Fehlern schauen."
+		remotes = ReplicatedStorage:WaitForChild("Kapitel2")
+	end
+	-- Was der Server gerade macht (oder welcher Fehler passiert ist)
+	local function showStatus()
+		local status = remotes:GetAttribute("Status")
+		if status and loadingLabel.Visible then
+			loadingLabel.Text = status
+		end
+	end
+	remotes:GetAttributeChangedSignal("Status"):Connect(showStatus)
+	showStatus()
 	local event = remotes:WaitForChild("SceneEvent")
 	local choiceEvent = remotes:WaitForChild("SceneChoice")
 	local houseInside = false

@@ -41,21 +41,12 @@ local function hall(spot)
 end
 
 function Kapitel2.start()
-	House.mansion = true -- das große Herrenhaus statt des kleinen Holzhauses
-	print("Kapitel 2: Welt und Haus werden gebaut …")
-	World.build()
-	local removed = Mansion.clearAround(workspace:FindFirstChild("Level1"))
-	print("Kapitel 2: Welt fertig (" .. tostring(removed) .. " Bäume und Teile ums Haus entfernt).")
-
-	local origin = Route.houseCFrame()
-	local house = workspace:FindFirstChild("WagnerHouse", true)
-	local doorModel = house:FindFirstChild("FrontDoor")
-	local hingeCF = doorModel.PrimaryPart.CFrame
-	local facing = Route.housePoint(-2, -20) -- die Wagners schauen zur Tür hinaus
-
-	-- Gespräch: Server → Clients (Sätze, Auswahl, Geräusche) und zurück (Antwort)
+	-- Gespräch: Server → Clients (Sätze, Auswahl, Geräusche) und zurück (Antwort).
+	-- Wird zuerst angelegt, damit die Spieler gleich sehen, dass gebaut wird.
+	-- Das Attribut "Status" zeigt der Ladebildschirm an.
 	local remotes = Instance.new("Folder")
 	remotes.Name = "Kapitel2"
+	remotes:SetAttribute("Status", "Das Haus wird gebaut …")
 	local event = Instance.new("RemoteEvent")
 	event.Name = "SceneEvent"
 	event.Parent = remotes
@@ -63,6 +54,30 @@ function Kapitel2.start()
 	choiceEvent.Name = "SceneChoice"
 	choiceEvent.Parent = remotes
 	remotes.Parent = ReplicatedStorage
+
+	House.mansion = true -- das große Herrenhaus statt des kleinen Holzhauses
+	print("Kapitel 2: Welt und Haus werden gebaut …")
+	local started = os.clock()
+	local ok, problem = xpcall(function()
+		World.build()
+		task.wait()
+		local removed = Mansion.clearAround(workspace:FindFirstChild("Level1"))
+		print(string.format("Kapitel 2: Welt fertig nach %.1f s (%d Bäume und Teile ums Haus entfernt).", os.clock() - started, removed or 0))
+	end, debug.traceback)
+	local house = workspace:FindFirstChild("WagnerHouse", true)
+	local doorModel = house and house:FindFirstChild("FrontDoor")
+	if not ok or not (doorModel and doorModel.PrimaryPart) then
+		local text = tostring(problem or "Haus oder Haustür fehlt")
+		warn("Kapitel 2: FEHLER beim Bauen der Welt – bitte diese Meldung an Claude schicken:\n" .. text)
+		remotes:SetAttribute("Status", "Fehler beim Bauen (siehe Output):\n" .. (text:match("[^\n]+") or text))
+		return
+	end
+	remotes:SetAttribute("Status", "Die Wagners werden geweckt …")
+
+	local origin = Route.houseCFrame()
+	local hingeCF = doorModel.PrimaryPart.CFrame
+	local facing = Route.housePoint(-2, -20) -- die Wagners schauen zur Tür hinaus
+
 
 	------------------------------------------------------------------ Die Wagners
 	local family = Instance.new("Folder")
