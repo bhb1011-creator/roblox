@@ -33,6 +33,12 @@ local FALLBACK_KEYS = {
 	stepGravel = { "footstep", 0.95 },
 	stepDirt = { "footstep", 0.7 },
 	forestWind = { "wind", 1 },
+	heavyKnock = { "footstep", 0.35 },
+	doorBurst = { "footstep", 0.22 },
+	sarpStep = { "footstep", 0.42 },
+	heartbeat = { "footstep", 0.3 },
+	scream = { "sting", 1.25 },
+	jumpscare = { "sting", 0.85 },
 }
 
 local function makeSound(key, parent, props)
@@ -201,6 +207,8 @@ function Kapitel2.run()
 	-- Der Server hängt die Kerze an die Hand (für die anderen). Man selbst sieht sie
 	-- unten links im Bild, mit eigenem Licht; die Kerze an der Hand bleibt unsichtbar.
 	local candleDim, candleDimUntil = 1, 0 -- 1 = normal, kleiner = Kerzen fast aus
+	local dimTarget = 1 -- so hell werden die Kerzen nach dem Flackern wieder ("dim")
+	local ownCandleOff = false -- im Versteck ist die eigene Kerze aus
 	local held = create("Model", { Name = "HeldCandle" })
 	local heldParts = {}
 	local function heldPiece(name, shape, size, color, material, offset)
@@ -259,8 +267,8 @@ function Kapitel2.run()
 			entry.part.CFrame = base * entry.offset
 		end
 		local flicker = 0.85 + math.noise(now * 6, heldSeed) * 0.22 + math.noise(now * 17, heldSeed + 3) * 0.07
-		heldLight.Brightness = 1.4 * flicker * candleDim
-		heldFlame.Transparency = 1 - math.clamp(candleDim * 1.2, 0, 1)
+		heldLight.Brightness = ownCandleOff and 0 or 1.4 * flicker * candleDim
+		heldFlame.Transparency = ownCandleOff and 1 or 1 - math.clamp(candleDim * 1.2, 0, 1)
 	end
 
 	------------------------------------------------------------------ Kerzen
@@ -373,6 +381,52 @@ function Kapitel2.run()
 		end)
 	end
 
+	------------------------------------------------------------------ Jumpscare
+	local shakeUntil = 0
+	local scareFlash = create("Frame", {
+		Name = "ScareFlash",
+		Size = UDim2.fromScale(1, 1),
+		BackgroundColor3 = Color3.fromRGB(110, 0, 0),
+		BackgroundTransparency = 1,
+		BorderSizePixel = 0,
+		ZIndex = 9,
+		Parent = gui,
+	})
+	-- Sarps Gesicht schießt auf die Kamera zu, roter Blitz, dann schwarz
+	local function jumpscare()
+		local sound = makeSound("jumpscare", SoundService, { Volume = 2.5 })
+		if sound then
+			sound:Play()
+			task.delay(4, function()
+				sound:Destroy()
+			end)
+		end
+		local folder = workspace:FindFirstChild("SarpNight")
+		local sarpModel = folder and folder:FindFirstChild("Sarp")
+		local head = sarpModel and sarpModel:FindFirstChild("Head")
+		if head then
+			camera.CameraType = Enum.CameraType.Scriptable
+			local start = os.clock()
+			local connection
+			connection = RunService.RenderStepped:Connect(function()
+				local t = os.clock() - start
+				if t > 1.4 or not head.Parent then
+					connection:Disconnect()
+					return
+				end
+				local look = head.CFrame.LookVector
+				local distance = 3 - math.min(t / 0.3, 1) * 2.1
+				local shake = Vector3.new(math.random() - 0.5, math.random() - 0.5, 0) * 0.3
+				camera.CFrame = CFrame.lookAt(head.Position + look * distance + shake, head.Position)
+			end)
+		end
+		scareFlash.BackgroundTransparency = 0.3
+		TweenService:Create(scareFlash, TweenInfo.new(0.9), { BackgroundTransparency = 1 }):Play()
+		task.delay(1.25, function()
+			setFade(0, 0.12)
+		end)
+	end
+
 	------------------------------------------------------------------ Nachrichten vom Server
 	-- Der Server legt diesen Ordner an, sobald er mit dem Bauen beginnt
 	local remotes = ReplicatedStorage:WaitForChild("Kapitel2", 60)
@@ -453,12 +507,79 @@ function Kapitel2.run()
 		elseif kind == "explore" then
 			hint("Sieh dich im Haus um. Euer Zimmer ist oben – zweite Tür links.", 7)
 		elseif kind == "sleep" then
-			-- alle liegen im Bett: langsam einschlafen (hier geht es später mit der Nacht weiter)
-			finished = true
+			-- alle liegen im Bett: einschlafen, dann mitten in der Nacht
 			setFade(0, 4)
 			task.delay(4.5, function()
-				chapter.Text = "Ihr schlaft ein …"
-				chapterTitle.Text = "Fortsetzung folgt: die erste Nacht"
+				chapter.Text = "Mitten in der Nacht …"
+				chapterTitle.Text = "03:17"
+				showText(chapter, true, 1.5)
+				showText(chapterTitle, true, 2)
+			end)
+			task.delay(9.5, function()
+				showText(chapter, false, 1.5)
+				showText(chapterTitle, false, 1.5)
+			end)
+		elseif kind == "wake" then
+			finished = false
+			dimTarget = 0.8
+			showText(chapter, false, 0.5)
+			showText(chapterTitle, false, 0.5)
+			setFade(1, 2.5)
+		elseif kind == "dim" then
+			dimTarget = message.level or 1
+			candleDimUntil = 0
+		elseif kind == "hidden" then
+			ownCandleOff = true
+			hint("Versteckt. Sei ganz still … (E: rauskommen)", 5)
+		elseif kind == "unhidden" then
+			ownCandleOff = false
+		elseif kind == "nearScare" then
+			-- er steht direkt vor deinem Versteck
+			local seconds = message.seconds or 3
+			shakeUntil = os.clock() + seconds
+			task.spawn(function()
+				local stop = os.clock() + seconds
+				while os.clock() < stop do
+					local beat = makeSound("heartbeat", SoundService, { Volume = 1.6 })
+					if beat then
+						beat:Play()
+						task.delay(2, function()
+							beat:Destroy()
+						end)
+					end
+					task.wait(0.45)
+				end
+			end)
+		elseif kind == "jumpscare" then
+			jumpscare()
+		elseif kind == "caught" then
+			setFade(0, 0.1)
+			chapter.Text = "Er hat dich gefunden …"
+			chapterTitle.Text = ""
+			showText(chapter, true, 0.8)
+		elseif kind == "retry" then
+			camera.CameraType = Enum.CameraType.Custom
+			ownCandleOff = false
+			showText(chapter, false, 0.5)
+			showText(chapterTitle, false, 0.5)
+			setFade(1, 1.2)
+		elseif kind == "alone" then
+			finished = true
+			dimTarget = 0.6
+			task.delay(1, function()
+				chapter.Text = "Die Wagners sind weg."
+				chapterTitle.Text = "Du bist allein im Haus. Mit ihm."
+				showText(chapter, true, 1.5)
+				showText(chapterTitle, true, 2)
+			end)
+			task.delay(8, function()
+				setFade(0, 3)
+				showText(chapter, false, 1)
+				showText(chapterTitle, false, 1)
+			end)
+			task.delay(11.5, function()
+				chapter.Text = "ENDE VON KAPITEL 2 (TEIL 1)"
+				chapterTitle.Text = "Fortsetzung folgt …"
 				showText(chapter, true, 1.5)
 				showText(chapterTitle, true, 2)
 			end)
@@ -504,6 +625,13 @@ function Kapitel2.run()
 	local lastScan = 0
 
 	-- Bei der Antwortauswahl braucht man einen freien Mauszeiger (nach der Kamera setzen)
+	RunService:BindToRenderStep("Kapitel2Shake", Enum.RenderPriority.Camera.Value + 2, function()
+		-- Kamera zittert, wenn Sarp direkt vor dem Versteck steht
+		if os.clock() < shakeUntil and camera.CameraType ~= Enum.CameraType.Scriptable then
+			local amount = 0.006
+			camera.CFrame *= CFrame.Angles((math.random() - 0.5) * amount, (math.random() - 0.5) * amount, 0)
+		end
+	end)
 	RunService:BindToRenderStep("Kapitel2Mouse", Enum.RenderPriority.Camera.Value + 1, function()
 		if Choices.isChoosing() then
 			UserInputService.MouseBehavior = Enum.MouseBehavior.Default
@@ -525,7 +653,7 @@ function Kapitel2.run()
 			scanCandles()
 		end
 		if now > candleDimUntil then
-			candleDim += (1 - candleDim) * math.min(deltaTime * 3, 1)
+			candleDim += (dimTarget - candleDim) * math.min(deltaTime * 3, 1)
 		end
 		for light, info in candles do
 			if light.Parent then

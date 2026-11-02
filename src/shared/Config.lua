@@ -115,6 +115,13 @@ Config.SOUNDS = {
 	doorCreak = "", -- door_creak.ogg (Tür geht knarrend auf)
 	doorSlam = "", -- door_slam.ogg (Tür fällt hinter einem zu)
 	doorChain = "", -- door_chain.ogg (Türkette wird abgenommen)
+	-- Kapitel 2, die erste Nacht
+	scream = "", -- scream_distant.ogg (Schrei irgendwo im Haus, weckt einen auf)
+	heavyKnock = "", -- heavy_knock.ogg (drei schwere Schläge gegen die Haustür)
+	doorBurst = "", -- door_burst.ogg (Tür wird aufgerissen und knallt gegen die Wand)
+	sarpStep = "", -- sarp_step.ogg (schwerer, schleifender Schritt)
+	sarpBreath = "", -- sarp_breath.ogg (rasselndes Atmen ganz nah)
+	jumpscare = "", -- jumpscare.ogg (lauter Schreck-Ton mit Schrei)
 }
 
 -- Sprachausgabe auf Englisch mit der Text-to-Speech-Funktion von Roblox.
@@ -142,7 +149,19 @@ Config.VOICES = {
 			{ "AudioEqualizer", { LowGain = 4, MidGain = 0, HighGain = -6 } },
 			{ "AudioReverb", { DecayTime = 1.8, WetLevel = -8, DryLevel = 0, HighCutFrequency = 3500 } },
 		},
+	},	-- Sarp in seiner zweiten Gestalt: tief, verzerrt, mit Hall
+	sarpDemon = {
+		id = "1",
+		pitch = -7,
+		speed = 0.72,
+		volume = 2.2,
+		effects = {
+			{ "AudioEqualizer", { LowGain = 6, MidGain = -2, HighGain = -8 } },
+			{ "AudioDistortion", { Level = 0.25 } },
+			{ "AudioReverb", { DecayTime = 2.6, WetLevel = -4, DryLevel = 0, HighCutFrequency = 3000 } },
+		},
 	},
+
 	-- Die Spieler (Antworten) und der Erzähler (das sind auch die Spieler: "we", "I"):
 	-- eine hellere, jüngere Stimme
 	player = {

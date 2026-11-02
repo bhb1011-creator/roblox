@@ -980,10 +980,10 @@ local function buildStairs()
 	end
 	-- Handlauf an der rechten Wand (die geht bis in den Keller hinunter), genau zwischen
 	-- oberer und unterer Stufe und immer 3 über den Stufen
-	local railTop, railBottom = L(53.85, 33.4, FLOOR.E - 0.5 + 3), L(53.85, 23.2, FLOOR.K + 0.8 + 3)
+	local railTop, railBottom = L(53.6, 33.4, FLOOR.E - 0.5 + 3), L(53.6, 23.2, FLOOR.K + 0.8 + 3)
 	box("CellarHandrail", Vector3.new(0.2, 0.2, (railTop - railBottom).Magnitude), CFrame.lookAt((railTop + railBottom) / 2, railBottom), Color3.fromRGB(46, 36, 28), M.Wood)
 	for _, point in { railTop, railBottom } do
-		box("CellarRailHolder", Vector3.new(0.3, 0.12, 0.12), CFrame.new(point + Vector3.new(0.15, 0, 0)), COLORS.metal, M.Metal)
+		box("CellarRailHolder", Vector3.new(0.5, 0.12, 0.12), CFrame.new(point + Vector3.new(0.25, 0, 0)), COLORS.metal, M.Metal)
 	end
 end
 
@@ -1021,20 +1021,33 @@ local function buildFurniture()
 
 	-- Esszimmer: Tisch für sieben, gedeckt
 	local tableTop = Furniture.table(b, at(67, 30, E, "N"), 4, 15, 2.9, Color3.fromRGB(56, 40, 28))
-	box("TableRunner", Vector3.new(1.4, 0.03, 14), tableTop * CFrame.new(0, 0.02, 0), Color3.fromRGB(110, 30, 28), M.Fabric)
+	-- lange Tischdecke bis fast auf den Boden: darunter kann man sich verstecken
+	Furniture.tableCloth(b, at(67, 30, E, "N"), 4, 15, 2.9, Color3.fromRGB(176, 166, 146))
+	box("TableRunner", Vector3.new(1.4, 0.03, 14), tableTop * CFrame.new(0, 0.06, 0), Color3.fromRGB(110, 30, 28), M.Fabric)
 	for i = -1, 1 do
 		Furniture.chair(b, at(64.5, 30 + i * 4.5, E, "E"))
 		Furniture.chair(b, at(69.5, 30 + i * 4.5, E, "W"))
 		for _, x in { 65.4, 68.6 } do
-			box("Plate", Vector3.new(1.1, 0.06, 1.1), CFrame.new(L(x, 30 + i * 4.5, E + 2.93)), Color3.fromRGB(210, 204, 190), M.SmoothPlastic)
+			box("Plate", Vector3.new(1.1, 0.06, 1.1), CFrame.new(L(x, 30 + i * 4.5, E + 2.97)), Color3.fromRGB(210, 204, 190), M.SmoothPlastic)
 		end
 	end
 	Furniture.chair(b, at(67, 39.5, E, "N"))
-	box("Plate", Vector3.new(1.1, 0.06, 1.1), CFrame.new(L(67, 36.4, E + 2.93)), Color3.fromRGB(210, 204, 190), M.SmoothPlastic)
+	box("Plate", Vector3.new(1.1, 0.06, 1.1), CFrame.new(L(67, 36.4, E + 2.97)), Color3.fromRGB(210, 204, 190), M.SmoothPlastic)
 	for _, y in { 24, 30, 36 } do
 		lit(at(67, y, E + 2.9), 1)
 	end
 	Furniture.shelf(b, at(72, 13, E, "S"), 6, 2.9, "books", rng) -- niedrig, unter dem Erkerfenster
+	-- Verstecke für die erste Nacht (Night.lua): Schrank, unter dem Tisch, hinter dem Vorhang
+	local wardrobeFrame = at(75, 40.5, E, "N") -- an der Wand zum Wohnzimmer (rechts sind Fenster)
+	local inside = Furniture.hideWardrobe(b, wardrobeFrame)
+	Furniture.curtain(b, L(66.2, 18.25, E), L(77.8, 18.25, E), CEIL.E - E - 0.25, Color3.fromRGB(96, 30, 32))
+	Mansion.hideSpots = {
+		{ name = "Schrank", kind = "stand", place = origin * inside, exit = origin * at(75, 38, E, "N"), prompt = origin * CFrame.new(L(75, 38.9, E + 3.5)), search = Mansion.point(75, 37.2, E) },
+		{ name = "Tisch", kind = "lie", place = origin * CFrame.lookAt(L(67, 30, E + 0.55), L(67, 30, E + 5), L(67, 40, E) - L(67, 30, E)), exit = origin * at(63, 30, E, "E"), prompt = origin * CFrame.new(L(65, 30, E + 1.5)), search = Mansion.point(63.4, 28, E) },
+		{ name = "Vorhang", kind = "stand", place = origin * CFrame.lookAt(L(72, 15.9, E), L(72, 20, E)), exit = origin * at(72, 20.5, E, "S"), prompt = origin * CFrame.new(L(72, 18.9, E + 3.5)), search = Mansion.point(71, 19.8, E) },
+	}
+	-- die Stühle, auf die sich die Spieler beim Abendessen setzen
+	Mansion.dinnerSeats = { origin * at(64.5, 30, E, "E"), origin * at(69.5, 30, E, "W") }
 	Furniture.picture(b, at(80.02, 30, E + 6, "W"), 3, 4, Color3.fromRGB(40, 50, 40), true)
 	Furniture.picture(b, at(56, 18.54, E + 6, "S"), 2.4, 3, Color3.fromRGB(56, 46, 40), true)
 
@@ -1439,6 +1452,27 @@ function Mansion.build(model, houseOrigin)
 	task.wait()
 	lastBreath = os.clock()
 	return root
+end
+
+-- Punkt im Haus (Plan-Koordinaten, Höhe) in Weltkoordinaten
+function Mansion.point(x, y, height)
+	return (origin * CFrame.new(L(x, y, height or FLOOR.E))).Position
+end
+Mansion.FLOORS = FLOOR
+
+-- Steht dieser Punkt in diesem Raum (id aus ROOMS, z. B. "ess")?
+function Mansion.inRoom(worldPosition, id, floorKey)
+	if not origin then
+		return false
+	end
+	floorKey = floorKey or "E"
+	local relative = origin:Inverse() * worldPosition
+	local x, y = relative.X + 50, 57.4 - relative.Z
+	if relative.Y < FLOOR[floorKey] - 2 or relative.Y > FLOOR[floorKey] + 9 then
+		return false
+	end
+	local room = roomAt(floorKey, x, y)
+	return room ~= nil and room.id == id
 end
 
 -- Die Tür an dieser Stelle im Plan (für Szenen, z. B. die Wagners schließen sie)

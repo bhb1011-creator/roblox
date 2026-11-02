@@ -25,6 +25,7 @@ local Kapitel2Dialogue = {}
 Kapitel2Dialogue.NAMES = {
 	mrsWagner = "Mrs. Wagner",
 	mrWagner = "Mr. Wagner",
+	sarpDemon = "Sarp",
 }
 
 Kapitel2Dialogue.SCRIPT = {
@@ -83,6 +84,65 @@ Kapitel2Dialogue.SCRIPT = {
 	{ action = "leave", wait = 1 },
 	{ action = "finish" },
 }
+
+-- Die erste Nacht (Night.lua): Man wacht von Schreien auf, Mrs. Wagner steht in der Tür
+-- und holt einen mitten in der Nacht zum Essen. Aktionen:
+--   followMrs – sie geht voraus ins Esszimmer, man folgt ihr
+--   sitDown   – alle setzen sich an den Tisch
+--   knock     – es klopft schwer an der Haustür, die Kerzen flackern
+--   flee      – die Wagners rennen durch die Küche weg und schließen hinter sich ab
+Kapitel2Dialogue.NIGHT_WAKE = {
+	{ speaker = "mrsWagner", look = "player", text = "Oh. You're awake.", wait = 0.6 },
+	{
+		choice = {
+			{
+				text = "What was that scream?",
+				reply = { { speaker = "mrsWagner", text = "Scream? I didn't hear anything.", wait = 0.6 } },
+			},
+			{
+				text = "What time is it?",
+				reply = { { speaker = "mrsWagner", text = "Time for dinner, of course.", wait = 0.6 } },
+			},
+		},
+	},
+	{ speaker = "mrsWagner", text = "Come downstairs. Dinner is ready.", wait = 0.4 },
+	{ speaker = "mrsWagner", look = "down", text = "Richard is waiting.", wait = 0.6 },
+	{ action = "followMrs" },
+}
+
+Kapitel2Dialogue.NIGHT_DINNER = {
+	{ action = "sitDown", wait = 1 },
+	{ speaker = "mrsWagner", look = "player", text = "Sit, sit. You must be starving.", wait = 1.2 },
+	{ speaker = "mrWagner", look = "down", text = "We don't get many guests anymore.", wait = 0.8 },
+	{ speaker = "mrsWagner", text = "Sarp sends them to us. He always does.", wait = 0.6 },
+	{ speaker = "mrWagner", look = "player", text = "Margaret. Not now.", wait = 1 },
+	{
+		choice = {
+			{
+				text = "Why are we eating in the middle of the night?",
+				reply = { { speaker = "mrWagner", text = "Because that's when it's safe.", wait = 0.8 } },
+			},
+			{
+				text = "The plates are empty.",
+				reply = { { speaker = "mrsWagner", text = "...Are they?", wait = 1.2 } },
+			},
+		},
+	},
+	{ action = "knock", wait = 1.5 },
+	{ speaker = "mrsWagner", look = "down", text = "...He's early.", wait = 0.5 },
+	{ speaker = "mrWagner", look = "player", text = "Hide. Now!", wait = 0.2 },
+	{ speaker = "mrWagner", text = "And whatever you hear... don't make a sound." },
+	{ action = "flee" },
+}
+
+-- Was Sarp beim Suchen flüstert (zufällig)
+Kapitel2Dialogue.SARP_WHISPERS = {
+	"I know you're here.",
+	"I can hear your heart.",
+	"Come out... come out...",
+	"You can't hide from me.",
+}
+Kapitel2Dialogue.SARP_LEAVES = "...Not yet. Soon."
 
 -- Wenn nach dem Hereinbitten jemand draußen stehen bleibt
 Kapitel2Dialogue.COME_INSIDE = { speaker = "mrsWagner", text = "Please. Come inside." }

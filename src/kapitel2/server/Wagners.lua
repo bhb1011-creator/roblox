@@ -152,6 +152,10 @@ end
 
 -- Augen, Brauen, Mund. `style`: "smile" (Mrs. Wagner) oder "tired" (Mr. Wagner)
 
+-- für andere Figuren (z. B. Sarps zweite Gestalt in SarpStage2.lua)
+Wagners.newBody = newBody
+Wagners.attach = attach
+
 local function face(model, head, style, colors)
 	local size = head.Size
 	local front = -size.Z / 2 - 0.005

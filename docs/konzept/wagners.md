@@ -56,3 +56,20 @@ Texte: `src/shared/Kapitel2Dialogue.lua`. Figuren: `src/kapitel2/server/Wagners.
 - Die Kinder kennenlernen (Szenen mit Lucy und Tommy)
 - Eigene Stimmen für Lucy und Tommy
 - Wie es nach der Ankunft weitergeht (Zimmer oben, die vernagelte erste Tür, …)
+
+## Die erste Nacht (eingebaut, `src/kapitel2/server/Night.lua`)
+
+1. Wenn alle im Gästezimmer im Bett liegen: schwarz, „Mitten in der Nacht … 03:17“, Schreie
+   irgendwo im Haus.
+2. Man wacht auf, Mrs. Wagner steht in der Tür und holt einen mitten in der Nacht zum Essen.
+   Man folgt ihr über Galerie, Treppe, Flur und Küche ins Esszimmer, Mr. Wagner wartet dort.
+3. Am Tisch (man sitzt): kurzes Gespräch über Sarp, eine Auswahl, dann klopft es schwer an
+   der Haustür. „Hide. Now!“ – die Wagners rennen durch die Küche weg und schließen ab.
+4. 22 Sekunden zum Verstecken. Drei Verstecke im Esszimmer: **Schrank** (mit Schlitzen zum
+   Rausschauen), **unter dem Tisch** (lange Tischdecke), **hinter dem Vorhang** im Erker.
+5. Sarp in seiner **zweiten Gestalt** (`SarpStage2.lua`) reißt die Haustür auf, kommt durch
+   Halle und Wohnzimmer, sprengt die Tür zum Esszimmer auf und sucht: Er bleibt vor jedem
+   Versteck stehen, atmet, schaut hinein (unter den Tisch beugt er sich herunter). Wer drin
+   ist: Herzschlag, Kamera zittert, er flüstert. Wer nicht versteckt ist oder rauskommt:
+   Jumpscare („Er hat dich gefunden …“). Werden alle gefunden, beginnt das Verstecken neu.
+6. Er geht wieder („...Not yet. Soon.“). Man ist allein im Haus – hier hört es erst einmal auf.

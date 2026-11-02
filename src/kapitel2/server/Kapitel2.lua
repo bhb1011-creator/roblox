@@ -15,6 +15,7 @@ local House = require(script.Parent.House)
 local HouseInterior = require(script.Parent.HouseInterior)
 local Mansion = require(script.Parent.Mansion)
 local Wagners = require(script.Parent.Wagners)
+local Night = require(script.Parent.Night)
 local World = require(script.Parent.World)
 
 local Kapitel2 = {}
@@ -171,7 +172,8 @@ function Kapitel2.start()
 		end
 		local position = Wagners.ground(npc)
 		for _, spot in spots do
-			local target = hall(spot)
+			-- Punkte: Hallen-Koordinaten (Vector2) oder { at = Weltposition der Füße }
+			local target = (type(spot) == "table" and rawget(spot, "at")) or hall(spot)
 			local distance = (target - position).Magnitude
 			if distance > 0.05 then
 				local direction = (target - position).Unit
@@ -427,6 +429,7 @@ function Kapitel2.start()
 	------------------------------------------------------------------ Schlafen
 	-- In den Betten im Gästezimmer kann man sich hinlegen (E). Liegen alle, schlafen sie
 	-- ein – hier geht es später mit der Nacht weiter.
+	local startNight -- wird weiter unten gesetzt (Night.lua)
 	local lying = {} -- Spieler -> Bett
 	local asleep = false
 	local exploring = false
@@ -461,7 +464,10 @@ function Kapitel2.start()
 		asleep = true
 		remotes:SetAttribute("Night", true)
 		event:FireAllClients({ type = "sleep" })
-		print("Kapitel 2: Alle liegen im Bett – die Nacht beginnt (hier geht es später weiter).")
+		print("Kapitel 2: Alle liegen im Bett – die erste Nacht beginnt.")
+		if startNight then
+			task.spawn(startNight)
+		end
 	end
 	local function checkAllAsleep()
 		local players = Players:GetPlayers()
@@ -750,6 +756,27 @@ function Kapitel2.start()
 		end
 	end
 
+	-- Spielt eine Liste von Schritten ab (Sätze, Aktionen, Auswahl)
+	local function runScript(steps, label)
+		for number, step in steps do
+			local ok, problem = xpcall(function()
+				if step.choice then
+					local index, chooser = ask(step.choice)
+					local option = step.choice[index]
+					say("player", option.text, chooser and chooser.DisplayName or "You")
+					for _, line in option.reply or {} do
+						runLine(line)
+					end
+				else
+					runLine(step)
+				end
+			end, debug.traceback)
+			if not ok then
+				warn("Kapitel 2: Fehler in " .. (label or "Szene") .. " bei Schritt " .. number .. ":\n" .. tostring(problem))
+			end
+		end
+	end
+
 	local function runScene()
 		duo = #Players:GetPlayers() >= 2
 		local finishedScene = false
@@ -776,6 +803,34 @@ function Kapitel2.start()
 		-- Sicherheitsnetz: Niemand bleibt eingefroren, auch wenn etwas schiefging
 		if not finishedScene or frozen then
 			actions.finish()
+		end
+	end
+
+	------------------------------------------------------------------ Die erste Nacht (Night.lua)
+	startNight = function()
+		local ok, problem = xpcall(Night.run, debug.traceback, {
+			event = event,
+			remotes = remotes,
+			sfx = sfx,
+			say = say,
+			runScript = runScript,
+			actions = actions,
+			npcs = npcs,
+			walkPath = walkPath,
+			moveDoor = moveDoor,
+			hall = hall,
+			setMovement = setMovement,
+			standUp = standUp,
+			lying = lying,
+			beds = Mansion.beds,
+			frontDoor = { set = setDoor, swing = swingDoor, open = DOOR_OPEN, position = doorFront },
+			hiddenSpot = hiddenSpot,
+			facing = facing,
+			spawnPlayer = spawnPlayer,
+		})
+		if not ok then
+			warn("Kapitel 2: Fehler in der Nacht:\n" .. tostring(problem))
+			setMovement(true)
 		end
 	end
 

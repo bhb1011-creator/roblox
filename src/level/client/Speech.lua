@@ -15,6 +15,7 @@ local NAME_COLORS = {
 	player = Color3.fromRGB(150, 190, 225),
 	mrsWagner = Color3.fromRGB(215, 185, 150),
 	mrWagner = Color3.fromRGB(170, 170, 150),
+	sarpDemon = Color3.fromRGB(220, 60, 50),
 }
 
 local output

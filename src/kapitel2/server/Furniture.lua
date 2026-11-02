@@ -333,4 +333,62 @@ function Furniture.altar(b, cf)
 	b.box("SarpEyes", Vector3.new(0.5, 0.08, 0.02), cf * CFrame.new(0, 4.33, 0.62) * CFrame.Angles(math.rad(-10), 0, 0), Color3.fromRGB(200, 30, 20), M.Neon)
 end
 
+-- Versteck: Schrank, innen hohl, vorne zwei Türen mit Schlitzen auf Augenhöhe (von innen
+-- sieht man durch die Schlitze in den Raum). Vorne = -Z.
+function Furniture.hideWardrobe(b, cf)
+	local w, h, d = 3.4, 7.6, 2.4
+	local wood, dark = C.darkWood, C.black
+	b.box("HideWardrobeBack", Vector3.new(w, h, 0.2), cf * CFrame.new(0, h / 2, d / 2 - 0.1), wood, M.Wood)
+	for _, x in { -1, 1 } do
+		b.box("HideWardrobeSide", Vector3.new(0.2, h, d), cf * CFrame.new(x * (w / 2 - 0.1), h / 2, 0), wood, M.Wood)
+	end
+	b.box("HideWardrobeTop", Vector3.new(w + 0.3, 0.3, d + 0.3), cf * CFrame.new(0, h + 0.15, 0), C.wood, M.Wood)
+	b.box("HideWardrobeFloor", Vector3.new(w, 0.2, d), cf * CFrame.new(0, 0.1, 0), wood, M.Wood)
+	-- Türen: unten und oben geschlossen, dazwischen Lamellen mit Spalten
+	local front = -d / 2 + 0.06
+	local slitsFrom, slitsTo = 4.0, 6.4
+	b.box("HideWardrobeDoor", Vector3.new(w - 0.4, slitsFrom - 0.2, 0.12), cf * CFrame.new(0, 0.2 + (slitsFrom - 0.2) / 2, front), wood, M.WoodPlanks)
+	b.box("HideWardrobeDoor", Vector3.new(w - 0.4, h - slitsTo, 0.12), cf * CFrame.new(0, slitsTo + (h - slitsTo) / 2, front), wood, M.WoodPlanks)
+	local y = slitsFrom
+	while y < slitsTo - 0.1 do
+		b.box("HideWardrobeSlat", Vector3.new(w - 0.4, 0.2, 0.12), cf * CFrame.new(0, y + 0.1, front) * CFrame.Angles(math.rad(-25), 0, 0), wood, M.Wood)
+		y += 0.34
+	end
+	b.box("HideWardrobeLine", Vector3.new(0.05, h - 0.4, 0.04), cf * CFrame.new(0, h / 2, front - 0.08), dark, M.Wood)
+	for _, x in { -0.3, 0.3 } do
+		b.box("HideWardrobeKnob", Vector3.new(0.14, 0.14, 0.14), cf * CFrame.new(x, 3.6, front - 0.12), C.brass, M.Metal)
+	end
+	return cf * CFrame.new(0, 0.2, 0.15) -- Stelle für den Versteckten (Füße), Blick nach vorne
+end
+
+-- Lange Tischdecke, die an allen Seiten fast bis zum Boden hängt (darunter kann man sich
+-- verstecken). `cf` = Tisch auf dem Boden (wie bei Furniture.table), w, d, h wie dort.
+function Furniture.tableCloth(b, cf, w, d, h, color, gap)
+	gap = gap or 0.7
+	local hang = h - gap
+	b.box("TableCloth", Vector3.new(w + 0.3, 0.04, d + 0.3), cf * CFrame.new(0, h + 0.02, 0), color, M.Fabric)
+	for _, x in { -1, 1 } do
+		b.box("TableClothSide", Vector3.new(0.05, hang, d + 0.3), cf * CFrame.new(x * (w / 2 + 0.15), gap + hang / 2, 0), color, M.Fabric)
+	end
+	for _, z in { -1, 1 } do
+		b.box("TableClothEnd", Vector3.new(w + 0.35, hang, 0.05), cf * CFrame.new(0, gap + hang / 2, z * (d / 2 + 0.15)), color, M.Fabric)
+	end
+end
+
+-- Schwerer, bodenlanger Vorhang (zwei Bahnen an einer Stange) zwischen `from` und `to`
+-- (Punkte auf dem Boden, Haus-Koordinaten), `height` hoch
+function Furniture.curtain(b, from, to, height, color)
+	local span = to - from
+	local middle = (from + to) / 2
+	local frame = CFrame.lookAt(middle, middle + span:Cross(Vector3.yAxis))
+	local width = span.Magnitude
+	b.box("CurtainRod", Vector3.new(width + 0.4, 0.12, 0.12), frame * CFrame.new(0, height + 0.15, 0), C.brass, M.Metal)
+	for _, side in { -1, 1 } do
+		-- leicht gewellt: zwei Lagen versetzt
+		for layer = 0, 1 do
+			b.box("HeavyCurtain", Vector3.new(width / 2 - 0.05, height - 0.1, 0.08), frame * CFrame.new(side * width / 4, height / 2 + 0.05, layer * 0.1 - 0.05) * CFrame.Angles(0, math.rad(layer == 0 and 2 or -2), 0), color, M.Fabric)
+		end
+	end
+end
+
 return Furniture
