@@ -54,6 +54,18 @@ function Kapitel2.start()
 	local choiceEvent = Instance.new("RemoteEvent")
 	choiceEvent.Name = "SceneChoice"
 	choiceEvent.Parent = remotes
+	-- Licht an/aus (Taste F): ohne Licht sieht Sarp einen nicht
+	local lightEvent = Instance.new("RemoteEvent")
+	lightEvent.Name = "Light"
+	lightEvent.Parent = remotes
+	lightEvent.OnServerEvent:Connect(function(player, on)
+		player:SetAttribute("LightOff", on ~= true)
+		local candle = player.Character and player.Character:FindFirstChild("PlayerCandle")
+		local light = candle and candle:FindFirstChild("CandleLight", true)
+		if light then
+			light.Enabled = on == true
+		end
+	end)
 	remotes.Parent = ReplicatedStorage
 
 	House.mansion = true -- das große Herrenhaus statt des kleinen Holzhauses
@@ -281,10 +293,11 @@ function Kapitel2.start()
 		local flame = piece("CandleFlame", Enum.PartType.Ball, Vector3.new(0.16, 0.16, 0.16), base * CFrame.new(0, 0.95, 0), Color3.fromRGB(255, 170, 70), Enum.Material.Neon)
 		local light = Instance.new("PointLight")
 		light.Name = "CandleLight"
-		light.Range = 16
-		light.Brightness = 1.3
+		light.Range = 22
+		light.Brightness = 2
 		light.Color = Color3.fromRGB(255, 180, 110)
 		light.Shadows = true
+		light.Enabled = not player:GetAttribute("LightOff")
 		light.Parent = flame
 		model.Parent = character
 	end
@@ -811,8 +824,10 @@ function Kapitel2.start()
 	end
 
 	------------------------------------------------------------------ Die erste Nacht (Night.lua)
+	local nightStartAt -- "afterHide" beim Teststart
 	startNight = function()
 		local ok, problem = xpcall(Night.run, debug.traceback, {
+			startAt = nightStartAt,
 			event = event,
 			remotes = remotes,
 			sfx = sfx,
@@ -880,6 +895,24 @@ function Kapitel2.start()
 		task.spawn(runScene)
 	end)
 
+	-- Teststart (Config.TEST_START_KAPITEL2): man ist schon drin, hat eine Kerze, es ist Nacht
+	local testStart = Config.TEST_START_KAPITEL2 == "nachVerstecken"
+	if testStart then
+		print("Kapitel 2: TESTSTART direkt nach dem Verstecken (Config.TEST_START_KAPITEL2)")
+		inside = true
+		candlesGiven = true
+		exploring = true
+		started = true
+		prompt.Enabled = false
+		remotes:SetAttribute("TestStart", true)
+		remotes:SetAttribute("Inside", true)
+		for _, npc in { mrs, mr } do
+			if npc then
+				Wagners.place(npc, hiddenSpot, facing)
+			end
+		end
+	end
+
 	local firstJoin
 	local function onPlayerAdded(player)
 		spawnPlayer(player)
@@ -896,6 +929,15 @@ function Kapitel2.start()
 				task.wait(1)
 				event:FireAllClients({ type = "start" })
 				remotes:SetAttribute("Started", true)
+				if testStart then
+					-- Teststart: gleich in die Nacht, direkt nach dem Verstecken
+					task.wait(3)
+					asleep = true
+					nightStartAt = "afterHide"
+					remotes:SetAttribute("Night", true)
+					task.spawn(startNight)
+					return
+				end
 				task.wait(5)
 				if prompt.Parent then
 					prompt.Enabled = true

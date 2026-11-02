@@ -67,27 +67,44 @@ function Night.run(ctx)
 		sfx("stepWood", position + Vector3.new(0, 0.5, 0), { volume = 0.7, maxDistance = 50 })
 	end
 
+	-- Teststart direkt nach dem Verstecken (Config.TEST_START_KAPITEL2 = "nachVerstecken")
+	local afterHide = ctx.startAt == "afterHide"
+
+	-- Stuhl am Esstisch: Mitte der Sitzfläche, Blick zum Tisch
+	local function chair(x, y, faceX, faceY)
+		local seat = point(x, y) + Vector3.new(0, 1.9, 0)
+		return CFrame.lookAt(seat, point(faceX, faceY) + Vector3.new(0, 1.9, 0))
+	end
+	local CHAIRS = {
+		mrsWagner = chair(64.5, 25.5, 67, 25.5),
+		mrWagner = chair(67, 39.5, 67, 30),
+		lucy = chair(64.5, 34.5, 67, 34.5),
+		tommy = chair(69.5, 34.5, 67, 34.5),
+	}
+
 	------------------------------------------------------------------ 1. Aufwachen
-	task.wait(5)
-	-- Schreie irgendwo im Haus (alles noch schwarz)
-	for i, spot in { { 60, 30 }, { 40, 26 }, { 70, 46 } } do
-		sfx("scream", point(spot[1], spot[2], i == 2 and "O" or "E") + Vector3.new(0, 4, 0), { volume = 1.2, maxDistance = 300, speed = 0.9 + i * 0.05 })
-		task.wait(2.2)
+	if not afterHide then
+		task.wait(5)
+		-- Schreie irgendwo im Haus (alles noch schwarz)
+		for i, spot in { { 60, 30 }, { 40, 26 }, { 70, 46 } } do
+			sfx("scream", point(spot[1], spot[2], i == 2 and "O" or "E") + Vector3.new(0, 4, 0), { volume = 1.2, maxDistance = 300, speed = 0.9 + i * 0.05 })
+			task.wait(2.2)
+		end
+		task.wait(1.5)
+		for player in ctx.lying do
+			ctx.standUp(player)
+		end
+		-- Mrs. Wagner steht in der Tür vom Gästezimmer, Mr. Wagner sitzt am Kopf des Tisches
+		if mrs then
+			Wagners.place(mrs, point(51.4, 52.6, "O"), point(51.4, 45, "O"))
+			mrs:SetAttribute("Look", "player")
+		end
+		if mr then
+			Wagners.sit(mr, CHAIRS.mrWagner)
+			mr:SetAttribute("Look", "down")
+		end
 	end
-	task.wait(1.5)
-	for player in ctx.lying do
-		ctx.standUp(player)
-	end
-	-- Mrs. Wagner steht in der Tür vom Gästezimmer, Mr. Wagner wartet am Esstisch
-	if mrs then
-		Wagners.place(mrs, point(51.4, 52.6, "O"), point(51.4, 45, "O"))
-		mrs:SetAttribute("Look", "player")
-	end
-	if mr then
-		Wagners.place(mr, point(67, 40.9), point(67, 30))
-		mr:SetAttribute("Look", "down")
-	end
-	-- die Kinder sitzen schon am Tisch (stehen neben ihren Stühlen)
+	-- die Kinder sitzen schon am Tisch
 	local family = (mrs and mrs.Parent) or (mr and mr.Parent) or workspace
 	local function buildKid(name, builder)
 		local ok, model = pcall(builder, family)
@@ -100,18 +117,20 @@ function Night.run(ctx)
 	local lucy = buildKid("Lucy", Wagners.buildLucy)
 	local tommy = buildKid("Tommy", Wagners.buildTommy)
 	if lucy then
-		Wagners.place(lucy, point(63.1, 34.5), point(67, 34.5))
+		Wagners.sit(lucy, CHAIRS.lucy)
 		lucy:SetAttribute("Look", "player")
 	end
 	if tommy then
-		Wagners.place(tommy, point(70.9, 34.5), point(67, 34.5))
+		Wagners.sit(tommy, CHAIRS.tommy)
 		tommy:SetAttribute("Look", "down")
 	end
 	ctx.npcs.lucy = lucy
 	ctx.npcs.tommy = tommy
-	ctx.remotes:SetAttribute("Phase", "wake")
-	event:FireAllClients({ type = "wake" })
-	task.wait(3)
+	if not afterHide then
+		ctx.remotes:SetAttribute("Phase", "wake")
+		event:FireAllClients({ type = "wake" })
+		task.wait(3)
+	end
 
 	------------------------------------------------------------------ Aktionen
 	-- Mrs. Wagner geht voraus: Galerie, Treppe hinunter, durch Flur und Küche ins Esszimmer
@@ -141,7 +160,7 @@ function Night.run(ctx)
 				P(62.6, 26.5, "E"),
 			}, 4.5, steps)
 			if mrs then
-				Wagners.place(mrs, point(62.6, 26.5), point(67, 26.5))
+				Wagners.sit(mrs, CHAIRS.mrsWagner)
 			end
 			arrived = true
 		end)
@@ -248,6 +267,12 @@ function Night.run(ctx)
 				npc:SetAttribute("Look", "down")
 			end
 		end
+		-- alle springen von den Stühlen auf
+		Wagners.stand(mrs, point(62.8, 25.5), point(57, 38))
+		Wagners.stand(mr, point(67, 41), point(57, 38))
+		Wagners.stand(lucy, point(62.8, 34.5), point(57, 38))
+		Wagners.stand(tommy, point(71.2, 34.5), point(57, 38))
+		task.wait(0.3)
 		local done = 0
 		task.spawn(function()
 			ctx.walkPath(mrs, { P(60, 34), P(57, 38), P(51, 38), P(46, 36) }, 10, steps)
@@ -292,8 +317,23 @@ function Night.run(ctx)
 		ctx.setMovement(true)
 	end
 
-	ctx.runScript(Script.NIGHT_WAKE, "Aufwachen")
-	ctx.runScript(Script.NIGHT_DINNER, "Abendessen")
+	if not afterHide then
+		ctx.runScript(Script.NIGHT_WAKE, "Aufwachen")
+		ctx.runScript(Script.NIGHT_DINNER, "Abendessen")
+	else
+		-- Teststart: Familie weg, alle stehen im Esszimmer, die Türen sind offen
+		for _, npc in { mrs, mr, lucy, tommy } do
+			if npc then
+				Wagners.stand(npc)
+				Wagners.place(npc, ctx.hiddenSpot, ctx.facing)
+			end
+		end
+		for index, player in Players:GetPlayers() do
+			bringTo(player, point(60 + index, 36), point(67, 30))
+		end
+		ctx.setMovement(true)
+		task.wait(1.5)
+	end
 
 	------------------------------------------------------------------ 3. Verstecken
 	local spots = Mansion.hideSpots or {}
@@ -635,8 +675,8 @@ function Night.run(ctx)
 		end
 	end
 
-	local survived = false
-	for round = 1, MAX_ROUNDS do
+	local survived = afterHide
+	for round = 1, afterHide and 0 or MAX_ROUNDS do
 		survived = hideRound(round)
 		if survived then
 			break
@@ -843,7 +883,9 @@ function Night.run(ctx)
 
 	event:FireAllClients({ type = "hint", text = "Hol die Axt aus dem Keller (Kellertür in der Küche).", seconds = 7 })
 
-	-- Sarp läuft durchs Erdgeschoss. Sieht er jemanden, bleibt er stehen und starrt.
+	-- Sarp läuft durchs Erdgeschoss. Sieht er jemanden mit Licht, verfolgt er ihn und macht
+	-- Schaden, wenn er nah genug ist. Man kann weglaufen – oder das Licht ausmachen (F):
+	-- dann verliert er einen aus den Augen und geht wieder weg.
 	local patrolDoors = { Mansion.doorAt(51.4, 54.15, "E"), Mansion.doorAt(44, 42, "E"), kitchenDoor, livingDoor, Mansion.doorAt(54.25, 63, "E") }
 	for _, door in patrolDoors do
 		if door and door.angle == 0 then
@@ -855,16 +897,23 @@ function Night.run(ctx)
 		point(48, 66), point(51.4, 58), point(51.4, 50), point(44, 46), point(44, 38), point(52, 38), point(57, 38),
 		point(62, 36), point(62, 40), point(62, 46), point(60.5, 58), point(57, 62.5), point(52.5, 63),
 	}
-	local lastStare = {}
-	local function canSee(player)
+	local SEE_DISTANCE = 26
+	local CHASE_SPEED = 6.6 -- etwas langsamer als man selbst läuft (8)
+	local HIT_DISTANCE = 3.6
+	local HIT_DAMAGE = 25
+	local function lightOn(player)
+		return not player:GetAttribute("LightOff")
+	end
+	local function canSee(player, distanceLimit)
 		local root = rootOf(player)
 		local sarpRoot = sarp and sarp:FindFirstChild("HumanoidRootPart")
-		if not (root and sarpRoot) then
+		local _, humanoid = rootOf(player)
+		if not (root and sarpRoot and humanoid) or humanoid.Health <= 0 or hidden[player] then
 			return false
 		end
 		local eye = sarpRoot.Position + Vector3.new(0, 2.5, 0)
 		local offset = root.Position - eye
-		if offset.Magnitude > 16 or math.abs(root.Position.Y - Wagners.ground(sarp).Y - 3) > 6 then
+		if offset.Magnitude > (distanceLimit or SEE_DISTANCE) or math.abs(root.Position.Y - Wagners.ground(sarp).Y - 3) > 7 then
 			return false
 		end
 		local visible = true
@@ -872,40 +921,115 @@ function Night.run(ctx)
 			local params = RaycastParams.new()
 			params.FilterType = Enum.RaycastFilterType.Exclude
 			params.FilterDescendantsInstances = { sarp, player.Character }
-			visible = workspace:Raycast(eye, offset, params) == nil
+			local hit = workspace:Raycast(eye, offset, params)
+			-- Türblätter und Kleinkram zählen nicht als Sichtschutz, Wände schon
+			visible = hit == nil or not hit.Instance.Anchored or hit.Instance.Name:find("Door") ~= nil
 		end)
 		return visible
 	end
-	local stareAt
-	local function lookingForSomeone()
+	-- Wen sieht er gerade? Ohne Licht sieht er einen gar nicht.
+	local function findTarget()
 		for _, player in Players:GetPlayers() do
-			if (os.clock() - (lastStare[player] or -100)) > 12 and canSee(player) then
-				stareAt = player
-				return true
+			if lightOn(player) and canSee(player, SEE_DISTANCE) then
+				return player
 			end
 		end
-		return false
+		return nil
+	end
+	-- Weg zum Ziel: Roblox-Wegfindung (Treppen, Türen); wenn das nicht geht, gerade aus
+	local PathfindingService
+	pcall(function()
+		PathfindingService = game:GetService("PathfindingService")
+	end)
+	local function nextWaypoint(from, to)
+		if PathfindingService then
+			local ok, result = pcall(function()
+				local path = PathfindingService:CreatePath({ AgentRadius = 1.5, AgentHeight = 7, AgentCanJump = false })
+				path:ComputeAsync(from, to)
+				if path.Status == Enum.PathStatus.Success then
+					local points = path:GetWaypoints()
+					return points[math.min(3, #points)] and points[math.min(3, #points)].Position
+				end
+				return nil
+			end)
+			if ok and result then
+				return result
+			end
+		end
+		return to
+	end
+	local hitCooldown = {}
+	local function chase(player)
+		event:FireClient(player, { type = "chased" })
+		whisper(Script.SARP_WHISPERS[math.random(1, #Script.SARP_WHISPERS)])
+		local lostSince
+		local giveUpAt = os.clock() + 40
+		while not doneWithNight and os.clock() < giveUpAt do
+			local root, humanoid = rootOf(player)
+			if not (root and humanoid) or humanoid.Health <= 0 then
+				break
+			end
+			-- Licht aus oder außer Sicht: er verliert einen nach kurzer Zeit
+			local seen = lightOn(player) and canSee(player, SEE_DISTANCE + 8)
+			if seen then
+				lostSince = nil
+			else
+				lostSince = lostSince or os.clock()
+				if os.clock() - lostSince > (lightOn(player) and 4 or 0.6) then
+					break
+				end
+			end
+			local feet = Wagners.ground(sarp)
+			local target = root.Position - Vector3.new(0, footOffset(player), 0)
+			local distance = (target - feet).Magnitude
+			if distance <= HIT_DISTANCE then
+				Wagners.place(sarp, feet, target)
+				if os.clock() > (hitCooldown[player] or 0) then
+					hitCooldown[player] = os.clock() + 1.3
+					humanoid:TakeDamage(HIT_DAMAGE)
+					sfx("jumpscare", root.Position, { volume = 1.2, maxDistance = 40, speed = 1.3 })
+					event:FireClient(player, { type = "hurt", health = humanoid.Health })
+				end
+				RunService.Heartbeat:Wait()
+			else
+				local waypoint = nextWaypoint(feet, target)
+				sarpWalk({ waypoint }, CHASE_SPEED, function()
+					return (os.clock() - (lostSince or os.clock())) > 0.5
+				end)
+			end
+		end
+		event:FireClient(player, { type = "lost" })
+		-- stehen bleiben, lauschen, dann weiter
+		SarpStage2.look(sarp, 0.5, 0)
+		task.wait(1)
+		SarpStage2.look(sarp, -0.5, 0)
+		task.wait(1)
+		SarpStage2.look(sarp, 0, 0)
 	end
 	if sarp then
 		Wagners.place(sarp, PATROL[1], PATROL[2])
+		event:FireAllClients({ type = "hint", text = "F: Licht aus/an. Ohne Licht sieht er dich nicht – du ihn aber auch kaum.", seconds = 8 })
 		task.spawn(function()
 			local index = 1
 			while not doneWithNight and sarp.Parent do
 				local target = PATROL[index % #PATROL + 1]
-				local reached = sarpWalk({ target }, 3.6, lookingForSomeone)
-				if not reached and stareAt then
-					-- stehen bleiben, den Spieler anstarren, flüstern
-					local player = stareAt
-					stareAt = nil
-					lastStare[player] = os.clock()
-					local root = rootOf(player)
-					if root then
-						local feet = Wagners.ground(sarp)
-						Wagners.place(sarp, feet, Vector3.new(root.Position.X, feet.Y, root.Position.Z))
+				local seenPlayer
+				local reached = sarpWalk({ target }, 3.6, function()
+					seenPlayer = findTarget()
+					return seenPlayer ~= nil
+				end)
+				if seenPlayer then
+					chase(seenPlayer)
+					-- zurück zum nächsten Punkt seiner Runde
+					local feet = Wagners.ground(sarp)
+					local nearest, nearestDistance = index, math.huge
+					for i, p in PATROL do
+						local d = (p - feet).Magnitude
+						if d < nearestDistance then
+							nearest, nearestDistance = i, d
+						end
 					end
-					event:FireClient(player, { type = "nearScare", seconds = 3 })
-					whisper(Script.SARP_WHISPERS[math.random(1, #Script.SARP_WHISPERS)])
-					task.wait(3)
+					index = nearest
 				elseif reached then
 					index = index % #PATROL + 1
 				end

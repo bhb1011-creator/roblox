@@ -198,6 +198,10 @@ function Kapitel2.run()
 				if head and not head:FindFirstChild("PhoneLight") then
 					create("SpotLight", { Name = "PhoneLight", Face = Enum.NormalId.Front, Range = 34, Angle = 55, Brightness = 2, Color = Color3.fromRGB(225, 235, 255), Shadows = true, Parent = head })
 				end
+				local phone = head and head:FindFirstChild("PhoneLight")
+				if phone then
+					phone.Enabled = not other:GetAttribute("LightOff")
+				end
 			end
 			task.wait(1)
 		end
@@ -209,6 +213,7 @@ function Kapitel2.run()
 	local candleDim, candleDimUntil = 1, 0 -- 1 = normal, kleiner = Kerzen fast aus
 	local dimTarget = 1 -- so hell werden die Kerzen nach dem Flackern wieder ("dim")
 	local ownCandleOff = false -- im Versteck ist die eigene Kerze aus
+	local lightOff = false -- Taste F: Kerze und Handylicht aus (dann sieht Sarp einen nicht)
 	local held = create("Model", { Name = "HeldCandle" })
 	local heldParts = {}
 	local function heldPiece(name, shape, size, color, material, offset)
@@ -234,8 +239,8 @@ function Kapitel2.run()
 	local heldFlame = heldPiece("CandleFlame", Enum.PartType.Ball, Vector3.new(0.1, 0.1, 0.1), Color3.fromRGB(255, 170, 70), Enum.Material.Neon, CFrame.new(0, 0.65, 0))
 	local heldLight = create("PointLight", {
 		Name = "OwnCandleLight",
-		Range = 18,
-		Brightness = 1.4,
+		Range = 26,
+		Brightness = 2.4,
 		Color = Color3.fromRGB(255, 180, 110),
 		Shadows = true,
 		Parent = heldFlame,
@@ -307,8 +312,9 @@ function Kapitel2.run()
 			entry.part.CFrame = base * entry.offset
 		end
 		local flicker = 0.85 + math.noise(now * 6, heldSeed) * 0.22 + math.noise(now * 17, heldSeed + 3) * 0.07
-		heldLight.Brightness = ownCandleOff and 0 or 1.4 * flicker * candleDim
-		heldFlame.Transparency = ownCandleOff and 1 or 1 - math.clamp(candleDim * 1.2, 0, 1)
+		local off = ownCandleOff or lightOff
+		heldLight.Brightness = off and 0 or 2.4 * flicker * math.max(candleDim, 0.35)
+		heldFlame.Transparency = off and 1 or 1 - math.clamp(candleDim * 1.2, 0, 1)
 	end
 
 	------------------------------------------------------------------ Kerzen
@@ -486,6 +492,40 @@ function Kapitel2.run()
 	showStatus()
 	local event = remotes:WaitForChild("SceneEvent")
 	local choiceEvent = remotes:WaitForChild("SceneChoice")
+
+	-- Licht an/aus: Taste F (am Handy: Knopf unten rechts)
+	local lightEvent = remotes:WaitForChild("Light", 10)
+	local function toggleLight()
+		lightOff = not lightOff
+		if lightEvent then
+			lightEvent:FireServer(not lightOff)
+		end
+		hint(lightOff and "Licht aus." or "Licht an.", 1.5)
+	end
+	UserInputService.InputBegan:Connect(function(input, processed)
+		if not processed and input.KeyCode == Enum.KeyCode.F then
+			toggleLight()
+		end
+	end)
+	if UserInputService.TouchEnabled then
+		local button = create("TextButton", {
+			Name = "LightButton",
+			AnchorPoint = Vector2.new(1, 1),
+			Position = UDim2.new(1, -24, 1, -160),
+			Size = UDim2.fromOffset(70, 70),
+			BackgroundColor3 = Color3.fromRGB(30, 26, 22),
+			BackgroundTransparency = 0.3,
+			Text = "Licht",
+			TextColor3 = Color3.fromRGB(240, 220, 180),
+			Font = Enum.Font.SpecialElite,
+			TextSize = 18,
+			AutoLocalize = false,
+			ZIndex = 7,
+			Parent = gui,
+		})
+		create("UICorner", { CornerRadius = UDim.new(1, 0), Parent = button })
+		button.Activated:Connect(toggleLight)
+	end
 	local houseInside = false
 	local finished = false
 
@@ -505,7 +545,7 @@ function Kapitel2.run()
 			showText(chapterTitle, false, 1.5)
 		end)
 		task.delay(7.5, function()
-			if not finished then
+			if not finished and not remotes:GetAttribute("TestStart") then
 				hint("Klopf an die Tür.", 6)
 			end
 		end)
@@ -593,6 +633,15 @@ function Kapitel2.run()
 			end)
 		elseif kind == "jumpscare" then
 			jumpscare()
+		elseif kind == "hurt" then
+			-- getroffen: roter Blitz, Bild wackelt
+			scareFlash.BackgroundTransparency = 0.35
+			TweenService:Create(scareFlash, TweenInfo.new(0.7), { BackgroundTransparency = 1 }):Play()
+			shakeUntil = os.clock() + 0.6
+		elseif kind == "chased" then
+			hint("Er hat dich gesehen – lauf! (F: Licht aus)", 4)
+		elseif kind == "lost" then
+			hint("Er hat dich verloren …", 3)
 		elseif kind == "caught" then
 			setFade(0, 0.1)
 			chapter.Text = "Er hat dich gefunden …"
@@ -697,6 +746,9 @@ function Kapitel2.run()
 		-- Handylicht folgt dem Blick
 		local target = camera.CFrame * CFrame.new(0.35, -0.45, -0.3)
 		flashlight.CFrame = flashlight.CFrame:Lerp(target, math.min(deltaTime * 10, 1))
+		for _, light in flashlight:GetChildren() do
+			light.Enabled = not lightOff
+		end
 
 		-- Kerzen flackern (und gehen bei "candleOut" fast aus)
 		if now - lastScan > 2 then

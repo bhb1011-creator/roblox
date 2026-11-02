@@ -49,6 +49,8 @@ local MOVING_JOINTS = {
 	{ "RightLowerArm", "RightElbow" },
 	{ "LeftUpperLeg", "LeftHip" },
 	{ "RightUpperLeg", "RightHip" },
+	{ "LeftLowerLeg", "LeftKnee" },
+	{ "RightLowerLeg", "RightKnee" },
 }
 
 local function replaceJoint(model, partName, jointName)
@@ -512,6 +514,65 @@ function Wagners.place(model, ground, facing)
 		target = ground + root.CFrame.LookVector
 	end
 	root.CFrame = CFrame.lookAt(ground, target) + Vector3.new(0, height, 0)
+end
+
+-- Hinsetzen: Oberschenkel nach vorne, Unterschenkel nach unten, Hüfte auf die Sitzfläche.
+-- `seat` = Mitte der Sitzfläche (oben), Blickrichtung = wohin man auf dem Stuhl schaut.
+function Wagners.sit(model, seat)
+	local root = model and model:FindFirstChild("HumanoidRootPart")
+	local lowerTorso = model and model:FindFirstChild("LowerTorso")
+	if not (root and lowerTorso) then
+		return
+	end
+	if not model:GetAttribute("Sitting") then
+		-- Abstand Mitte -> Hüftgelenk messen, solange die Figur noch steht
+		local hip = model:FindFirstChild("LeftUpperLeg") and model.LeftUpperLeg:FindFirstChild("LeftHip")
+		local hipY = hip and (lowerTorso.CFrame * hip.C0).Position.Y or (root.Position.Y - root.Size.Y / 2)
+		model:SetAttribute("HipOffset", root.Position.Y - hipY)
+		for _, side in { "Left", "Right" } do
+			local upper, lower = model:FindFirstChild(side .. "UpperLeg"), model:FindFirstChild(side .. "LowerLeg")
+			local hipJoint = upper and upper:FindFirstChild(side .. "Hip")
+			local kneeJoint = lower and lower:FindFirstChild(side .. "Knee")
+			for _, joint in { hipJoint, kneeJoint } do
+				if joint and not joint:GetAttribute("Standing") then
+					joint:SetAttribute("Standing", joint.C0)
+				end
+			end
+			pcall(function()
+				hipJoint.C0 = hipJoint:GetAttribute("Standing") * CFrame.Angles(math.rad(90), 0, 0)
+				kneeJoint.C0 = kneeJoint:GetAttribute("Standing") * CFrame.Angles(math.rad(-90), 0, 0)
+			end)
+		end
+		model:SetAttribute("Sitting", true)
+	end
+	local thigh = model:FindFirstChild("LeftUpperLeg")
+	local thighHalf = thigh and thigh.Size.Z / 2 or 0.5
+	local look = seat.LookVector * Vector3.new(1, 0, 1)
+	look = look.Magnitude > 0.01 and look.Unit or Vector3.new(0, 0, -1)
+	local position = seat.Position - look * 0.35 + Vector3.new(0, thighHalf + (model:GetAttribute("HipOffset") or 1), 0)
+	root.CFrame = CFrame.lookAt(position, position + look)
+end
+
+-- Wieder aufstehen und neben den Stuhl stellen (`feet` = wo die Füße hinkommen)
+function Wagners.stand(model, feet, lookAt)
+	if not (model and model:GetAttribute("Sitting")) then
+		return
+	end
+	for _, side in { "Left", "Right" } do
+		for _, name in { side .. "Hip", side .. "Knee" } do
+			local part = model:FindFirstChild(side .. (name:find("Hip") and "UpperLeg" or "LowerLeg"))
+			local joint = part and part:FindFirstChild(name)
+			if joint and joint:GetAttribute("Standing") then
+				pcall(function()
+					joint.C0 = joint:GetAttribute("Standing")
+				end)
+			end
+		end
+	end
+	model:SetAttribute("Sitting", false)
+	if feet then
+		Wagners.place(model, feet, lookAt or (feet + model.HumanoidRootPart.CFrame.LookVector))
+	end
 end
 
 -- Wo die Füße der Figur gerade stehen

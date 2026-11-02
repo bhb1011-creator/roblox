@@ -138,6 +138,12 @@ Config.SPEECH_ENABLED = true
 -- Antworten der Spieler mit der Roblox-Stimme sprechen? false = ohne eigene Aufnahme nur
 -- als Untertitel (die Roblox-Stimme passt nicht zu den echten Aufnahmen).
 Config.PLAYER_TTS = false
+
+-- Zum schnellen Testen von Kapitel 2: wo man startet.
+--   ""               = normal (vor der Haustür)
+--   "nachVerstecken" = in der ersten Nacht direkt nach dem Verstecken im Esszimmer
+--                      (Richard kommt, Axt holen, Sarp läuft herum)
+Config.TEST_START_KAPITEL2 = "nachVerstecken"
 Config.VOICES = {
 	-- Sarp: etwas tiefer, langsam, ruhig – mit Bass, weniger Höhen und dunklem Hall
 	sarp = {
