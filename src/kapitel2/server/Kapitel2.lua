@@ -415,6 +415,10 @@ function Kapitel2.start()
 						return
 					end
 					if door.locked then
+						-- z. B. Tür 1 mit der Axt aufbrechen (Night.lua setzt door.onLocked)
+						if door.onLocked and door.onLocked(player) then
+							return
+						end
 						sfx("knock", leaf.Position, { count = 2, interval = 0.13, volume = 0.5 })
 						event:FireClient(player, { type = "hint", text = "Abgeschlossen.", seconds = 2 })
 						return

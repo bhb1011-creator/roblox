@@ -242,6 +242,46 @@ function Kapitel2.run()
 	})
 	local heldSeed = math.random() * 100
 	local heldSway = CFrame.new()
+	-- Axt (wenn man sie hat): unten rechts im Bild, die an der Hand bleibt unsichtbar
+	local heldAxe = create("Model", { Name = "HeldAxe" })
+	local axeParts = {}
+	for _, info in {
+		{ "AxeHandle", Vector3.new(0.1, 1.8, 0.1), Color3.fromRGB(120, 86, 52), Enum.Material.Wood, CFrame.new(0, 0, 0) },
+		{ "AxeHead", Vector3.new(0.08, 0.4, 0.62), Color3.fromRGB(110, 112, 116), Enum.Material.Metal, CFrame.new(0, 0.8, 0.2) },
+	} do
+		local part = create("Part", {
+			Name = info[1],
+			Size = info[2],
+			Color = info[3],
+			Material = info[4],
+			Anchored = true,
+			CanCollide = false,
+			CanQuery = false,
+			CanTouch = false,
+			CastShadow = false,
+			Parent = heldAxe,
+		})
+		table.insert(axeParts, { part = part, offset = info[5] })
+	end
+	local function updateHeldAxe()
+		local character = player.Character
+		local serverAxe = character and character:FindFirstChild("PlayerAxe")
+		if not serverAxe then
+			heldAxe.Parent = nil
+			return
+		end
+		for _, part in serverAxe:GetDescendants() do
+			if part:IsA("BasePart") then
+				part.LocalTransparencyModifier = 1
+			end
+		end
+		heldAxe.Parent = workspace
+		local base = camera.CFrame * CFrame.new(0.75, -0.85, -1.5) * CFrame.Angles(math.rad(-15), math.rad(-20), math.rad(-25))
+		for _, entry in axeParts do
+			entry.part.CFrame = base * entry.offset
+		end
+	end
+
 	local function updateHeldCandle(deltaTime, now)
 		local character = player.Character
 		local serverCandle = character and character:FindFirstChild("PlayerCandle")
@@ -383,6 +423,7 @@ function Kapitel2.run()
 
 	------------------------------------------------------------------ Jumpscare
 	local shakeUntil = 0
+	local nextBeat = 0
 	local scareFlash = create("Frame", {
 		Name = "ScareFlash",
 		Size = UDim2.fromScale(1, 1),
@@ -567,8 +608,8 @@ function Kapitel2.run()
 			finished = true
 			dimTarget = 0.6
 			task.delay(1, function()
-				chapter.Text = "Die Wagners sind weg."
-				chapterTitle.Text = "Du bist allein im Haus. Mit ihm."
+				chapter.Text = message.title or "Die Wagners sind weg."
+				chapterTitle.Text = message.subtitle or "Du bist allein im Haus. Mit ihm."
 				showText(chapter, true, 1.5)
 				showText(chapterTitle, true, 2)
 			end)
@@ -669,6 +710,25 @@ function Kapitel2.run()
 		end
 
 		updateHeldCandle(deltaTime, now)
+		updateHeldAxe()
+
+		-- Herzschlag: je näher Sarp ist, desto schneller und lauter
+		local sarpFolder = workspace:FindFirstChild("SarpNight")
+		local sarpHead = sarpFolder and sarpFolder:FindFirstChild("Sarp") and sarpFolder.Sarp:FindFirstChild("Head")
+		if sarpHead and not finished then
+			local distance = (sarpHead.Position - camera.CFrame.Position).Magnitude
+			if distance < 34 and now >= nextBeat then
+				local closeness = 1 - math.clamp((distance - 5) / 29, 0, 1)
+				nextBeat = now + 1.1 - closeness * 0.75
+				local beat = makeSound("heartbeat", SoundService, { Volume = 0.4 + closeness * 1.6 })
+				if beat then
+					beat:Play()
+					task.delay(2, function()
+						beat:Destroy()
+					end)
+				end
+			end
+		end
 		updateNecks(deltaTime)
 
 		-- Im Haus ist es still: kein Wind, keine Tiere, nur das Haus knarrt

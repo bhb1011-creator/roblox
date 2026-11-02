@@ -1231,6 +1231,19 @@ local function buildFurniture()
 	Furniture.clothesline(b, L(14.5, 55, Kf + 6.4), L(33.5, 55, Kf + 6.4), rng)
 	-- Heizungsraum
 	Furniture.boiler(b, at(60, 24, Kf, "S"))
+	-- Hackklotz mit der Axt (die erste Nacht: Richard schickt einen hierher)
+	cyl("ChoppingBlock", 1.6, 1.8, at(66, 39, Kf), Color3.fromRGB(96, 72, 48), M.Wood)
+	local axe = Instance.new("Model")
+	axe.Name = "CellarAxe"
+	local beforeAxe = current
+	current = axe
+	local axeBase = CFrame.new(L(66, 39, Kf + 1.6)) * CFrame.Angles(0, math.rad(30), math.rad(-25))
+	box("AxeHandle", Vector3.new(0.16, 2.8, 0.16), axeBase * CFrame.new(0, 1.2, 0), Color3.fromRGB(120, 86, 52), M.Wood)
+	box("AxeHead", Vector3.new(0.12, 0.6, 0.9), axeBase * CFrame.new(0, 0.15, 0.3), Color3.fromRGB(110, 112, 116), M.Metal)
+	current = beforeAxe
+	axe.PrimaryPart = axe:FindFirstChild("AxeHandle")
+	axe.Parent = current
+	Mansion.axe = axe
 	for i = 0, 2 do
 		local pipeY = Kf + 7.6 - i * 0.4
 		beam("Pipe", L(55, 20 + i * 2, pipeY), L(69, 20 + i * 2, pipeY), 0.3, COLORS.metal, M.Metal)

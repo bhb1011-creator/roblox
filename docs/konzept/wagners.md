@@ -72,4 +72,10 @@ Texte: `src/shared/Kapitel2Dialogue.lua`. Figuren: `src/kapitel2/server/Wagners.
    Versteck stehen, atmet, schaut hinein (unter den Tisch beugt er sich herunter). Wer drin
    ist: Herzschlag, Kamera zittert, er flüstert. Wer nicht versteckt ist oder rauskommt:
    Jumpscare („Er hat dich gefunden …“). Werden alle gefunden, beginnt das Verstecken neu.
-6. Er geht wieder („...Not yet. Soon.“). Man ist allein im Haus – hier hört es erst einmal auf.
+6. Er geht wieder („...Not yet. Soon.“). Richard kommt zurück: Im Keller (Heizungsraum,
+   Hackklotz) liegt eine Axt, damit soll man oben **Tür 1** (vernagelt) aufbrechen.
+7. Währenddessen läuft Sarp durchs Erdgeschoss (sehr laute Schritte, Herzschlag wird schneller,
+   je näher er ist). Jetzt ist er nicht mehr tödlich: Sieht er einen, bleibt er stehen, starrt
+   und flüstert. Die Familie (Mrs. Wagner, Lucy, Tommy) taucht irgendwo in der Ferne auf, sagt
+   etwas Seltsames und rennt weg und verschwindet, wenn man näher kommt.
+8. Wer die Axt hat, bricht Tür 1 auf (Bretter fallen ab). Hier hört es erst einmal auf.

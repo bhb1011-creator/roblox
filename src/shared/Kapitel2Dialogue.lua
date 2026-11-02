@@ -139,6 +139,28 @@ Kapitel2Dialogue.NIGHT_DINNER = {
 	{ action = "flee" },
 }
 
+-- Nachdem Sarp das Esszimmer verlassen hat: Richard kommt zurück
+Kapitel2Dialogue.NIGHT_RICHARD = {
+	{ action = "richardComes" },
+	{ speaker = "mrWagner", look = "player", text = "It's safe. He's gone... for now.", wait = 0.8 },
+	{ speaker = "mrWagner", text = "Listen to me. There's an axe in the cellar.", wait = 0.5 },
+	{ speaker = "mrWagner", text = "Take it upstairs. Break open the first door. The one we nailed shut.", wait = 0.8 },
+	{
+		choice = {
+			{
+				text = "What's behind that door?",
+				reply = { { speaker = "mrWagner", look = "down", text = "The reason you are here.", wait = 0.8 } },
+			},
+			{
+				text = "Why should we trust you?",
+				reply = { { speaker = "mrWagner", text = "Because I'm the only one left who still fights him.", wait = 0.8 } },
+			},
+		},
+	},
+	{ speaker = "mrWagner", look = "down", text = "Hurry. Before Margaret comes back.", wait = 0.4 },
+	{ action = "richardLeaves" },
+}
+
 -- Was Sarp beim Suchen flüstert (zufällig)
 Kapitel2Dialogue.SARP_WHISPERS = {
 	"I know you're here.",

@@ -349,10 +349,18 @@ function Furniture.hideWardrobe(b, cf)
 	local slitsFrom, slitsTo = 4.0, 6.4
 	b.box("HideWardrobeDoor", Vector3.new(w - 0.4, slitsFrom - 0.2, 0.12), cf * CFrame.new(0, 0.2 + (slitsFrom - 0.2) / 2, front), wood, M.WoodPlanks)
 	b.box("HideWardrobeDoor", Vector3.new(w - 0.4, h - slitsTo, 0.12), cf * CFrame.new(0, slitsTo + (h - slitsTo) / 2, front), wood, M.WoodPlanks)
+	-- Lamellen oben und unten, dazwischen ein breiter offener Schlitz auf Augenhöhe
+	local openFrom, openTo = 4.55, 5.75
 	local y = slitsFrom
 	while y < slitsTo - 0.1 do
-		b.box("HideWardrobeSlat", Vector3.new(w - 0.4, 0.2, 0.12), cf * CFrame.new(0, y + 0.1, front) * CFrame.Angles(math.rad(-25), 0, 0), wood, M.Wood)
-		y += 0.34
+		if y + 0.2 < openFrom or y > openTo then
+			b.box("HideWardrobeSlat", Vector3.new(w - 0.4, 0.2, 0.12), cf * CFrame.new(0, y + 0.1, front) * CFrame.Angles(math.rad(-20), 0, 0), wood, M.Wood)
+		end
+		y += 0.38
+	end
+	for _, x in { -1, 1 } do
+		-- schmale Rahmenleisten links und rechts vom Schlitz
+		b.box("HideWardrobeFrame", Vector3.new(0.2, openTo - openFrom + 0.2, 0.12), cf * CFrame.new(x * (w / 2 - 0.3), (openFrom + openTo) / 2, front), wood, M.Wood)
 	end
 	b.box("HideWardrobeLine", Vector3.new(0.05, h - 0.4, 0.04), cf * CFrame.new(0, h / 2, front - 0.08), dark, M.Wood)
 	for _, x in { -0.3, 0.3 } do

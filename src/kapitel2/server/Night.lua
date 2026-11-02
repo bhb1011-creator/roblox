@@ -37,7 +37,7 @@ function Night.run(ctx)
 		return { at = Mansion.point(x, y, floorKey == "O" and O or E) }
 	end
 	local function point(x, y, floorKey)
-		return Mansion.point(x, y, floorKey == "O" and O or E)
+		return Mansion.point(x, y, floorKey == "O" and O or floorKey == "K" and Mansion.FLOORS.K or E)
 	end
 	local function rootOf(player)
 		local character = player.Character
@@ -432,7 +432,8 @@ function Night.run(ctx)
 					end
 					if os.clock() >= nextStep then
 						nextStep = os.clock() + 0.7
-						sfx("sarpStep", position + Vector3.new(0, 0.5, 0), { volume = 1.1, maxDistance = 90 })
+						-- sehr laut und weit zu hören: man merkt, wenn er näher kommt
+						sfx("sarpStep", position + Vector3.new(0, 0.5, 0), { volume = 2.6, maxDistance = 170 })
 					end
 					if a >= 1 then
 						break
@@ -670,10 +671,318 @@ function Night.run(ctx)
 	if livingDoor then
 		livingDoor.locked = false
 	end
+	task.wait(2)
+	event:FireAllClients({ type = "hint", text = "Er ist weg … fürs Erste.", seconds = 4 })
 	task.wait(3)
-	ctx.remotes:SetAttribute("Phase", "alone")
-	event:FireAllClients({ type = "alone" })
-	print("Kapitel 2: Sarp ist weg – man ist allein im Haus (hier geht es später weiter).")
+
+	------------------------------------------------------------------ 5. Richard kommt zurück
+	function actions.richardComes()
+		if kitchenDoor then
+			kitchenDoor.locked = false
+			if kitchenDoor.angle == 0 then
+				sfx("doorCreak", kitchenDoor.model.PrimaryPart.Position, { volume = 0.6 })
+				ctx.moveDoor(kitchenDoor, kitchenDoor.openAngle, 0.9)
+			end
+		end
+		if mr then
+			Wagners.place(mr, point(48, 38.2), point(60, 36))
+			ctx.walkPath(mr, { P(52, 38.2), P(57, 38), P(60, 36.5) }, 4.5, steps)
+			Wagners.place(mr, point(60, 36.5), point(66, 32))
+			mr:SetAttribute("Look", "player")
+		end
+	end
+	function actions.richardLeaves()
+		if mr then
+			mr:SetAttribute("Look", "down")
+			ctx.walkPath(mr, { P(57, 38), P(51, 38.2), P(46, 37) }, 6, steps)
+			Wagners.place(mr, ctx.hiddenSpot, ctx.facing)
+		end
+	end
+	ctx.runScript(Script.NIGHT_RICHARD, "Richard")
+
+	------------------------------------------------------------------ 6. Axt holen, Tür 1 aufbrechen
+	-- (Sarp läuft dabei durchs Erdgeschoss; jetzt ist er nicht mehr tödlich, nur unheimlich)
+	local doneWithNight = false
+	local axeHolder
+	local function giveAxe(player)
+		local character = player.Character
+		local hand = character and (character:FindFirstChild("LeftHand") or character:FindFirstChild("Left Arm"))
+		local root = character and character:FindFirstChild("HumanoidRootPart")
+		if not (hand and root) or character:FindFirstChild("PlayerAxe") then
+			return
+		end
+		local model = Instance.new("Model")
+		model.Name = "PlayerAxe"
+		local base = CFrame.new(hand.Position) * root.CFrame.Rotation * CFrame.new(0, -0.1, -0.2) * CFrame.Angles(math.rad(-70), 0, 0)
+		local function piece(name, size, offset, color, material)
+			local part = Instance.new("Part")
+			part.Name = name
+			part.Size = size
+			part.CFrame = base * offset
+			part.Color = color
+			part.Material = material
+			part.CanCollide = false
+			part.CanQuery = false
+			part.CanTouch = false
+			part.Massless = true
+			part.Parent = model
+			local weld = Instance.new("WeldConstraint")
+			weld.Part0 = hand
+			weld.Part1 = part
+			weld.Parent = part
+		end
+		piece("AxeHandle", Vector3.new(0.14, 2.6, 0.14), CFrame.new(0, 0.9, 0), Color3.fromRGB(120, 86, 52), Enum.Material.Wood)
+		piece("AxeHead", Vector3.new(0.1, 0.55, 0.85), CFrame.new(0, 2.05, 0.28), Color3.fromRGB(110, 112, 116), Enum.Material.Metal)
+		model.Parent = character
+	end
+	local axe = Mansion.axe
+	local axePart = axe and axe.PrimaryPart
+	if axePart then
+		local prompt = Instance.new("ProximityPrompt")
+		prompt.ObjectText = "Axt"
+		prompt.ActionText = "Nehmen"
+		prompt.HoldDuration = 0.4
+		prompt.MaxActivationDistance = 7
+		prompt.RequiresLineOfSight = false
+		prompt.Parent = axePart
+		prompt.Triggered:Connect(function(player)
+			if axeHolder then
+				return
+			end
+			axeHolder = player
+			axe.Parent = nil
+			giveAxe(player)
+			sfx("doorCreak", axePart.Position, { volume = 0.4, speed = 1.6 })
+			event:FireAllClients({ type = "hint", text = player.DisplayName .. " hat die Axt. Jetzt nach oben zu Tür 1.", seconds = 6 })
+			pcall(function()
+				-- nach dem Neuspawnen die Axt wieder in die Hand geben
+				player.CharacterAdded:Connect(function()
+					task.wait(1)
+					if axeHolder == player and not doneWithNight then
+						giveAxe(player)
+					end
+				end)
+			end)
+		end)
+	end
+
+	-- Tür 1 (oben an der Galerie, vernagelt) mit der Axt aufbrechen
+	local doorOne = Mansion.doorAt(46.8, 54.15, "O")
+	local broken = false
+	local function breakDoor(player)
+		if broken or not doorOne then
+			return
+		end
+		broken = true
+		local origin = Mansion.origin
+		local middle = origin * (doorOne.middle + Vector3.new(0, O + 4, 0))
+		event:FireAllClients({ type = "hint", text = player.DisplayName .. " bricht die Tür auf …", seconds = 4 })
+		for i = 1, 5 do
+			sfx("doorBurst", middle, { volume = 1.2, speed = 1.2 + i * 0.05, maxDistance = 200 })
+			task.wait(0.75)
+			-- nach und nach fallen die Bretter ab
+			if i >= 2 then
+				for _, part in Mansion.model:GetDescendants() do
+					if part:IsA("BasePart") and part.Name == "Board" and part.Anchored then
+						local offset = part.Position - middle
+						if math.abs(offset.Y) < 6 and Vector3.new(offset.X, 0, offset.Z).Magnitude < 3 and math.random() < 0.5 then
+							part.Anchored = false
+							part.CanCollide = true
+						end
+					end
+				end
+			end
+		end
+		for _, part in Mansion.model:GetDescendants() do
+			if part:IsA("BasePart") and part.Name == "Board" and part.Anchored then
+				local offset = part.Position - middle
+				if math.abs(offset.Y) < 6 and Vector3.new(offset.X, 0, offset.Z).Magnitude < 3 then
+					part.Anchored = false
+					part.CanCollide = true
+				end
+			end
+		end
+		doorOne.locked = false
+		sfx("doorSlam", middle, { volume = 1.4 })
+		ctx.moveDoor(doorOne, doorOne.openAngle, 0.35)
+		task.wait(2.5)
+		doneWithNight = true
+		ctx.remotes:SetAttribute("Phase", "doorOne")
+		event:FireAllClients({ type = "alone", title = "Tür 1 ist offen.", subtitle = "Was haben die Wagners hier versteckt?" })
+		print("Kapitel 2: Tür 1 ist aufgebrochen (hier geht es später weiter).")
+	end
+	if doorOne then
+		doorOne.onLocked = function(player)
+			if broken then
+				return true
+			end
+			if player == axeHolder then
+				task.spawn(breakDoor, player)
+			else
+				event:FireClient(player, { type = "hint", text = "Vernagelt. Mit einer Axt könnte man die Bretter aufbrechen.", seconds = 3 })
+			end
+			return true
+		end
+	end
+
+	event:FireAllClients({ type = "hint", text = "Hol die Axt aus dem Keller (Kellertür in der Küche).", seconds = 7 })
+
+	-- Sarp läuft durchs Erdgeschoss. Sieht er jemanden, bleibt er stehen und starrt.
+	local patrolDoors = { Mansion.doorAt(51.4, 54.15, "E"), Mansion.doorAt(44, 42, "E"), kitchenDoor, livingDoor, Mansion.doorAt(54.25, 63, "E") }
+	for _, door in patrolDoors do
+		if door and door.angle == 0 then
+			door.locked = false
+			task.spawn(ctx.moveDoor, door, door.openAngle, 0.6)
+		end
+	end
+	local PATROL = {
+		point(48, 66), point(51.4, 58), point(51.4, 50), point(44, 46), point(44, 38), point(52, 38), point(57, 38),
+		point(62, 36), point(62, 40), point(62, 46), point(60.5, 58), point(57, 62.5), point(52.5, 63),
+	}
+	local lastStare = {}
+	local function canSee(player)
+		local root = rootOf(player)
+		local sarpRoot = sarp and sarp:FindFirstChild("HumanoidRootPart")
+		if not (root and sarpRoot) then
+			return false
+		end
+		local eye = sarpRoot.Position + Vector3.new(0, 2.5, 0)
+		local offset = root.Position - eye
+		if offset.Magnitude > 16 or math.abs(root.Position.Y - Wagners.ground(sarp).Y - 3) > 6 then
+			return false
+		end
+		local visible = true
+		pcall(function()
+			local params = RaycastParams.new()
+			params.FilterType = Enum.RaycastFilterType.Exclude
+			params.FilterDescendantsInstances = { sarp, player.Character }
+			visible = workspace:Raycast(eye, offset, params) == nil
+		end)
+		return visible
+	end
+	local stareAt
+	local function lookingForSomeone()
+		for _, player in Players:GetPlayers() do
+			if (os.clock() - (lastStare[player] or -100)) > 12 and canSee(player) then
+				stareAt = player
+				return true
+			end
+		end
+		return false
+	end
+	if sarp then
+		Wagners.place(sarp, PATROL[1], PATROL[2])
+		task.spawn(function()
+			local index = 1
+			while not doneWithNight and sarp.Parent do
+				local target = PATROL[index % #PATROL + 1]
+				local reached = sarpWalk({ target }, 3.6, lookingForSomeone)
+				if not reached and stareAt then
+					-- stehen bleiben, den Spieler anstarren, flüstern
+					local player = stareAt
+					stareAt = nil
+					lastStare[player] = os.clock()
+					local root = rootOf(player)
+					if root then
+						local feet = Wagners.ground(sarp)
+						Wagners.place(sarp, feet, Vector3.new(root.Position.X, feet.Y, root.Position.Z))
+					end
+					event:FireClient(player, { type = "nearScare", seconds = 3 })
+					whisper(Script.SARP_WHISPERS[math.random(1, #Script.SARP_WHISPERS)])
+					task.wait(3)
+				elseif reached then
+					index = index % #PATROL + 1
+				end
+			end
+			Wagners.place(sarp, away, ctx.facing)
+		end)
+	end
+
+	-- Die Familie geistert durchs Haus: steht irgendwo in der Ferne, sagt etwas Seltsames,
+	-- und rennt weg und verschwindet, sobald man ihr zu nahe kommt
+	local APPEAR = {
+		{ 46, 63, "E" }, { 38, 50, "E" }, { 24, 52, "E" }, { 70, 63, "E" }, { 42, 28, "E" },
+		{ 49, 57.5, "O" }, { 70, 37, "O" }, { 64, 64, "O" }, { 49, 27, "O" }, { 39, 27, "O" },
+		{ 24, 46, "K" }, { 40, 38, "K" }, { 62, 30, "K" },
+	}
+	local LINES = {
+		mrsWagner = { "You shouldn't be up so late.", "Dinner isn't over yet.", "He is so proud of you." },
+		lucy = { "Do you want to see my room?", "Mommy says you'll stay forever.", "Shhh. He's listening." },
+		tommy = { "I drew you today.", "Can you hear the walls?", "Don't open the first door." },
+	}
+	local members = { mrsWagner = mrs, lucy = lucy, tommy = tommy }
+	local function nearestPlayer(position)
+		local best, bestDistance
+		for _, player in Players:GetPlayers() do
+			local root = rootOf(player)
+			if root and math.abs(root.Position.Y - position.Y - 3) < 7 then
+				local distance = (root.Position - position).Magnitude
+				if not bestDistance or distance < bestDistance then
+					best, bestDistance = player, distance
+				end
+			end
+		end
+		return best, bestDistance
+	end
+	task.spawn(function()
+		task.wait(12)
+		local lastSpot
+		while not doneWithNight do
+			-- wer erscheint, und wo (nicht direkt neben einem Spieler)
+			local names = {}
+			for name, model in members do
+				if model then
+					table.insert(names, name)
+				end
+			end
+			if #names == 0 then
+				break
+			end
+			local name = names[math.random(1, #names)]
+			local model = members[name]
+			local spot
+			for _ = 1, 12 do
+				local candidate = APPEAR[math.random(1, #APPEAR)]
+				local feet = point(candidate[1], candidate[2], candidate[3])
+				local _, distance = nearestPlayer(feet)
+				if candidate ~= lastSpot and (not distance or distance > 18) then
+					spot = feet
+					lastSpot = candidate
+					break
+				end
+			end
+			if spot then
+				local player = nearestPlayer(spot)
+				local root = player and rootOf(player)
+				Wagners.place(model, spot, root and Vector3.new(root.Position.X, spot.Y, root.Position.Z) or spot + Vector3.new(0, 0, 1))
+				model:SetAttribute("Look", "player")
+				local spoke = false
+				local shownUntil = os.clock() + 40
+				while os.clock() < shownUntil and not doneWithNight do
+					local near, distance = nearestPlayer(spot)
+					if near and distance < 24 and not spoke then
+						spoke = true
+						local lines = LINES[name]
+						task.spawn(say, name, lines[math.random(1, #lines)])
+					end
+					if near and distance < 10 then
+						-- wegrennen und verschwinden
+						local nearRoot = rootOf(near)
+						local away = (spot - nearRoot.Position) * Vector3.new(1, 0, 1)
+						away = away.Magnitude > 0.1 and away.Unit or Vector3.new(1, 0, 0)
+						model:SetAttribute("Look", "down")
+						sfx("stepWood", spot + Vector3.new(0, 0.5, 0), { count = 4, interval = 0.18, volume = 0.9 })
+						ctx.walkPath(model, { { at = spot + away * 5 } }, 16)
+						event:FireClient(near, { type = "candleOut", duration = 0.4 })
+						break
+					end
+					task.wait(0.25)
+				end
+				Wagners.place(model, ctx.hiddenSpot, ctx.facing)
+			end
+			task.wait(math.random(14, 26))
+		end
+	end)
 end
 
 return Night
