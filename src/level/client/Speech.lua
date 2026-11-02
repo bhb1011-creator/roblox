@@ -18,7 +18,6 @@ local NAME_COLORS = {
 }
 
 local output
-local warned = false
 local speakingUntil = 0
 local current = 0
 local frame, nameLabel, textLabel
@@ -81,9 +80,11 @@ local function speak(speaker, text)
 			tts:Destroy()
 		end)
 	end)
-	if not ok and not warned then
-		warned = true
-		warn("Sprachausgabe (Text-to-Speech) geht hier nicht, es gibt nur Untertitel. Grund:", problem)
+	if not ok then
+		-- Jede Zeile, die nicht gesprochen werden konnte, mit ihrem Text melden (der Untertitel
+		-- erscheint trotzdem). Oft hat der Roblox-Textfilter die Zeile blockiert ("FilteredText"),
+		-- dann muss sie anders formuliert werden.
+		warn(string.format("Sprachausgabe: Diese Zeile (%s) wurde nicht gesprochen, nur als Untertitel gezeigt: \"%s\" – Grund: %s", tostring(speaker), tostring(text), tostring(problem)))
 	end
 end
 
