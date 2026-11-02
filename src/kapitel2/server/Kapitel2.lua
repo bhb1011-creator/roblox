@@ -105,8 +105,14 @@ function Kapitel2.start()
 		Wagners.place(mrs, hall(SPOTS.mrsStart), facing)
 		mrs:SetAttribute("Look", "player")
 	end
+	-- Mr. Wagner wartet in der Küche und kommt während des Gesprächs zur Tür
+	local function plan(x, y)
+		return Vector2.new(x - 50, 57.4 - y) -- Bauplan -> Hallen-Koordinaten
+	end
+	local KITCHEN_TO_DOOR = { plan(44, 38), plan(44, 46), plan(51.4, 50), plan(51.4, 58), SPOTS.mrBehind }
 	if mr then
-		Wagners.place(mr, hiddenSpot, facing)
+		local start = hall(plan(46.5, 38))
+		Wagners.place(mr, start, start + Vector3.new(-1, 0, 0))
 		mr:SetAttribute("Look", "down")
 	end
 	local npcs = { mrsWagner = mrs, mrWagner = mr }
@@ -150,10 +156,11 @@ function Kapitel2.start()
 	end
 
 	-- Gehen entlang mehrerer Punkte (Hallen-Koordinaten), Blick in Gehrichtung
-	local function walkPath(npc, spots, speed)
+	local function walkPath(npc, spots, speed, onStep)
 		if not npc then
 			return
 		end
+		local nextStep = 0
 		local hips = {}
 		for _, name in { "LeftUpperLeg", "RightUpperLeg" } do
 			local part = npc:FindFirstChild(name)
@@ -174,6 +181,10 @@ function Kapitel2.start()
 					local a = math.min((os.clock() - start) * speed / distance, 1)
 					position = from:Lerp(target, a)
 					Wagners.place(npc, position, position + direction)
+					if onStep and os.clock() >= nextStep then
+						nextStep = os.clock() + 0.55
+						onStep(position)
+					end
 					for index, hip in hips do
 						pcall(function()
 							hip.joint.C0 = hip.base * CFrame.Angles(math.sin(os.clock() * 7 + index * math.pi) * 0.35, 0, 0)
@@ -572,13 +583,37 @@ function Kapitel2.start()
 		sfx("doorCreak", doorFront, { volume = 1, speed = 0.85 })
 		swingDoor(DOOR_OPEN, 2.6)
 	end
+	-- Mr. Wagner geht aus der Küche durch den Flur zur Haustür (man hört seine Schritte)
+	local mrArrived = false
+	function actions.mrComes()
+		if not mr or mrArrived then
+			mrArrived = true
+			return
+		end
+		task.spawn(function()
+			local ok, problem = pcall(walkPath, mr, KITCHEN_TO_DOOR, 5, function(position)
+				sfx("stepWood", position + Vector3.new(0, 0.5, 0), { volume = 0.7, maxDistance = 50 })
+			end)
+			if not ok then
+				warn("Kapitel 2: Mr. Wagner konnte nicht zur Tür gehen: " .. tostring(problem))
+			end
+			Wagners.place(mr, hall(SPOTS.mrBehind), facing)
+			mrArrived = true
+		end)
+	end
 	function actions.mrAppears()
-		event:FireAllClients({ type = "candleOut", duration = 0.7 })
-		task.wait(0.3)
+		if not mrArrived then
+			actions.mrComes()
+		end
+		local deadline = os.clock() + 12
+		while not mrArrived and os.clock() < deadline do
+			task.wait(0.1)
+		end
 		if mr then
 			Wagners.place(mr, hall(SPOTS.mrBehind), facing)
 			mr:SetAttribute("Look", "player")
 		end
+		event:FireAllClients({ type = "candleOut", duration = 0.5 })
 		task.wait(0.45)
 		sfx("sting")
 	end

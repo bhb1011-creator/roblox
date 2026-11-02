@@ -10,7 +10,8 @@
 --   doorClose   – Tür kurz zu
 --   chain       – die Kette wird abgenommen, sie tritt zurück
 --   doorOpen    – die Tür geht ganz auf
---   mrAppears   – die Kerze flackert fast aus; danach steht Mr. Wagner hinter ihr
+--   mrComes     – Mr. Wagner kommt aus der Küche durch den Flur zur Tür (man hört ihn)
+--   mrAppears   – er steht hinter ihr, die Kerze flackert kurz
 --   invite      – beide treten zur Seite, man geht selbst hinein, die Tür fällt zu
 --   candles     – jeder Spieler bekommt eine Kerze in die Hand (mehr Licht im Haus)
 --   point       – Mr. Wagner zeigt die Treppe hoch
@@ -47,6 +48,7 @@ Kapitel2Dialogue.SCRIPT = {
 			},
 		},
 	},
+	{ action = "mrComes" },
 	{ speaker = "mrsWagner", text = "You met Sarp on the way, didn't you?", wait = 0.9 },
 	{ speaker = "mrsWagner", text = "He always finds our guests first.", wait = 0.4 },
 	{ action = "mrAppears", wait = 0.9 },

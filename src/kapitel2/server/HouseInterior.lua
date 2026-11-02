@@ -135,9 +135,17 @@ function HouseInterior.build(model, origin, mansion)
 	for i = 1, STEPS do
 		local height = i * rise - 0.1
 		local z = STAIRS_Z0 + (i - 0.5) * run
-		block("Stair", Vector3.new(stairsW - 0.02, height, run), CFrame.new(stairsX + 0.01, FLOOR + height / 2, z), COLORS.stair, Enum.Material.WoodPlanks)
-		block("StairTread", Vector3.new(stairsW + 0.06, 0.08, run + 0.06), CFrame.new(stairsX + 0.03, FLOOR + height + 0.04, z - 0.03), COLORS.tread, Enum.Material.Wood)
+		-- die Stufen sind nur zum Ansehen, gelaufen wird auf der unsichtbaren Rampe
+		block("Stair", Vector3.new(stairsW - 0.02, height, run), CFrame.new(stairsX + 0.01, FLOOR + height / 2, z), COLORS.stair, Enum.Material.WoodPlanks, { CanCollide = false })
+		block("StairTread", Vector3.new(stairsW + 0.06, 0.08, run + 0.06), CFrame.new(stairsX + 0.03, FLOOR + height + 0.04, z - 0.03), COLORS.tread, Enum.Material.Wood, { CanCollide = false })
 	end
+	-- Unsichtbare Rampe über den Stufenkanten: so läuft man gleichmäßig hoch und bleibt
+	-- nirgends an einer Kante hängen. Oben endet sie genau auf Höhe der Galerie.
+	local rampFrom = Vector3.new(stairsX, FLOOR + 0.4, STAIRS_Z0)
+	local rampTo = Vector3.new(stairsX, GALLERY + 0.02, GALLERY_Z)
+	local rampMid = (rampFrom + rampTo) / 2
+	local rampFrame = CFrame.lookAt(rampMid, rampTo) * CFrame.new(0, -0.5, 0)
+	block("StairRamp", Vector3.new(stairsW, 1, (rampTo - rampFrom).Magnitude + 0.3), rampFrame, COLORS.stair, Enum.Material.WoodPlanks, { Transparency = 1, CastShadow = false })
 	-- Handlauf mit Stäben auf der offenen Seite
 	local railX = STAIRS_X1 + 0.15
 	local railFrom = Vector3.new(railX, FLOOR + 3.2, STAIRS_Z0 + 0.3)
@@ -241,7 +249,8 @@ function HouseInterior.build(model, origin, mansion)
 
 	------------------------------------------------------------------ Kronleuchter ohne Licht
 	local chandelier = CFrame.new(-2, CEILING, -7.5)
-	block("ChandelierChain", Vector3.new(0.12, 2.6, 0.12), chandelier * CFrame.new(0, -1.3, 0), COLORS.brass, Enum.Material.Metal)
+	-- Kette reicht bis in die Decke (im großen Haus liegt die Decke etwas höher)
+	block("ChandelierChain", Vector3.new(0.12, 3.0, 0.12), chandelier * CFrame.new(0, -1.1, 0), COLORS.brass, Enum.Material.Metal)
 	Parts.column({ Name = "ChandelierRing", Color = COLORS.brass, Material = Enum.Material.Metal, Parent = folder }, 0.2, 2.6, origin * chandelier * CFrame.new(0, -2.8, 0))
 	for i = 0, 4 do
 		local angle = i / 5 * math.pi * 2

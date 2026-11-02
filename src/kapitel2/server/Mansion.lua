@@ -588,11 +588,13 @@ local function buildWall(floorKey, a, b, kind, openings, topOverride)
 				if o.boards then
 					local side = (rooms[-1] and rooms[-1].id == o.boards) and -1 or 1
 					for i, angle in { 14, -10, 6 } do
-						local c = middle + normal * side * (t / 2 + 0.3) + Vector3.new(0, bottom + 1.6 + i * 1.5, 0)
+						-- liegen auf dem Türrahmen auf
+						local c = middle + normal * side * (t / 2 + 0.25) + Vector3.new(0, bottom + 1.6 + i * 1.5, 0)
 						box("Board", Vector3.new(item.w + 0.6, 0.55, 0.14), CFrame.lookAt(c, c + normal * side) * CFrame.Angles(0, 0, math.rad(angle)), COLORS.board, M.WoodPlanks)
 					end
 					for i = 1, 5 do
-						local c = middle + dir * (-0.9 + i * 0.32) + normal * side * (t / 2 + 0.2) + Vector3.new(0, bottom + 1.5, 0)
+						-- direkt auf dem Türblatt
+						local c = middle + dir * (-0.9 + i * 0.32) + normal * side * 0.12 + Vector3.new(0, bottom + 1.5, 0)
 						box("Scratch", Vector3.new(0.05, 1.4, 0.02), CFrame.lookAt(c, c + normal * side) * CFrame.Angles(0, 0, math.rad(8 - i * 3)), Color3.fromRGB(30, 22, 18))
 					end
 				end
@@ -849,7 +851,7 @@ local function buildWalls()
 	intO({ 62, 40 }, { 62, 52 })
 	intO({ 62, 52 }, { 62, 54.15 })
 	intO({ 54.25, 54.15 }, { 62, 54.15 })
-	intO({ 62, 52 }, { 74.56, 52 }, { { 68, 52, kind = DOOR, angle = 80, swing = "spiel" } })
+	intO({ 62, 52 }, { 74.56, 52 }, { { 68, 52, kind = DOOR, angle = 80, swing = "gang" } }) -- geht zum Flur auf (sonst steht sie im Weg)
 	intO({ 74.56, 52 }, { 80.56, 44 })
 	local corridorDoors = {
 		{ 39, 34, kind = DOOR, angle = 25, swing = "tommy" },
@@ -995,7 +997,7 @@ local function buildFurniture()
 
 	-- Wohnzimmer: Kamin, Möbel unter Tüchern
 	Furniture.fireplace(b, at(79.5, 50, E, "W"))
-	Furniture.picture(b, at(79.9, 50, E + 8.2, "W"), 3.2, 4, Color3.fromRGB(50, 40, 34), true)
+	Furniture.picture(b, at(80.02, 50, E + 8.2, "W"), 3.2, 4, Color3.fromRGB(50, 40, 34), true)
 	Furniture.rug(b, at(68, 52, E), 10, 8, Color3.fromRGB(80, 34, 30))
 	Furniture.sofa(b, at(67, 50, E, "E"), 6, Color3.fromRGB(96, 36, 34), true)
 	Furniture.sofa(b, at(72, 45, E, "S"), 2.6, Color3.fromRGB(96, 36, 34), true)
@@ -1003,7 +1005,7 @@ local function buildFurniture()
 	Furniture.table(b, at(72, 50.5, E), 3, 2, 1.6)
 	Furniture.shelf(b, at(57.2, 42.9, E, "S"), 5, 7.5, "books", rng) -- links und rechts der Tür zum Esszimmer
 	Furniture.shelf(b, at(66.6, 42.9, E, "S"), 4, 7.5, "books", rng)
-	Furniture.picture(b, at(55, 66, E + 5.5, "E"), 2, 2.6, Color3.fromRGB(70, 60, 50), true)
+	Furniture.picture(b, at(54.64, 66, E + 5.5, "E"), 2, 2.6, Color3.fromRGB(70, 60, 50), true)
 
 	-- Turmzimmer
 	Furniture.rug(b, at(84, 66, E), 9, 9, Color3.fromRGB(40, 50, 60))
@@ -1027,8 +1029,8 @@ local function buildFurniture()
 		lit(at(67, y, E + 2.9), 1)
 	end
 	Furniture.shelf(b, at(72, 13, E, "N"), 6, 3.2, "books", rng)
-	Furniture.picture(b, at(80.1, 30, E + 6, "W"), 3, 4, Color3.fromRGB(40, 50, 40), true)
-	Furniture.picture(b, at(58, 18.4, E + 6, "N"), 2.4, 3, Color3.fromRGB(56, 46, 40), true)
+	Furniture.picture(b, at(80.02, 30, E + 6, "W"), 3, 4, Color3.fromRGB(40, 50, 40), true)
+	Furniture.picture(b, at(58, 18.54, E + 6, "S"), 2.4, 3, Color3.fromRGB(56, 46, 40), true)
 
 	-- Küche
 	Furniture.counter(b, at(40.5, 21.3, E, "S"), 9)
@@ -1040,8 +1042,14 @@ local function buildFurniture()
 	for _, c in { { 39, 31, "E" }, { 45, 31, "W" }, { 42, 28.6, "S" }, { 42, 33.6, "N" } } do
 		Furniture.chair(b, at(c[1], c[2], E, c[3]))
 	end
+	-- Töpfe hängen an einer Stange, die mit Ketten an der Decke hängt
+	box("PotRack", Vector3.new(6.8, 0.12, 0.12), CFrame.new(L(38.4, 20.9, E + 7.3)), COLORS.metal, M.Metal)
+	for _, x in { 35.4, 41.4 } do
+		box("PotRackChain", Vector3.new(0.06, CEIL.E - (E + 7.3) + 0.2, 0.06), CFrame.new(L(x, 20.9, (CEIL.E + E + 7.3) / 2 + 0.1)), COLORS.metal, M.Metal)
+	end
 	for i = 0, 3 do
 		cyl("HangingPot", 0.8, 0.9, at(36 + i * 1.6, 20.9, E + 6.4), Color3.fromRGB(60, 58, 56), M.Metal)
+		box("PotHook", Vector3.new(0.05, 0.16, 0.05), CFrame.new(L(36 + i * 1.6, 20.9, E + 7.2 + 0.0)), COLORS.metal, M.Metal)
 	end
 	box("KnifeBlock", Vector3.new(0.6, 0.9, 0.5), CFrame.new(L(43.5, 21.2, E + 3.65)), Color3.fromRGB(40, 30, 22), M.Wood)
 
@@ -1059,7 +1067,7 @@ local function buildFurniture()
 	local gramo = Furniture.table(b, at(31, 41, E), 2, 2, 2.6)
 	box("Gramophone", Vector3.new(1.2, 0.5, 1.2), gramo * CFrame.new(0, 0.25, 0), Color3.fromRGB(50, 34, 24), M.Wood)
 	box("GramophoneHorn", Vector3.new(1.2, 1.2, 0.2), gramo * CFrame.new(0, 1.0, 0.3) * CFrame.Angles(math.rad(-30), 0, 0), Color3.fromRGB(140, 110, 50), M.Metal)
-	Furniture.picture(b, at(24, 38.4, E + 6, "N"), 3, 2.2, Color3.fromRGB(80, 70, 60), true)
+	Furniture.picture(b, at(24, 38.39, E + 6, "S"), 3, 2.2, Color3.fromRGB(80, 70, 60), true)
 
 	-- Arbeitszimmer (abgeschlossen)
 	Furniture.desk(b, at(22, 68, E, "S"), rng)
@@ -1092,8 +1100,12 @@ local function buildFurniture()
 	------------------------------------------------ Obergeschoss
 	-- langer Flur: Läufer, Bilder, Kerze
 	Furniture.rug(b, at(56, 37, O), 40, 3.6, Color3.fromRGB(70, 30, 28))
-	for _, x in { 38, 46, 54, 66, 76 } do
-		Furniture.picture(b, at(x, 39.6, O + 5.5, "S"), 2, 2.6, Color3.fromRGB(60, 54, 44), x == 46 or x == 66)
+	-- Bilder an den Flurwänden (Bildseite zum Flur)
+	for _, x in { 46, 54 } do
+		Furniture.picture(b, at(x, 39.61, O + 5.5, "N"), 2, 2.6, Color3.fromRGB(60, 54, 44), x == 46)
+	end
+	for _, x in { 66, 76 } do
+		Furniture.picture(b, at(x, 34.39, O + 5.5, "S"), 2, 2.6, Color3.fromRGB(60, 54, 44), x == 66)
 	end
 	local hallTable = Furniture.table(b, at(64.5, 41.5, O), 2.4, 1.4, 2.8)
 	lit(hallTable)
@@ -1112,7 +1124,7 @@ local function buildFurniture()
 	-- hinter Tür 1: leer, nur ein Stuhl, der zur Wand schaut, und Kratzer
 	Furniture.chair(b, at(45, 42, O, "N"))
 	for i = 1, 12 do
-		local x = 42.3 + (i % 3) * 0.1
+		local x = 42.09 -- direkt auf der Tapete
 		box("Scratch", Vector3.new(0.05, rng:NextNumber(1, 3), 0.02), CFrame.new(L(x, 44 + i * 0.7, O + 2 + rng:NextNumber(0, 3))) * CFrame.Angles(0, math.rad(90), math.rad(rng:NextNumber(-20, 20))), Color3.fromRGB(20, 16, 14))
 	end
 
@@ -1120,7 +1132,7 @@ local function buildFurniture()
 	Furniture.bed(b, at(36.6, 23.5, O, "S"), 3.2, 5.6, Color3.fromRGB(60, 80, 120))
 	Furniture.toyBox(b, at(41.5, 23, O, "S"))
 	Furniture.rug(b, at(39, 29, O), 6, 5, Color3.fromRGB(50, 70, 100))
-	for i, p in { { 43.6, 24, "W" }, { 43.6, 28, "W" }, { 38, 20.4, "N" }, { 41, 20.4, "N" }, { 34.4, 30, "E" } } do
+	for i, p in { { 43.66, 24, "W" }, { 43.66, 28, "W" }, { 38, 20.49, "S" }, { 41, 20.49, "S" }, { 34.49, 30, "E" } } do
 		Furniture.drawing(b, at(p[1], p[2], O + 4.5 + (i % 2) * 0.6, p[3]))
 	end
 	for i = 0, 4 do
@@ -1149,7 +1161,7 @@ local function buildFurniture()
 	Furniture.nightstand(b, at(76, 21, O, "S"))
 	Furniture.wardrobe(b, at(79.4, 29.5, O, "W"), 4)
 	Furniture.mirror(b, at(64.4, 26, O + 5.2, "E"))
-	Furniture.picture(b, at(72, 12.4, O + 5, "N"), 4, 3, Color3.fromRGB(60, 50, 44), true) -- Familienfoto, Gesichter zerkratzt
+	Furniture.picture(b, at(72, 12.54, O + 5, "S"), 4, 3, Color3.fromRGB(60, 50, 44), true) -- Familienfoto, Gesichter zerkratzt
 
 	-- Spielzimmer
 	Furniture.rockingHorse(b, at(66, 62, O, -60))
@@ -1171,7 +1183,7 @@ local function buildFurniture()
 	Furniture.bed(b, at(18, 44, O, "E"), 4.6, 7, Color3.fromRGB(180, 174, 160))
 	Furniture.wardrobe(b, at(30, 38.9, O, "S"), 4)
 	Furniture.chair(b, at(28, 52, O, 200), Color3.fromRGB(60, 46, 34))
-	Furniture.picture(b, at(14.4, 52, O + 5, "E"), 2.2, 3, Color3.fromRGB(70, 66, 56), true)
+	Furniture.picture(b, at(14.54, 52, O + 5, "E"), 2.2, 3, Color3.fromRGB(70, 66, 56), true)
 	Furniture.sofa(b, at(36, 56, O, "W"), 3, Color3.fromRGB(80, 70, 60), true)
 	for i = 1, 6 do
 		box("Cobweb", Vector3.new(2.4, 2.4, 0.02), CFrame.new(L(14.6 + (i % 2) * 26.6, 38.6 + i * 3.2, CEIL.O - 1.1)) * CFrame.Angles(0, math.rad(45), math.rad(45)), Color3.fromRGB(200, 200, 196), M.SmoothPlastic, { Transparency = 0.7, CanCollide = false })
@@ -1194,12 +1206,18 @@ local function buildFurniture()
 	end
 	-- Waschkeller
 	Furniture.washtub(b, at(20, 44, Kf))
-	Furniture.clothesline(b, L(16, 50, Kf + 6.4), L(32, 50, Kf + 6.4), rng)
-	Furniture.clothesline(b, L(16, 55, Kf + 6.4), L(32, 55, Kf + 6.4), rng)
+	-- Wäscheleinen von Wand zu Wand gespannt
+	Furniture.clothesline(b, L(14.5, 50, Kf + 6.4), L(33.5, 50, Kf + 6.4), rng)
+	Furniture.clothesline(b, L(14.5, 55, Kf + 6.4), L(33.5, 55, Kf + 6.4), rng)
 	-- Heizungsraum
 	Furniture.boiler(b, at(60, 24, Kf, "S"))
 	for i = 0, 2 do
-		beam("Pipe", L(55, 20 + i * 2, Kf + 7.6 - i * 0.4), L(69, 20 + i * 2, Kf + 7.6 - i * 0.4), 0.3, COLORS.metal, M.Metal)
+		local pipeY = Kf + 7.6 - i * 0.4
+		beam("Pipe", L(55, 20 + i * 2, pipeY), L(69, 20 + i * 2, pipeY), 0.3, COLORS.metal, M.Metal)
+		-- Halterungen an der Decke
+		for _, x in { 57, 62, 67 } do
+			box("PipeHanger", Vector3.new(0.08, CEIL.K - pipeY + 0.1, 0.08), CFrame.new(L(x, 20 + i * 2, (CEIL.K + pipeY) / 2 + 0.05)), COLORS.metal, M.Metal)
+		end
 	end
 	-- Kriechkeller: Kisten
 	for i = 0, 5 do

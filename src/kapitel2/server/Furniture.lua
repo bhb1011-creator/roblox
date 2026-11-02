@@ -61,6 +61,15 @@ function Furniture.sofa(b, cf, w, color, covered)
 	for _, x in { -1, 1 } do
 		b.box("SofaArm", Vector3.new(0.7, 1.9, 2.6), cf * CFrame.new(x * (w / 2 - 0.35), 1.55, 0), fabric, mat)
 	end
+	if not covered then
+		-- Sockel mit kurzen Füßen
+		b.box("SofaBase", Vector3.new(w - 0.1, 0.45, 2.4), cf * CFrame.new(0, 0.37, 0), C.darkWood, M.Wood)
+		for _, x in { -1, 1 } do
+			for _, z in { -1, 1 } do
+				b.box("SofaFoot", Vector3.new(0.25, 0.16, 0.25), cf * CFrame.new(x * (w / 2 - 0.3), 0.08, z * 1.0), C.darkWood, M.Wood)
+			end
+		end
+	end
 	if covered then
 		-- das Tuch hängt bis auf den Boden
 		b.box("Sheet", Vector3.new(w + 0.2, 0.6, 3.0), cf * CFrame.new(0, 0.3, -0.1), C.sheet, mat)
@@ -245,7 +254,7 @@ function Furniture.rockingHorse(b, cf)
 	b.box("HorseHead", Vector3.new(0.7, 1.3, 0.9), cf * CFrame.new(0, 2.8, -1.3) * CFrame.Angles(math.rad(-20), 0, 0), Color3.fromRGB(150, 120, 90), M.Wood)
 	b.box("HorseMane", Vector3.new(0.3, 1.2, 0.4), cf * CFrame.new(0, 3.0, -0.95) * CFrame.Angles(math.rad(-20), 0, 0), C.darkWood, M.Fabric)
 	for _, x in { -0.55, 0.55 } do
-		b.box("Rocker", Vector3.new(0.2, 0.3, 3.4), cf * CFrame.new(x, 0.3, 0), C.darkWood, M.Wood)
+		b.box("Rocker", Vector3.new(0.2, 0.3, 3.4), cf * CFrame.new(x, 0.15, 0), C.darkWood, M.Wood)
 		for _, z in { -0.8, 0.8 } do
 			b.box("HorseLeg", Vector3.new(0.2, 1.4, 0.2), cf * CFrame.new(x, 1.0, z), Color3.fromRGB(150, 120, 90), M.Wood)
 		end
@@ -308,7 +317,9 @@ function Furniture.clothesline(b, from, to, rng)
 	for i = 1, math.floor(length / 3) do
 		local t = (i - 0.5) / math.floor(length / 3)
 		local at = from:Lerp(to, t)
-		b.boxWorld("HangingSheet", Vector3.new(2.2, rng:NextNumber(2.2, 3.4), 0.05), CFrame.lookAt(at, at + (to - from):Cross(Vector3.yAxis)) * CFrame.new(0, -1.4, 0), C.sheet, M.Fabric)
+		-- das Laken hängt über der Leine (Oberkante knapp darüber)
+		local sheetHeight = rng:NextNumber(2.2, 3.4)
+		b.boxWorld("HangingSheet", Vector3.new(2.2, sheetHeight, 0.05), CFrame.lookAt(at, at + (to - from):Cross(Vector3.yAxis)) * CFrame.new(0, -sheetHeight / 2 + 0.05, 0), C.sheet, M.Fabric)
 	end
 end
 
@@ -318,8 +329,8 @@ function Furniture.altar(b, cf)
 	b.box("AltarClothHang", Vector3.new(1.6, 2.4, 0.05), cf * CFrame.new(0, 1.9, -1.15), Color3.fromRGB(80, 14, 14), M.Fabric)
 	-- ein Gefäß und ein Bild von Sarp (nur ein schwarzer Umriss mit roten Augen)
 	b.cyl("Bowl", 0.4, 1.0, cf * CFrame.new(0, 3.1, -0.3), C.metal, M.Metal)
-	b.box("SarpPicture", Vector3.new(1.4, 1.9, 0.08), cf * CFrame.new(0, 4.1, 0.7) * CFrame.Angles(math.rad(-10), 0, 0), C.black, M.SmoothPlastic)
-	b.box("SarpEyes", Vector3.new(0.5, 0.08, 0.02), cf * CFrame.new(0, 4.6, 0.62) * CFrame.Angles(math.rad(-10), 0, 0), Color3.fromRGB(200, 30, 20), M.Neon)
+	b.box("SarpPicture", Vector3.new(1.4, 1.9, 0.08), cf * CFrame.new(0, 3.83, 0.7) * CFrame.Angles(math.rad(-10), 0, 0), C.black, M.SmoothPlastic)
+	b.box("SarpEyes", Vector3.new(0.5, 0.08, 0.02), cf * CFrame.new(0, 4.33, 0.62) * CFrame.Angles(math.rad(-10), 0, 0), Color3.fromRGB(200, 30, 20), M.Neon)
 end
 
 return Furniture
