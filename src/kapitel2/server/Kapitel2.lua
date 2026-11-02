@@ -24,6 +24,7 @@ local CHOICE_TIMEOUT = 25 -- danach wird automatisch die erste Antwort genommen
 local GAP = 0.4 -- Pause zwischen zwei Sätzen
 local WAIT_FOR_GROUP = 10 -- Sekunden, die auf den zweiten Spieler gewartet wird
 local WALK_SPEED = 8 -- im Haus etwas langsamer
+local SNEAK_SPEED = 4 -- Schleichen (Taste C): leiser, Sarp hört einen nicht
 local DOOR_CRACK, DOOR_OPEN = math.rad(14), math.rad(88)
 local REMIND_AFTER, PULL_IN_AFTER = 18, 40 -- Sekunden, wenn jemand draußen bleibt
 
@@ -59,11 +60,28 @@ function Kapitel2.start()
 	lightEvent.Name = "Light"
 	lightEvent.Parent = remotes
 	lightEvent.OnServerEvent:Connect(function(player, on)
+		if player:GetAttribute("CandleMode") == "none" then
+			-- kein Licht mehr (die Kerze ist bei der Explosion verloren gegangen)
+			player:SetAttribute("LightOff", true)
+			return
+		end
 		player:SetAttribute("LightOff", on ~= true)
 		local candle = player.Character and player.Character:FindFirstChild("PlayerCandle")
 		local light = candle and candle:FindFirstChild("CandleLight", true)
 		if light then
 			light.Enabled = on == true
+		end
+	end)
+	-- Schleichen an/aus (Taste C): nur während der Flucht erlaubt (Attribut "SneakAllowed")
+	local sneakEvent = Instance.new("RemoteEvent")
+	sneakEvent.Name = "Sneak"
+	sneakEvent.Parent = remotes
+	sneakEvent.OnServerEvent:Connect(function(player, on)
+		on = on == true and remotes:GetAttribute("SneakAllowed") == true
+		player:SetAttribute("Sneaking", on)
+		local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+		if humanoid and humanoid.WalkSpeed > 0 then
+			humanoid.WalkSpeed = on and SNEAK_SPEED or WALK_SPEED
 		end
 	end)
 	remotes.Parent = ReplicatedStorage
@@ -248,7 +266,7 @@ function Kapitel2.start()
 		for _, player in Players:GetPlayers() do
 			local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
 			if humanoid then
-				humanoid.WalkSpeed = enabled and WALK_SPEED or 0
+				humanoid.WalkSpeed = enabled and (player:GetAttribute("Sneaking") and SNEAK_SPEED or WALK_SPEED) or 0
 				humanoid.JumpHeight = enabled and 2 or 0
 			end
 		end
@@ -257,7 +275,13 @@ function Kapitel2.start()
 	-- Eigene Kerze in der Hand (bekommt man von Mrs. Wagner). Die anderen sehen sie an
 	-- der Hand, man selbst sieht sie unten links im Bild (macht Scene.lua auf dem Client).
 	local candlesGiven = false
+	-- "normal" = gelbe Kerze, "red" = rote Kerze von Richard (Flucht), "none" = keine mehr
+	local candleMode = "normal"
 	local function giveCandle(player)
+		if candleMode == "none" then
+			return
+		end
+		local red = candleMode == "red"
 		local character = player.Character
 		local hand = character and (character:FindFirstChild("RightHand") or character:FindFirstChild("Right Arm"))
 		local root = character and character:FindFirstChild("HumanoidRootPart")
@@ -289,23 +313,46 @@ function Kapitel2.start()
 		end
 		local upright = CFrame.Angles(0, 0, math.rad(90)) -- Zylinder stehen in Roblox auf der Seite
 		piece("CandleHolder", Enum.PartType.Cylinder, Vector3.new(0.12, 0.6, 0.6), base * upright, Color3.fromRGB(120, 96, 52), Enum.Material.Metal)
-		piece("Candle", Enum.PartType.Cylinder, Vector3.new(0.8, 0.22, 0.22), base * CFrame.new(0, 0.46, 0) * upright, Color3.fromRGB(225, 215, 190), Enum.Material.SmoothPlastic)
-		local flame = piece("CandleFlame", Enum.PartType.Ball, Vector3.new(0.16, 0.16, 0.16), base * CFrame.new(0, 0.95, 0), Color3.fromRGB(255, 170, 70), Enum.Material.Neon)
+		piece("Candle", Enum.PartType.Cylinder, Vector3.new(0.8, 0.22, 0.22), base * CFrame.new(0, 0.46, 0) * upright, red and Color3.fromRGB(110, 24, 22) or Color3.fromRGB(225, 215, 190), Enum.Material.SmoothPlastic)
+		local flame = piece("CandleFlame", Enum.PartType.Ball, Vector3.new(0.16, 0.16, 0.16), base * CFrame.new(0, 0.95, 0), red and Color3.fromRGB(255, 50, 36) or Color3.fromRGB(255, 170, 70), Enum.Material.Neon)
 		local light = Instance.new("PointLight")
 		light.Name = "CandleLight"
-		light.Range = 22
-		light.Brightness = 2
-		light.Color = Color3.fromRGB(255, 180, 110)
+		light.Range = red and 15 or 22
+		light.Brightness = red and 1.6 or 2
+		light.Color = red and Color3.fromRGB(255, 40, 30) or Color3.fromRGB(255, 180, 110)
 		light.Shadows = true
 		light.Enabled = not player:GetAttribute("LightOff")
 		light.Parent = flame
 		model.Parent = character
 	end
 
+	-- Kerze für alle neu verteilen (oder wegnehmen)
+	local function setCandleMode(mode)
+		candleMode = mode
+		candlesGiven = true
+		for _, player in Players:GetPlayers() do
+			local old = player.Character and player.Character:FindFirstChild("PlayerCandle")
+			if old then
+				old:Destroy()
+			end
+			player:SetAttribute("CandleMode", mode ~= "normal" and mode or nil)
+			player:SetAttribute("LightOff", mode == "none")
+			giveCandle(player)
+		end
+	end
+
+	-- Wo man nach dem Sterben wieder anfängt (Flucht: im Raum hinter Tür 1)
+	local checkpoint -- function(index) -> CFrame
 	local function spawnPlayer(player)
 		local index = table.find(Players:GetPlayers(), player) or 1
 		local cframe
-		if inside then
+		player:SetAttribute("CandleMode", candleMode ~= "normal" and candleMode or nil)
+		if candleMode == "none" then
+			player:SetAttribute("LightOff", true)
+		end
+		if checkpoint then
+			cframe = checkpoint(index)
+		elseif inside then
 			local spot = hall(SPOTS.pullIn) + Vector3.new(index * 1.5 - 2, 0, 0)
 			cframe = CFrame.lookAt(spot, Vector3.new(facing.X, spot.Y, facing.Z))
 		else
@@ -314,6 +361,7 @@ function Kapitel2.start()
 		ForestWalk.spawnWalker(player, cframe)
 		local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
 		if humanoid then
+			player:SetAttribute("Sneaking", false)
 			humanoid.WalkSpeed = frozen and 0 or WALK_SPEED
 			humanoid.JumpHeight = frozen and 0 or 2
 			if candlesGiven then
@@ -846,6 +894,12 @@ function Kapitel2.start()
 			hiddenSpot = hiddenSpot,
 			facing = facing,
 			spawnPlayer = spawnPlayer,
+			setCandleMode = setCandleMode,
+			setCheckpoint = function(fn)
+				checkpoint = fn
+			end,
+			walkSpeed = WALK_SPEED,
+			sneakSpeed = SNEAK_SPEED,
 		})
 		if not ok then
 			warn("Kapitel 2: Fehler in der Nacht:\n" .. tostring(problem))
@@ -896,9 +950,9 @@ function Kapitel2.start()
 	end)
 
 	-- Teststart (Config.TEST_START_KAPITEL2): man ist schon drin, hat eine Kerze, es ist Nacht
-	local testStart = Config.TEST_START_KAPITEL2 == "nachVerstecken"
+	local testStart = Config.TEST_START_KAPITEL2 == "nachVerstecken" or Config.TEST_START_KAPITEL2 == "tuer1"
 	if testStart then
-		print("Kapitel 2: TESTSTART direkt nach dem Verstecken (Config.TEST_START_KAPITEL2)")
+		print("Kapitel 2: TESTSTART " .. (Config.TEST_START_KAPITEL2 == "tuer1" and "im Raum hinter Tür 1 (Flucht)" or "direkt nach dem Verstecken") .. " (Config.TEST_START_KAPITEL2)")
 		inside = true
 		candlesGiven = true
 		exploring = true
@@ -933,7 +987,7 @@ function Kapitel2.start()
 					-- Teststart: gleich in die Nacht, direkt nach dem Verstecken
 					task.wait(3)
 					asleep = true
-					nightStartAt = "afterHide"
+					nightStartAt = Config.TEST_START_KAPITEL2 == "tuer1" and "tuer1" or "afterHide"
 					remotes:SetAttribute("Night", true)
 					task.spawn(startNight)
 					return

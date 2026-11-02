@@ -72,11 +72,40 @@ Texte: `src/shared/Kapitel2Dialogue.lua`. Figuren: `src/kapitel2/server/Wagners.
    Versteck stehen, atmet, schaut hinein (unter den Tisch beugt er sich herunter). Wer drin
    ist: Herzschlag, Kamera zittert, er flüstert. Wer nicht versteckt ist oder rauskommt:
    Jumpscare („Er hat dich gefunden …“). Werden alle gefunden, beginnt das Verstecken neu.
-6. Er geht wieder („...Not yet. Soon.“). Richard kommt zurück: Im Keller (Heizungsraum,
-   Hackklotz) liegt eine Axt, damit soll man oben **Tür 1** (vernagelt) aufbrechen.
+6. Er geht wieder („...Not yet. Soon.“). Richard kommt zurück: Im Keller liegt eine Axt
+   (an einem von 6 ausgelosten Plätzen, siehe `hausplan_keller_axt.png`), damit soll man oben
+   **Tür 1** (vernagelt) aufbrechen.
 7. Währenddessen läuft Sarp durchs Erdgeschoss (sehr laute Schritte, Herzschlag wird schneller,
    je näher er ist). Jetzt ist er nicht mehr tödlich: Sieht er einen, bleibt er stehen, starrt
    und flüstert. Die Familie (Mrs. Wagner, Lucy, Tommy) taucht irgendwo in der Ferne auf, sagt
    etwas Seltsames und rennt weg und verschwindet, wenn man näher kommt.
 8. Wer die Axt hat, bricht Tür 1 auf (Bretter fallen ab). Sobald jemand den Raum dahinter
-   betritt, wird das Bild sofort schwarz („Hinter Tür 1 … Fortsetzung folgt“).
+   betritt, beginnt die Flucht.
+
+## Die Flucht (eingebaut, `src/kapitel2/server/Escape.lua`)
+
+Hintergrund (wird hier **nicht** erzählt, erst im DLC): Die Familie hat Sarp erschaffen.
+Richard war die ganze Zeit auf ihrer Seite, bis er gemerkt hat, dass es nicht mehr gut ist –
+jetzt will er die Spieler gehen lassen. Er verrät nichts („That is not your story. Not yet.“).
+Plan mit allen Fundorten und dem Kerzenweg: `hausplan_flucht.png`.
+
+1. Hinter Tür 1: Pult, Safe, drei Verstecke (Schrank, hinter dem umgekippten Bett, Truhe).
+   Richard erklärt: Im Safe liegt der Schlüssel nach draußen, man soll ihn aufsprengen –
+   dafür **Chemikalien** und **Schießpulver** finden. Jeder bekommt eine **rote Kerze**;
+   die Taschenlampe gibt es nicht mehr.
+2. Suchen (je 6 mögliche Plätze, ausgelost; zu zweit trägt jeder nur eins). Liste oben links.
+   Die Familie taucht außer Sicht auf, kommt auf einen zu und schlägt zu (20 Schaden), dann
+   verschwindet sie. Der Raum hinter Tür 1 ist sicher. Sarp hört man nur von unten.
+3. Am Pult ablegen → zusammenbauen → Ladung an den Safe → Lunte mit der Kerze anzünden →
+   5 Sekunden zum Verstecken. Richard läuft weg.
+4. Explosion: Safetür fliegt weg, die Kerzen sind verloren (innere Stimme sagt es).
+   Sarp brüllt, kommt die Treppe hoch und durchsucht die drei Verstecke. Wer gefunden wird:
+   Jumpscare, danach geht es im Raum weiter.
+5. Danach stehen **rote Kerzen** auf dem Weg nach unten (Galerie, Treppe, Halle, Flur, Küche,
+   Keller). Schlüssel nehmen. Sarp läuft im Erdgeschoss herum und ist tödlich: Er **hört**
+   jeden, der nicht schleicht (bis 20 Studs), und **sieht** im Dunkeln nur aus der Nähe.
+   **C = Schleichen** (langsam, leise). Erwischt: Jumpscare, Neustart im Raum hinter Tür 1.
+6. Der Schlüssel schließt das Regal vor dem Geheimgang im Vorratskeller auf. Wer den
+   **Ritualraum** betritt: sofort schwarz („Der Ritualraum … Fortsetzung folgt“).
+
+Teststart: `Config.TEST_START_KAPITEL2 = "tuer1"` (gleich im Raum hinter Tür 1).

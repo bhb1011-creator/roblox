@@ -17,6 +17,7 @@ local Script = require(ReplicatedStorage.Shared.Kapitel2Dialogue)
 local Mansion = require(script.Parent.Mansion)
 local Wagners = require(script.Parent.Wagners)
 local SarpStage2 = require(script.Parent.SarpStage2)
+local Escape = require(script.Parent.Escape)
 
 local Night = {}
 
@@ -68,7 +69,9 @@ function Night.run(ctx)
 	end
 
 	-- Teststart direkt nach dem Verstecken (Config.TEST_START_KAPITEL2 = "nachVerstecken")
-	local afterHide = ctx.startAt == "afterHide"
+	-- oder gleich im Raum hinter Tür 1 (= "tuer1", dann beginnt sofort die Flucht)
+	local atDoorOne = ctx.startAt == "tuer1"
+	local afterHide = ctx.startAt == "afterHide" or atDoorOne
 
 	-- Stuhl am Esstisch: Mitte der Sitzfläche, Blick zum Tisch
 	local function chair(x, y, faceX, faceY)
@@ -738,11 +741,15 @@ function Night.run(ctx)
 			Wagners.place(mr, ctx.hiddenSpot, ctx.facing)
 		end
 	end
-	ctx.runScript(Script.NIGHT_RICHARD, "Richard")
+	if not atDoorOne then
+		ctx.runScript(Script.NIGHT_RICHARD, "Richard")
+	end
 
 	------------------------------------------------------------------ 6. Axt holen, Tür 1 aufbrechen
 	-- (Sarp läuft dabei durchs Erdgeschoss; jetzt ist er nicht mehr tödlich, nur unheimlich)
 	local doneWithNight = false
+	local enterEscape -- Flucht (Escape.lua), wird ganz unten festgelegt
+	local patrolDone, familyDone = false, false
 	local axeHolder
 	local function giveAxe(player)
 		local character = player.Character
@@ -867,10 +874,11 @@ function Night.run(ctx)
 			end
 			task.wait(0.2)
 		end
-		doneWithNight = true
-		ctx.setMovement(false)
-		event:FireAllClients({ type = "alone", instant = true, title = "Hinter Tür 1 …", subtitle = "Fortsetzung folgt" })
-		print("Kapitel 2: Jemand ist in Raum hinter Tür 1 gegangen – Bild schwarz (hier geht es später weiter).")
+		print("Kapitel 2: Jemand ist in den Raum hinter Tür 1 gegangen – die Flucht beginnt.")
+		while not enterEscape do -- (wird am Ende von Night.run festgelegt)
+			task.wait(0.1)
+		end
+		enterEscape()
 	end
 	if doorOne then
 		doorOne.onLocked = function(player)
@@ -886,7 +894,9 @@ function Night.run(ctx)
 		end
 	end
 
-	event:FireAllClients({ type = "hint", text = "Such die Axt im Keller (Kellertür in der Küche). Sie kann überall dort unten liegen.", seconds = 8 })
+	if not atDoorOne then
+		event:FireAllClients({ type = "hint", text = "Such die Axt im Keller (Kellertür in der Küche). Sie kann überall dort unten liegen.", seconds = 8 })
+	end
 
 	-- Sarp läuft durchs Erdgeschoss. Sieht er jemanden mit Licht, verfolgt er ihn und macht
 	-- Schaden, wenn er nah genug ist. Man kann weglaufen – oder das Licht ausmachen (F):
@@ -1011,7 +1021,10 @@ function Night.run(ctx)
 		task.wait(1)
 		SarpStage2.look(sarp, 0, 0)
 	end
-	if sarp then
+	if not sarp or atDoorOne then
+		patrolDone = true
+	end
+	if sarp and not atDoorOne then
 		Wagners.place(sarp, PATROL[1], PATROL[2])
 		event:FireAllClients({ type = "hint", text = "F: Licht aus/an. Ohne Licht sieht er dich nicht – du ihn aber auch kaum.", seconds = 8 })
 		task.spawn(function()
@@ -1040,6 +1053,7 @@ function Night.run(ctx)
 				end
 			end
 			Wagners.place(sarp, away, ctx.facing)
+			patrolDone = true
 		end)
 	end
 
@@ -1150,6 +1164,10 @@ function Night.run(ctx)
 		return best
 	end
 	task.spawn(function()
+		if atDoorOne then
+			familyDone = true
+			return
+		end
 		task.wait(12)
 		local lastSpot
 		while not doneWithNight do
@@ -1234,7 +1252,68 @@ function Night.run(ctx)
 			end
 			task.wait(math.random(14, 26))
 		end
+		familyDone = true
 	end)
+
+	------------------------------------------------------------------ 7. Die Flucht (Escape.lua)
+	local escapeStarted = false
+	enterEscape = function()
+		if escapeStarted then
+			return
+		end
+		escapeStarted = true
+		doneWithNight = true -- Rundgang und Familien-Erscheinungen hören auf
+		Escape.run({
+			ctx = ctx,
+			point = point,
+			P = P,
+			rootOf = rootOf,
+			footOffset = footOffset,
+			bringTo = bringTo,
+			steps = steps,
+			sarp = sarp,
+			away = away,
+			sarpWalk = sarpWalk,
+			whisper = whisper,
+			nextWaypoint = nextWaypoint,
+			setFade = setFade,
+			fade = fade,
+			nearestPlayer = nearestPlayer,
+			anyoneSees = anyoneSees,
+			clearLine = clearLine,
+			characters = characters,
+			APPEAR = APPEAR,
+			members = members,
+			mr = mr,
+			mrs = mrs,
+			isReady = function()
+				return patrolDone and familyDone
+			end,
+		})
+	end
+	if atDoorOne then
+		-- Teststart: Tür 1 ist schon aufgebrochen, alle stehen im Raum dahinter
+		if doorOne then
+			local middle = Mansion.origin * (doorOne.middle + Vector3.new(0, O + 4, 0))
+			for _, part in Mansion.model:GetDescendants() do
+				if part:IsA("BasePart") and part.Name == "Board" then
+					local offset = part.Position - middle
+					if math.abs(offset.Y) < 6 and Vector3.new(offset.X, 0, offset.Z).Magnitude < 3 then
+						part:Destroy()
+					end
+				end
+			end
+			doorOne.locked = false
+			broken = true
+			ctx.moveDoor(doorOne, doorOne.openAngle, 0.1)
+		end
+		for index, player in Players:GetPlayers() do
+			bringTo(player, point(45.6 + index * 0.9, 51.5, "O"), point(45.4, 44, "O"))
+		end
+		ctx.setMovement(true)
+		enterEscape()
+	end
 end
 
 return Night
+

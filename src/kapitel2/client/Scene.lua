@@ -39,6 +39,9 @@ local FALLBACK_KEYS = {
 	heartbeat = { "footstep", 0.3 },
 	scream = { "sting", 1.25 },
 	jumpscare = { "sting", 0.85 },
+	fuse = { "footstep", 2.4 },
+	explosion = { "sting", 0.5 },
+	sarpRoar = { "sting", 0.6 },
 }
 
 local function makeSound(key, parent, props)
@@ -161,6 +164,70 @@ function Kapitel2.run()
 			end
 		end)
 	end
+	-- Aufgabenliste oben links (Flucht: was man noch braucht)
+	local objectives = create("Frame", {
+		Name = "Objectives",
+		Position = UDim2.fromOffset(18, 18),
+		Size = UDim2.fromOffset(330, 0),
+		AutomaticSize = Enum.AutomaticSize.Y,
+		BackgroundColor3 = Color3.fromRGB(14, 10, 10),
+		BackgroundTransparency = 0.45,
+		BorderSizePixel = 0,
+		Visible = false,
+		ZIndex = 6,
+		Parent = gui,
+	})
+	create("UICorner", { CornerRadius = UDim.new(0, 6), Parent = objectives })
+	create("UIPadding", { PaddingLeft = UDim.new(0, 12), PaddingRight = UDim.new(0, 12), PaddingTop = UDim.new(0, 8), PaddingBottom = UDim.new(0, 8), Parent = objectives })
+	create("UIListLayout", { Padding = UDim.new(0, 4), SortOrder = Enum.SortOrder.LayoutOrder, Parent = objectives })
+	local function showObjectives(message)
+		for _, child in objectives:GetChildren() do
+			if child:IsA("TextLabel") then
+				child:Destroy()
+			end
+		end
+		if message.clear or not message.items then
+			objectives.Visible = false
+			return
+		end
+		local rows = { { text = message.title or "", title = true } }
+		for _, item in message.items do
+			table.insert(rows, item)
+		end
+		for index, row in rows do
+			create("TextLabel", {
+				LayoutOrder = index,
+				Size = UDim2.new(1, 0, 0, row.title and 24 or 22),
+				BackgroundTransparency = 1,
+				Font = Enum.Font.SpecialElite,
+				Text = row.title and row.text or ((row.done and "☑ " or "☐ ") .. row.text),
+				TextSize = row.title and 20 or 17,
+				TextXAlignment = Enum.TextXAlignment.Left,
+				TextColor3 = row.title and Color3.fromRGB(230, 120, 110) or (row.done and Color3.fromRGB(150, 145, 135) or Color3.fromRGB(230, 222, 210)),
+				TextWrapped = true,
+				AutoLocalize = false,
+				ZIndex = 7,
+				Parent = objectives,
+			})
+		end
+		objectives.Visible = true
+	end
+	local sneakLabel = create("TextLabel", {
+		Name = "SneakLabel",
+		AnchorPoint = Vector2.new(0.5, 1),
+		Position = UDim2.new(0.5, 0, 1, -24),
+		Size = UDim2.fromOffset(260, 26),
+		BackgroundTransparency = 1,
+		Font = Enum.Font.SpecialElite,
+		Text = "– du schleichst –",
+		TextSize = 18,
+		TextColor3 = Color3.fromRGB(200, 190, 175),
+		TextStrokeTransparency = 0.6,
+		Visible = false,
+		AutoLocalize = false,
+		ZIndex = 6,
+		Parent = gui,
+	})
 	local function setFade(transparency, duration)
 		TweenService:Create(fade, TweenInfo.new(duration), { BackgroundTransparency = transparency }):Play()
 	end
@@ -200,7 +267,7 @@ function Kapitel2.run()
 				end
 				local phone = head and head:FindFirstChild("PhoneLight")
 				if phone then
-					phone.Enabled = not other:GetAttribute("LightOff")
+					phone.Enabled = not other:GetAttribute("LightOff") and other:GetAttribute("CandleMode") == nil
 				end
 			end
 			task.wait(1)
@@ -235,7 +302,8 @@ function Kapitel2.run()
 	end
 	local upright = CFrame.Angles(0, 0, math.rad(90))
 	heldPiece("CandleHolder", Enum.PartType.Cylinder, Vector3.new(0.08, 0.42, 0.42), Color3.fromRGB(120, 96, 52), Enum.Material.Metal, upright)
-	heldPiece("Candle", Enum.PartType.Cylinder, Vector3.new(0.55, 0.15, 0.15), Color3.fromRGB(225, 215, 190), Enum.Material.SmoothPlastic, CFrame.new(0, 0.31, 0) * upright)
+	local heldWax = heldPiece("Candle", Enum.PartType.Cylinder, Vector3.new(0.55, 0.15, 0.15), Color3.fromRGB(225, 215, 190), Enum.Material.SmoothPlastic, CFrame.new(0, 0.31, 0) * upright)
+	local heldRed = false
 	local heldFlame = heldPiece("CandleFlame", Enum.PartType.Ball, Vector3.new(0.1, 0.1, 0.1), Color3.fromRGB(255, 170, 70), Enum.Material.Neon, CFrame.new(0, 0.65, 0))
 	local heldLight = create("PointLight", {
 		Name = "OwnCandleLight",
@@ -313,7 +381,15 @@ function Kapitel2.run()
 		end
 		local flicker = 0.85 + math.noise(now * 6, heldSeed) * 0.22 + math.noise(now * 17, heldSeed + 3) * 0.07
 		local off = ownCandleOff or lightOff
-		heldLight.Brightness = off and 0 or 2.4 * flicker * math.max(candleDim, 0.35)
+		local red = player:GetAttribute("CandleMode") == "red"
+		if red ~= heldRed then
+			heldRed = red
+			heldLight.Color = red and Color3.fromRGB(255, 40, 30) or Color3.fromRGB(255, 180, 110)
+			heldLight.Range = red and 16 or 26
+			heldFlame.Color = red and Color3.fromRGB(255, 50, 36) or Color3.fromRGB(255, 170, 70)
+			heldWax.Color = red and Color3.fromRGB(110, 24, 22) or Color3.fromRGB(225, 215, 190)
+		end
+		heldLight.Brightness = off and 0 or (red and 1.7 or 2.4) * flicker * math.max(candleDim, 0.35)
 		heldFlame.Transparency = off and 1 or 1 - math.clamp(candleDim * 1.2, 0, 1)
 	end
 
@@ -429,6 +505,7 @@ function Kapitel2.run()
 
 	------------------------------------------------------------------ Jumpscare
 	local shakeUntil = 0
+	local shakeStrength -- stärkeres Wackeln (Explosion)
 	local nextBeat = 0
 	local scareFlash = create("Frame", {
 		Name = "ScareFlash",
@@ -496,15 +573,51 @@ function Kapitel2.run()
 	-- Licht an/aus: Taste F (am Handy: Knopf unten rechts)
 	local lightEvent = remotes:WaitForChild("Light", 10)
 	local function toggleLight()
+		if player:GetAttribute("CandleMode") == "none" then
+			hint("Du hast kein Licht mehr.", 2)
+			return
+		end
 		lightOff = not lightOff
 		if lightEvent then
 			lightEvent:FireServer(not lightOff)
 		end
 		hint(lightOff and "Licht aus." or "Licht an.", 1.5)
 	end
+	-- Schleichen: Taste C (am Handy: Knopf). Nur bei der Flucht erlaubt.
+	local sneakEvent = remotes:WaitForChild("Sneak", 10)
+	local sneaking = false
+	local function setSneak(on)
+		if on and not remotes:GetAttribute("SneakAllowed") then
+			return
+		end
+		sneaking = on
+		sneakLabel.Visible = on
+		if sneakEvent then
+			sneakEvent:FireServer(on)
+		end
+	end
+	local function toggleSneak()
+		if not remotes:GetAttribute("SneakAllowed") then
+			return
+		end
+		setSneak(not sneaking)
+		hint(sneaking and "Du schleichst (leise)." or "Du gehst normal (er kann dich hören).", 2)
+	end
+	player:GetAttributeChangedSignal("Sneaking"):Connect(function()
+		-- der Server setzt es nach dem Neuspawnen zurück
+		if player:GetAttribute("Sneaking") ~= true and sneaking then
+			sneaking = false
+			sneakLabel.Visible = false
+		end
+	end)
 	UserInputService.InputBegan:Connect(function(input, processed)
-		if not processed and input.KeyCode == Enum.KeyCode.F then
+		if processed then
+			return
+		end
+		if input.KeyCode == Enum.KeyCode.F then
 			toggleLight()
+		elseif input.KeyCode == Enum.KeyCode.C then
+			toggleSneak()
 		end
 	end)
 	if UserInputService.TouchEnabled then
@@ -525,6 +638,27 @@ function Kapitel2.run()
 		})
 		create("UICorner", { CornerRadius = UDim.new(1, 0), Parent = button })
 		button.Activated:Connect(toggleLight)
+		local sneakButton = create("TextButton", {
+			Name = "SneakButton",
+			AnchorPoint = Vector2.new(1, 1),
+			Position = UDim2.new(1, -104, 1, -160),
+			Size = UDim2.fromOffset(70, 70),
+			BackgroundColor3 = Color3.fromRGB(30, 26, 22),
+			BackgroundTransparency = 0.3,
+			Text = "Schleichen",
+			TextColor3 = Color3.fromRGB(240, 220, 180),
+			Font = Enum.Font.SpecialElite,
+			TextSize = 13,
+			AutoLocalize = false,
+			Visible = remotes:GetAttribute("SneakAllowed") == true,
+			ZIndex = 7,
+			Parent = gui,
+		})
+		create("UICorner", { CornerRadius = UDim.new(1, 0), Parent = sneakButton })
+		sneakButton.Activated:Connect(toggleSneak)
+		remotes:GetAttributeChangedSignal("SneakAllowed"):Connect(function()
+			sneakButton.Visible = remotes:GetAttribute("SneakAllowed") == true
+		end)
 	end
 	local houseInside = false
 	local finished = false
@@ -639,7 +773,34 @@ function Kapitel2.run()
 			TweenService:Create(scareFlash, TweenInfo.new(0.7), { BackgroundTransparency = 1 }):Play()
 			shakeUntil = os.clock() + 0.6
 		elseif kind == "chased" then
-			hint("Er hat dich gesehen – lauf! (F: Licht aus)", 4)
+			hint(message.text or "Er hat dich gesehen – lauf! (F: Licht aus)", 4)
+		elseif kind == "objectives" then
+			showObjectives(message)
+		elseif kind == "redCandle" then
+			lightOff = false
+			hint("Rotes Licht – mehr hast du nicht mehr. (F: an/aus)", 5)
+		elseif kind == "candleLost" then
+			lightOff = true
+			hint("Deine Kerze ist weg.", 4)
+		elseif kind == "explosion" then
+			-- weißer Blitz, das Bild wackelt stark, kurz dumpf
+			local flash = create("Frame", {
+				Size = UDim2.fromScale(1, 1),
+				BackgroundColor3 = Color3.fromRGB(255, 240, 220),
+				BackgroundTransparency = 0.05,
+				BorderSizePixel = 0,
+				ZIndex = 9,
+				Parent = gui,
+			})
+			TweenService:Create(flash, TweenInfo.new(1.6), { BackgroundTransparency = 1 }):Play()
+			task.delay(1.7, function()
+				flash:Destroy()
+			end)
+			shakeUntil = os.clock() + 1.4
+			shakeStrength = 0.05
+			task.delay(1.4, function()
+				shakeStrength = nil
+			end)
 		elseif kind == "lost" then
 			hint("Er hat dich verloren …", 3)
 		elseif kind == "caught" then
@@ -728,7 +889,7 @@ function Kapitel2.run()
 	RunService:BindToRenderStep("Kapitel2Shake", Enum.RenderPriority.Camera.Value + 2, function()
 		-- Kamera zittert, wenn Sarp direkt vor dem Versteck steht
 		if os.clock() < shakeUntil and camera.CameraType ~= Enum.CameraType.Scriptable then
-			local amount = 0.006
+			local amount = shakeStrength or 0.006
 			camera.CFrame *= CFrame.Angles((math.random() - 0.5) * amount, (math.random() - 0.5) * amount, 0)
 		end
 	end)
@@ -746,8 +907,9 @@ function Kapitel2.run()
 		-- Handylicht folgt dem Blick
 		local target = camera.CFrame * CFrame.new(0.35, -0.45, -0.3)
 		flashlight.CFrame = flashlight.CFrame:Lerp(target, math.min(deltaTime * 10, 1))
+		local phoneAllowed = player:GetAttribute("CandleMode") == nil -- ab der Flucht: keine Taschenlampe
 		for _, light in flashlight:GetChildren() do
-			light.Enabled = not lightOff
+			light.Enabled = not lightOff and phoneAllowed
 		end
 
 		-- Kerzen flackern (und gehen bei "candleOut" fast aus)

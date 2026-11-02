@@ -122,6 +122,10 @@ Config.SOUNDS = {
 	sarpStep = "", -- sarp_step.ogg (schwerer, schleifender Schritt)
 	sarpBreath = "", -- sarp_breath.ogg (rasselndes Atmen ganz nah)
 	jumpscare = "", -- jumpscare.ogg (lauter Schreck-Ton mit Schrei)
+	-- Die Flucht (Kapitel 2)
+	fuse = "", -- fuse.ogg (Zündschnur zischt, ca. 5 Sekunden)
+	explosion = "", -- explosion.ogg (Explosion im Raum, dumpf und laut)
+	sarpRoar = "", -- sarp_roar.ogg (Sarp brüllt wütend, durchs ganze Haus)
 }
 
 -- Sprachausgabe auf Englisch mit der Text-to-Speech-Funktion von Roblox.
@@ -143,7 +147,9 @@ Config.PLAYER_TTS = false
 --   ""               = normal (vor der Haustür)
 --   "nachVerstecken" = in der ersten Nacht direkt nach dem Verstecken im Esszimmer
 --                      (Richard kommt, Axt holen, Sarp läuft herum)
-Config.TEST_START_KAPITEL2 = "nachVerstecken"
+--   "tuer1"          = gleich im Raum hinter Tür 1: die Flucht (Richard, Chemikalien und
+--                      Schießpulver suchen, Safe sprengen, Sarp, rote Kerzen, Ritualraum)
+Config.TEST_START_KAPITEL2 = "tuer1"
 Config.VOICES = {
 	-- Sarp: etwas tiefer, langsam, ruhig – mit Bass, weniger Höhen und dunklem Hall
 	sarp = {

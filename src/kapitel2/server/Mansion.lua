@@ -1146,11 +1146,123 @@ local function buildFurniture()
 	Furniture.wardrobe(b, at(60.5, 50, O, "W"), 4)
 	Furniture.rug(b, at(55, 49, O), 6, 4, Color3.fromRGB(80, 60, 50))
 
-	-- hinter Tür 1: leer, nur ein Stuhl, der zur Wand schaut, und Kratzer
-	Furniture.chair(b, at(45, 42, O, "N"))
+	-- Hinter Tür 1 (die Flucht, Escape.lua): Safe an der Rückwand, Pult, drei Verstecke
+	-- (Schrank, umgekipptes Bett, Truhe), Kratzer an der Wand. In der Mitte bleibt ein Gang frei.
 	for i = 1, 12 do
-		local x = 42.09 -- direkt auf der Tapete
-		box("Scratch", Vector3.new(0.05, rng:NextNumber(1, 3), 0.02), CFrame.new(L(x, 44 + i * 0.7, O + 2 + rng:NextNumber(0, 3))) * CFrame.Angles(0, math.rad(90), math.rad(rng:NextNumber(-20, 20))), Color3.fromRGB(20, 16, 14))
+		local x = 48.26 -- direkt auf der Tapete (Ostwand)
+		box("Scratch", Vector3.new(0.05, rng:NextNumber(1, 3), 0.02), CFrame.new(L(x, 48.2 + i * 0.4, O + 2 + rng:NextNumber(0, 3))) * CFrame.Angles(0, math.rad(90), math.rad(rng:NextNumber(-20, 20))), Color3.fromRGB(20, 16, 14))
+	end
+	local escape = { hideSpots = {} }
+	Mansion.escape = escape
+	-- Safe: Korpus fest, die Tür ist ein eigenes Modell (fliegt bei der Explosion weg)
+	do
+		local safeFrame = at(46.6, 41.35, O, "S")
+		local w, h, d = 3, 3.6, 1.8
+		local steel, dark = Color3.fromRGB(52, 56, 58), Color3.fromRGB(24, 24, 26)
+		box("SafeBack", Vector3.new(w, h, 0.25), safeFrame * CFrame.new(0, h / 2, d / 2 - 0.125), steel, M.Metal)
+		for _, x in { -1, 1 } do
+			box("SafeSide", Vector3.new(0.25, h, d), safeFrame * CFrame.new(x * (w / 2 - 0.125), h / 2, 0), steel, M.Metal)
+		end
+		box("SafeTop", Vector3.new(w, 0.25, d), safeFrame * CFrame.new(0, h - 0.125, 0), steel, M.Metal)
+		box("SafeBottom", Vector3.new(w, 0.3, d), safeFrame * CFrame.new(0, 0.15, 0), steel, M.Metal)
+		box("SafeInside", Vector3.new(w - 0.5, 0.06, d - 0.3), safeFrame * CFrame.new(0, 1.6, 0.05), dark, M.Metal)
+		local door = Instance.new("Model")
+		door.Name = "SafeDoor"
+		local before = current
+		current = door
+		local front = -d / 2 - 0.13
+		local plate = box("SafeDoorPlate", Vector3.new(w - 0.06, h - 0.06, 0.24), safeFrame * CFrame.new(0, h / 2, front), Color3.fromRGB(62, 66, 68), M.DiamondPlate)
+		cyl("SafeDial", 0.18, 0.9, safeFrame * CFrame.new(-0.4, h / 2 + 0.3, front - 0.2) * CFrame.Angles(math.rad(90), 0, 0), Color3.fromRGB(150, 140, 110), M.Metal)
+		box("SafeHandle", Vector3.new(0.9, 0.16, 0.16), safeFrame * CFrame.new(0.65, h / 2 - 0.2, front - 0.2), Color3.fromRGB(150, 140, 110), M.Metal)
+		current = before
+		door.PrimaryPart = plate
+		door.Parent = current
+		escape.safeDoor = door
+		escape.safeInside = origin * safeFrame * CFrame.new(0, 1.75, 0)
+		escape.safeFront = origin * safeFrame * CFrame.new(0, 1.8, front - 0.3)
+	end
+	-- Schrank zum Verstecken (Westwand, hinten)
+	do
+		local frame = at(43.25, 42.7, O, "E")
+		local inside = Furniture.hideWardrobe(b, frame)
+		table.insert(escape.hideSpots, { name = "Schrank", label = "Schrank", kind = "stand", place = origin * inside, exit = origin * at(45.3, 42.7, O, "E"), prompt = origin * CFrame.new(L(44.7, 42.7, O + 3.5)), search = Mansion.point(45.6, 43.2, O) })
+	end
+	-- umgekipptes Bett an der Ostwand: dahinter kann man sich auf den Boden legen
+	do
+		local frame = CFrame.new(L(46.4, 45.3, O + 1.6)) * CFrame.Angles(0, 0, math.rad(-6))
+		box("TippedBedBase", Vector3.new(0.35, 3.2, 5), frame, Color3.fromRGB(58, 44, 32), M.Wood)
+		for _, z in { -2.3, 2.3 } do
+			for _, y in { 1.2, -1.2 } do
+				box("TippedBedLeg", Vector3.new(0.4, 0.3, 0.3), frame * CFrame.new(-0.37, y, z), Color3.fromRGB(46, 34, 24), M.Wood)
+			end
+		end
+		box("TippedBedSheet", Vector3.new(0.06, 1.8, 3.4), frame * CFrame.new(-0.21, -0.5, 0.4) * CFrame.Angles(0, 0, math.rad(4)), Color3.fromRGB(190, 182, 168), M.Fabric)
+		local spot = L(47.45, 45.3, O + 0.55)
+		table.insert(escape.hideSpots, { name = "Bett", label = "Hinter das Bett", kind = "lie", place = origin * CFrame.lookAt(spot, spot + Vector3.new(0, 5, 0), L(47.45, 50, O) - L(47.45, 45.3, O)), exit = origin * at(45.1, 45.3, O, "W"), prompt = origin * CFrame.new(L(45.6, 45.3, O + 2.5)), search = Mansion.point(44.9, 45.6, O) })
+	end
+	-- Pult (Westwand, Mitte): hier legt man Chemikalien und Schießpulver ab
+	do
+		local frame = at(42.95, 46.6, O, "E")
+		box("PultBase", Vector3.new(1.6, 0.25, 1.4), frame * CFrame.new(0, 0.125, 0), Color3.fromRGB(46, 34, 24), M.Wood)
+		box("PultColumn", Vector3.new(0.7, 3.1, 0.7), frame * CFrame.new(0, 1.8, 0), Color3.fromRGB(58, 44, 32), M.Wood)
+		local top = frame * CFrame.new(0, 3.55, 0) * CFrame.Angles(math.rad(12), 0, 0)
+		box("PultTop", Vector3.new(2.4, 0.2, 1.5), top, Color3.fromRGB(70, 52, 36), M.Wood)
+		box("PultEdge", Vector3.new(2.46, 0.18, 0.12), top * CFrame.new(0, 0.18, -0.7), Color3.fromRGB(46, 34, 24), M.Wood)
+		escape.pult = origin * frame * CFrame.new(0, 3.75, 0)
+		escape.pultPrompt = origin * CFrame.new(L(43.9, 46.6, O + 3))
+	end
+	-- Truhe (Westwand, vorne beim Eingang): man legt sich hinein
+	do
+		local frame = at(42.95, 51.1, O, "E")
+		local w, h, d = 4.6, 1.7, 1.8 -- w = Länge an der Wand entlang
+		local wood = Color3.fromRGB(70, 46, 30)
+		box("ChestBottom", Vector3.new(w, 0.2, d), frame * CFrame.new(0, 0.1, 0), wood, M.Wood)
+		for _, z in { -1, 1 } do
+			box("ChestWall", Vector3.new(w, h, 0.2), frame * CFrame.new(0, h / 2, z * (d / 2 - 0.1)), wood, M.WoodPlanks)
+		end
+		for _, x in { -1, 1 } do
+			box("ChestEnd", Vector3.new(0.2, h, d - 0.4), frame * CFrame.new(x * (w / 2 - 0.1), h / 2, 0), wood, M.WoodPlanks)
+		end
+		box("ChestLid", Vector3.new(w + 0.1, 0.2, d + 0.1), frame * CFrame.new(0, h + 0.1, 0), Color3.fromRGB(60, 40, 26), M.Wood)
+		for _, x in { -1.4, 1.4 } do
+			box("ChestBand", Vector3.new(0.25, h + 0.3, d + 0.16), frame * CFrame.new(x, (h + 0.3) / 2, 0), COLORS.metal, M.Metal)
+		end
+		box("ChestLock", Vector3.new(0.4, 0.4, 0.12), frame * CFrame.new(0, h - 0.2, -d / 2 - 0.11), Color3.fromRGB(150, 140, 110), M.Metal)
+		local spot = L(42.95, 51.1, O + 0.55)
+		table.insert(escape.hideSpots, { name = "Truhe", label = "In die Truhe", kind = "lie", place = origin * CFrame.lookAt(spot, spot + Vector3.new(0, 5, 0), L(42.95, 56, O) - L(42.95, 51.1, O)), exit = origin * at(44.6, 51.1, O, "E"), prompt = origin * CFrame.new(L(44.2, 51.1, O + 1.5)), search = Mansion.point(45.0, 51.1, O) })
+	end
+	-- Wo es neu losgeht, wenn man erwischt wird (im Raum hinter Tür 1)
+	escape.checkpoint = Mansion.point(45.4, 49, O)
+	-- Wo Chemikalien und Schießpulver liegen können (jedes Mal wird ein Platz ausgelost).
+	-- Alle Stellen sind geprüft: freier Boden, nichts im Weg.
+	local K0 = FLOOR.K
+	escape.items = {
+		chemicals = {
+			{ name = "Bad", at = Mansion.point(60.5, 28.5, O) },
+			{ name = "Speisekammer", at = Mansion.point(44, 12, E) },
+			{ name = "Küche", at = Mansion.point(38, 36, E) },
+			{ name = "Flur zum Garten", at = Mansion.point(24, 33, E) },
+			{ name = "Waschkeller", at = Mansion.point(30, 40, K0) },
+			{ name = "Heizungsraum", at = Mansion.point(57, 30, K0) },
+		},
+		powder = {
+			{ name = "Wohnzimmer", at = Mansion.point(74, 50, E) },
+			{ name = "Turmzimmer", at = Mansion.point(88, 64, E) },
+			{ name = "Salon", at = Mansion.point(18, 42, E) },
+			{ name = "Nähzimmer (Turm oben)", at = Mansion.point(86, 62, O) },
+			{ name = "Spielzimmer", at = Mansion.point(64, 68, O) },
+			{ name = "Kriechkeller", at = Mansion.point(73, 38, K0) },
+		},
+	}
+	-- Der Weg nach draußen (rote Kerzen): Galerie, Treppe, Halle, Flur, Küche, Keller,
+	-- Regal vor dem Geheimgang, Ritualraum
+	escape.path = {}
+	for _, p in {
+		{ 47.6, 52.6, O }, { 47.8, 56.6, O }, { 44.9, 57.4, O }, { 45.6, 69.8, E }, { 48.6, 66, E }, { 50.4, 60, E },
+		{ 50.4, 56.5, E }, { 50.4, 51.5, E }, { 47, 47.5, E }, { 45.2, 44.5, E }, { 45.2, 40.5, E }, { 48.5, 37.6, E },
+		{ 51, 35.4, E }, { 52.1, 21.6, K0 }, { 49.4, 21.8, K0 }, { 47, 17.5, K0 }, { 47, 14, K0 },
+	} do
+		table.insert(escape.path, Mansion.point(p[1], p[2], p[3]))
 	end
 
 	-- Tommys Zimmer: Bett, Spielkiste, Zeichnungen
@@ -1225,6 +1337,7 @@ local function buildFurniture()
 	Furniture.shelf(b, at(47, 20.75, Kf, "S"), 3.6, 6.6, "jars", rng)
 	current = before
 	secret.Parent = current
+	Mansion.secretShelf = secret
 	Furniture.shelf(b, at(35, 30, Kf, "E"), 6, 7, "jars", rng)
 	for i = 0, 3 do
 		box("Crate", Vector3.new(2, 1.6, 2), CFrame.new(L(38 + i * 2.3, 25.5, Kf + 0.8)) * CFrame.Angles(0, i * 0.3, 0), Color3.fromRGB(100, 80, 56), M.WoodPlanks)

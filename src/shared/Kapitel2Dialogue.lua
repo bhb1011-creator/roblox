@@ -28,6 +28,7 @@ Kapitel2Dialogue.NAMES = {
 	sarpDemon = "Sarp",
 	lucy = "Lucy",
 	tommy = "Tommy",
+	player = "Du", -- innere Stimme
 }
 
 Kapitel2Dialogue.SCRIPT = {
@@ -172,5 +173,60 @@ Kapitel2Dialogue.SARP_LEAVES = "...Not yet. Soon."
 
 -- Wenn nach dem Hereinbitten jemand draußen stehen bleibt
 Kapitel2Dialogue.COME_INSIDE = { speaker = "mrsWagner", text = "Please. Come inside." }
+
+-- Die Flucht (Escape.lua): Richard wartet im Raum hinter Tür 1. Er verrät nichts darüber,
+-- was mit seiner Familie passiert ist (das kommt erst im DLC) – er sagt nur, was zu tun ist.
+Kapitel2Dialogue.ESCAPE_INTRO = {
+	{ speaker = "mrWagner", look = "player", text = "You made it in. Good.", wait = 0.6 },
+	{ speaker = "mrWagner", text = "Don't ask me what this room is. Not tonight.", wait = 0.5 },
+	{ speaker = "mrWagner", text = "That safe holds a key. It opens the way out of this house.", wait = 0.4 },
+	{ speaker = "mrWagner", text = "Only Margaret knows the combination. So we open it another way.", wait = 0.4 },
+	{ speaker = "mrWagner", text = "Somewhere in this house there are chemicals. And black powder.", wait = 0.3 },
+	{ speaker = "mrWagner", text = "Find both. Bring them to this desk.", wait = 0.6 },
+	{
+		choice = {
+			{
+				text = "Why are you helping us?",
+				reply = { { speaker = "mrWagner", look = "down", text = "Because somebody should have done this a long time ago.", wait = 0.8 } },
+			},
+			{
+				text = "What happened to your family?",
+				reply = { { speaker = "mrWagner", look = "down", text = "That is not your story. Not yet.", wait = 0.8 } },
+			},
+		},
+	},
+	{ speaker = "mrWagner", look = "player", text = "Take this. It's the only light I can give you.", wait = 0.2 },
+	{ action = "redCandles", wait = 0.6 },
+	{ speaker = "mrWagner", text = "And stay away from my family. They won't let you leave anymore.", wait = 0.2 },
+	{ speaker = "mrWagner", text = "They will hurt you. Go. I'll wait here.", wait = 0.4 },
+}
+-- einzelne Sätze während der Flucht (Sprecher, Text)
+Kapitel2Dialogue.ESCAPE = {
+	splitUp = { "mrWagner", "There are two of you. Split up. It's faster." },
+	gotChemicals = { "player", "Chemicals. This should do it." },
+	gotPowder = { "player", "Black powder. Careful with that." },
+	carryOne = { "player", "My hands are full. The other one has to carry that." },
+	firstPlaced = { "mrWagner", "Good. Now the other one." },
+	bothPlaced = { "mrWagner", "That's everything. Put it together, here on the desk." },
+	built = { "mrWagner", "Now put it on the safe door." },
+	onSafe = { "mrWagner", "Light the fuse with your candle. Then hide. Quickly!" },
+	lit = { "mrWagner", "Hide! Now! I'll keep the others away." },
+	candleLost = { "player", "My candle... it's gone. I can barely see anything." },
+	heHeard = { "player", "He heard that. He's coming up here!" },
+	afterSearch = { "player", "He's gone. Red candles... somebody lit a path. Downstairs." },
+	takeKey = { "player", "The key. Now follow the candles. And keep quiet." },
+	sneakHint = { "player", "If I walk slowly, he won't hear me." },
+	shelfLocked = { "player", "There's a keyhole behind this shelf. I need the key from the safe." },
+	shelfOpen = { "player", "It fits. There's a passage behind the shelf." },
+	hurt = { "player", "Get away from me!" },
+}
+-- Die Familie greift jetzt an (sagt dabei etwas)
+Kapitel2Dialogue.FAMILY_ANGRY = {
+	mrsWagner = { "You're not leaving, dear.", "Where do you think you're going?", "Dinner isn't over." },
+	lucy = { "Mommy says you have to stay!", "Don't go. Please don't go.", "Found you!" },
+	tommy = { "You can't leave! You can't!", "I'll tell him where you are!", "Got you!" },
+}
+-- Sarp nach der Explosion
+Kapitel2Dialogue.SARP_ALERT = { "Who opened my door?", "I smell you.", "Little thieves..." }
 
 return Kapitel2Dialogue
