@@ -21,6 +21,10 @@ House.BASE = 1.6
 House.STORY = 10
 House.DOOR_HINGE = Vector3.new(-4, 1.6, -15.15) -- Scharnier der Haustür (Innenseite)
 
+-- true = statt des Holzhauses wird das große Herrenhaus aus Kapitel 2 gebaut (Mansion.lua).
+-- Hof, Veranda, Haustür, Einfahrt und Briefkasten bleiben gleich.
+House.mansion = false
+
 local Y = Route.GROUND_Y
 local W, D = Route.HOUSE_SIZE.X, Route.HOUSE_SIZE.Z -- Wohnhaus 40 × 30
 local BASE = 1.6 -- Höhe des Steinsockels (Fußboden Erdgeschoss)
@@ -66,17 +70,31 @@ function House.build(parent)
 	------------------------------------------------------------------ Boden: Hof und Gelände
 	-- Gelände unter dem Grundstück entfernen, damit nichts durch den Hof ragt
 	local yardCFrame = origin * CFrame.new(4, 0, -4)
-	workspace.Terrain:FillBlock(yardCFrame, Vector3.new(86, 8, 62), Enum.Material.Air)
+	-- beim Herrenhaus ist der Hof dünn (darunter liegt der Keller) und das Gelände
+	-- räumt Mansion.lua selbst frei
+	local yardThickness = House.mansion and 0.3 or 4.2
+	if not House.mansion then
+		workspace.Terrain:FillBlock(yardCFrame, Vector3.new(86, 8, 62), Enum.Material.Air)
+	end
 	Parts.new("Part", {
 		Name = "Yard",
-		Size = Vector3.new(86, 4.2, 62),
-		CFrame = yardCFrame * CFrame.new(0, -0.08 - 2.1, 0),
+		Size = Vector3.new(86, yardThickness, 62),
+		CFrame = yardCFrame * CFrame.new(0, -0.08 - yardThickness / 2, 0),
 		Color = COLORS.yard,
 		Material = Enum.Material.Ground,
 		Parent = model,
 	})
 
 	------------------------------------------------------------------ Wohnhaus: Sockel und Wände
+	-- Seiten des Hauses: CFrame auf der Wand, LookVector zeigt nach außen
+	local faces = {
+		front = { cframe = CFrame.new(0, 0, -D / 2), width = W },
+		back = { cframe = CFrame.new(0, 0, D / 2) * CFrame.Angles(0, math.pi, 0), width = W },
+		left = { cframe = CFrame.new(-W / 2, 0, 0) * CFrame.Angles(0, math.pi / 2, 0), width = D },
+		right = { cframe = CFrame.new(W / 2, 0, 0) * CFrame.Angles(0, -math.pi / 2, 0), width = D },
+	}
+	local garageSide = CFrame.new(GX + GW / 2, 0, 0) * CFrame.Angles(0, -math.pi / 2, 0)
+	if not House.mansion then
 	block("Foundation", Vector3.new(W + 1, BASE, D + 1), CFrame.new(0, BASE / 2, 0), COLORS.stone, Enum.Material.Cobblestone)
 	if House.interior then
 		-- Massive Wände mit einem Loch für die Eingangshalle (und die Haustür)
@@ -96,15 +114,6 @@ function House.build(parent)
 	else
 		block("Walls", Vector3.new(W, 2 * STORY, D), CFrame.new(0, BASE + STORY, 0), COLORS.siding, Enum.Material.WoodPlanks)
 	end
-
-	-- Seiten des Hauses: CFrame auf der Wand, LookVector zeigt nach außen
-	local faces = {
-		front = { cframe = CFrame.new(0, 0, -D / 2), width = W },
-		back = { cframe = CFrame.new(0, 0, D / 2) * CFrame.Angles(0, math.pi, 0), width = W },
-		left = { cframe = CFrame.new(-W / 2, 0, 0) * CFrame.Angles(0, math.pi / 2, 0), width = D },
-		right = { cframe = CFrame.new(W / 2, 0, 0) * CFrame.Angles(0, -math.pi / 2, 0), width = D },
-	}
-	local garageSide = CFrame.new(GX + GW / 2, 0, 0) * CFrame.Angles(0, -math.pi / 2, 0)
 
 	-- Waagerechte Bretter (Stülpschalung) auf allen vier Seiten
 	-- (Bretter enden unter den Eckbrettern; Zierbretter an den Seiten minimal schmaler,
@@ -137,6 +146,7 @@ function House.build(parent)
 			block("CornerBoard", Vector3.new(0.7, 2 * STORY - 0.1, 0.7), CFrame.new(x * W / 2, BASE + STORY, z * D / 2), COLORS.trim, Enum.Material.Wood)
 		end
 	end
+	end -- nicht beim Herrenhaus
 
 	------------------------------------------------------------------ Fenster (alle dunkel)
 	local rng = Random.new(14)
@@ -177,6 +187,7 @@ function House.build(parent)
 	end
 
 	local groundY, upperY = BASE + 4.6, BASE + STORY + 4.8
+	if not House.mansion then
 	-- Vorderseite: unten links und rechts der Tür, oben fünf Fenster
 	for _, u in { -16, -8.6, 5.5, 13.5 } do
 		window("front", u, groundY, { curtain = u == 6 })
@@ -193,11 +204,12 @@ function House.build(parent)
 		window("back", u, groundY, { noShutters = true })
 		window("back", u, upperY, { noShutters = true, boarded = u == 4 })
 	end
+	end -- nicht beim Herrenhaus
 
 	------------------------------------------------------------------ Haustür
 	local doorX = -2
 	local door = faces.front.cframe * CFrame.new(doorX, BASE, 0)
-	if House.interior then
+	if House.interior or House.mansion then
 		-- Rahmen mit Öffnung; die Tür ist ein eigenes Modell, das sich am Scharnier dreht
 		for _, side in { -1, 1 } do
 			block("DoorFrame", Vector3.new(0.65, 7.8, 0.4), door * CFrame.new(side * 2.275, 3.9, -0.15), COLORS.trim, Enum.Material.Wood)
@@ -283,6 +295,7 @@ function House.build(parent)
 	end
 
 	------------------------------------------------------------------ Dach mit Schornstein
+	if not House.mansion then
 	local slope = math.atan(RISE / (D / 2))
 	local overhang = 1.6
 	local slabLength = (D / 2 + overhang) / math.cos(slope)
@@ -310,8 +323,10 @@ function House.build(parent)
 	block("Gutter", Vector3.new(W - 6, 0.4, 0.5), CFrame.new(3, TOP - 0.4, -D / 2 - overhang + 0.2), COLORS.metal, Enum.Material.Metal)
 	block("Gutter", Vector3.new(6.5, 0.4, 0.5), CFrame.new(-W / 2 + 1.5, TOP - 1.6, -D / 2 - overhang + 0.2) * CFrame.Angles(0, 0, math.rad(-22)), COLORS.metal, Enum.Material.Metal)
 	block("Downpipe", Vector3.new(0.4, TOP - 0.5, 0.4), CFrame.new(W / 2 - 0.6, (TOP - 0.5) / 2, -D / 2 - 0.6), COLORS.metal, Enum.Material.Metal)
+	end -- nicht beim Herrenhaus
 
 	------------------------------------------------------------------ Garage (angebaut)
+	if not House.mansion then
 	local garageCenter = CFrame.new(GX, 0, 0)
 	local gHalf = GD / 2
 	block("GarageFoundation", Vector3.new(GW + 0.6, 0.6, GD + 0.6), garageCenter * CFrame.new(0, 0.3, 0), COLORS.stone, Enum.Material.Concrete)
@@ -364,6 +379,8 @@ function House.build(parent)
 		block("TrashLid", Vector3.new(2.3, 0.25, 2.3), CFrame.new(GX + GW / 2 + 1.8, 3.35, z) * CFrame.Angles(0, 0, i == 2 and math.rad(30) or 0), Color3.fromRGB(46, 50, 48), Enum.Material.Metal)
 	end
 
+	end -- keine Garage beim Herrenhaus
+
 	------------------------------------------------------------------ Hof: Zaun, Briefkasten, Spuren
 	-- Alter Lattenzaun vorne am Grundstück, mit Lücken
 	local fenceZ = -D / 2 - 16
@@ -385,7 +402,7 @@ function House.build(parent)
 		block("TrikeWheel", Vector3.new(0.2, 1.2, 1.2), trike * CFrame.new(0, 0.6, z), Color3.fromRGB(20, 20, 20), Enum.Material.Rubber, { Shape = Enum.PartType.Cylinder })
 	end
 	-- Schaukel aus einem Reifen an einem Gestell neben dem Haus
-	local swing = CFrame.new(-W / 2 - 6, 0, 6)
+	local swing = House.mansion and CFrame.new(-54, 0, -8) or CFrame.new(-W / 2 - 6, 0, 6)
 	for _, z in { -2.5, 2.5 } do
 		block("SwingPost", Vector3.new(0.5, 10, 0.5), swing * CFrame.new(0, 5, z), COLORS.darkWood, Enum.Material.Wood)
 	end
@@ -412,7 +429,7 @@ function House.build(parent)
 	end
 
 	-- Schotterfläche vor dem Garagentor
-	block("Driveway", Vector3.new(15, 4.2, 16), CFrame.new(GX, -0.05 - 2.1, -GD / 2 - 8), COLORS.gravel, Enum.Material.Pebble)
+	block("Driveway", Vector3.new(15, 4.2, 16), CFrame.new(GX, -0.05 - 2.1, House.mansion and -26 or -GD / 2 - 8), COLORS.gravel, Enum.Material.Pebble)
 
 	-- Briefkasten an der Einfahrt
 	local mailPosition = Route.sidePoint(Route.HOUSE_S - 50, Route.ROAD_WIDTH / 2 + 2.5, 0)
@@ -437,7 +454,9 @@ function House.build(parent)
 		})
 	end
 
-	if House.interior then
+	if House.mansion then
+		require(script.Parent.Mansion).build(model, origin)
+	elseif House.interior then
 		require(script.Parent.HouseInterior).build(model, origin)
 	end
 

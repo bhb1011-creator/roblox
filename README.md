@@ -56,10 +56,11 @@ Am besten jeden Teil in einem eigenen Studio-Ort (eigene Datei) testen.
 - Sie nimmt die Kette ab und öffnet ganz. Zwei Antworten wählt, wer geklopft hat (Tasten **1** und **2**)
 - Die Kerze flackert fast aus – danach steht **Mr. Wagner** plötzlich hinter ihr (groß, hager, Bart, blutig verbundene Hand, schaut meist auf den Boden)
 - Sie bitten einen herein; man geht selbst hinein, die Tür fällt hinter einem zu. (Wer draußen bleibt, wird erinnert und nach 40 Sekunden hereingeholt)
-- Eingangshalle: Treppe zur Galerie mit zwei Türen (die erste ist vernagelt – „Not the first one.“), stehen gebliebene Standuhr, Kinderstiefel an der Garderobe, Familienfotos mit zerkratzten Gesichtern, verhängter Spiegel, Durchgänge ins Dunkle, nur Kerzenlicht
+- Danach darf man sich frei im Haus umsehen
+- **Das Haus** (`src/kapitel2/server/Mansion.lua`, Bauplan: `docs/konzept/hausplan.html`): ein großes, verwinkeltes Herrenhaus mit Keller, Erdgeschoss und Obergeschoss, rundem Turm (vorne links), Erkern, sechseckigem Glas-Wintergarten (hinten rechts), zwei Schornsteinen. Über 20 eingerichtete Räume: Eingangshalle mit Galerie, Wohnzimmer mit Kamin, Esszimmer (gedeckt für sieben), Küche mit Kellertreppe, Speisekammer, Salon mit Klavier, Arbeitszimmer (abgeschlossen), WC, Gartenflur, Wintergarten; oben langer Flur, Gästezimmer (euer Zimmer), die vernagelte Tür 1, Zimmer von Lucy und Tommy, Bad, Elternschlafzimmer, Spielzimmer, Nähzimmer im Turm, Großmutters Zimmer (abgeschlossen); im Keller Vorratskeller, Waschkeller, Heizungsraum, Kriechkeller, hinter einem Regal ein Geheimgang zum runden Ritualraum und ein Tunnel in den Wald
+- **Die Familie** (`src/kapitel2/server/Wagners.lua`): Mrs. und Mr. Wagner an der Tür, Lucy steht oben an der Galerie und schaut herunter (obwohl sie „schläft“), Tommy steht im Salon am Klavier
 - Stimmen erst mal mit der Roblox-Stimme (Mrs. Wagner: Stimme 4, Mr. Wagner: Stimme 5, siehe `Config.VOICES`)
-- Texte und Ablauf: `src/shared/Kapitel2Dialogue.lua`, Figuren: `src/kapitel2/server/Wagners.lua`, Konzept: `docs/konzept/wagners.md`
-- Die Kinder (Tochter und Sohn) kommen später
+- Texte und Ablauf: `src/shared/Kapitel2Dialogue.lua`, Konzept: `docs/konzept/wagners.md`
 
 ## Level 1 – Zwischensequenz „Die Fahrt“
 
@@ -151,7 +152,7 @@ Fehlt eine ID, wird der Sound einfach weggelassen – das Spiel funktioniert tro
 | `src/lobby/client` | StarterPlayerScripts › Lobby | Knöpfe, Hinweise, Shop-Fenster, Lichteffekte |
 | `src/level/server` | ServerScriptService › Level | Level 1: Welt, Haus der Wagners, Auto, Sarp, Ablauf des Gesprächs (`DialogueRunner`), Waldweg mit Biest (`ForestWalk`) |
 | `src/level/client` | StarterPlayerScripts › Level | Ablauf der Zwischensequenz, Kamera, Sprachausgabe/Untertitel (`Speech`), Antwortauswahl (`Choices`), Biest/Rennen/Tod (`BeastView`), Umgebungsgeräusche (`Ambience`) |
-| `src/kapitel2/server` | ServerScriptService › Kapitel2 | Kapitel 2: Start (`Main`), Ablauf (`Kapitel2`), Eingangshalle (`HouseInterior`), die Wagners (`Wagners`). Welt, Haus und `ForestWalk` kommen aus `src/level/server` |
+| `src/kapitel2/server` | ServerScriptService › Kapitel2 | Kapitel 2: Start (`Main`), Ablauf (`Kapitel2`), das große Haus (`Mansion`), Möbel (`Furniture`), Einrichtung der Eingangshalle (`HouseInterior`), die Familie (`Wagners`). Welt, Hof/Veranda/Tür (`House`) und `ForestWalk` kommen aus `src/level/server` |
 | `src/kapitel2/client` | StarterPlayerScripts › Kapitel2 | Kapitel 2: Start (`Main`), Kamera/Licht/Kerzen/Köpfe (`Scene`). `Speech`, `Choices` und `Ambience` kommen aus `src/level/client` |
 
 ## Robux-Produkte einrichten (Kasse)

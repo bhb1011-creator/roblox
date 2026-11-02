@@ -163,6 +163,12 @@ local function face(model, head, style, colors)
 			attach(model, head, "Pupil", Vector3.new(0.055 * s, 0.055 * s, 0.02), CFrame.new(x, 0.12 * s, front - 0.012), Color3.fromRGB(18, 14, 12))
 			attach(model, head, "EyeRing", Vector3.new(0.24 * s, 0.06 * s, 0.02), CFrame.new(x, 0.01 * s, front), Color3.fromRGB(128, 104, 112))
 			attach(model, head, "Brow", Vector3.new(0.24 * s, 0.035 * s, 0.02), CFrame.new(x, 0.29 * s, front) * CFrame.Angles(0, 0, math.rad(side * 8)), colors.hair)
+		elseif style == "child" then
+			-- große, fast ganz schwarze Augen, die nichts anschauen
+			attach(model, head, "EyeWhite", Vector3.new(0.22 * s, 0.18 * s, 0.02), CFrame.new(x, 0.1 * s, front), Color3.fromRGB(226, 222, 214))
+			attach(model, head, "Pupil", Vector3.new(0.16 * s, 0.15 * s, 0.02), CFrame.new(x, 0.09 * s, front - 0.012), Color3.fromRGB(12, 10, 10))
+			attach(model, head, "EyeRing", Vector3.new(0.22 * s, 0.05 * s, 0.02), CFrame.new(x, -0.02 * s, front), Color3.fromRGB(120, 100, 110))
+			attach(model, head, "Brow", Vector3.new(0.2 * s, 0.03 * s, 0.02), CFrame.new(x, 0.27 * s, front), colors.hair)
 		else
 			-- müde, halb geschlossene Augen mit schweren Lidern und Tränensäcken
 			attach(model, head, "EyeWhite", Vector3.new(0.19 * s, 0.09 * s, 0.02), CFrame.new(x, 0.11 * s, front), Color3.fromRGB(214, 206, 192))
@@ -173,7 +179,10 @@ local function face(model, head, style, colors)
 			attach(model, head, "Brow", Vector3.new(0.27 * s, 0.07 * s, 0.02), CFrame.new(x, 0.27 * s, front) * CFrame.Angles(0, 0, math.rad(-side * 12)), colors.hair)
 		end
 	end
-	if style == "smile" then
+	if style == "child" then
+		-- kleiner, gerader Mund
+		attach(model, head, "Mouth", Vector3.new(0.16 * s, 0.035 * s, 0.02), CFrame.new(0, -0.25 * s, front), Color3.fromRGB(120, 70, 70))
+	elseif style == "smile" then
 		-- breites, starres Lächeln
 		local lips = Color3.fromRGB(128, 66, 66)
 		attach(model, head, "Mouth", Vector3.new(0.4 * s, 0.035 * s, 0.02), CFrame.new(0, -0.26 * s, front), lips)
@@ -309,6 +318,73 @@ function Wagners.buildMr(parent)
 	attach(model, leftHand, "Bandage", leftHand.Size + Vector3.new(0.06, 0.04, 0.06), CFrame.new(), Color3.fromRGB(196, 190, 174), Enum.Material.Fabric)
 	attach(model, leftHand, "Blood", Vector3.new(0.18, 0.2, 0.02), CFrame.new(0.02, -0.02, -leftHand.Size.Z / 2 - 0.045), Color3.fromRGB(110, 20, 18), Enum.Material.Fabric)
 
+	model.Parent = parent
+	return model
+end
+
+-- Lucy (Tochter, ca. 12): weißes Nachthemd bis zu den Knöcheln, lange dunkle Haare,
+-- barfuß, lächelt genau wie ihre Mutter. Hält eine Puppe.
+function Wagners.buildLucy(parent)
+	local colors = {
+		skin = Color3.fromRGB(220, 206, 196),
+		torso = Color3.fromRGB(214, 208, 196),
+		arms = Color3.fromRGB(214, 208, 196),
+		legs = Color3.fromRGB(220, 206, 196),
+		shoes = Color3.fromRGB(210, 194, 184),
+		hair = Color3.fromRGB(40, 30, 26),
+	}
+	local model = newBody("Lucy", colors, { HeightScale = 0.72, WidthScale = 0.72, DepthScale = 0.8, HeadScale = 0.95 })
+	if not model then
+		return nil
+	end
+	local head, hips = model.Head, model.LowerTorso
+	face(model, head, "smile", colors)
+	local size = head.Size
+	attach(model, head, "Hair", Vector3.new(size.X + 0.06, 0.3, size.Z + 0.06), CFrame.new(0, size.Y / 2 - 0.08, 0.03), colors.hair, Enum.Material.Fabric)
+	attach(model, head, "HairLong", Vector3.new(size.X + 0.1, size.Y * 1.5, 0.3), CFrame.new(0, -size.Y * 0.2, size.Z / 2 - 0.04), colors.hair, Enum.Material.Fabric)
+	for _, side in { -1, 1 } do
+		attach(model, head, "HairSide", Vector3.new(0.18, size.Y * 1.2, size.Z * 0.5), CFrame.new(side * (size.X / 2 + 0.04), -size.Y * 0.1, 0.1), colors.hair, Enum.Material.Fabric)
+	end
+	attach(model, hips, "Nightgown", Vector3.new(hips.Size.X + 0.35, 2.9, hips.Size.Z + 0.35), CFrame.new(0, -1.35, 0), colors.torso, Enum.Material.Fabric)
+	attach(model, hips, "NightgownHem", Vector3.new(hips.Size.X + 0.45, 0.12, hips.Size.Z + 0.45), CFrame.new(0, -2.75, 0), Color3.fromRGB(190, 184, 172), Enum.Material.Fabric)
+	-- die Puppe in der linken Hand
+	local hand = model.LeftHand
+	attach(model, hand, "DollBody", Vector3.new(0.3, 0.45, 0.22), CFrame.new(0, -0.35, -0.15), Color3.fromRGB(120, 40, 50), Enum.Material.Fabric)
+	attach(model, hand, "DollHead", Vector3.new(0.3, 0.3, 0.3), CFrame.new(0, -0.05, -0.15), Color3.fromRGB(220, 214, 200), Enum.Material.SmoothPlastic, Enum.PartType.Ball)
+	model.Parent = parent
+	return model
+end
+
+-- Tommy (Sohn, ca. 7): gestreifter Schlafanzug, zerzauste Haare, große dunkle Augen.
+-- Hält eine Zeichnung.
+function Wagners.buildTommy(parent)
+	local colors = {
+		skin = Color3.fromRGB(214, 196, 180),
+		torso = Color3.fromRGB(70, 90, 130),
+		arms = Color3.fromRGB(70, 90, 130),
+		legs = Color3.fromRGB(70, 90, 130),
+		shoes = Color3.fromRGB(200, 180, 166),
+		hair = Color3.fromRGB(92, 70, 48),
+	}
+	local model = newBody("Tommy", colors, { HeightScale = 0.58, WidthScale = 0.7, DepthScale = 0.8, HeadScale = 1 })
+	if not model then
+		return nil
+	end
+	local head, torso = model.Head, model.UpperTorso
+	face(model, head, "child", colors)
+	local size = head.Size
+	attach(model, head, "Hair", Vector3.new(size.X + 0.08, 0.36, size.Z + 0.08), CFrame.new(0, size.Y / 2 - 0.06, 0.02), colors.hair, Enum.Material.Fabric)
+	for i = -1, 1 do
+		attach(model, head, "HairTuft", Vector3.new(0.3, 0.2, 0.3), CFrame.new(i * 0.32, size.Y / 2 + 0.1, -0.1 + i * 0.1) * CFrame.Angles(0, 0, math.rad(i * 30)), colors.hair, Enum.Material.Fabric)
+	end
+	-- Streifen auf dem Schlafanzug
+	for k = -2, 2 do
+		attach(model, torso, "Stripe", Vector3.new(torso.Size.X + 0.02, 0.08, torso.Size.Z + 0.02), CFrame.new(0, k * torso.Size.Y / 5, 0), Color3.fromRGB(190, 196, 206), Enum.Material.Fabric)
+	end
+	-- die Zeichnung in der rechten Hand
+	local hand = model.RightHand
+	attach(model, hand, "Drawing", Vector3.new(0.9, 0.7, 0.02), CFrame.new(0, -0.3, -0.2), Color3.fromRGB(214, 206, 186), Enum.Material.SmoothPlastic)
+	attach(model, hand, "DrawingFigure", Vector3.new(0.08, 0.45, 0.01), CFrame.new(0.15, -0.3, -0.215), Color3.fromRGB(16, 14, 12), Enum.Material.SmoothPlastic)
 	model.Parent = parent
 	return model
 end

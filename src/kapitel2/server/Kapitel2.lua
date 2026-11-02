@@ -13,6 +13,7 @@ local Route = require(ReplicatedStorage.Shared.LevelRoute)
 local ForestWalk = require(script.Parent.ForestWalk)
 local House = require(script.Parent.House)
 local HouseInterior = require(script.Parent.HouseInterior)
+local Mansion = require(script.Parent.Mansion)
 local Wagners = require(script.Parent.Wagners)
 local World = require(script.Parent.World)
 
@@ -40,10 +41,11 @@ local function hall(spot)
 end
 
 function Kapitel2.start()
-	House.interior = true
+	House.mansion = true -- das große Herrenhaus statt des kleinen Holzhauses
 	print("Kapitel 2: Welt und Haus werden gebaut …")
 	World.build()
-	print("Kapitel 2: Welt fertig.")
+	local removed = Mansion.clearAround(workspace:FindFirstChild("Level1"))
+	print("Kapitel 2: Welt fertig (" .. tostring(removed) .. " Bäume und Teile ums Haus entfernt).")
 
 	local origin = Route.houseCFrame()
 	local house = workspace:FindFirstChild("WagnerHouse", true)
@@ -88,6 +90,21 @@ function Kapitel2.start()
 		mr:SetAttribute("Look", "down")
 	end
 	local npcs = { mrsWagner = mrs, mrWagner = mr }
+
+	-- Die Kinder: Lucy steht oben an der Galerie und schaut herunter (obwohl sie
+	-- angeblich schläft), Tommy steht im Salon am Klavier
+	local lucy = build("Lucy", Wagners.buildLucy)
+	local tommy = build("Tommy", Wagners.buildTommy)
+	if lucy then
+		local gallery = Route.housePoint(-1.2, 1.3) + Vector3.new(0, HouseInterior.FLOOR - 0.1 + House.STORY, 0)
+		Wagners.place(lucy, gallery, Route.housePoint(-1.2, -10))
+		lucy:SetAttribute("Look", "player")
+	end
+	if tommy then
+		local salon = (Mansion.spot(20.4, 47, "E")).Position
+		Wagners.place(tommy, salon, (Mansion.spot(14, 47, "E")).Position)
+		tommy:SetAttribute("Look", "down")
+	end
 
 	-- Langsam rückwärts oder seitlich gleiten, Blick immer zur Tür (läuft nebenher)
 	local function glide(npc, target, duration)
@@ -340,9 +357,10 @@ function Kapitel2.start()
 			end)
 		end
 	end
+	-- Ende des Gesprächs: Jetzt darf man sich frei im Haus umsehen
 	function actions.finish()
-		setMovement(false)
-		event:FireAllClients({ type = "finish" })
+		setMovement(true)
+		event:FireAllClients({ type = "explore" })
 	end
 
 	local stairsTop = (origin * CFrame.new(HouseInterior.STAIRS_TOP + Vector3.new(0, 5, 1.5))).Position

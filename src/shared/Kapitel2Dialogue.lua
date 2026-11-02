@@ -13,7 +13,7 @@
 --   mrAppears   – die Kerze flackert fast aus; danach steht Mr. Wagner hinter ihr
 --   invite      – beide treten zur Seite, man geht selbst hinein, die Tür fällt zu
 --   point       – Mr. Wagner zeigt die Treppe hoch
---   finish      – Ende des Anfangs
+--   finish      – Ende des Gesprächs: danach kann man sich frei im Haus umsehen
 -- `look` = wohin der Sprecher schaut: "player", "down" oder "stairs".
 -- `wait` = Pause danach (Sekunden).
 local Kapitel2Dialogue = {}

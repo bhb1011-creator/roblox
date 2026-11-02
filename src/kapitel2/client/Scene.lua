@@ -363,6 +363,8 @@ function Kapitel2.run()
 			end)
 		elseif kind == "inside" then
 			houseInside = true
+		elseif kind == "explore" then
+			hint("Sieh dich im Haus um.", 6)
 		elseif kind == "finish" then
 			finished = true
 			setFade(0, 3)

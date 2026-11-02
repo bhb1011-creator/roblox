@@ -27,15 +27,17 @@ Alles ist düster bei ihnen, irgendwie komisch. Sie sind freundlich, aber es sti
 |---|---|---|---|
 | **Mrs. Wagner (Margaret)** | um die 45, dunkelgrünes Kleid, graubraune Strickjacke, Spitzenkragen, Medaillon, Haare streng zu einem Knoten, graue Strähnen. Sehr blass, dunkle Ringe unter den Augen, winzige starre Pupillen | übertrieben freundlich, langsam, ein bisschen zu süß. Lächelt immer. Schaut einen ständig an. Hält eine Kerze | Stimme 4 (amerikanisch, Frau), etwas tiefer, langsam |
 | **Mr. Wagner (Richard)** | groß und hager, schmutziges Hemd mit hochgekrempelten Ärmeln, Hosenträger, ungepflegter Bart, müde Augen. Linke Hand verbunden, der Verband ist blutig | redet wenig und kurz, schaut meist auf den Boden. Scheint Angst vor etwas zu haben („He shouldn't have.“). Seine Frau unterbricht ihn („Richard.“) | Stimme 5 (amerikanisch, Mann), tief, müde |
-| **Tochter** (Vorschlag: Lucy, ca. 12) | noch offen | steht beim Ankommen oben an der Galerie und schaut, obwohl sie angeblich schläft. Lächelt wie die Mutter | noch offen |
-| **Sohn** (Vorschlag: Tommy, ca. 7) | noch offen | spielt im Salon immer denselben Klavierton, malt Bilder von Sarp | noch offen |
+| **Lucy** (Tochter, ca. 12) | weißes Nachthemd bis zu den Knöcheln, lange dunkle Haare, barfuß, hält eine Puppe. Lächelt genau wie die Mutter | steht beim Ankommen oben an der Galerie und schaut herunter, obwohl sie angeblich schläft | noch offen |
+| **Tommy** (Sohn, ca. 7) | gestreifter Schlafanzug, zerzauste Haare, große fast schwarze Augen, hält eine Zeichnung | steht im Salon am Klavier (später: spielt immer denselben Ton), malt Bilder von Sarp | noch offen |
 
 ## Das Haus
 
-Bauplan (Entwurf, noch nicht gebaut): `docs/konzept/hausplan.html`. Keller, Erdgeschoss und
-Obergeschoss, innen gut doppelt so groß wie außen (84 × 64 statt 40 × 30). Vorschlag: Wenn
-die Tür hinter einem zufällt, wird es kurz schwarz und man steht im großen Haus, in einer
-Eingangshalle, die genau gleich aussieht.
+Gebaut in `src/kapitel2/server/Mansion.lua`, Bauplan: `docs/konzept/hausplan.html` (und die
+Bilder `hausplan_*.png`). Das Haus ist von Anfang an groß (auch von außen): Keller,
+Erdgeschoss, Obergeschoss, runder Turm vorne links, Erker, sechseckiger Glas-Wintergarten
+hinten rechts. Im Keller hinter einem Regal ein Geheimgang zum runden Ritualraum (Altar,
+Kerzenkreis, Fotos früherer Gäste) und ein Tunnel in den Wald (möglicher Fluchtweg).
+Weg nach oben: Treppe in der Halle → Galerie → Tür ins Spielzimmer → langer Flur.
 
 ## Kapitel 2 – Anfang (gebaut)
 
@@ -51,5 +53,6 @@ Texte: `src/shared/Kapitel2Dialogue.lua`. Figuren: `src/kapitel2/server/Wagners.
 ## Offen
 
 - Eigene Stimmen (ElevenLabs) für Mrs. und Mr. Wagner, später für die Kinder
-- Die Kinder kennenlernen
+- Die Kinder kennenlernen (Szenen mit Lucy und Tommy)
+- Eigene Stimmen für Lucy und Tommy
 - Wie es nach der Ankunft weitergeht (Zimmer oben, die vernagelte erste Tür, …)

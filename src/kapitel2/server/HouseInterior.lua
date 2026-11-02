@@ -74,7 +74,9 @@ function HouseInterior.candle(parent, cframe, height, range, brightness)
 	return flame
 end
 
-function HouseInterior.build(model, origin)
+-- `mansion` = true: im großen Haus (Mansion.lua) kommen Wände, Boden, Decke und die echten
+-- Türen vom Haus selbst; hier nur Treppe, Galerie und Einrichtung der Halle.
+function HouseInterior.build(model, origin, mansion)
 	local folder = Instance.new("Model")
 	folder.Name = "Interior"
 	folder.Parent = model
@@ -83,8 +85,10 @@ function HouseInterior.build(model, origin)
 	------------------------------------------------------------------ Boden und Decke
 	local hallW, hallD = X1 - X0, Z1 - Z0
 	local midX, midZ = (X0 + X1) / 2, (Z0 + Z1) / 2
-	block("Floor", Vector3.new(hallW, 0.1, hallD), CFrame.new(midX, BASE + 0.05, midZ), COLORS.floor, Enum.Material.WoodPlanks)
-	block("Ceiling", Vector3.new(hallW, 0.5, hallD), CFrame.new(midX, TOP - 0.25, midZ), COLORS.ceiling, Enum.Material.Wood)
+	if not mansion then
+		block("Floor", Vector3.new(hallW, 0.1, hallD), CFrame.new(midX, BASE + 0.05, midZ), COLORS.floor, Enum.Material.WoodPlanks)
+		block("Ceiling", Vector3.new(hallW, 0.5, hallD), CFrame.new(midX, TOP - 0.25, midZ), COLORS.ceiling, Enum.Material.Wood)
+	end
 	-- Alter Teppich mit dunklem Rand
 	block("RugBorder", Vector3.new(5.4, 0.03, 8.4), CFrame.new(-2, FLOOR + 0.015, -8.2), COLORS.rugBorder, Enum.Material.Fabric)
 	block("Rug", Vector3.new(4.8, 0.03, 7.8), CFrame.new(-2, FLOOR + 0.045, -8.2), COLORS.rug, Enum.Material.Fabric)
@@ -110,12 +114,14 @@ function HouseInterior.build(model, origin)
 			block(name, Vector3.new(4, toY - from, depth), CFrame.new(-2, (from + toY) / 2, Z0 + depth / 2), color, material)
 		end
 	end
+	if not mansion then
 	walls(wainscotTop, CEILING, COLORS.wallpaper, Enum.Material.Fabric, 0.1, "Wallpaper")
 	walls(FLOOR, wainscotTop, COLORS.wainscot, Enum.Material.WoodPlanks, 0.16, "Wainscot")
 	-- Abschlussleiste über der Holzverkleidung
 	walls(wainscotTop - 0.1, wainscotTop + 0.15, COLORS.trim, Enum.Material.Wood, 0.22, "ChairRail")
+	end
 	-- dunkle Streifen in der Tapete (nur links und rechts, sie laufen nach oben)
-	for z = Z0 + 1.2, Z1 - 0.6, 1.6 do
+	for z = Z0 + 1.2, (mansion and Z0 or Z1 - 0.6), 1.6 do
 		for _, x in { X0 + 0.11, X1 - 0.11 } do
 			block("WallpaperStripe", Vector3.new(0.02, CEILING - wainscotTop - 0.4, 0.35), CFrame.new(x, (wainscotTop + CEILING) / 2 + 0.1, z), COLORS.wallpaperStripe, Enum.Material.Fabric)
 		end
@@ -158,7 +164,7 @@ function HouseInterior.build(model, origin)
 	end
 	-- Türen an der Rückwand: die erste vernagelt und zerkratzt, die zweite ist "euer" Zimmer
 	local doorZ = Z1 - 0.1 - 0.1
-	for index, x in { -3.2, 1.4 } do
+	for index, x in mansion and {} or { -3.2, 1.4 } do
 		block("UpstairsDoorFrame", Vector3.new(3.8, 7.6, 0.16), CFrame.new(x, GALLERY + 3.8, doorZ - 0.02), COLORS.trim, Enum.Material.Wood)
 		block("UpstairsDoor", Vector3.new(3.2, 7.1, 0.2), CFrame.new(x, GALLERY + 3.55, doorZ - 0.12), COLORS.stair, Enum.Material.WoodPlanks)
 		block("UpstairsDoorKnob", Vector3.new(0.25, 0.25, 0.25), CFrame.new(x + 1.1, GALLERY + 3.4, doorZ - 0.3), COLORS.brass, Enum.Material.Metal, { Shape = Enum.PartType.Ball })
@@ -200,7 +206,9 @@ function HouseInterior.build(model, origin)
 		block(name .. "Casing", Vector3.new(0.35, height + 0.2, 0.18), cframe * CFrame.new(width / 2 + 0.17, height / 2 + 0.1, -0.06), COLORS.trim, Enum.Material.Wood)
 		block(name .. "Casing", Vector3.new(width + 0.7, 0.35, 0.18), cframe * CFrame.new(0, height + 0.37, -0.06), COLORS.trim, Enum.Material.Wood)
 	end
-	doorway("LivingRoomDoorway", CFrame.new(wallX - 0.26, FLOOR, -5) * CFrame.Angles(0, math.rad(90), 0), 3.4, 7.4)
+	if not mansion then
+		doorway("LivingRoomDoorway", CFrame.new(wallX - 0.26, FLOOR, -5) * CFrame.Angles(0, math.rad(90), 0), 3.4, 7.4)
+	end
 	-- Tischchen mit Kerze und Familienfotos (alle Gesichter zerkratzt)
 	local tableCF = CFrame.new(wallX - 0.9, FLOOR, -0.9)
 	block("SideTable", Vector3.new(1.4, 0.15, 2.6), tableCF * CFrame.new(0, 2.9, 0), COLORS.stair, Enum.Material.Wood)
@@ -224,10 +232,12 @@ function HouseInterior.build(model, origin)
 	block("MirrorFrame", Vector3.new(2.8, 4, 0.15), CFrame.new(-3.6, FLOOR + 5.2, backZ - 0.08), COLORS.brass, Enum.Material.Metal)
 	block("MirrorCloth", Vector3.new(2.6, 3.5, 0.06), CFrame.new(-3.6, FLOOR + 4.9, backZ - 0.2), COLORS.cloth, Enum.Material.Fabric)
 	block("MirrorCloth", Vector3.new(2.2, 0.8, 0.12), CFrame.new(-3.5, FLOOR + 3.05, backZ - 0.25) * CFrame.Angles(math.rad(-8), 0, math.rad(4)), COLORS.cloth, Enum.Material.Fabric)
-	doorway("KitchenDoorway", CFrame.new(1.4, FLOOR, backZ - 0.26), 3, 7.4)
-	-- Aus der Küche fällt schwaches Kerzenlicht
-	local glow = block("KitchenGlow", Vector3.new(0.2, 0.2, 0.2), CFrame.new(1.4, FLOOR + 0.8, backZ - 0.9), COLORS.flame, Enum.Material.SmoothPlastic, { Transparency = 1, CanCollide = false, CanQuery = false })
-	Parts.light("PointLight", glow, { Name = "CandleLight", Range = 7, Brightness = 0.5, Color = Color3.fromRGB(255, 150, 80) })
+	if not mansion then
+		doorway("KitchenDoorway", CFrame.new(1.4, FLOOR, backZ - 0.26), 3, 7.4)
+		-- Aus der Küche fällt schwaches Kerzenlicht
+		local glow = block("KitchenGlow", Vector3.new(0.2, 0.2, 0.2), CFrame.new(1.4, FLOOR + 0.8, backZ - 0.9), COLORS.flame, Enum.Material.SmoothPlastic, { Transparency = 1, CanCollide = false, CanQuery = false })
+		Parts.light("PointLight", glow, { Name = "CandleLight", Range = 7, Brightness = 0.5, Color = Color3.fromRGB(255, 150, 80) })
+	end
 
 	------------------------------------------------------------------ Kronleuchter ohne Licht
 	local chandelier = CFrame.new(-2, CEILING, -7.5)
