@@ -70,7 +70,7 @@ Kapitel2Dialogue.SCRIPT = {
 	},
 	{ speaker = "mrsWagner", text = "Come in. Don't let the cold in." },
 	{ action = "invite", wait = 1.2 },
-	{ speaker = "mrsWagner", text = "The children are already asleep. You'll meet them tomorrow.", wait = 0.6 },
+	{ speaker = "mrsWagner", text = "The children are already asleep. You'll see them at breakfast.", wait = 0.6 },
 	{ speaker = "mrsWagner", action = "candles", text = { solo = "Here. Take this candle.", duo = "Here. Take these candles." }, wait = 0.4 },
 	{ speaker = "mrsWagner", text = "The house gets very dark at night.", wait = 0.8 },
 	{ speaker = "mrWagner", action = "point", look = "stairs", text = "Your room is upstairs. Second door on the left.", wait = 1.3 },
