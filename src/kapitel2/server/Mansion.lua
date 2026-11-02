@@ -281,7 +281,7 @@ local ROOMS = {
 		{ id = "speise", name = "Speisekammer", poly = R(40, 8, 54.25, 20), wall = { Color3.fromRGB(110, 100, 84), M.SmoothPlastic }, floor = KITCHEN_FLOOR },
 		{ id = "salon", name = "Salon", poly = R(14, 38, 34, 60), wall = { Color3.fromRGB(64, 56, 74), M.Fabric }, wainscot = true, floor = WOOD_FLOOR },
 		{ id = "arbeit", name = "Arbeitszimmer", poly = { { 10, 60 }, { 36, 60 }, { 36, 80 }, { 18, 80 }, { 10, 72 } }, wall = { Color3.fromRGB(62, 46, 34), M.WoodPlanks }, floor = WOOD_FLOOR },
-		{ id = "wc", name = "WC", poly = R(36, 60, 41.75, 72), wall = { Color3.fromRGB(150, 150, 140), M.Tile }, floor = TILE_FLOOR },
+		{ id = "wc", name = "WC", poly = R(36, 60, 41.75, 72), wall = { Color3.fromRGB(150, 150, 140), M.CeramicTiles }, floor = TILE_FLOOR },
 		{ id = "gartenflur", name = "Flur zum Garten", poly = { { 8, 30 }, { 34, 30 }, { 34, 38 }, { 14, 38 }, { 8, 34 } }, wall = { Color3.fromRGB(100, 94, 80), M.SmoothPlastic }, floor = TILE_FLOOR },
 		{ id = "winter", name = "Wintergarten", poly = HEX, floor = { Color3.fromRGB(80, 80, 76), M.Slate }, glass = true },
 	},
@@ -294,7 +294,7 @@ local ROOMS = {
 		{ id = "naeh", name = "Nähzimmer", poly = TOWER, wall = { Color3.fromRGB(100, 80, 80), M.Fabric }, floor = WOOD_FLOOR },
 		{ id = "tommy", name = "Zimmer Tommy", poly = R(34, 20, 44, 34), wall = { Color3.fromRGB(70, 90, 110), M.Fabric }, floor = WOOD_FLOOR },
 		{ id = "lucy", name = "Zimmer Lucy", poly = R(44, 20, 54.25, 34), wall = { Color3.fromRGB(120, 90, 100), M.Fabric }, floor = WOOD_FLOOR },
-		{ id = "bad", name = "Bad", poly = R(54.25, 18, 64, 34), wall = { Color3.fromRGB(160, 160, 150), M.Tile }, floor = TILE_FLOOR },
+		{ id = "bad", name = "Bad", poly = R(54.25, 18, 64, 34), wall = { Color3.fromRGB(160, 160, 150), M.CeramicTiles }, floor = TILE_FLOOR },
 		{ id = "eltern", name = "Elternschlafzimmer", poly = { { 64, 18 }, { 66, 18 }, { 68, 12 }, { 76, 12 }, { 78, 18 }, { 80.56, 18 }, { 80.56, 34 }, { 64, 34 } }, wall = { Color3.fromRGB(80, 64, 56), M.Fabric }, floor = WOOD_FLOOR },
 		{ id = "oma", name = "Großmutters Zimmer", poly = { { 14, 38 }, { 34, 38 }, { 34, 40 }, { 41.75, 40 }, { 41.75, 60 }, { 14, 60 } }, wall = { Color3.fromRGB(90, 86, 70), M.Fabric }, floor = WOOD_FLOOR },
 	},
@@ -410,7 +410,7 @@ local function buildWall(floorKey, a, b, kind, openings, topOverride)
 					panel("ChairRail", floorTop + 3.0, floorTop + 3.25, 0.2, Color3.fromRGB(70, 56, 42), M.Wood)
 				elseif room.tiles then
 					panel("Wallpaper", floorTop + 4, ceiling, 0.06, room.wall[1], room.wall[2])
-					panel("WallTiles", floorTop, floorTop + 4, 0.1, Color3.fromRGB(176, 172, 158), M.Tile)
+					panel("WallTiles", floorTop, floorTop + 4, 0.1, Color3.fromRGB(176, 172, 158), M.CeramicTiles)
 				else
 					panel("Wallpaper", floorTop + 0.45, ceiling, 0.06, room.wall[1], room.wall[2])
 					panel("Baseboard", floorTop, floorTop + 0.45, 0.14, Color3.fromRGB(46, 36, 28), M.Wood)
