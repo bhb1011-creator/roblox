@@ -29,4 +29,14 @@ if oldCutscene then
 	oldCutscene:Destroy()
 end
 
-require(script.Parent.Kapitel2).start()
+local ok, problem = xpcall(function()
+	require(script.Parent.Kapitel2).start()
+end, debug.traceback)
+if not ok then
+	-- Fehler auch auf dem Ladebildschirm zeigen (sonst wartet das Spiel nur)
+	warn("Kapitel 2 konnte nicht starten – bitte diese Meldung an Claude schicken:\n" .. tostring(problem))
+	local remotes = ReplicatedStorage:FindFirstChild("Kapitel2") or Instance.new("Folder")
+	remotes.Name = "Kapitel2"
+	remotes:SetAttribute("Status", "Fehler beim Start:\n" .. (tostring(problem):match("[^\n]+") or "?"))
+	remotes.Parent = ReplicatedStorage
+end
