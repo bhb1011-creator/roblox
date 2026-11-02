@@ -604,6 +604,16 @@ function Kapitel2.run()
 			showText(chapter, false, 0.5)
 			showText(chapterTitle, false, 0.5)
 			setFade(1, 1.2)
+		elseif kind == "alone" and message.instant then
+			-- sofort schwarz (z. B. beim Betreten des Raums hinter Tür 1)
+			finished = true
+			setFade(0, 0.25)
+			task.delay(2, function()
+				chapter.Text = message.title or ""
+				chapterTitle.Text = message.subtitle or ""
+				showText(chapter, true, 1.5)
+				showText(chapterTitle, true, 2)
+			end)
 		elseif kind == "alone" then
 			finished = true
 			dimTarget = 0.6

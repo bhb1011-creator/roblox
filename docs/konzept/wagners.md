@@ -78,4 +78,5 @@ Texte: `src/shared/Kapitel2Dialogue.lua`. Figuren: `src/kapitel2/server/Wagners.
    je näher er ist). Jetzt ist er nicht mehr tödlich: Sieht er einen, bleibt er stehen, starrt
    und flüstert. Die Familie (Mrs. Wagner, Lucy, Tommy) taucht irgendwo in der Ferne auf, sagt
    etwas Seltsames und rennt weg und verschwindet, wenn man näher kommt.
-8. Wer die Axt hat, bricht Tür 1 auf (Bretter fallen ab). Hier hört es erst einmal auf.
+8. Wer die Axt hat, bricht Tür 1 auf (Bretter fallen ab). Sobald jemand den Raum dahinter
+   betritt, wird das Bild sofort schwarz („Hinter Tür 1 … Fortsetzung folgt“).

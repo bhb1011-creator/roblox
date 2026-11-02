@@ -805,11 +805,27 @@ function Night.run(ctx)
 		doorOne.locked = false
 		sfx("doorSlam", middle, { volume = 1.4 })
 		ctx.moveDoor(doorOne, doorOne.openAngle, 0.35)
-		task.wait(2.5)
-		doneWithNight = true
+		event:FireAllClients({ type = "hint", text = "Die Tür ist offen. Geh hinein.", seconds = 5 })
 		ctx.remotes:SetAttribute("Phase", "doorOne")
-		event:FireAllClients({ type = "alone", title = "Tür 1 ist offen.", subtitle = "Was haben die Wagners hier versteckt?" })
-		print("Kapitel 2: Tür 1 ist aufgebrochen (hier geht es später weiter).")
+		-- sobald jemand den Raum hinter Tür 1 betritt: alles schwarz
+		local deadline = os.clock() + 180
+		while os.clock() < deadline do
+			local inside = false
+			for _, other in Players:GetPlayers() do
+				local root = rootOf(other)
+				if root and Mansion.inRoom(root.Position, "tuer1", "O") then
+					inside = true
+				end
+			end
+			if inside then
+				break
+			end
+			task.wait(0.2)
+		end
+		doneWithNight = true
+		ctx.setMovement(false)
+		event:FireAllClients({ type = "alone", instant = true, title = "Hinter Tür 1 …", subtitle = "Fortsetzung folgt" })
+		print("Kapitel 2: Jemand ist in Raum hinter Tür 1 gegangen – Bild schwarz (hier geht es später weiter).")
 	end
 	if doorOne then
 		doorOne.onLocked = function(player)
