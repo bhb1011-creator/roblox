@@ -84,6 +84,14 @@ function Kapitel2.start()
 			humanoid.WalkSpeed = on and SNEAK_SPEED or WALK_SPEED
 		end
 	end)
+	-- Versteck verlassen mit einer Taste (E / Leertaste / Knopf), Night.lua und Escape.lua hören zu
+	local leaveHideEvent = Instance.new("RemoteEvent")
+	leaveHideEvent.Name = "LeaveHide"
+	leaveHideEvent.Parent = remotes
+	-- Quick-Time-Event (die Familie hat einen gepackt): der Client meldet, ob man sich befreit hat
+	local qteEvent = Instance.new("RemoteEvent")
+	qteEvent.Name = "Qte"
+	qteEvent.Parent = remotes
 	remotes.Parent = ReplicatedStorage
 
 	House.mansion = true -- das große Herrenhaus statt des kleinen Holzhauses
@@ -969,7 +977,7 @@ function Kapitel2.start()
 		if Config.TEST_START_KAPITEL2 == "tuer1" and Mansion.escape then
 			checkpoint = function(index)
 				local feet = Mansion.escape.checkpoint + Vector3.new((index - 1) * 1.2 - 0.6, 0, 0)
-				local look = Mansion.point(45.4, 43, Mansion.FLOORS.O)
+				local look = Mansion.escape.checkpointLook
 				return CFrame.lookAt(feet, Vector3.new(look.X, feet.Y, look.Z))
 			end
 		end

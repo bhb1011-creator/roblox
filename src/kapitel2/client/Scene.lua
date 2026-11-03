@@ -228,6 +228,79 @@ function Kapitel2.run()
 		ZIndex = 6,
 		Parent = gui,
 	})
+	-- Quick-Time-Event (die Familie hat dich gepackt): großer Knopf in der Mitte + Balken
+	local qteFrame = create("Frame", {
+		Name = "Qte",
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.55),
+		Size = UDim2.fromOffset(360, 190),
+		BackgroundColor3 = Color3.fromRGB(30, 6, 6),
+		BackgroundTransparency = 0.25,
+		BorderSizePixel = 0,
+		Visible = false,
+		ZIndex = 8,
+		Parent = gui,
+	})
+	create("UICorner", { CornerRadius = UDim.new(0, 10), Parent = qteFrame })
+	local qteTitle = create("TextLabel", {
+		Position = UDim2.fromOffset(10, 8),
+		Size = UDim2.new(1, -20, 0, 50),
+		BackgroundTransparency = 1,
+		Font = Enum.Font.SpecialElite,
+		Text = "",
+		TextWrapped = true,
+		TextSize = 22,
+		TextColor3 = Color3.fromRGB(245, 220, 210),
+		AutoLocalize = false,
+		ZIndex = 9,
+		Parent = qteFrame,
+	})
+	local qteButton = create("TextButton", {
+		AnchorPoint = Vector2.new(0.5, 0),
+		Position = UDim2.new(0.5, 0, 0, 62),
+		Size = UDim2.fromOffset(220, 70),
+		BackgroundColor3 = Color3.fromRGB(150, 30, 26),
+		Text = "TIPPEN!",
+		Font = Enum.Font.SpecialElite,
+		TextSize = 30,
+		TextColor3 = Color3.new(1, 1, 1),
+		AutoLocalize = false,
+		ZIndex = 9,
+		Parent = qteFrame,
+	})
+	create("UICorner", { CornerRadius = UDim.new(0, 8), Parent = qteButton })
+	local qteBarBack = create("Frame", {
+		Position = UDim2.new(0, 20, 1, -38),
+		Size = UDim2.new(1, -40, 0, 18),
+		BackgroundColor3 = Color3.fromRGB(60, 50, 48),
+		BorderSizePixel = 0,
+		ZIndex = 9,
+		Parent = qteFrame,
+	})
+	local qteBar = create("Frame", {
+		Size = UDim2.fromScale(0, 1),
+		BackgroundColor3 = Color3.fromRGB(230, 200, 120),
+		BorderSizePixel = 0,
+		ZIndex = 10,
+		Parent = qteBarBack,
+	})
+	local leaveButton = create("TextButton", {
+		Name = "LeaveHideButton",
+		AnchorPoint = Vector2.new(0.5, 1),
+		Position = UDim2.new(0.5, 0, 1, -70),
+		Size = UDim2.fromOffset(200, 54),
+		BackgroundColor3 = Color3.fromRGB(30, 26, 22),
+		BackgroundTransparency = 0.25,
+		Text = "Rauskommen",
+		Font = Enum.Font.SpecialElite,
+		TextSize = 20,
+		TextColor3 = Color3.fromRGB(240, 220, 180),
+		AutoLocalize = false,
+		Visible = false,
+		ZIndex = 7,
+		Parent = gui,
+	})
+	create("UICorner", { CornerRadius = UDim.new(0, 8), Parent = leaveButton })
 	local function setFade(transparency, duration)
 		TweenService:Create(fade, TweenInfo.new(duration), { BackgroundTransparency = transparency }):Play()
 	end
@@ -610,7 +683,61 @@ function Kapitel2.run()
 			sneakLabel.Visible = false
 		end
 	end)
+	-- Versteck verlassen: E oder Leertaste (am Handy: Knopf "Rauskommen")
+	local leaveHideEvent = remotes:WaitForChild("LeaveHide", 10)
+	local qteEvent = remotes:WaitForChild("Qte", 10)
+	local hiddenNow = false
+	local function leaveHide()
+		if hiddenNow and leaveHideEvent then
+			leaveHideEvent:FireServer()
+		end
+	end
+	leaveButton.Activated:Connect(leaveHide)
+	-- Quick-Time-Event: so oft tippen wie verlangt, bevor die Zeit um ist
+	local qte -- { need, count, deadline }
+	local function qteTap()
+		if not qte then
+			return
+		end
+		qte.count += 1
+		qteBar.Size = UDim2.fromScale(math.clamp(qte.count / qte.need, 0, 1), 1)
+		shakeUntil = os.clock() + 0.15
+		if qte.count >= qte.need then
+			qte = nil
+			qteFrame.Visible = false
+			if qteEvent then
+				qteEvent:FireServer(true)
+			end
+		end
+	end
+	qteButton.Activated:Connect(qteTap)
+	local function startQte(message)
+		qte = { need = message.taps or 10, count = 0, deadline = os.clock() + (message.seconds or 4) }
+		qteTitle.Text = (message.name and message.name ~= "" and (message.name .. " hat dich gepackt!") or "Du wurdest gepackt!") .. "  Schnell tippen (E / Leertaste)!"
+		qteBar.Size = UDim2.fromScale(0, 1)
+		qteFrame.Visible = true
+		shakeUntil = os.clock() + (message.seconds or 4)
+		local mine = qte
+		task.delay(message.seconds or 4, function()
+			if qte == mine then
+				qte = nil
+				qteFrame.Visible = false
+				if qteEvent then
+					qteEvent:FireServer(false)
+				end
+			end
+		end)
+	end
 	UserInputService.InputBegan:Connect(function(input, processed)
+		if input.KeyCode == Enum.KeyCode.E or input.KeyCode == Enum.KeyCode.Space then
+			if qte then
+				qteTap()
+				return
+			elseif hiddenNow then
+				leaveHide()
+				return
+			end
+		end
 		if processed then
 			return
 		end
@@ -745,9 +872,13 @@ function Kapitel2.run()
 			candleDimUntil = 0
 		elseif kind == "hidden" then
 			ownCandleOff = true
-			hint("Versteckt. Sei ganz still … (E: rauskommen)", 5)
+			hiddenNow = true
+			leaveButton.Visible = UserInputService.TouchEnabled
+			hint("Versteckt. Sei ganz still … (E oder Leertaste: rauskommen)", 5)
 		elseif kind == "unhidden" then
 			ownCandleOff = false
+			hiddenNow = false
+			leaveButton.Visible = false
 		elseif kind == "nearScare" then
 			-- er steht direkt vor deinem Versteck
 			local seconds = message.seconds or 3
@@ -776,6 +907,8 @@ function Kapitel2.run()
 			hint(message.text or "Er hat dich gesehen – lauf! (F: Licht aus)", 4)
 		elseif kind == "objectives" then
 			showObjectives(message)
+		elseif kind == "qte" then
+			startQte(message)
 		elseif kind == "redCandle" then
 			lightOff = false
 			hint("Rotes Licht – mehr hast du nicht mehr. (F: an/aus)", 5)
@@ -804,6 +937,8 @@ function Kapitel2.run()
 		elseif kind == "lost" then
 			hint("Er hat dich verloren …", 3)
 		elseif kind == "caught" then
+			hiddenNow = false
+			leaveButton.Visible = false
 			setFade(0, 0.1)
 			chapter.Text = "Er hat dich gefunden …"
 			chapterTitle.Text = ""

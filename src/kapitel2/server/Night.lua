@@ -345,6 +345,7 @@ function Night.run(ctx)
 	local hidden = {} -- Spieler -> Versteck
 	local caught = {} -- Spieler -> true
 	local hidePhase = false
+	local promptsOn = false -- Versteck-Knöpfe gerade an (setPrompts)
 	local LABELS = { Schrank = "Schrank", Tisch = "Unter den Tisch", Vorhang = "Hinter den Vorhang" }
 
 	local function leaveSpot(player, toExit)
@@ -356,6 +357,7 @@ function Night.run(ctx)
 		spot.occupant = nil
 		if spot.promptObject then
 			spot.promptObject.ActionText = "Verstecken"
+			spot.promptObject.Enabled = promptsOn
 		end
 		local root, humanoid = rootOf(player)
 		if root and humanoid then
@@ -381,6 +383,7 @@ function Night.run(ctx)
 		hidden[player] = spot
 		spot.occupant = player
 		spot.promptObject.ActionText = "Rauskommen"
+		spot.promptObject.Enabled = false -- rauskommen: E oder Leertaste (Remote "LeaveHide")
 		humanoid.WalkSpeed = 0
 		humanoid.AutoRotate = false
 		root.Anchored = true
@@ -426,11 +429,20 @@ function Night.run(ctx)
 		end)
 	end
 	local function setPrompts(enabled)
+		promptsOn = enabled
 		for _, spot in spots do
 			if spot.promptObject then
-				spot.promptObject.Enabled = enabled
+				spot.promptObject.Enabled = enabled and not spot.occupant
 			end
 		end
+	end
+	local leaveHideEvent = ctx.remotes:FindFirstChild("LeaveHide")
+	if leaveHideEvent then
+		leaveHideEvent.OnServerEvent:Connect(function(player)
+			if hidden[player] and not caught[player] then
+				leaveSpot(player)
+			end
+		end)
 	end
 
 	-- Sarp
@@ -809,7 +821,7 @@ function Night.run(ctx)
 			axe.Parent = nil
 			giveAxe(player)
 			sfx("doorCreak", axePart.Position, { volume = 0.4, speed = 1.6 })
-			event:FireAllClients({ type = "hint", text = player.DisplayName .. " hat die Axt. Jetzt nach oben zu Tür 1.", seconds = 6 })
+			event:FireAllClients({ type = "hint", text = player.DisplayName .. " hat die Axt. Jetzt nach oben zu Tür 1 – Großmutters Zimmer im langen Flur.", seconds = 7 })
 			pcall(function()
 				-- nach dem Neuspawnen die Axt wieder in die Hand geben
 				player.CharacterAdded:Connect(function()
@@ -822,8 +834,8 @@ function Night.run(ctx)
 		end)
 	end
 
-	-- Tür 1 (oben an der Galerie, vernagelt) mit der Axt aufbrechen
-	local doorOne = Mansion.doorAt(46.8, 54.15, "O")
+	-- Tür 1 (oben im langen Flur: Großmutters Zimmer, vernagelt) mit der Axt aufbrechen
+	local doorOne = Mansion.doorAt(38, 40, "O")
 	local broken = false
 	local function breakDoor(player)
 		if broken or not doorOne then
@@ -1314,8 +1326,9 @@ function Night.run(ctx)
 		for index, player in Players:GetPlayers() do
 			-- (wer schon im Raum steht, bleibt einfach dort)
 			local root = rootOf(player)
-			if not (root and Mansion.inRoom(root.Position, "tuer1", "O")) then
-				bringTo(player, point(45.6 + index * 0.9, 51.5, "O"), point(45.4, 44, "O"))
+			local room = Mansion.escape
+			if room and not (root and Mansion.inRoom(root.Position, "tuer1", "O")) then
+				bringTo(player, room.checkpoint + Vector3.new((index - 1) * 1.2 - 0.6, 0, 0), room.checkpointLook)
 			end
 		end
 		ctx.setMovement(true)

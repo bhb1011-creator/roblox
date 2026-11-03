@@ -3,7 +3,10 @@
 --  1. Richard wartet am Pult. Er erklärt, was zu tun ist (ohne zu verraten, was mit seiner
 --     Familie los ist) und gibt jedem eine rote Kerze. Taschenlampe gibt es keine mehr.
 --  2. Man sucht Chemikalien und Schießpulver (je ein ausgeloster Platz, Mansion.escape.items).
---     Die Familie taucht auf, kommt auf einen zu und macht Schaden.
+--     Sarp läuft dabei durchs ganze Haus (Erdgeschoss, Keller, oben) und ist tödlich: Er sieht
+--     das rote Licht, hört, wer nicht schleicht. Der Raum hinter Tür 1 ist sicher.
+--     Die Familie taucht auf und packt einen (höchstens 10 Sekunden lang in der Nähe):
+--     Quick-Time-Event – schnell tippen, um sich loszureißen, sonst gibt es Schaden.
 --  3. Am Pult ablegen, zusammenbauen, an den Safe, Lunte mit der Kerze anzünden, verstecken.
 --  4. Explosion: der Safe ist offen, die Kerzen sind weg. Sarp hat es gehört, kommt hoch
 --     und durchsucht den Raum (Schrank, hinter dem Bett, Truhe).
@@ -12,7 +15,6 @@
 --  6. Der Schlüssel öffnet das Regal vor dem Geheimgang. Wer den Ritualraum betritt: schwarz.
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local RunService = game:GetService("RunService")
 
 local Script = require(ReplicatedStorage.Shared.Kapitel2Dialogue)
 local Mansion = require(script.Parent.Mansion)
@@ -21,14 +23,18 @@ local SarpStage2 = require(script.Parent.SarpStage2)
 
 local Escape = {}
 
-local FAMILY_DAMAGE = 20 -- pro Treffer der Familie
-local FAMILY_SPEED = 5.5 -- etwas langsamer als man läuft (8)
+local FAMILY_DAMAGE = 25 -- wenn man sich nicht losreißt
+local FAMILY_SPEED = 6 -- etwas langsamer als man läuft (8)
+local FAMILY_TIME = 10 -- so lange bleibt ein Familienmitglied höchstens in der Nähe
+local QTE_TAPS, QTE_SECONDS = 10, 4 -- so oft tippen, so viel Zeit
 local FUSE_TIME = 5 -- Sekunden zum Verstecken nach dem Anzünden
 local BLAST_DAMAGE = 35 -- wer nicht versteckt ist und nah am Safe steht
 local SEARCH_SPEED = 4.2
+local RUSH_SPEED = 6.5 -- nach der Explosion rennt er zum Zimmer
 local PATROL_SPEED = 3.4
 local CHASE_SPEED = 7.2
-local HEAR_DISTANCE = 20 -- so weit hört Sarp Spieler, die nicht schleichen
+local HEAR_DISTANCE = 16 -- so weit hört Sarp Spieler, die nicht schleichen
+local LIGHT_SEE_DISTANCE = 20 -- das rote Licht sieht er von weitem
 local SEE_DISTANCE = 9 -- im Dunkeln sieht er einen nur aus der Nähe
 local SNEAK_SEE_DISTANCE = 6 -- wer schleicht, fällt noch später auf
 local CATCH_DISTANCE = 3.2
@@ -90,7 +96,7 @@ function Escape.run(kit)
 	------------------------------------------------------------------ Neustart-Punkt
 	local function checkpointFrame(index)
 		local feet = room.checkpoint + Vector3.new((index - 1) * 1.2 - 0.6, 0, 0)
-		local look = point(45.4, 43, O)
+		local look = room.checkpointLook
 		return CFrame.lookAt(feet, Vector3.new(look.X, feet.Y, look.Z))
 	end
 	ctx.setCheckpoint(checkpointFrame)
@@ -110,6 +116,7 @@ function Escape.run(kit)
 		spot.occupant = nil
 		if spot.promptObject then
 			spot.promptObject.ActionText = "Verstecken"
+			spot.promptObject.Enabled = true
 		end
 		local root, humanoid = rootOf(player)
 		if root and humanoid then
@@ -135,6 +142,7 @@ function Escape.run(kit)
 		hidden[player] = spot
 		spot.occupant = player
 		spot.promptObject.ActionText = "Rauskommen"
+		spot.promptObject.Enabled = false -- rauskommen: E oder Leertaste (Remote "LeaveHide")
 		humanoid.WalkSpeed = 0
 		humanoid.AutoRotate = false
 		root.Anchored = true
@@ -173,6 +181,15 @@ function Escape.run(kit)
 				leaveSpot(player)
 			elseif not hidden[player] then
 				enterSpot(player, spot)
+			end
+		end)
+	end
+
+	local leaveHideEvent = remotes:FindFirstChild("LeaveHide")
+	if leaveHideEvent then
+		leaveHideEvent.OnServerEvent:Connect(function(player)
+			if hidden[player] and not caught[player] then
+				leaveSpot(player)
 			end
 		end)
 	end
@@ -355,17 +372,154 @@ function Escape.run(kit)
 		event:FireAllClients({ type = "objectives", title = "Für den Safe", items = list })
 	end
 
+	------------------------------------------------------------------ Sarp: Rundgang, bemerken, verfolgen
+	local E, K = Mansion.FLOORS.E, Mansion.FLOORS.K
+	local function route(list)
+		local out = {}
+		for _, p in list do
+			table.insert(out, point(p[1], p[2], p[3]))
+		end
+		return out
+	end
+	-- Während der Suche: durchs ganze Haus (Erdgeschoss, Keller, oben im langen Flur)
+	local SEARCH_ROUTE = route({
+		{ 48, 66, E }, { 51.4, 58, E }, { 51.4, 50, E }, { 46, 46, E }, { 44, 40, E }, { 48, 37, E }, { 51.6, 35.6, E },
+		{ 52.1, 33.5, E }, { 52.1, 22.6, K }, { 48, 26, K }, { 43, 31, K }, { 42, 34.5, K }, { 42, 38, K }, { 54, 38, K },
+		{ 61, 33, K }, { 54, 38, K }, { 42, 38, K }, { 34, 40, K }, { 26, 47, K }, { 34, 40, K }, { 42, 38, K }, { 42, 34.5, K },
+		{ 43, 31, K }, { 48, 26, K }, { 52.1, 22.6, K }, { 52.1, 33.5, E }, { 48, 37, E }, { 44, 40, E }, { 46, 46, E },
+		{ 51.4, 50, E }, { 51.4, 58, E }, { 48, 66, E }, { 43.8, 69.3, E }, { 43.7, 68.2, E }, { 43.7, 59.3, O }, { 50, 57, O },
+		{ 54.25, 56.3, O }, { 58, 56.3, O }, { 66, 54.5, O }, { 68, 51, O }, { 64.6, 44, O }, { 63, 37.6, O }, { 46, 37, O },
+		{ 40, 37, O }, { 46, 37, O }, { 63, 37.6, O }, { 64.6, 44, O }, { 68, 51, O }, { 66, 54.5, O }, { 58, 56.3, O },
+		{ 54.25, 56.3, O }, { 50, 57, O }, { 43.7, 59.3, O }, { 43.7, 68.2, E }, { 43.8, 69.3, E },
+	})
+	-- Beim Schleichen am Ende: nur im Erdgeschoss (Halle, Flur, Küche), wo der Kerzenweg langführt
+	local SNEAK_ROUTE = route({
+		{ 48, 66, E }, { 51.4, 58, E }, { 51.4, 50, E }, { 46, 46, E }, { 44, 40, E }, { 48, 37, E }, { 51, 36.5, E },
+		{ 48, 37, E }, { 44, 40, E }, { 46, 46, E }, { 51.4, 50, E }, { 51.4, 58, E },
+	})
+	local function patrolPhase()
+		return phase == "search" or phase == "bomb" or phase == "sneak"
+	end
+	-- Bemerkt er diesen Spieler? Im Raum hinter Tür 1 ist man sicher.
+	local function notices(player)
+		local root, humanoid = rootOf(player)
+		local sarpRoot = sarp and sarp:FindFirstChild("HumanoidRootPart")
+		if not (root and humanoid and sarpRoot) or humanoid.Health <= 0 or hidden[player] or caught[player] then
+			return false
+		end
+		if Mansion.inRoom(root.Position, "tuer1", "O") then
+			return false
+		end
+		local feet = Wagners.ground(sarp)
+		if math.abs(root.Position.Y - feet.Y - 3) > 7 then
+			return false
+		end
+		local distance = (root.Position - sarpRoot.Position).Magnitude
+		local sneaking = player:GetAttribute("Sneaking") == true
+		local moving = false
+		pcall(function()
+			moving = humanoid.MoveDirection.Magnitude > 0.1
+		end)
+		if moving and not sneaking and distance < HEAR_DISTANCE then
+			return true -- gehört
+		end
+		local lightOn = player:GetAttribute("CandleMode") == "red" and not player:GetAttribute("LightOff")
+		local limit = lightOn and LIGHT_SEE_DISTANCE or (sneaking and SNEAK_SEE_DISTANCE or SEE_DISTANCE)
+		if distance < limit then
+			local eye = sarpRoot.Position + Vector3.new(0, 2.5, 0)
+			return kit.clearLine(eye, root.Position, { sarp, player.Character })
+		end
+		return false
+	end
+	local function chase(player)
+		event:FireClient(player, { type = "chased", text = "Er hat dich bemerkt – lauf! (Sicher bist du nur in Großmutters Zimmer)" })
+		kit.whisper(Script.SARP_WHISPERS[math.random(1, #Script.SARP_WHISPERS)])
+		local lostSince
+		local giveUp = os.clock() + 25
+		while patrolPhase() and os.clock() < giveUp do
+			local root = rootOf(player)
+			if not root or not alive(player) or caught[player] or hidden[player] then
+				break
+			end
+			if notices(player) then
+				lostSince = nil
+			else
+				lostSince = lostSince or os.clock()
+				if os.clock() - lostSince > 2.5 then
+					break
+				end
+			end
+			local feet = Wagners.ground(sarp)
+			local target = root.Position - Vector3.new(0, footOffset(player), 0)
+			if (target - feet).Magnitude <= CATCH_DISTANCE and not Mansion.inRoom(root.Position, "tuer1", "O") then
+				catchPlayer(player, 2.5)
+				break
+			end
+			kit.sarpWalk({ kit.nextWaypoint(feet, target) }, CHASE_SPEED, function()
+				return not patrolPhase() or (lostSince ~= nil and os.clock() - lostSince > 0.5)
+			end)
+		end
+		event:FireClient(player, { type = "lost" })
+		SarpStage2.look(sarp, 0.5, 0)
+		task.wait(1)
+		SarpStage2.look(sarp, -0.5, 0)
+		task.wait(1)
+		SarpStage2.look(sarp, 0, 0)
+	end
+	local patrolRunning = false
+	local function sarpPatrol(path)
+		if not sarp then
+			return
+		end
+		patrolRunning = true
+		Wagners.place(sarp, path[1], path[2])
+		local index = 1
+		while patrolPhase() do
+			local target = path[index % #path + 1]
+			local noticed
+			local reached = kit.sarpWalk({ target }, PATROL_SPEED, function()
+				if not patrolPhase() then
+					return true
+				end
+				for _, player in Players:GetPlayers() do
+					if notices(player) then
+						noticed = player
+						return true
+					end
+				end
+				return false
+			end)
+			if noticed and patrolPhase() then
+				chase(noticed)
+				-- weiter beim nächsten Punkt seines Rundgangs
+				local feet = Wagners.ground(sarp)
+				local nearest, nearestDistance = index, math.huge
+				for i, p in path do
+					local d = (p - feet).Magnitude
+					if d < nearestDistance then
+						nearest, nearestDistance = i, d
+					end
+				end
+				index = nearest
+			elseif reached then
+				index = index % #path + 1
+			end
+		end
+		Wagners.place(sarp, kit.away, ctx.facing)
+		patrolRunning = false
+	end
+
 	------------------------------------------------------------------ 1. Richard im Raum
 	local mr = kit.mr
 	if mr then
-		Wagners.place(mr, point(44.6, 48.9, O), point(46.8, 52, O))
+		Wagners.place(mr, room.richard, room.richardLook)
 		mr:SetAttribute("Look", "player")
 	end
 	ctx.setMovement(true)
 	ctx.actions.redCandles = function()
 		ctx.setCandleMode("red")
 		event:FireAllClients({ type = "redCandle" })
-		sfx("doorCreak", point(44.6, 48.9, O + 3), { volume = 0.3, speed = 2 })
+		sfx("doorCreak", room.richard + Vector3.new(0, 3, 0), { volume = 0.3, speed = 2 })
 	end
 	ctx.runScript(Script.ESCAPE_INTRO, "Flucht")
 	if mr then
@@ -377,6 +531,7 @@ function Escape.run(kit)
 
 	------------------------------------------------------------------ 2. Suchen
 	phase = "search"
+	remotes:SetAttribute("SneakAllowed", true)
 	local itemFolder = Instance.new("Folder")
 	itemFolder.Name = "EscapeItems"
 	itemFolder.Parent = Mansion.model or workspace
@@ -434,18 +589,52 @@ function Escape.run(kit)
 		caught[player] = nil
 	end)
 
-	-- Die Familie: taucht außer Sicht auf, kommt auf einen zu und schlägt zu (dann weg)
+	-- Sarp läuft ab jetzt durchs ganze Haus (Hauptgefahr)
+	task.spawn(sarpPatrol, SEARCH_ROUTE)
+	hint("Sarp ist im Haus. Licht aus (F) und Schleichen (C) machen dich unauffälliger.", 7)
+
+	-- Die Familie: taucht außer Sicht auf, kommt auf einen zu und packt einen.
+	-- Dann Quick-Time-Event: schnell tippen, um sich loszureißen (sonst Schaden).
+	-- Länger als FAMILY_TIME Sekunden bleibt niemand in der Nähe.
 	local members = {}
 	for name, model in kit.members or {} do
 		if model then
 			table.insert(members, { name = name, model = model })
 		end
 	end
+	local qteEvent = remotes:FindFirstChild("Qte")
+	local qteResult = {}
+	if qteEvent then
+		qteEvent.OnServerEvent:Connect(function(player, freed)
+			qteResult[player] = freed == true
+		end)
+	end
+	-- gepackt: man kann sich nicht bewegen, bis man sich losgerissen hat (oder die Zeit um ist)
+	local function grab(player, member)
+		local _, humanoid = rootOf(player)
+		if not humanoid then
+			return true
+		end
+		qteResult[player] = nil
+		player:SetAttribute("Grabbed", true)
+		humanoid.WalkSpeed = 0
+		event:FireClient(player, { type = "qte", taps = QTE_TAPS, seconds = QTE_SECONDS, name = Script.NAMES[member.name] or "" })
+		local deadline = os.clock() + QTE_SECONDS + 1.5
+		while qteResult[player] == nil and os.clock() < deadline do
+			task.wait(0.1)
+		end
+		local freed = qteResult[player] == true
+		player:SetAttribute("Grabbed", nil)
+		if humanoid.Health > 0 then
+			humanoid.WalkSpeed = speedFor(player)
+		end
+		return freed
+	end
 	local function sameFloorPlayers(position)
 		local list = {}
 		for _, player in Players:GetPlayers() do
 			local root = rootOf(player)
-			if root and alive(player) and not hidden[player] and math.abs(root.Position.Y - position.Y - 3) < 7 then
+			if root and alive(player) and not hidden[player] and not caught[player] and math.abs(root.Position.Y - position.Y - 3) < 7 then
 				table.insert(list, { player = player, root = root, distance = (root.Position - position).Magnitude })
 			end
 		end
@@ -455,7 +644,7 @@ function Escape.run(kit)
 		return list
 	end
 	local function familyHunt()
-		task.wait(15)
+		task.wait(20)
 		local lastSpot
 		while phase == "search" or phase == "bomb" do
 			if #members == 0 then
@@ -468,8 +657,8 @@ function Escape.run(kit)
 				local candidate = kit.APPEAR[math.random(1, #kit.APPEAR)]
 				local spot = point(candidate[1], candidate[2], Mansion.FLOORS[candidate[3]])
 				local near = sameFloorPlayers(spot)[1]
-				-- nicht im Raum hinter Tür 1 (dort ist Richard)
-				if candidate ~= lastSpot and near and near.distance > 14 and near.distance < 40 and not Mansion.inRoom(near.root.Position, "tuer1", "O") and not kit.anyoneSees(spot, model) then
+				-- nicht im Raum hinter Tür 1 (dort ist man sicher)
+				if candidate ~= lastSpot and near and near.distance > 12 and near.distance < 30 and not Mansion.inRoom(near.root.Position, "tuer1", "O") and not kit.anyoneSees(spot, model) then
 					feet, lastSpot = spot, candidate
 					break
 				end
@@ -479,16 +668,16 @@ function Escape.run(kit)
 				local target = sameFloorPlayers(feet)[1]
 				Wagners.place(model, feet, target and Vector3.new(target.root.Position.X, feet.Y, target.root.Position.Z) or feet + Vector3.new(0, 0, 1))
 				model:SetAttribute("Look", "player")
-				kit.fade(model, 1, 0, 1)
+				kit.fade(model, 1, 0, 0.8)
 				local spoke = false
-				local giveUp = os.clock() + 25
+				local giveUp = os.clock() + FAMILY_TIME
 				while os.clock() < giveUp and (phase == "search" or phase == "bomb") do
 					local position = Wagners.ground(model)
 					local nearest = sameFloorPlayers(position)[1]
-					if not nearest or nearest.distance > 40 or Mansion.inRoom(nearest.root.Position, "tuer1", "O") then
+					if not nearest or nearest.distance > 35 or Mansion.inRoom(nearest.root.Position, "tuer1", "O") then
 						break
 					end
-					if not spoke and nearest.distance < 26 then
+					if not spoke and nearest.distance < 24 then
 						spoke = true
 						local lines = Script.FAMILY_ANGRY[member.name]
 						if lines then
@@ -496,16 +685,18 @@ function Escape.run(kit)
 						end
 					end
 					local targetFeet = nearest.root.Position - Vector3.new(0, footOffset(nearest.player), 0)
-					if (targetFeet - position).Magnitude <= CATCH_DISTANCE then
-						-- zuschlagen, dann verschwinden
+					if (targetFeet - position).Magnitude <= CATCH_DISTANCE and not nearest.player:GetAttribute("Grabbed") then
+						-- packen: Quick-Time-Event
 						Wagners.place(model, position, targetFeet)
+						sfx("jumpscare", nearest.root.Position, { volume = 0.9, maxDistance = 40, speed = 1.5 })
+						local freed = grab(nearest.player, member)
 						local _, humanoid = rootOf(nearest.player)
-						if humanoid then
+						if freed then
+							event:FireClient(nearest.player, { type = "hint", text = "Losgerissen!", seconds = 2 })
+						elseif humanoid then
 							humanoid:TakeDamage(FAMILY_DAMAGE)
+							event:FireClient(nearest.player, { type = "hurt", health = humanoid.Health })
 						end
-						sfx("jumpscare", nearest.root.Position, { volume = 1.1, maxDistance = 40, speed = 1.4 })
-						event:FireClient(nearest.player, { type = "hurt", health = humanoid and humanoid.Health })
-						task.wait(0.3)
 						break
 					end
 					local waypoint = kit.nextWaypoint(position, targetFeet)
@@ -515,23 +706,14 @@ function Escape.run(kit)
 					ctx.walkPath(model, { { at = waypoint } }, FAMILY_SPEED, kit.steps)
 				end
 				model:SetAttribute("Look", "down")
-				kit.fade(model, 0, 1, 0.7)
+				kit.fade(model, 0, 1, 0.6)
 				Wagners.place(model, ctx.hiddenSpot, ctx.facing)
 				kit.setFade(model, 0)
 			end
-			task.wait(math.random(10, 18))
+			task.wait(math.random(12, 20))
 		end
 	end
 	task.spawn(familyHunt)
-	-- Sarp ist weg, man hört ihn nur manchmal von unten
-	task.spawn(function()
-		while phase == "search" or phase == "bomb" do
-			task.wait(math.random(30, 50))
-			if phase == "search" or phase == "bomb" then
-				sfx("sarpStep", point(47, 4, Mansion.FLOORS.K + 1), { count = 3, interval = 0.8, volume = 1.4, maxDistance = 400 })
-			end
-		end
-	end)
 
 	------------------------------------------------------------------ 3. Pult und Safe
 	local pultPart = Instance.new("Part")
@@ -690,7 +872,7 @@ function Escape.run(kit)
 		line("lit")
 		if mr then
 			mr:SetAttribute("Look", "down")
-			ctx.walkPath(mr, { { at = point(46.8, 53.5, O) }, { at = point(47.5, 57, O) } }, 9, kit.steps)
+			ctx.walkPath(mr, { { at = room.sarpEnter }, { at = room.doorOutside } }, 9, kit.steps)
 			Wagners.place(mr, ctx.hiddenSpot, ctx.facing)
 		end
 	end)
@@ -789,7 +971,6 @@ function Escape.run(kit)
 	task.spawn(line, "heHeard")
 	hint("Versteck dich! Er kommt!", 5)
 	task.wait(3)
-	local E = Mansion.FLOORS.E
 	local function sarpSays(list)
 		kit.whisper(list[math.random(1, #list)])
 	end
@@ -814,12 +995,17 @@ function Escape.run(kit)
 			end
 		end
 	end
+	-- (der Rundgang von vorhin ist vorbei, bevor er hochkommt)
+	local stopWait = os.clock()
+	while patrolRunning and os.clock() - stopWait < 6 do
+		task.wait(0.1)
+	end
 	if sarp then
-		Wagners.place(sarp, point(48.5, 67, E), point(44, 69, E))
+		Wagners.place(sarp, room.sarpStart, room.sarpApproach[1])
 		sarpSays(Script.SARP_ALERT)
-		kit.sarpWalk({ point(43.8, 69.3, E), point(43.7, 68.2, E), point(43.7, 59.3, O), point(46.8, 57, O), point(46.8, 54.6, O) }, SEARCH_SPEED)
+		kit.sarpWalk(room.sarpApproach, RUSH_SPEED) -- wütend: er rennt hoch
 		searchingRoom = true
-		kit.sarpWalk({ point(46.6, 51.5, O) }, SEARCH_SPEED, interruptedInRoom)
+		kit.sarpWalk({ room.sarpEnter }, SEARCH_SPEED, interruptedInRoom)
 		catchVisibleInRoom()
 		-- die drei Verstecke in zufälliger Reihenfolge
 		local order = table.clone(room.hideSpots)
@@ -850,7 +1036,12 @@ function Escape.run(kit)
 		end
 		searchingRoom = false
 		kit.whisper(Script.SARP_LEAVES)
-		kit.sarpWalk({ point(46.8, 54.6, O), point(46.8, 57, O), point(43.7, 59.3, O), point(43.7, 68.2, E), point(48, 66, E) }, SEARCH_SPEED)
+		local back = { room.sarpEnter }
+		for i = #room.sarpApproach, 1, -1 do
+			table.insert(back, room.sarpApproach[i])
+		end
+		table.insert(back, room.sarpStart)
+		kit.sarpWalk(back, SEARCH_SPEED)
 	end
 	-- wer erwischt wurde, macht im Raum weiter
 	for _, player in Players:GetPlayers() do
@@ -976,110 +1167,8 @@ function Escape.run(kit)
 		end)
 	end
 
-	-- Sarp läuft unten herum: hört, wer nicht schleicht; sieht im Dunkeln nur aus der Nähe
-	local PATROL = {
-		point(48, 66, E), point(51.4, 58, E), point(51.4, 50, E), point(46, 46, E), point(44, 40, E),
-		point(48, 37, E), point(51, 36.5, E), point(48, 37, E), point(44, 40, E), point(46, 46, E), point(51.4, 50, E), point(51.4, 58, E),
-	}
-	local function notices(player)
-		local root, humanoid = rootOf(player)
-		local sarpRoot = sarp and sarp:FindFirstChild("HumanoidRootPart")
-		if not (root and humanoid and sarpRoot) or humanoid.Health <= 0 or hidden[player] or caught[player] then
-			return false
-		end
-		local feet = Wagners.ground(sarp)
-		if math.abs(root.Position.Y - feet.Y - 3) > 7 then
-			return false
-		end
-		local distance = (root.Position - sarpRoot.Position).Magnitude
-		local sneaking = player:GetAttribute("Sneaking") == true
-		local moving = false
-		pcall(function()
-			moving = humanoid.MoveDirection.Magnitude > 0.1
-		end)
-		if moving and not sneaking and distance < HEAR_DISTANCE then
-			return true -- gehört
-		end
-		if distance < (sneaking and SNEAK_SEE_DISTANCE or SEE_DISTANCE) then
-			local eye = sarpRoot.Position + Vector3.new(0, 2.5, 0)
-			return kit.clearLine(eye, root.Position, { sarp, player.Character })
-		end
-		return false
-	end
-	local function chase(player)
-		event:FireClient(player, { type = "chased", text = "Er hat dich bemerkt – lauf!" })
-		kit.whisper(Script.SARP_WHISPERS[math.random(1, #Script.SARP_WHISPERS)])
-		local lostSince
-		local giveUp = os.clock() + 25
-		while phase == "sneak" and os.clock() < giveUp do
-			local root = rootOf(player)
-			if not root or not alive(player) or caught[player] or hidden[player] then
-				break
-			end
-			if notices(player) then
-				lostSince = nil
-			else
-				lostSince = lostSince or os.clock()
-				if os.clock() - lostSince > 2.5 then
-					break
-				end
-			end
-			local feet = Wagners.ground(sarp)
-			local target = root.Position - Vector3.new(0, footOffset(player), 0)
-			if (target - feet).Magnitude <= CATCH_DISTANCE then
-				catchPlayer(player, 2.5)
-				break
-			end
-			kit.sarpWalk({ kit.nextWaypoint(feet, target) }, CHASE_SPEED, function()
-				return lostSince ~= nil and os.clock() - lostSince > 0.5
-			end)
-		end
-		event:FireClient(player, { type = "lost" })
-		SarpStage2.look(sarp, 0.5, 0)
-		task.wait(1)
-		SarpStage2.look(sarp, -0.5, 0)
-		task.wait(1)
-		SarpStage2.look(sarp, 0, 0)
-	end
-	local function sarpPatrol()
-		if not sarp then
-			return
-		end
-		Wagners.place(sarp, PATROL[1], PATROL[2])
-		local index = 1
-		while phase == "sneak" do
-			local target = PATROL[index % #PATROL + 1]
-			local noticed
-			local reached = kit.sarpWalk({ target }, PATROL_SPEED, function()
-				if phase ~= "sneak" then
-					return true
-				end
-				for _, player in Players:GetPlayers() do
-					if notices(player) then
-						noticed = player
-						return true
-					end
-				end
-				return false
-			end)
-			if noticed then
-				chase(noticed)
-				local feet = Wagners.ground(sarp)
-				local nearest, nearestDistance = index, math.huge
-				for i, p in PATROL do
-					local d = (p - feet).Magnitude
-					if d < nearestDistance then
-						nearest, nearestDistance = i, d
-					end
-				end
-				index = nearest
-			elseif reached then
-				index = index % #PATROL + 1
-			end
-		end
-		Wagners.place(sarp, kit.away, ctx.facing)
-	end
-	task.spawn(sarpPatrol)
+	-- Im Schleichen läuft Sarp nur im Erdgeschoss (dort, wo der Kerzenweg langführt)
+	task.spawn(sarpPatrol, SNEAK_ROUTE)
 
 	------------------------------------------------------------------ 7. Ritualraum: schwarz
 	while true do
