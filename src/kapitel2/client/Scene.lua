@@ -288,10 +288,10 @@ function Kapitel2.run()
 		Name = "LeaveHideButton",
 		AnchorPoint = Vector2.new(0.5, 1),
 		Position = UDim2.new(0.5, 0, 1, -70),
-		Size = UDim2.fromOffset(200, 54),
+		Size = UDim2.fromOffset(240, 54),
 		BackgroundColor3 = Color3.fromRGB(30, 26, 22),
 		BackgroundTransparency = 0.25,
-		Text = "Rauskommen",
+		Text = UserInputService.TouchEnabled and "Rauskommen" or "[E]  Rauskommen",
 		Font = Enum.Font.SpecialElite,
 		TextSize = 20,
 		TextColor3 = Color3.fromRGB(240, 220, 180),
@@ -301,6 +301,90 @@ function Kapitel2.run()
 		Parent = gui,
 	})
 	create("UICorner", { CornerRadius = UDim.new(0, 8), Parent = leaveButton })
+	create("UIStroke", { Color = Color3.fromRGB(200, 170, 120), Thickness = 1.5, Parent = leaveButton })
+
+	-- Herzen oben rechts (3 fürs ganze Kapitel; der Server zählt sie im Attribut "Hearts")
+	local heartsLabel = create("TextLabel", {
+		Name = "Hearts",
+		AnchorPoint = Vector2.new(1, 0),
+		Position = UDim2.new(1, -20, 0, 16),
+		Size = UDim2.fromOffset(160, 40),
+		BackgroundTransparency = 1,
+		Font = Enum.Font.GothamBold,
+		Text = "",
+		TextSize = 34,
+		TextXAlignment = Enum.TextXAlignment.Right,
+		TextColor3 = Color3.fromRGB(210, 40, 40),
+		TextStrokeTransparency = 0.5,
+		AutoLocalize = false,
+		ZIndex = 7,
+		Parent = gui,
+	})
+	local function showHearts()
+		local hearts = player:GetAttribute("Hearts")
+		if hearts == nil then
+			heartsLabel.Text = ""
+			return
+		end
+		heartsLabel.Text = string.rep("♥", hearts) .. string.rep("♡", math.max(3 - hearts, 0))
+	end
+	player:GetAttributeChangedSignal("Hearts"):Connect(showHearts)
+	showHearts()
+
+	-- Game Over: schwarz, "Du wurdest getötet", Knopf "Nochmal versuchen"
+	local gameOverFrame = create("Frame", {
+		Name = "GameOver",
+		Size = UDim2.fromScale(1, 1),
+		BackgroundColor3 = Color3.fromRGB(8, 0, 0),
+		BackgroundTransparency = 1,
+		BorderSizePixel = 0,
+		Visible = false,
+		ZIndex = 20,
+		Parent = gui,
+	})
+	local gameOverTitle = create("TextLabel", {
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.4),
+		Size = UDim2.new(0.9, 0, 0, 70),
+		BackgroundTransparency = 1,
+		Font = Enum.Font.SpecialElite,
+		Text = "GAME OVER",
+		TextSize = 64,
+		TextColor3 = Color3.fromRGB(190, 20, 20),
+		TextTransparency = 1,
+		AutoLocalize = false,
+		ZIndex = 21,
+		Parent = gameOverFrame,
+	})
+	local gameOverText = create("TextLabel", {
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.5),
+		Size = UDim2.new(0.9, 0, 0, 40),
+		BackgroundTransparency = 1,
+		Font = Enum.Font.SpecialElite,
+		Text = "Du wurdest getötet.",
+		TextSize = 28,
+		TextColor3 = Color3.fromRGB(220, 205, 190),
+		TextTransparency = 1,
+		AutoLocalize = false,
+		ZIndex = 21,
+		Parent = gameOverFrame,
+	})
+	local retryButton = create("TextButton", {
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.64),
+		Size = UDim2.fromOffset(260, 60),
+		BackgroundColor3 = Color3.fromRGB(60, 14, 12),
+		Text = "Nochmal versuchen",
+		Font = Enum.Font.SpecialElite,
+		TextSize = 24,
+		TextColor3 = Color3.fromRGB(240, 220, 200),
+		AutoLocalize = false,
+		Visible = false,
+		ZIndex = 21,
+		Parent = gameOverFrame,
+	})
+	create("UICorner", { CornerRadius = UDim.new(0, 8), Parent = retryButton })
 	local function setFade(transparency, duration)
 		TweenService:Create(fade, TweenInfo.new(duration), { BackgroundTransparency = transparency }):Play()
 	end
@@ -693,6 +777,13 @@ function Kapitel2.run()
 		end
 	end
 	leaveButton.Activated:Connect(leaveHide)
+	local restartEvent = remotes:WaitForChild("Restart", 10)
+	retryButton.Activated:Connect(function()
+		retryButton.Visible = false
+		if restartEvent then
+			restartEvent:FireServer()
+		end
+	end)
 	-- Quick-Time-Event: so oft tippen wie verlangt, bevor die Zeit um ist
 	local qte -- { need, count, deadline }
 	local function qteTap()
@@ -873,7 +964,7 @@ function Kapitel2.run()
 		elseif kind == "hidden" then
 			ownCandleOff = true
 			hiddenNow = true
-			leaveButton.Visible = UserInputService.TouchEnabled
+			leaveButton.Visible = true
 			hint("Versteckt. Sei ganz still … (E oder Leertaste: rauskommen)", 5)
 		elseif kind == "unhidden" then
 			ownCandleOff = false
@@ -909,6 +1000,32 @@ function Kapitel2.run()
 			showObjectives(message)
 		elseif kind == "qte" then
 			startQte(message)
+		elseif kind == "heartLost" then
+			-- ein Herz weg: rot aufblitzen, die Herzen kurz groß
+			scareFlash.BackgroundTransparency = 0.25
+			TweenService:Create(scareFlash, TweenInfo.new(0.9), { BackgroundTransparency = 1 }):Play()
+			heartsLabel.TextSize = 46
+			TweenService:Create(heartsLabel, TweenInfo.new(0.6), { TextSize = 34 }):Play()
+			if (message.hearts or 0) > 0 then
+				hint(message.hearts == 1 and "Nur noch ein Herz …" or ("Noch " .. message.hearts .. " Herzen."), 3)
+			end
+		elseif kind == "gameOver" then
+			qte = nil
+			qteFrame.Visible = false
+			hiddenNow = false
+			leaveButton.Visible = false
+			gameOverFrame.Visible = true
+			gameOverFrame.BackgroundTransparency = 1
+			TweenService:Create(gameOverFrame, TweenInfo.new(1.5), { BackgroundTransparency = 0 }):Play()
+			task.delay(1, function()
+				TweenService:Create(gameOverTitle, TweenInfo.new(1.5), { TextTransparency = 0 }):Play()
+				TweenService:Create(gameOverText, TweenInfo.new(2), { TextTransparency = 0 }):Play()
+			end)
+			task.delay(3.5, function()
+				retryButton.Visible = true
+				UserInputService.MouseBehavior = Enum.MouseBehavior.Default
+				UserInputService.MouseIconEnabled = true
+			end)
 		elseif kind == "redCandle" then
 			lightOff = false
 			hint("Rotes Licht – mehr hast du nicht mehr. (F: an/aus)", 5)
@@ -943,6 +1060,16 @@ function Kapitel2.run()
 			chapter.Text = "Er hat dich gefunden …"
 			chapterTitle.Text = ""
 			showText(chapter, true, 0.8)
+		elseif kind == "retry" and player:GetAttribute("GameOver") and not message.restart then
+			-- (Game Over bleibt stehen, bis man "Nochmal versuchen" drückt)
+		elseif kind == "retry" and gameOverFrame.Visible then
+			gameOverFrame.Visible = false
+			retryButton.Visible = false
+			gameOverTitle.TextTransparency = 1
+			gameOverText.TextTransparency = 1
+			camera.CameraType = Enum.CameraType.Custom
+			ownCandleOff = false
+			setFade(1, 1.2)
 		elseif kind == "retry" then
 			camera.CameraType = Enum.CameraType.Custom
 			ownCandleOff = false
@@ -1029,7 +1156,7 @@ function Kapitel2.run()
 		end
 	end)
 	RunService:BindToRenderStep("Kapitel2Mouse", Enum.RenderPriority.Camera.Value + 1, function()
-		if Choices.isChoosing() then
+		if Choices.isChoosing() or retryButton.Visible then
 			UserInputService.MouseBehavior = Enum.MouseBehavior.Default
 			UserInputService.MouseIconEnabled = true
 		elseif UserInputService.MouseIconEnabled then

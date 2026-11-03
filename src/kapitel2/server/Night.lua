@@ -534,6 +534,9 @@ function Night.run(ctx)
 		task.wait(1.6)
 		event:FireClient(player, { type = "caught" })
 		SarpStage2.look(sarp, 0, 0)
+		if ctx.loseHeart then
+			ctx.loseHeart(player, "gefunden")
+		end
 	end
 
 	local function allCaught()
@@ -676,7 +679,7 @@ function Night.run(ctx)
 		for index, player in Players:GetPlayers() do
 			caught[player] = nil
 			local root, humanoid = rootOf(player)
-			if root and humanoid then
+			if root and humanoid and not player:GetAttribute("GameOver") then
 				root.Anchored = false
 				humanoid.PlatformStand = false
 				humanoid.AutoRotate = true
@@ -939,7 +942,7 @@ function Night.run(ctx)
 		local root = rootOf(player)
 		local sarpRoot = sarp and sarp:FindFirstChild("HumanoidRootPart")
 		local _, humanoid = rootOf(player)
-		if not (root and sarpRoot and humanoid) or humanoid.Health <= 0 or hidden[player] then
+		if not (root and sarpRoot and humanoid) or humanoid.Health <= 0 or hidden[player] or player:GetAttribute("GameOver") then
 			return false
 		end
 		local eye = sarpRoot.Position + Vector3.new(0, 2.5, 0)
@@ -1016,10 +1019,15 @@ function Night.run(ctx)
 			if distance <= HIT_DISTANCE then
 				Wagners.place(sarp, feet, target)
 				if os.clock() > (hitCooldown[player] or 0) then
-					hitCooldown[player] = os.clock() + 1.3
-					humanoid:TakeDamage(HIT_DAMAGE)
+					-- ein Treffer kostet ein Herz (danach ist man wieder gesund und kann weglaufen)
+					hitCooldown[player] = os.clock() + 3
 					sfx("jumpscare", root.Position, { volume = 1.2, maxDistance = 40, speed = 1.3 })
-					event:FireClient(player, { type = "hurt", health = humanoid.Health })
+					event:FireClient(player, { type = "hurt" })
+					if ctx.loseHeart then
+						ctx.loseHeart(player, "Sarp")
+					else
+						humanoid:TakeDamage(HIT_DAMAGE)
+					end
 				end
 				RunService.Heartbeat:Wait()
 			else
@@ -1266,7 +1274,7 @@ function Night.run(ctx)
 				Wagners.place(model, ctx.hiddenSpot, ctx.facing)
 				setFade(model, 0)
 			end
-			task.wait(math.random(14, 26))
+			task.wait(math.random(30, 50)) -- nicht zu oft
 		end
 		familyDone = true
 	end)

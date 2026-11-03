@@ -23,7 +23,6 @@ local SarpStage2 = require(script.Parent.SarpStage2)
 
 local Escape = {}
 
-local FAMILY_DAMAGE = 25 -- wenn man sich nicht losreißt
 local FAMILY_SPEED = 6 -- etwas langsamer als man läuft (8)
 local FAMILY_TIME = 10 -- so lange bleibt ein Familienmitglied höchstens in der Nähe
 local QTE_TAPS, QTE_SECONDS = 10, 4 -- so oft tippen, so viel Zeit
@@ -34,9 +33,11 @@ local RUSH_SPEED = 6.5 -- nach der Explosion rennt er zum Zimmer
 local PATROL_SPEED = 3.4
 local CHASE_SPEED = 7.2
 local HEAR_DISTANCE = 16 -- so weit hört Sarp Spieler, die nicht schleichen
-local LIGHT_SEE_DISTANCE = 20 -- das rote Licht sieht er von weitem
-local SEE_DISTANCE = 9 -- im Dunkeln sieht er einen nur aus der Nähe
-local SNEAK_SEE_DISTANCE = 6 -- wer schleicht, fällt noch später auf
+local LIGHT_SEE_DISTANCE = 26 -- das rote Licht sieht er von weitem
+local SEE_DISTANCE = 12 -- im Dunkeln sieht er einen nur aus der Nähe
+local SNEAK_SEE_DISTANCE = 8 -- wer schleicht, fällt später auf
+local ALERT_SPEED = 5.5 -- so schnell kommt er dorthin, wo die Familie einen gepackt hat
+local FAMILY_FIRST, FAMILY_PAUSE_MIN, FAMILY_PAUSE_MAX = 45, 40, 65 -- seltener
 local CATCH_DISTANCE = 3.2
 
 local LABELS = { chemicals = "Chemikalien", powder = "Schießpulver" }
@@ -90,7 +91,7 @@ function Escape.run(kit)
 	end
 	local function alive(player)
 		local root, humanoid = rootOf(player)
-		return root ~= nil and humanoid ~= nil and humanoid.Health > 0
+		return root ~= nil and humanoid ~= nil and humanoid.Health > 0 and not player:GetAttribute("GameOver")
 	end
 
 	------------------------------------------------------------------ Neustart-Punkt
@@ -154,7 +155,17 @@ function Escape.run(kit)
 		end
 		event:FireClient(player, { type = "hidden", spot = spot.name })
 	end
-	for _, spot in room.hideSpots do
+	local allSpots = {}
+	for _, list in { room.hideSpots, room.houseHideSpots or {}, Mansion.hideSpots or {} } do
+		for _, spot in list do
+			-- (die Knöpfe der ersten Nacht im Esszimmer werden durch neue ersetzt)
+			if spot.promptObject then
+				spot.promptObject.Enabled = false
+			end
+			table.insert(allSpots, spot)
+		end
+	end
+	for _, spot in allSpots do
 		local part = Instance.new("Part")
 		part.Name = "EscapeHide" .. spot.name
 		part.Size = Vector3.new(1, 1, 1)
@@ -165,7 +176,7 @@ function Escape.run(kit)
 		part.CFrame = spot.prompt
 		part.Parent = holder
 		local prompt = Instance.new("ProximityPrompt")
-		prompt.ObjectText = spot.label or spot.name
+		prompt.ObjectText = spot.label or ({ Tisch = "Unter den Tisch", Vorhang = "Hinter den Vorhang" })[spot.name] or spot.name
 		prompt.ActionText = "Verstecken"
 		prompt.HoldDuration = 0.3
 		prompt.MaxActivationDistance = 6
@@ -196,6 +207,10 @@ function Escape.run(kit)
 
 	-- Erwischt (von Sarp): Jumpscare, kurz schwarz, dann geht es im Raum hinter Tür 1 weiter
 	local function restartPlayer(player)
+		if player:GetAttribute("GameOver") then
+			caught[player] = nil
+			return
+		end
 		leaveSpot(player, false)
 		local index = table.find(Players:GetPlayers(), player) or 1
 		local root, humanoid = rootOf(player)
@@ -234,6 +249,9 @@ function Escape.run(kit)
 		event:FireClient(player, { type = "caught" })
 		if sarp then
 			SarpStage2.look(sarp, 0, 0)
+		end
+		if ctx.loseHeart then
+			ctx.loseHeart(player, "Sarp")
 		end
 		if restartAfter then
 			task.delay(restartAfter, function()
@@ -366,7 +384,7 @@ function Escape.run(kit)
 		local list = {}
 		for _, kind in { "chemicals", "powder" } do
 			local item = items[kind]
-			local state = item and (item.placed and "am Pult" or (carriedBy[kind] and ("trägt " .. carriedBy[kind].DisplayName) or "gesucht")) or "gesucht"
+			local state = item and (item.placed and "am Pult" or (carriedBy[kind] and ("trägt " .. carriedBy[kind].DisplayName) or "gesucht (liegt 2-mal im Haus)")) or "gesucht"
 			table.insert(list, { text = LABELS[kind] .. " – " .. state, done = item ~= nil and item.placed == true })
 		end
 		event:FireAllClients({ type = "objectives", title = "Für den Safe", items = list })
@@ -404,7 +422,7 @@ function Escape.run(kit)
 	local function notices(player)
 		local root, humanoid = rootOf(player)
 		local sarpRoot = sarp and sarp:FindFirstChild("HumanoidRootPart")
-		if not (root and humanoid and sarpRoot) or humanoid.Health <= 0 or hidden[player] or caught[player] then
+		if not (root and humanoid and sarpRoot) or not alive(player) or hidden[player] or caught[player] then
 			return false
 		end
 		if Mansion.inRoom(root.Position, "tuer1", "O") then
@@ -431,14 +449,23 @@ function Escape.run(kit)
 		end
 		return false
 	end
+	local searchHideSpot -- (weiter unten)
 	local function chase(player)
 		event:FireClient(player, { type = "chased", text = "Er hat dich bemerkt – lauf! (Sicher bist du nur in Großmutters Zimmer)" })
 		kit.whisper(Script.SARP_WHISPERS[math.random(1, #Script.SARP_WHISPERS)])
 		local lostSince
 		local giveUp = os.clock() + 25
+		local hidSpot, sawIt
 		while patrolPhase() and os.clock() < giveUp do
 			local root = rootOf(player)
-			if not root or not alive(player) or caught[player] or hidden[player] then
+			if hidden[player] then
+				-- vor seinen Augen versteckt? Dann schaut er dort nach
+				hidSpot = hidden[player]
+				local sarpRoot = sarp:FindFirstChild("HumanoidRootPart")
+				sawIt = sarpRoot ~= nil and (sarpRoot.Position - hidSpot.place.Position).Magnitude < 9 and lostSince == nil
+				break
+			end
+			if not root or not alive(player) or caught[player] then
 				break
 			end
 			if notices(player) then
@@ -459,12 +486,95 @@ function Escape.run(kit)
 				return not patrolPhase() or (lostSince ~= nil and os.clock() - lostSince > 0.5)
 			end)
 		end
+		if hidSpot and patrolPhase() then
+			searchHideSpot(hidSpot, sawIt)
+			return
+		end
 		event:FireClient(player, { type = "lost" })
 		SarpStage2.look(sarp, 0.5, 0)
 		task.wait(1)
 		SarpStage2.look(sarp, -0.5, 0)
 		task.wait(1)
 		SarpStage2.look(sarp, 0, 0)
+	end
+	-- Er hat einen sich verstecken sehen (oder fast): dort nachschauen
+	searchHideSpot = function(spot, sawIt)
+		local giveUp = os.clock() + 12
+		while patrolPhase() and os.clock() < giveUp do
+			local feet = Wagners.ground(sarp)
+			if (spot.search - feet).Magnitude < 1.5 then
+				break
+			end
+			kit.sarpWalk({ kit.nextWaypoint(feet, spot.search) }, CHASE_SPEED * 0.7, function()
+				return not patrolPhase()
+			end)
+		end
+		if not patrolPhase() then
+			return
+		end
+		local feet = Wagners.ground(sarp)
+		local target = spot.place.Position
+		Wagners.place(sarp, feet, Vector3.new(target.X, feet.Y, target.Z))
+		SarpStage2.look(sarp, 0, spot.kind == "lie" and 0.9 or 0.15)
+		sfx("sarpBreath", target + Vector3.new(0, 2, 0), { volume = 1.4, maxDistance = 30 })
+		if spot.occupant then
+			event:FireClient(spot.occupant, { type = "nearScare", seconds = 3 })
+			kit.whisper(Script.SARP_WHISPERS[math.random(1, #Script.SARP_WHISPERS)])
+		end
+		task.wait(3)
+		SarpStage2.look(sarp, 0, 0)
+		-- hat er gesehen, wie man hineingeht, zieht er einen heraus
+		if sawIt and spot.occupant and patrolPhase() then
+			catchPlayer(spot.occupant, 2.5)
+		else
+			kit.whisper(Script.SARP_LEAVES)
+		end
+	end
+	-- Lärm (die Familie hat jemanden gepackt): er geht genau dorthin
+	local alertAt
+	local function investigate(goal)
+		local giveUp = os.clock() + 25
+		while patrolPhase() and os.clock() < giveUp do
+			local feet = Wagners.ground(sarp)
+			if (goal - feet).Magnitude < 3 then
+				break
+			end
+			local noticed
+			kit.sarpWalk({ kit.nextWaypoint(feet, goal) }, ALERT_SPEED, function()
+				if not patrolPhase() then
+					return true
+				end
+				for _, player in Players:GetPlayers() do
+					if notices(player) then
+						noticed = player
+						return true
+					end
+				end
+				return false
+			end)
+			if noticed then
+				return noticed
+			end
+		end
+		-- umschauen
+		for _, yaw in { 0.6, -0.6, 0 } do
+			SarpStage2.look(sarp, yaw, 0)
+			task.wait(0.8)
+		end
+		return nil
+	end
+	-- nächster Punkt des Rundgangs, möglichst auf demselben Stockwerk (nicht durch die Decke)
+	local function nearestOnFloor(path, fallback)
+		local feet = Wagners.ground(sarp)
+		local nearest, nearestDistance = fallback, math.huge
+		for i, p in path do
+			local flat = Vector3.new(p.X - feet.X, 0, p.Z - feet.Z).Magnitude
+			local d = flat + math.abs(p.Y - feet.Y) * 20
+			if d < nearestDistance and (math.abs(p.Y - feet.Y) < 3 or nearestDistance == math.huge) then
+				nearest, nearestDistance = i, d
+			end
+		end
+		return nearest
 	end
 	local patrolRunning = false
 	local function sarpPatrol(path)
@@ -475,6 +585,15 @@ function Escape.run(kit)
 		Wagners.place(sarp, path[1], path[2])
 		local index = 1
 		while patrolPhase() do
+			if alertAt then
+				local goal = alertAt
+				alertAt = nil
+				local noticed = investigate(goal)
+				if noticed and patrolPhase() then
+					chase(noticed)
+				end
+				index = nearestOnFloor(path, index)
+			end
 			local target = path[index % #path + 1]
 			local noticed
 			local reached = kit.sarpWalk({ target }, PATROL_SPEED, function()
@@ -492,15 +611,7 @@ function Escape.run(kit)
 			if noticed and patrolPhase() then
 				chase(noticed)
 				-- weiter beim nächsten Punkt seines Rundgangs
-				local feet = Wagners.ground(sarp)
-				local nearest, nearestDistance = index, math.huge
-				for i, p in path do
-					local d = (p - feet).Magnitude
-					if d < nearestDistance then
-						nearest, nearestDistance = i, d
-					end
-				end
-				index = nearest
+				index = nearestOnFloor(path, index)
 			elseif reached then
 				index = index % #path + 1
 			end
@@ -535,44 +646,59 @@ function Escape.run(kit)
 	local itemFolder = Instance.new("Folder")
 	itemFolder.Name = "EscapeItems"
 	itemFolder.Parent = Mansion.model or workspace
+	local LIFT = { chemicals = 0.37, powder = 0.45 } -- Modell-Unterkante auf die Fläche
 	for _, kind in { "chemicals", "powder" } do
-		local spots = room.items[kind]
-		local spot = spots[math.random(1, #spots)]
-		print("[Kapitel2] " .. LABELS[kind] .. " liegen: " .. spot.name)
-		local model = buildWorldModel(kind, CFrame.new(spot.at + Vector3.new(0, 0.35, 0)) * CFrame.Angles(0, math.random() * 6, 0), itemFolder)
-		-- ein ganz schwaches Glimmen, damit man es im Dunkeln findet
-		local glow = Instance.new("PointLight")
-		glow.Range = 5
-		glow.Brightness = 0.6
-		glow.Color = Color3.fromRGB(255, 200, 150)
-		glow.Parent = model.PrimaryPart
-		local prompt = Instance.new("ProximityPrompt")
-		prompt.ObjectText = LABELS[kind]
-		prompt.ActionText = "Nehmen"
-		prompt.HoldDuration = 0.5
-		prompt.MaxActivationDistance = 7
-		prompt.RequiresLineOfSight = false
-		prompt.Parent = model.PrimaryPart
-		local item = { model = model, spot = spot, prompt = prompt, placed = false }
+		-- zwei verschiedene Plätze auslosen
+		local spots = table.clone(room.items[kind])
+		local chosen = {}
+		for _ = 1, math.min(2, #spots) do
+			table.insert(chosen, table.remove(spots, math.random(1, #spots)))
+		end
+		local item = { models = {}, placed = false }
 		items[kind] = item
-		prompt.Triggered:Connect(function(player)
-			if carriedBy[kind] or item.placed or phase ~= "search" then
-				return
-			end
-			-- zu zweit trägt jeder nur eins (man soll sich aufteilen)
-			if #Players:GetPlayers() >= 2 and #carrying(player) >= 1 then
-				hint("Du trägst schon etwas. Das muss dein Partner tragen.", 3, player)
-				return
-			end
-			carriedBy[kind] = player
-			model.Parent = nil
-			giveCarried(player, kind)
-			hookRespawn(player)
-			sfx("doorCreak", spot.at, { volume = 0.3, speed = 1.8 })
-			lineAsync(kind == "chemicals" and "gotChemicals" or "gotPowder")
-			hint(player.DisplayName .. " hat " .. WITH_ARTICLE[kind] .. ". Zurück zum Pult hinter Tür 1.", 5)
-			showObjectives()
-		end)
+		for _, spot in chosen do
+			print("[Kapitel2] " .. LABELS[kind] .. ": " .. spot.name)
+			local model = buildWorldModel(kind, CFrame.new(spot.at + Vector3.new(0, LIFT[kind] + 0.02, 0)) * CFrame.Angles(0, math.rad(spot.yaw or 0), 0), itemFolder)
+			-- ein ganz schwaches Glimmen, damit man es im Dunkeln findet
+			local glow = Instance.new("PointLight")
+			glow.Range = 5
+			glow.Brightness = 0.6
+			glow.Color = Color3.fromRGB(255, 200, 150)
+			glow.Parent = model.PrimaryPart
+			local prompt = Instance.new("ProximityPrompt")
+			prompt.ObjectText = LABELS[kind]
+			prompt.ActionText = "Nehmen"
+			prompt.HoldDuration = 0.5
+			prompt.MaxActivationDistance = 7
+			prompt.RequiresLineOfSight = false
+			prompt.Parent = model.PrimaryPart
+			table.insert(item.models, model)
+			prompt.Triggered:Connect(function(player)
+				if carriedBy[kind] or item.placed or item.model or (phase ~= "search" and phase ~= "bomb") then
+					return
+				end
+				-- zu zweit trägt jeder nur eins (man soll sich aufteilen)
+				if #Players:GetPlayers() >= 2 and #carrying(player) >= 1 then
+					hint("Du trägst schon etwas. Das muss dein Partner tragen.", 3, player)
+					return
+				end
+				-- dieses nehmen, das zweite verschwindet
+				item.model, item.spot, item.prompt = model, spot, prompt
+				for _, other in item.models do
+					if other ~= model then
+						other:Destroy()
+					end
+				end
+				carriedBy[kind] = player
+				model.Parent = nil
+				giveCarried(player, kind)
+				hookRespawn(player)
+				sfx("doorCreak", spot.at, { volume = 0.3, speed = 1.8 })
+				lineAsync(kind == "chemicals" and "gotChemicals" or "gotPowder")
+				hint(player.DisplayName .. " hat " .. WITH_ARTICLE[kind] .. ". Zurück zum Pult in Großmutters Zimmer.", 5)
+				showObjectives()
+			end)
+		end
 	end
 	showObjectives()
 	hint("Sucht Chemikalien und Schießpulver im ganzen Haus – auch im Keller.", 7)
@@ -581,7 +707,7 @@ function Escape.run(kit)
 		for _, kind in carrying(player) do
 			carriedBy[kind] = nil
 			local item = items[kind]
-			if item and not item.placed then
+			if item and not item.placed and item.model then
 				item.model.Parent = itemFolder
 			end
 		end
@@ -644,7 +770,7 @@ function Escape.run(kit)
 		return list
 	end
 	local function familyHunt()
-		task.wait(20)
+		task.wait(FAMILY_FIRST)
 		local lastSpot
 		while phase == "search" or phase == "bomb" do
 			if #members == 0 then
@@ -689,14 +815,18 @@ function Escape.run(kit)
 						-- packen: Quick-Time-Event
 						Wagners.place(model, position, targetFeet)
 						sfx("jumpscare", nearest.root.Position, { volume = 0.9, maxDistance = 40, speed = 1.5 })
+						local grabbedAt = targetFeet
 						local freed = grab(nearest.player, member)
-						local _, humanoid = rootOf(nearest.player)
 						if freed then
-							event:FireClient(nearest.player, { type = "hint", text = "Losgerissen!", seconds = 2 })
-						elseif humanoid then
-							humanoid:TakeDamage(FAMILY_DAMAGE)
-							event:FireClient(nearest.player, { type = "hurt", health = humanoid.Health })
+							event:FireClient(nearest.player, { type = "hint", text = "Losgerissen! Lauf – er hat es gehört!", seconds = 3 })
+						else
+							event:FireClient(nearest.player, { type = "hurt" })
+							if ctx.loseHeart then
+								ctx.loseHeart(nearest.player, member.name)
+							end
 						end
+						-- der Lärm lockt Sarp an: er kommt genau dorthin
+						alertAt = grabbedAt
 						break
 					end
 					local waypoint = kit.nextWaypoint(position, targetFeet)
@@ -710,7 +840,7 @@ function Escape.run(kit)
 				Wagners.place(model, ctx.hiddenSpot, ctx.facing)
 				kit.setFade(model, 0)
 			end
-			task.wait(math.random(12, 20))
+			task.wait(math.random(FAMILY_PAUSE_MIN, FAMILY_PAUSE_MAX))
 		end
 	end
 	task.spawn(familyHunt)
@@ -825,11 +955,23 @@ function Escape.run(kit)
 			dropFromHand(player, "Carried_charge")
 			chargeModel.Parent = itemFolder
 			chargeModel:PivotTo(room.safeFront * CFrame.new(0, -0.6, 0.15))
-			bombStep = "light"
+			bombStep = "richardLeaving"
+			safePrompt.Enabled = false
 			safePrompt.ActionText = "Lunte anzünden"
 			safePrompt.HoldDuration = 1
-			event:FireAllClients({ type = "objectives", title = "Für den Safe", items = { { text = "Lunte mit der Kerze anzünden", done = false } } })
-			lineAsync("onSafe")
+			-- Richard geht vorher raus; erst dann kann man die Lunte anzünden
+			task.spawn(function()
+				line("onSafe")
+				if mr then
+					mr:SetAttribute("Look", "down")
+					ctx.walkPath(mr, { { at = room.sarpEnter }, { at = room.doorOutside } }, 7, kit.steps)
+					Wagners.place(mr, ctx.hiddenSpot, ctx.facing)
+				end
+				bombStep = "light"
+				safePrompt.Enabled = true
+				event:FireAllClients({ type = "objectives", title = "Für den Safe", items = { { text = "Lunte mit der Kerze anzünden", done = false } } })
+				hint("Richard ist weg. Zünde die Lunte mit deiner Kerze an.", 5)
+			end)
 		elseif bombStep == "light" then
 			if player:GetAttribute("LightOff") then
 				hint("Du brauchst Licht: mach deine Kerze an (F).", 3, player)
@@ -868,14 +1010,7 @@ function Escape.run(kit)
 	sfx("fuse", room.safeFront.Position, { volume = 1.4, maxDistance = 40 })
 	hint("Versteck dich! Schrank, hinter dem Bett oder in der Truhe!", FUSE_TIME)
 	event:FireAllClients({ type = "objectives", clear = true })
-	task.spawn(function()
-		line("lit")
-		if mr then
-			mr:SetAttribute("Look", "down")
-			ctx.walkPath(mr, { { at = room.sarpEnter }, { at = room.doorOutside } }, 9, kit.steps)
-			Wagners.place(mr, ctx.hiddenSpot, ctx.facing)
-		end
-	end)
+	lineAsync("lit")
 	for t = FUSE_TIME, 1, -1 do
 		if t <= 3 then
 			hint(tostring(t) .. " …", 1)
@@ -939,8 +1074,12 @@ function Escape.run(kit)
 	for _, player in Players:GetPlayers() do
 		local root, humanoid = rootOf(player)
 		if root and humanoid and not hidden[player] and (root.Position - blastAt).Magnitude < 10 then
-			humanoid:TakeDamage(BLAST_DAMAGE)
-			event:FireClient(player, { type = "hurt", health = humanoid.Health })
+			event:FireClient(player, { type = "hurt" })
+			if ctx.loseHeart then
+				ctx.loseHeart(player, "Explosion")
+			else
+				humanoid:TakeDamage(BLAST_DAMAGE)
+			end
 		end
 	end
 	-- die Kerzen sind weg (fliegen einem bei der Explosion aus der Hand)
@@ -1007,32 +1146,20 @@ function Escape.run(kit)
 		searchingRoom = true
 		kit.sarpWalk({ room.sarpEnter }, SEARCH_SPEED, interruptedInRoom)
 		catchVisibleInRoom()
-		-- die drei Verstecke in zufälliger Reihenfolge
-		local order = table.clone(room.hideSpots)
-		for i = #order, 2, -1 do
-			local j = math.random(1, i)
-			order[i], order[j] = order[j], order[i]
-		end
-		for _, spot in order do
-			kit.sarpWalk({ spot.search }, SEARCH_SPEED, interruptedInRoom)
+		-- einmal durchs Zimmer laufen (nicht in jedes Versteck schauen), dann wieder raus
+		for _, at in room.sarpRoomWalk do
+			kit.sarpWalk({ at }, SEARCH_SPEED, interruptedInRoom)
 			catchVisibleInRoom()
-			local feet = Wagners.ground(sarp)
-			local target = spot.place.Position
-			Wagners.place(sarp, feet, Vector3.new(target.X, feet.Y, target.Z))
-			SarpStage2.look(sarp, 0, spot.kind == "lie" and 0.9 or 0.15)
-			sfx("sarpBreath", target + Vector3.new(0, 2, 0), { volume = 1.4, maxDistance = 30 })
-			if spot.occupant then
-				event:FireClient(spot.occupant, { type = "nearScare", seconds = 3.5 })
-				sarpSays(Script.SARP_WHISPERS)
-			end
-			local waitUntil = os.clock() + 3.5
-			while os.clock() < waitUntil do
-				if interruptedInRoom() then
-					catchVisibleInRoom()
+			local sarpRoot = sarp:FindFirstChild("HumanoidRootPart")
+			for _, spot in room.hideSpots do
+				if spot.occupant and sarpRoot and (spot.place.Position - sarpRoot.Position).Magnitude < 7 then
+					event:FireClient(spot.occupant, { type = "nearScare", seconds = 2.5 })
 				end
-				task.wait(0.1)
 			end
-			SarpStage2.look(sarp, 0, 0)
+			if math.random() < 0.4 then
+				sfx("sarpBreath", sarpRoot and sarpRoot.Position or at, { volume = 1.2, maxDistance = 30 })
+			end
+			task.wait(0.6)
 		end
 		searchingRoom = false
 		kit.whisper(Script.SARP_LEAVES)

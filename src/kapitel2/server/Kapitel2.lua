@@ -25,6 +25,7 @@ local GAP = 0.4 -- Pause zwischen zwei Sätzen
 local WAIT_FOR_GROUP = 10 -- Sekunden, die auf den zweiten Spieler gewartet wird
 local WALK_SPEED = 8 -- im Haus etwas langsamer
 local SNEAK_SPEED = 4 -- Schleichen (Taste C): leiser, Sarp hört einen nicht
+local MAX_HEARTS = 3 -- Leben fürs ganze Kapitel (jeder Angriff kostet eins)
 local DOOR_CRACK, DOOR_OPEN = math.rad(14), math.rad(88)
 local REMIND_AFTER, PULL_IN_AFTER = 18, 40 -- Sekunden, wenn jemand draußen bleibt
 
@@ -92,6 +93,10 @@ function Kapitel2.start()
 	local qteEvent = Instance.new("RemoteEvent")
 	qteEvent.Name = "Qte"
 	qteEvent.Parent = remotes
+	-- Nach dem Game Over: "Nochmal versuchen"
+	local restartEvent = Instance.new("RemoteEvent")
+	restartEvent.Name = "Restart"
+	restartEvent.Parent = remotes
 	remotes.Parent = ReplicatedStorage
 
 	House.mansion = true -- das große Herrenhaus statt des kleinen Holzhauses
@@ -351,9 +356,13 @@ function Kapitel2.start()
 
 	-- Wo man nach dem Sterben wieder anfängt (Flucht: im Raum hinter Tür 1)
 	local checkpoint -- function(index) -> CFrame
+	local loseHeartOnDeath -- (wird unten bei den Herzen festgelegt)
 	local function spawnPlayer(player)
 		local index = table.find(Players:GetPlayers(), player) or 1
 		local cframe
+		if player:GetAttribute("Hearts") == nil then
+			player:SetAttribute("Hearts", MAX_HEARTS)
+		end
 		player:SetAttribute("CandleMode", candleMode ~= "normal" and candleMode or nil)
 		if candleMode == "none" then
 			player:SetAttribute("LightOff", true)
@@ -376,14 +385,73 @@ function Kapitel2.start()
 				giveCandle(player)
 			end
 			humanoid.Died:Connect(function()
+				if loseHeartOnDeath then
+					loseHeartOnDeath(player)
+				end
 				task.delay(3, function()
-					if player.Parent then
+					if player.Parent and not player:GetAttribute("GameOver") then
 						spawnPlayer(player)
 					end
 				end)
 			end)
 		end
 	end
+
+	------------------------------------------------------------------ Herzen (Leben) und Game Over
+	-- Jeder Spieler hat 3 Herzen fürs ganze Kapitel. Jeder Angriff (Sarp erwischt einen, die
+	-- Familie, die Explosion, Sterben) kostet eins, danach ist man wieder ganz gesund.
+	-- Keine Herzen mehr: Game Over (auf dem Client mit "Nochmal versuchen").
+	local function heartsOf(player)
+		local hearts = player:GetAttribute("Hearts")
+		if hearts == nil then
+			hearts = MAX_HEARTS
+			player:SetAttribute("Hearts", hearts)
+		end
+		return hearts
+	end
+	local function gameOver(player)
+		player:SetAttribute("GameOver", true)
+		local character = player.Character
+		local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+		local root = character and character:FindFirstChild("HumanoidRootPart")
+		if humanoid then
+			humanoid.WalkSpeed = 0
+		end
+		if root then
+			root.Anchored = true
+		end
+		event:FireClient(player, { type = "gameOver" })
+		print("Kapitel 2: GAME OVER für " .. player.Name)
+	end
+	local function loseHeart(player, reason)
+		if player:GetAttribute("GameOver") then
+			return 0
+		end
+		local hearts = math.max(heartsOf(player) - 1, 0)
+		player:SetAttribute("Hearts", hearts)
+		local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+		if humanoid and humanoid.Health > 0 then
+			humanoid.Health = humanoid.MaxHealth
+		end
+		event:FireClient(player, { type = "heartLost", hearts = hearts, reason = reason })
+		print(string.format("Kapitel 2: %s verliert ein Herz (%s) – noch %d", player.Name, tostring(reason), hearts))
+		if hearts <= 0 then
+			gameOver(player)
+		end
+		return hearts
+	end
+	loseHeartOnDeath = function(player)
+		loseHeart(player, "gestorben")
+	end
+	restartEvent.OnServerEvent:Connect(function(player)
+		if not player:GetAttribute("GameOver") then
+			return
+		end
+		player:SetAttribute("GameOver", nil)
+		player:SetAttribute("Hearts", MAX_HEARTS)
+		spawnPlayer(player)
+		event:FireClient(player, { type = "retry", restart = true })
+	end)
 
 	-- Steht jemand noch draußen (oder dort, wo die Tür zufällt)?
 	local hinge = Vector2.new(House.DOOR_HINGE.X, House.DOOR_HINGE.Z)
@@ -903,6 +971,7 @@ function Kapitel2.start()
 			facing = facing,
 			spawnPlayer = spawnPlayer,
 			setCandleMode = setCandleMode,
+			loseHeart = loseHeart,
 			setCheckpoint = function(fn)
 				checkpoint = fn
 			end,

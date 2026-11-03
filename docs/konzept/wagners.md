@@ -116,5 +116,26 @@ Plan mit allen Fundorten und dem Kerzenweg: `hausplan_flucht.png`.
 6. Der Schlüssel schließt das Regal vor dem Geheimgang im Vorratskeller auf. Wer den
    **Ritualraum** betritt: sofort schwarz („Der Ritualraum … Fortsetzung folgt“).
 
+### Herzen, Verstecke, Balance (Stand jetzt)
+
+- **3 Herzen** fürs ganze Kapitel (oben rechts). Jeder Angriff kostet eins – von Sarp erwischt
+  (auch beim Verstecken in der ersten Nacht), von der Familie gepackt und nicht losgerissen, die
+  Explosion ohne Versteck, Sterben. Danach ist man wieder ganz gesund. Keine Herzen mehr:
+  **Game Over** („Du wurdest getötet“, Knopf „Nochmal versuchen“ → 3 Herzen, weiter am letzten
+  Neustart-Punkt).
+- **Familie seltener** (erst nach 45 s, dann alle 40–65 s). Packt sie einen, hört Sarp das und
+  **kommt genau an diese Stelle**.
+- **Verstecke im ganzen Haus**: Schränke im Gästezimmer, langen Flur, Salon, Wohnzimmer und
+  Waschkeller, dazu Schrank/Tisch/Vorhang im Esszimmer und die drei in Großmutters Zimmer.
+  Versteckt man sich vor Sarps Augen, schaut er dort nach (und zieht einen heraus, wenn er es
+  gesehen hat). Rauskommen: E / Leertaste, der Knopf „[E] Rauskommen“ ist immer zu sehen.
+- Sarp sieht besser (rotes Licht bis 26 Studs, im Dunkeln 12, schleichend 8).
+- In Großmutters Zimmer läuft Sarp nach der Explosion nur einmal durch und geht wieder.
+  Das Zimmer ist **rot und gedämpft** beleuchtet.
+- Richard geht hinaus, **bevor** man die Lunte anzünden kann.
+- Chemikalien und Schießpulver liegen je **2-mal** (auf Tischen, Kisten, Arbeitsplatte …);
+  nimmt man eins, verschwindet das andere.
+- Weniger rote Kerzen auf dem Weg (11 statt 25), nur an den wichtigen Stellen.
+
 Teststart: `Config.TEST_START_KAPITEL2 = "tuer1"` (man erscheint gleich in Großmutters Zimmer).
 Das kleine Zimmer an der Galerie (früher „Tür 1“) ist jetzt eine abgeschlossene Kammer.

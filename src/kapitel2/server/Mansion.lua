@@ -1145,7 +1145,6 @@ local function buildFurniture()
 		table.insert(Mansion.beds, { cframe = origin * bedFrame, length = 7, width = 4 })
 	end
 	Furniture.nightstand(b, at(55.2, 41.2, O, "S"))
-	Furniture.wardrobe(b, at(60.5, 50, O, "W"), 4)
 	Furniture.rug(b, at(55, 49, O), 6, 4, Color3.fromRGB(80, 60, 50))
 
 	-- Kammer an der Galerie (abgeschlossen): nur ein Stuhl, der zur Wand schaut, und Kratzer
@@ -1214,28 +1213,38 @@ local function buildFurniture()
 	Furniture.chair(b, at(19.5, 54.5, O, 200), Color3.fromRGB(60, 46, 34))
 	Furniture.picture(b, at(14.54, 49, O + 5.6, "E"), 2.2, 3, Color3.fromRGB(70, 66, 56), true)
 	Furniture.sofa(b, at(36, 56, O, "W"), 3, Color3.fromRGB(80, 70, 60), true)
-	for i = 1, 6 do
-		box("Cobweb", Vector3.new(2.4, 2.4, 0.02), CFrame.new(L(15.2 + (i % 2) * 25.2, 38.6 + i * 3.2, CEIL.O - 1.1)) * CFrame.Angles(0, math.rad(45), math.rad(45)), Color3.fromRGB(200, 200, 196), M.SmoothPlastic, { Transparency = 0.7, CanCollide = false })
+	-- Spinnweben in den Ecken oben (an der Westwand nicht vor den Fenstern)
+	for i, y in { 41.8, 40.5, 48.2, 48.5, 54.6, 58.3 } do
+		box("Cobweb", Vector3.new(2.4, 2.4, 0.02), CFrame.new(L(15.2 + (i % 2) * 25.2, y, CEIL.O - 1.1)) * CFrame.Angles(0, math.rad(45), math.rad(45)), Color3.fromRGB(200, 200, 196), M.SmoothPlastic, { Transparency = 0.7, CanCollide = false })
 	end
 	Furniture.rug(b, at(28, 49, O), 9, 7, Color3.fromRGB(86, 40, 36))
 
-	-- Licht: Hängelampe in der Mitte, Kerzen auf dem Tischchen, der Truhe und am Boden
+	-- Licht: rote Kerzen (gedämpft, man sieht genug, aber es ist nicht hell): Hängelampe in der
+	-- Mitte, zwei auf dem Tischchen, zwei am Boden
 	do
+		local function redCandle(cf, height, range, brightness)
+			local flame = candle(cf, height, range, brightness)
+			if flame then
+				flame.Color = Color3.fromRGB(255, 50, 36)
+				local light = flame:FindFirstChildWhichIsA("PointLight")
+				if light then
+					light.Color = Color3.fromRGB(255, 45, 32)
+				end
+			end
+			return flame
+		end
 		local lampY = CEIL.O - 2.4
 		box("LampChain", Vector3.new(0.08, CEIL.O - lampY, 0.08), CFrame.new(L(28, 49, (CEIL.O + lampY) / 2)), COLORS.metal, M.Metal)
 		box("LampRing", Vector3.new(2.6, 0.14, 2.6), CFrame.new(L(28, 49, lampY)), Color3.fromRGB(70, 56, 36), M.Metal)
 		for i = 0, 2 do
 			local angle = i / 3 * math.pi * 2
-			local flame = candle(CFrame.new(L(28 + math.cos(angle) * 1.05, 49 + math.sin(angle) * 1.05, lampY + 0.07)), 0.5, 16, 1.0)
-			if flame then
-				flame.Name = "CandleFlame"
-			end
+			redCandle(CFrame.new(L(28 + math.cos(angle) * 1.05, 49 + math.sin(angle) * 1.05, lampY + 0.07)), 0.5, 14, 0.75)
 		end
 		local sideTable = Furniture.table(b, at(33.5, 46, O), 2, 2, 2.6)
-		lit(sideTable * CFrame.new(-0.4, 0, 0.3))
-		lit(sideTable * CFrame.new(0.4, 0, -0.2), 0.5)
-		lit(at(16.6, 58.4, O), 1.3)
-		lit(at(40.6, 42, O), 1.1)
+		redCandle(sideTable * CFrame.new(-0.4, 0, 0.3), 0.8, 9, 0.7)
+		redCandle(sideTable * CFrame.new(0.4, 0, -0.2), 0.5, 9, 0.7)
+		redCandle(at(16.6, 58.4, O), 1.3, 9, 0.7)
+		redCandle(at(40.6, 42, O), 1.1, 9, 0.7)
 	end
 
 	local escape = { hideSpots = {} }
@@ -1333,38 +1342,63 @@ local function buildFurniture()
 	end
 	escape.sarpStart = Mansion.point(48.5, 67, E)
 	escape.sarpEnter = Mansion.point(38, 42.6, O)
+	escape.sarpRoomWalk = {
+		Mansion.point(30, 47, O), Mansion.point(22, 51, O), Mansion.point(30, 53.5, O), Mansion.point(36, 46, O), Mansion.point(38, 42.6, O),
+	}
 	escape.doorOutside = Mansion.point(38, 37.4, O)
 	-- Wo Chemikalien und Schießpulver liegen können (jedes Mal wird ein Platz ausgelost).
 	-- Alle Stellen sind geprüft: freier Boden, nichts im Weg.
+	-- `at` = Oberkante der Fläche (Tisch, Kiste, Arbeitsplatte …), `yaw` = Drehung in Grad
+	local function onTop(name, x, y, top, yaw)
+		return { name = name, at = (origin * CFrame.new(L(x, y, top))).Position, yaw = yaw or 0 }
+	end
 	escape.items = {
 		chemicals = {
-			{ name = "Bad", at = Mansion.point(60.5, 28.5, O) },
-			{ name = "Speisekammer", at = Mansion.point(44, 12, E) },
-			{ name = "Küche", at = Mansion.point(38, 36, E) },
-			{ name = "Flur zum Garten", at = Mansion.point(24, 33, E) },
-			{ name = "Waschkeller", at = Mansion.point(30, 40, K0) },
-			{ name = "Heizungsraum", at = Mansion.point(57, 30, K0) },
+			onTop("Küche, auf der Arbeitsplatte", 41.6, 21.4, 4.9, 0),
+			onTop("Küche, auf dem Tisch", 40.8, 31.6, 4.6, 10),
+			onTop("Speisekammer, auf den Säcken", 43.3, 17.0, 3.7, 0),
+			onTop("Vorratskeller, auf einer Kiste", 42.6, 25.5, -6.7, 15),
+			onTop("Kriechkeller, auf einer Kiste", 74.8, 22.0, -6.8, 30),
+			onTop("Bad, neben der Wanne", 61.2, 26.5, O, 90),
 		},
 		powder = {
-			{ name = "Wohnzimmer", at = Mansion.point(74, 50, E) },
-			{ name = "Turmzimmer", at = Mansion.point(88, 64, E) },
-			{ name = "Salon", at = Mansion.point(18, 42, E) },
-			{ name = "Nähzimmer (Turm oben)", at = Mansion.point(86, 62, O) },
-			{ name = "Spielzimmer", at = Mansion.point(64, 68, O) },
-			{ name = "Kriechkeller", at = Mansion.point(73, 38, K0) },
+			onTop("Wohnzimmer, auf dem Couchtisch", 72, 50.5, 3.3, 0),
+			onTop("Turmzimmer, neben dem Tischchen", 88, 64.4, FLOOR.E, 20),
+			onTop("Flur zum Garten, auf der Bank", 24, 36.9, 3.55, 90),
+			onTop("Flur, auf der Kommode", 38.9, 42.92, 4.5, 90),
+			onTop("Gästezimmer, auf dem Nachttisch", 55.2, 41.2, 13.8, 0),
+			onTop("Kriechkeller, auf einer Kiste", 72, 34, -6.8, 0),
 		},
 	}
 	-- Der Weg nach draußen (rote Kerzen): langer Flur, Spielzimmer, Galerie, Treppe, Halle, Flur,
 	-- Küche, Keller, Regal vor dem Geheimgang, Ritualraum
 	escape.path = {}
 	for _, p in {
-		{ 38, 42.4, O }, { 37.2, 37.3, O }, { 46, 36.6, O }, { 55, 36.6, O }, { 63, 37.5, O }, { 64.6, 44, O }, { 68, 49.5, O },
-		{ 66.5, 55, O }, { 58.5, 56.6, O }, { 51, 57.2, O }, { 44.9, 57.4, O },
-		{ 45.6, 69.8, E }, { 48.6, 66, E }, { 50.4, 60, E }, { 50.4, 56.5, E }, { 50.4, 51.5, E }, { 47, 47.5, E }, { 45.2, 44.5, E },
-		{ 45.2, 40.5, E }, { 48.5, 37.6, E }, { 51, 35.4, E }, { 52.1, 21.6, K0 }, { 49.4, 21.8, K0 }, { 47, 17.5, K0 }, { 47, 14, K0 },
+		{ 38, 42.4, O }, { 46, 36.6, O }, { 64.6, 44, O }, { 66.5, 55, O }, { 51, 57.2, O },
+		{ 45.6, 69.8, E }, { 50.4, 56.5, E }, { 45.2, 44.5, E }, { 51, 35.4, E }, { 52.1, 21.6, K0 }, { 49.4, 21.8, K0 },
 	} do
 		table.insert(escape.path, Mansion.point(p[1], p[2], p[3]))
 	end
+	-- Versteck-Schränke im ganzen Haus (für die Flucht; Sarp sucht dort, wo er einen verloren hat)
+	escape.houseHideSpots = {}
+	local function hideCloset(label, x, y, height, facing)
+		local frame = at(x, y, height, facing)
+		local inside = Furniture.hideWardrobe(b, frame)
+		table.insert(escape.houseHideSpots, {
+			name = label,
+			label = "Schrank",
+			kind = "stand",
+			place = origin * inside,
+			exit = origin * frame * CFrame.new(0, 0, -2.2),
+			prompt = origin * frame * CFrame.new(0, 3.5, -1.7),
+			search = (origin * frame * CFrame.new(0, 0, -2.6)).Position,
+		})
+	end
+	hideCloset("Gästezimmer", 60.35, 50, O, "W")
+	hideCloset("Langer Flur", 62.6, 35.5, O, "S")
+	hideCloset("Salon", 18, 58.35, E, "N")
+	hideCloset("Wohnzimmer", 76, 43.6, E, "S")
+	hideCloset("Waschkeller", 15.75, 46, K0, "E")
 
 	------------------------------------------------ Keller
 	Furniture.shelf(b, at(36, 21, Kf, "S"), 3.6, 7, "jars", rng)
