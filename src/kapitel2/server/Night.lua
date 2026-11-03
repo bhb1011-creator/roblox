@@ -331,11 +331,13 @@ function Night.run(ctx)
 				Wagners.place(npc, ctx.hiddenSpot, ctx.facing)
 			end
 		end
-		for index, player in Players:GetPlayers() do
-			bringTo(player, point(60 + index, 36), point(67, 30))
+		if not atDoorOne then
+			for index, player in Players:GetPlayers() do
+				bringTo(player, point(60 + index, 36), point(67, 30))
+			end
 		end
 		ctx.setMovement(true)
-		task.wait(1.5)
+		task.wait(atDoorOne and 0 or 1.5)
 	end
 
 	------------------------------------------------------------------ 3. Verstecken
@@ -714,9 +716,11 @@ function Night.run(ctx)
 	if livingDoor then
 		livingDoor.locked = false
 	end
-	task.wait(2)
-	event:FireAllClients({ type = "hint", text = "Er ist weg … fürs Erste.", seconds = 4 })
-	task.wait(3)
+	if not atDoorOne then
+		task.wait(2)
+		event:FireAllClients({ type = "hint", text = "Er ist weg … fürs Erste.", seconds = 4 })
+		task.wait(3)
+	end
 
 	------------------------------------------------------------------ 5. Richard kommt zurück
 	function actions.richardComes()
@@ -1308,7 +1312,11 @@ function Night.run(ctx)
 			ctx.moveDoor(doorOne, doorOne.openAngle, 0.1)
 		end
 		for index, player in Players:GetPlayers() do
-			bringTo(player, point(45.6 + index * 0.9, 51.5, "O"), point(45.4, 44, "O"))
+			-- (wer schon im Raum steht, bleibt einfach dort)
+			local root = rootOf(player)
+			if not (root and Mansion.inRoom(root.Position, "tuer1", "O")) then
+				bringTo(player, point(45.6 + index * 0.9, 51.5, "O"), point(45.4, 44, "O"))
+			end
 		end
 		ctx.setMovement(true)
 		enterEscape()

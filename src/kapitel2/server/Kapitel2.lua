@@ -965,6 +965,14 @@ function Kapitel2.start()
 				Wagners.place(npc, hiddenSpot, facing)
 			end
 		end
+		-- Teststart "tuer1": man erscheint gleich im Raum hinter Tür 1 (nicht erst in der Halle)
+		if Config.TEST_START_KAPITEL2 == "tuer1" and Mansion.escape then
+			checkpoint = function(index)
+				local feet = Mansion.escape.checkpoint + Vector3.new((index - 1) * 1.2 - 0.6, 0, 0)
+				local look = Mansion.point(45.4, 43, Mansion.FLOORS.O)
+				return CFrame.lookAt(feet, Vector3.new(look.X, feet.Y, look.Z))
+			end
+		end
 	end
 
 	local firstJoin
