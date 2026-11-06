@@ -1213,17 +1213,13 @@ local function buildFurniture()
 	Furniture.rug(b, at(84, 66, O), 8, 8, Color3.fromRGB(80, 50, 50))
 
 	-- Großmutters Zimmer = Raum hinter Tür 1 (die Flucht, Escape.lua). Großmutters Sachen
-	-- stehen noch da (Bett, Schaukelstuhl, Sofa unter dem Tuch, Bild, Spinnweben); dazu Safe
+	-- stehen noch da (Bett, Schaukelstuhl, Sofa unter dem Tuch, Bild); dazu Safe
 	-- (Westwand, unter dem Bild), Pult in der Mitte, drei Verstecke (Schrank, hinter dem
 	-- umgekippten Bett, Truhe) und mehr Licht (Hängelampe, Kerzen).
 	Furniture.bed(b, at(18, 44, O, "E"), 4.6, 7, Color3.fromRGB(180, 174, 160))
 	Furniture.chair(b, at(19.5, 54.5, O, 200), Color3.fromRGB(60, 46, 34))
 	Furniture.picture(b, at(14.54, 49, O + 5.6, "E"), 2.2, 3, Color3.fromRGB(70, 66, 56), true)
 	Furniture.sofa(b, at(36, 56, O, "W"), 3, Color3.fromRGB(80, 70, 60), true)
-	-- Spinnweben in den Ecken oben (an der Westwand nicht vor den Fenstern)
-	for i, y in { 41.8, 40.5, 48.2, 48.5, 54.6, 58.3 } do
-		box("Cobweb", Vector3.new(2.4, 2.4, 0.02), CFrame.new(L(15.2 + (i % 2) * 25.2, y, CEIL.O - 1.1)) * CFrame.Angles(0, math.rad(45), math.rad(45)), Color3.fromRGB(200, 200, 196), M.SmoothPlastic, { Transparency = 0.7, CanCollide = false })
-	end
 	Furniture.rug(b, at(28, 49, O), 9, 7, Color3.fromRGB(86, 40, 36))
 
 	-- Licht: rote Kerzen (gedämpft, man sieht genug, aber es ist nicht hell): Hängelampe in der
@@ -1354,7 +1350,7 @@ local function buildFurniture()
 	}
 	escape.doorOutside = Mansion.point(38, 37.4, O)
 	-- Wo Chemikalien und Schießpulver liegen können (jedes Mal werden mehrere Plätze ausgelost).
-	-- Alle liegen unten (Erdgeschoss und Keller): man muss also aus dem Obergeschoss hinunter.
+	-- Pro Sorte liegt eines oben (schnell zu finden), die anderen unten im Haus.
 	-- Alle Stellen sind geprüft: freier Boden, nichts im Weg.
 	-- `at` = Oberkante der Fläche (Tisch, Kiste, Arbeitsplatte …), `yaw` = Drehung in Grad
 	local function onTop(name, x, y, top, yaw)
@@ -1367,12 +1363,14 @@ local function buildFurniture()
 			onTop("Speisekammer, auf den Säcken", 43.3, 17.0, 3.7, 0),
 			onTop("Vorratskeller, auf einer Kiste", 42.6, 25.5, -6.7, 15),
 			onTop("Kriechkeller, auf einer Kiste", 74.8, 22.0, -6.8, 30),
+			onTop("Bad, neben der Wanne", 61.2, 26.5, O, 90),
 		},
 		powder = {
 			onTop("Wohnzimmer, auf dem Couchtisch", 72, 50.5, 3.3, 0),
 			onTop("Turmzimmer, neben dem Tischchen", 88, 64.4, FLOOR.E, 20),
 			onTop("Flur zum Garten, auf der Bank", 24, 36.9, 3.55, 90),
 			onTop("Flur, auf der Kommode", 38.9, 42.92, 4.5, 90),
+			onTop("Gästezimmer, auf dem Nachttisch", 55.2, 41.2, 13.8, 0),
 			onTop("Kriechkeller, auf einer Kiste", 72, 34, -6.8, 0),
 		},
 	}

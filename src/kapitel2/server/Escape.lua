@@ -2,7 +2,7 @@
 --
 --  1. Richard wartet am Pult. Er erklärt, was zu tun ist (ohne zu verraten, was mit seiner
 --     Familie los ist) und gibt jedem eine rote Kerze. Taschenlampe gibt es keine mehr.
---  2. Man sucht Chemikalien und Schießpulver (je mehrere ausgeloste Plätze unten im Haus, Mansion.escape.items).
+--  2. Man sucht Chemikalien und Schießpulver (je mehrere ausgeloste Plätze, einer davon oben, Mansion.escape.items).
 --     Sarp läuft dabei durchs ganze Haus (Erdgeschoss, Keller, oben) und ist tödlich: Er sieht
 --     das rote Licht, hört, wer nicht schleicht. Der Raum hinter Tür 1 ist sicher.
 --     Die Familie taucht auf und packt einen (höchstens 10 Sekunden lang in der Nähe):
@@ -385,7 +385,7 @@ function Escape.run(kit)
 		local list = {}
 		for _, kind in { "chemicals", "powder" } do
 			local item = items[kind]
-			local state = item and (item.placed and "am Pult" or (carriedBy[kind] and ("trägt " .. carriedBy[kind].DisplayName) or "gesucht (liegt mehrmals unten im Haus)")) or "gesucht"
+			local state = item and (item.placed and "am Pult" or (carriedBy[kind] and ("trägt " .. carriedBy[kind].DisplayName) or "gesucht (liegt mehrmals im Haus)")) or "gesucht"
 			table.insert(list, { text = LABELS[kind] .. " – " .. state, done = item ~= nil and item.placed == true })
 		end
 		event:FireAllClients({ type = "objectives", title = "Für den Safe", items = list })
@@ -649,11 +649,17 @@ function Escape.run(kit)
 	itemFolder.Parent = Mansion.model or workspace
 	local LIFT = { chemicals = 0.37, powder = 0.45 } -- Modell-Unterkante auf die Fläche
 	for _, kind in { "chemicals", "powder" } do
-		-- mehrere verschiedene Plätze auslosen (alle unten im Haus, damit man leicht eins findet)
-		local spots = table.clone(room.items[kind])
+		-- mehrere verschiedene Plätze auslosen: einer oben (schnell zu finden), die anderen unten
+		local upstairs, downstairs = {}, {}
+		for _, spot in room.items[kind] do
+			table.insert(spot.at.Y > Mansion.FLOORS.O and upstairs or downstairs, spot)
+		end
 		local chosen = {}
-		for _ = 1, math.min(ITEM_COPIES, #spots) do
-			table.insert(chosen, table.remove(spots, math.random(1, #spots)))
+		if #upstairs > 0 then
+			table.insert(chosen, upstairs[math.random(1, #upstairs)])
+		end
+		for _ = 1, math.min(ITEM_COPIES - #chosen, #downstairs) do
+			table.insert(chosen, table.remove(downstairs, math.random(1, #downstairs)))
 		end
 		local item = { models = {}, placed = false }
 		items[kind] = item
@@ -708,7 +714,7 @@ function Escape.run(kit)
 		end
 	end
 	showObjectives()
-	hint("Sucht Chemikalien und Schießpulver unten im Haus – Erdgeschoss und Keller. Sie leuchten schwach.", 8)
+	hint("Sucht Chemikalien und Schießpulver im Haus – oben, im Erdgeschoss und im Keller. Sie leuchten schwach.", 8)
 	-- wer das Spiel verlässt, lässt seine Sachen fallen (sie liegen dann wieder am Fundort)
 	local leavingConnection = Players.PlayerRemoving:Connect(function(player)
 		for _, kind in carrying(player) do
