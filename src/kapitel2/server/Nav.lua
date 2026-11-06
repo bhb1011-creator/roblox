@@ -5,10 +5,10 @@
 local Nav = {}
 Nav.__index = Nav
 
-local INSET = 1.6 -- Abstand der Türpunkte zur Wand
-local CLEARANCE = 1.15 -- so viel Platz soll neben dem Weg frei sein (ab Wandmitte: halbe Wand + halbe Figur)
+local INSET = 2.0 -- Abstand der Türpunkte zur Wand
+local CLEARANCE = 1.8 -- so viel Platz soll neben dem Weg frei sein (ab Wandmitte: halbe Wand + halbe Figur)
 local STAIR_COST = 1.4
-local BODY = 0.8 -- so viel Abstand zu Möbeln (halbe Körperbreite)
+local BODY = 1.0 -- so viel Abstand zu Möbeln (halbe Körperbreite)
 
 local function inside(poly, x, y)
 	local result = false

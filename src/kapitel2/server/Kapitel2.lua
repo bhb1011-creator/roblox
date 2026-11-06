@@ -49,7 +49,8 @@ function Kapitel2.start()
 	-- Das Attribut "Status" zeigt der Ladebildschirm an.
 	local remotes = Instance.new("Folder")
 	remotes.Name = "Kapitel2"
-	remotes:SetAttribute("Status", "Das Haus wird gebaut …")
+	print("Kapitel 2: Version " .. tostring(Config.BUILD))
+	remotes:SetAttribute("Status", "Das Haus wird gebaut …  (Version " .. tostring(Config.BUILD) .. ")")
 	local event = Instance.new("RemoteEvent")
 	event.Name = "SceneEvent"
 	event.Parent = remotes
@@ -116,7 +117,7 @@ function Kapitel2.start()
 		remotes:SetAttribute("Status", "Fehler beim Bauen (siehe Output):\n" .. (text:match("[^\n]+") or text))
 		return
 	end
-	remotes:SetAttribute("Status", "Die Wagners werden geweckt …")
+	remotes:SetAttribute("Status", "Die Wagners werden geweckt …  (Version " .. tostring(Config.BUILD) .. ")")
 
 	local origin = Route.houseCFrame()
 	local hingeCF = doorModel.PrimaryPart.CFrame
