@@ -471,16 +471,26 @@ function Night.run(ctx)
 		end
 		local nextStep = 0
 		-- jedes Ziel über Türen und Treppen ansteuern, nie durch Wände oder Decken
-		local legs = {}
+		local legs, legDoors = {}, {}
 		for _, goal in points do
 			local from = legs[#legs] or position
-			for _, step in Mansion.route(from, goal) or { goal } do
+			local route, doors = Mansion.route(from, goal)
+			for i, step in route or { goal } do
 				table.insert(legs, step)
+				table.insert(legDoors, doors and doors[i] or false)
 			end
 		end
-		for _, target in legs do
+		local moved = false
+		for legIndex, target in legs do
+			-- führt dieser Abschnitt durch eine Tür? Dann geht sie jetzt auf
+			if legDoors[legIndex] then
+				Mansion.passDoor(legDoors[legIndex])
+			elseif legDoors[legIndex + 1] then
+				Mansion.passDoor(legDoors[legIndex + 1])
+			end
 			local distance = (target - position).Magnitude
 			if distance > 0.05 then
+				moved = true
 				local direction = (target - position).Unit
 				local from, start = position, os.clock()
 				while true do
@@ -511,6 +521,9 @@ function Night.run(ctx)
 			pcall(function()
 				hip.joint.C0 = hip.base
 			end)
+		end
+		if not moved then
+			RunService.Heartbeat:Wait()
 		end
 		return true
 	end
@@ -985,7 +998,7 @@ function Night.run(ctx)
 	end)
 	local function nextWaypoint(from, to)
 		-- erst unser eigenes Wegnetz (Türen, Treppen), die Roblox-Wegfindung nur als Notlösung
-		local route = Mansion.route(from, to)
+		local route = Mansion.route(from, to, 9)
 		if route then
 			local first = route[1]
 			if route[2] and (first - from).Magnitude < 0.4 then
@@ -999,7 +1012,7 @@ function Night.run(ctx)
 				path:ComputeAsync(from, to)
 				if path.Status == Enum.PathStatus.Success then
 					local points = path:GetWaypoints()
-					return points[math.min(3, #points)] and points[math.min(3, #points)].Position
+					return points[math.min(2, #points)] and points[math.min(2, #points)].Position
 				end
 				return nil
 			end)
@@ -1007,7 +1020,8 @@ function Night.run(ctx)
 				return result
 			end
 		end
-		return to
+		-- kein Weg gefunden: stehen bleiben (nie gerade durch die Wand)
+		return from
 	end
 	local hitCooldown = {}
 	local function chase(player)
@@ -1103,8 +1117,8 @@ function Night.run(ctx)
 	-- mit, sagt etwas Seltsames und läuft weg und verblasst, sobald man ihr zu nahe kommt.
 	-- (Alle Stellen sind geprüft: frei, mit Boden, nicht in Möbeln oder auf der Treppe.)
 	local APPEAR = {
-		{ 38, 50, "E" }, { 24, 52, "E" }, { 70, 63, "E" }, { 42, 28, "E" }, { 46, 46, "E" }, { 62, 50, "E" },
-		{ 49, 57.5, "O" }, { 70, 37, "O" }, { 40, 31, "O" }, { 49, 30, "O" }, { 60, 60, "O" }, { 58, 49, "O" }, { 44, 37, "O" }, { 76, 26, "O" },
+		{ 38, 50, "E" }, { 24, 52, "E" }, { 70, 63, "E" }, { 47.5, 27.5, "E" }, { 46, 46, "E" }, { 62, 50, "E" },
+		{ 49, 57.5, "O" }, { 70, 37, "O" }, { 40, 31, "O" }, { 49, 30, "O" }, { 60, 60, "O" }, { 58, 49, "O" }, { 44, 37, "O" }, { 72, 40, "O" },
 		{ 24, 46, "K" }, { 40, 38, "K" }, { 62, 30, "K" }, { 44, 30, "K" },
 	}
 	local LINES = {

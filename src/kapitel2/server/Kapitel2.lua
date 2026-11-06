@@ -534,6 +534,14 @@ function Kapitel2.start()
 		door.moving = false
 	end
 
+	-- Sarp und die Familie öffnen Türen, durch die ihr Weg führt (Mansion.route)
+	Mansion.openDoor = function(door)
+		if door.angle == 0 and not door.moving and door.model then
+			sfx("doorCreak", door.model.PrimaryPart and door.model.PrimaryPart.Position or Vector3.zero, { volume = 0.6, speed = 0.8 })
+			moveDoor(door, door.openAngle, 0.45)
+		end
+	end
+
 	local function setupDoors()
 		for _, door in Mansion.doors do
 			local leaf = door.model and door.model.PrimaryPart

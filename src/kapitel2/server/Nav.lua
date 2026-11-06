@@ -6,8 +6,9 @@ local Nav = {}
 Nav.__index = Nav
 
 local INSET = 1.6 -- Abstand der Türpunkte zur Wand
-local CLEARANCE = 0.5 -- so viel Platz soll neben dem Weg frei sein
+local CLEARANCE = 1.15 -- so viel Platz soll neben dem Weg frei sein (ab Wandmitte: halbe Wand + halbe Figur)
 local STAIR_COST = 1.4
+local BODY = 0.8 -- so viel Abstand zu Möbeln (halbe Körperbreite)
 
 local function inside(poly, x, y)
 	local result = false
@@ -22,11 +23,13 @@ local function inside(poly, x, y)
 	return result
 end
 
--- Bleibt die Strecke ganz im Raum (mit etwas Abstand zu den Wänden)?
-local function clear(poly, ax, ay, bx, by, margin)
+-- Bleibt die Strecke ganz im Raum (mit etwas Abstand zu den Wänden) und frei von Möbeln?
+-- `blocked(x, y)` = steht dort ein Möbelstück; `skip` = so viel am Anfang/Ende nicht auf Möbel
+-- prüfen (Start und Ziel dürfen direkt neben einem Tisch o. Ä. liegen).
+local function clear(poly, ax, ay, bx, by, margin, blocked, skip)
 	margin = margin or CLEARANCE
 	local length = math.sqrt((bx - ax) ^ 2 + (by - ay) ^ 2)
-	local steps = math.max(2, math.ceil(length / 0.6))
+	local steps = math.max(2, math.ceil(length / 0.5))
 	for i = 0, steps do
 		local t = i / steps
 		local x, y = ax + (bx - ax) * t, ay + (by - ay) * t
@@ -41,6 +44,10 @@ local function clear(poly, ax, ay, bx, by, margin)
 		then
 			return false
 		end
+		local along = t * length
+		if blocked and along >= (skip or 0) and along <= length - (skip or 0) and blocked(x, y) then
+			return false
+		end
 	end
 	return true
 end
@@ -52,7 +59,21 @@ end
 -- config = { rooms = { E = { {id, poly} … }, … }, doors = { {f, x, y, a, b, sides?} … },
 --            stairs = { { {x,y,f}, {x,y,f} } … }, hubs = { {f, x, y} … } }
 function Nav.new(config)
-	local self = setmetatable({ rooms = config.rooms, nodes = {}, edges = {} }, Nav)
+	local self = setmetatable({ rooms = config.rooms, nodes = {}, edges = {}, grid = {} }, Nav)
+	-- Möbel als Rechtecke (Plan-Koordinaten) je Stockwerk, in einem Raster für schnelles Suchen
+	for f, list in config.obstacles or {} do
+		local grid = {}
+		self.grid[f] = grid
+		for _, box in list do
+			for cx = math.floor((box[1] - 1) / 4), math.floor((box[3] + 1) / 4) do
+				for cy = math.floor((box[2] - 1) / 4), math.floor((box[4] + 1) / 4) do
+					local key = cx * 1000 + cy
+					grid[key] = grid[key] or {}
+					table.insert(grid[key], box)
+				end
+			end
+		end
+	end
 	local function roomById(f, id)
 		for _, room in config.rooms[f] or {} do
 			if room.id == id then
@@ -102,6 +123,8 @@ function Nav.new(config)
 			nb = addNode(f, sb[1], sb[2], b)
 		end
 		link(na, nb)
+		na.door = { x = x, y = y, f = f }
+		nb.door = na.door
 	end
 	for _, stair in config.stairs do
 		local lower = addNode(stair[1][3], stair[1][1], stair[1][2], stair[1][4])
@@ -112,19 +135,44 @@ function Nav.new(config)
 	for _, hub in config.hubs or {} do
 		addNode(hub[1], hub[2], hub[3], hub[4])
 	end
-	-- Räume: alle Punkte, die sich im selben Raum sehen, verbinden
+	-- feste Verbindungen ohne Abstandsprüfung (z. B. oben an der Treppe auf die schmale Galerie)
+	for _, pair in config.links or {} do
+		local a = addNode(pair[1][3], pair[1][1], pair[1][2], pair[1][4])
+		local b = addNode(pair[2][3], pair[2][1], pair[2][2], pair[2][4])
+		link(a, b)
+	end
+	-- Räume: alle Punkte, die sich im selben Raum sehen (ohne Möbel dazwischen), verbinden
 	for i, a in self.nodes do
 		for j = i + 1, #self.nodes do
 			local b = self.nodes[j]
 			if a.f == b.f and a.room == b.room and a.room then
 				local room = roomById(a.f, a.room)
-				if room and clear(room.poly, a.x, a.y, b.x, b.y) then
+				if room and clear(room.poly, a.x, a.y, b.x, b.y, nil, self:blocker(a.f, BODY), 0.3) then
 					link(a, b)
 				end
 			end
 		end
 	end
 	return self
+end
+
+-- Prüffunktion: steht an (x, y) auf Stockwerk f ein Möbelstück (mit `pad` Abstand)?
+function Nav:blocker(f, pad)
+	local grid = self.grid[f]
+	if not grid then
+		return nil
+	end
+	return function(x, y)
+		local cell = grid[math.floor(x / 4) * 1000 + math.floor(y / 4)]
+		if cell then
+			for _, box in cell do
+				if x > box[1] - pad and x < box[3] + pad and y > box[2] - pad and y < box[4] + pad then
+					return true
+				end
+			end
+		end
+		return false
+	end
 end
 
 function Nav:roomAt(f, x, y)
@@ -137,14 +185,15 @@ function Nav:roomAt(f, x, y)
 end
 
 -- Verbindungen eines freien Punkts zu den Wegpunkten (im selben Raum, mit freier Sicht)
-function Nav:attach(point)
+function Nav:attach(point, margin, ignoreFurniture)
+	margin = margin or 1.0
 	local links = {}
 	local room = self:roomAt(point.f, point.x, point.y)
 	for _, node in self.nodes do
 		if node.f == point.f then
 			local ok = false
 			if room and node.room == room.id then
-				ok = clear(room.poly, point.x, point.y, node.x, node.y, 0.1)
+				ok = clear(room.poly, point.x, point.y, node.x, node.y, margin, not ignoreFurniture and self:blocker(point.f, BODY * 0.6) or nil, 1.2)
 			elseif not room and dist(point, node) < 5 then
 				ok = true -- steht in einer Türöffnung o. Ä.
 			end
@@ -153,7 +202,15 @@ function Nav:attach(point)
 			end
 		end
 	end
-	if #links == 0 then
+	if #links == 0 and room and not ignoreFurniture then
+		-- zwischen Möbeln eingeklemmt: Möbel nicht beachten (aber weiter Abstand zu Wänden)
+		return self:attach(point, margin, true)
+	end
+	if #links == 0 and room and margin > 0.1 then
+		-- steht dicht an einer Wand: mit weniger Abstand noch einmal versuchen
+		return self:attach(point, 0.1, true)
+	end
+	if #links == 0 and (not room or margin <= 0.1) then
 		-- steht in einer Türöffnung o. Ä.: die nächsten Punkte nehmen
 		for _, node in self.nodes do
 			if node.f == point.f and dist(point, node) < 6 then
@@ -169,7 +226,7 @@ end
 function Nav:route(from, to)
 	local fromLinks, fromRoom = self:attach(from)
 	local toLinks, toRoom = self:attach(to)
-	if from.f == to.f and fromRoom and toRoom and fromRoom.id == toRoom.id and clear(fromRoom.poly, from.x, from.y, to.x, to.y, 0.1) then
+	if from.f == to.f and fromRoom and toRoom and fromRoom.id == toRoom.id and clear(fromRoom.poly, from.x, from.y, to.x, to.y, 1.0, self:blocker(from.f, BODY * 0.6), 1.2) then
 		return { to }
 	end
 	local count = #self.nodes
@@ -216,7 +273,7 @@ function Nav:route(from, to)
 	local at = finish
 	while at and at ~= 0 do
 		local node = self.nodes[at]
-		table.insert(reversed, { x = node.x, y = node.y, f = node.f })
+		table.insert(reversed, { x = node.x, y = node.y, f = node.f, door = node.door })
 		at = previous[at]
 	end
 	local result = {}

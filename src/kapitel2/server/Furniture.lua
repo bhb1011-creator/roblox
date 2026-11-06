@@ -300,7 +300,7 @@ function Furniture.boiler(b, cf)
 	b.box("BoilerDoor", Vector3.new(1.2, 1.0, 0.1), cf * CFrame.new(0, 1.4, -1.62), Color3.fromRGB(30, 26, 22), M.Metal)
 	b.box("BoilerGlow", Vector3.new(0.8, 0.2, 0.05), cf * CFrame.new(0, 1.1, -1.68), Color3.fromRGB(150, 50, 20), M.Neon)
 	for _, x in { -0.8, 0.8 } do
-		b.box("Pipe", Vector3.new(0.35, 4, 0.35), cf * CFrame.new(x, 8, 0), C.metal, M.Metal)
+		b.box("Pipe", Vector3.new(0.35, 3.6, 0.35), cf * CFrame.new(x, 7.8, 0), C.metal, M.Metal) -- endet im Boden darüber
 	end
 	b.box("CoalPile", Vector3.new(2.5, 0.8, 2), cf * CFrame.new(3, 0.4, -1), Color3.fromRGB(20, 20, 20), M.Slate)
 end

@@ -139,8 +139,11 @@ function Kapitel2.run()
 	loadingLabel.TextTransparency = 0
 	local hintLabel = label({
 		AnchorPoint = Vector2.new(0.5, 0),
-		Position = UDim2.fromScale(0.5, 0.12),
-		Size = UDim2.new(0.8, 0, 0, 30),
+		-- weiter unten und schmaler, damit der Text nicht über der Aufgabenliste (oben links) liegt
+		Position = UDim2.fromScale(0.5, 0.24),
+		Size = UDim2.new(0.56, 0, 0, 30),
+		AutomaticSize = Enum.AutomaticSize.Y,
+		TextWrapped = true,
 		Font = Enum.Font.SpecialElite,
 		Text = "",
 		TextSize = 22,
@@ -167,8 +170,9 @@ function Kapitel2.run()
 	-- Aufgabenliste oben links (Flucht: was man noch braucht)
 	local objectives = create("Frame", {
 		Name = "Objectives",
-		Position = UDim2.fromOffset(18, 18),
-		Size = UDim2.fromOffset(330, 0),
+		-- unter den Roblox-Knöpfen oben links (sonst verdecken die den Titel)
+		Position = UDim2.fromOffset(18, 72),
+		Size = UDim2.fromOffset(340, 0),
 		AutomaticSize = Enum.AutomaticSize.Y,
 		BackgroundColor3 = Color3.fromRGB(14, 10, 10),
 		BackgroundTransparency = 0.45,
@@ -198,6 +202,7 @@ function Kapitel2.run()
 			create("TextLabel", {
 				LayoutOrder = index,
 				Size = UDim2.new(1, 0, 0, row.title and 24 or 22),
+				AutomaticSize = Enum.AutomaticSize.Y, -- lange Zeilen umbrechen statt abschneiden
 				BackgroundTransparency = 1,
 				Font = Enum.Font.SpecialElite,
 				Text = row.title and row.text or ((row.done and "☑ " or "☐ ") .. row.text),

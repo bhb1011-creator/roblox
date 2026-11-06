@@ -730,8 +730,19 @@ local function hipRoof(x0, y0, x1, y1, base, rise, overhang)
 	-- (p1..p4 liegen bei Haus-x = min/max und Haus-z = min/max; Plan-x wächst mit
 	-- Haus-x, Plan-y wächst gegen Haus-z)
 	local sideOver = { oy1, ox1, oy0, ox0 }
+	-- liegt die Traufe über einem Raum (weil sich hier zwei Dächer überschneiden)? Dann keine
+	-- Rinne: sie hinge sonst unter der Decke ins Zimmer hinein
+	local function overRoom(a, b)
+		for i = 0, 8 do
+			local x, y = toPlan(a:Lerp(b, i / 8))
+			if roomAt("O", x, y) or roomAt("E", x, y) then
+				return true
+			end
+		end
+		return false
+	end
 	for index, edge in { { p1, p2 }, { p2, p3 }, { p3, p4 }, { p4, p1 } } do
-		if sideOver[index] > 0 then
+		if sideOver[index] > 0 and not overRoom(edge[1], edge[2]) then
 			beam("Gutter", edge[1] - Vector3.new(0, 0.3, 0), edge[2] - Vector3.new(0, 0.3, 0), 0.35, COLORS.metal, M.Metal)
 		end
 	end
@@ -796,7 +807,8 @@ local function buildWalls()
 	}, false)
 	buildWall("E", { 8, 30 }, { 20, 30 }, "int", { { 14, 30, kind = DOOR, angle = 70, swing = "winter", glassDoor = true } })
 	for _, p in { { 20, 30 }, { 8, 30 } } do
-		cyl("CornerPost", WALL_Y.E[2] + 1.2, THICK.ext + 0.35, CFrame.new(L(p[1], p[2], -1.2)), COLORS.trim, M.Wood)
+		-- etwas zum Glashaus hin versetzt (sonst steht die Säule in der Ecke des Gartenflurs)
+		cyl("CornerPost", WALL_Y.E[2] + 1.2, THICK.ext + 0.35, CFrame.new(L(p[1], p[2] - 0.4, -1.2)), COLORS.trim, M.Wood)
 	end
 
 	------------------------------------------------ Erdgeschoss innen
@@ -839,7 +851,7 @@ local function buildWalls()
 		{ 80.56, 50, kind = WIN }, { 80.56, 37, kind = WIN }, { 80.56, 26, kind = WIN },
 		{ 77, 15, kind = WIN, w = 2 }, { 72, 12, kind = WIN }, { 67, 15, kind = WIN, w = 2 },
 		{ 59, 18, kind = WIN }, { 49, 20, kind = WIN }, { 39, 20, kind = WIN },
-		{ 34, 27, kind = WIN }, { 34, 36, kind = WIN, w = 2.4 },
+		{ 34, 27, kind = WIN }, { 34, 36, kind = WIN, w = 2.4, noShutters = true },
 		{ 14, 44, kind = WIN }, { 14, 54, kind = WIN, boarded = true },
 	}, true)
 
@@ -849,7 +861,7 @@ local function buildWalls()
 	end
 	intO({ 41.75, 40 }, { 41.75, 54.15 })
 	intO({ 41.75, 54.15 }, { 41.75, 60 })
-	intO({ 41.75, 54.15 }, { 48.6, 54.15 }, { { 46.8, 54.15, kind = DOOR, angle = 0, w = 3.2, locked = true } }) -- Kammer: abgeschlossen
+	intO({ 41.75, 54.15 }, { 48.6, 54.15 }, { { 46.4, 54.15, kind = DOOR, angle = 0, w = 3.2, locked = true } }) -- Kammer: abgeschlossen (Rahmen nicht in der Querwand)
 	intO({ 48.6, 54.15 }, { 54.25, 54.15 }, { { 51.4, 54.15, kind = DOOR, angle = 75, w = 3.2, swing = "gaeste" } })
 	-- vom Ende der Galerie ins Spielzimmer (und von dort in den langen Flur)
 	intO({ 54.25, 54.15 }, { 54.25, 72 }, { { 54.25, 56.2, kind = DOOR, angle = 70, w = 3.2, swing = "spiel" } })
@@ -955,12 +967,14 @@ local function buildFloorsAndRoofs()
 	-- WC und Speisekammer stoßen an höhere Wände: dort kein Überstand (sonst ragt das
 	-- Dach in die Eingangshalle über der Treppe bzw. in die Kinderzimmer)
 	hipRoof(36, 60, 41.75, 72, BASE + STORY, 2.5, { x0 = 0.8, x1 = -0.45, y0 = 0, y1 = 0.8 })
-	hipRoof(40, 8, 54.25, 20, BASE + STORY, 3.5, { x0 = 1, x1 = 1, y0 = 1, y1 = -0.45 })
+	hipRoof(40, 8, 54.25, 20, BASE + STORY, 3.5, { x0 = 1, x1 = -0.3, y0 = 1, y1 = -0.45 })
 	pyramidRoof({ { 8, 30 }, { 34, 30 }, { 34, 38 }, { 14, 38 }, { 8, 34 } }, BASE + STORY, 3, 1, nil, nil, nil, nil, function(p)
 		return p[1] == 34 or p[2] == 38 -- Wände von Tommys Zimmer, Flur und Großmutters Zimmer
 	end)
 	-- Wintergarten: Glasdach mit weißen Sprossen
-	pyramidRoof(HEX, FLOOR.E + 8, 6, 0.6, COLORS.glassHouse, M.Glass, { Transparency = 0.55 }, "GlassRoof")
+	pyramidRoof(HEX, FLOOR.E + 8, 6, 0.6, COLORS.glassHouse, M.Glass, { Transparency = 0.55 }, "GlassRoof", function(p)
+		return p[2] > 29.9 -- Wand zum Gartenflur
+	end)
 	-- Turm: spitzes Achteckdach mit Wetterfahne
 	local apex = pyramidRoof(TOWER, TOWER_TOP, 15, 1.2)
 	cyl("Finial", 3, 0.3, CFrame.new(apex), COLORS.metal, M.Metal)
@@ -969,8 +983,8 @@ local function buildFloorsAndRoofs()
 	-- Schornsteine (Kamin im Wohnzimmer, Küchenherd)
 	box("Chimney", Vector3.new(3, TOP + 12, 3.4), CFrame.new(L(82.36, 50, (TOP + 12) / 2 - 0.6)), COLORS.brick, M.Brick)
 	box("ChimneyCap", Vector3.new(3.6, 0.5, 4), CFrame.new(L(82.36, 50, TOP + 11.6)), COLORS.stone, M.Concrete)
-	box("Chimney", Vector3.new(2.6, 12, 2.6), CFrame.new(L(37, 31, TOP + 4)), COLORS.brick, M.Brick)
-	box("ChimneyCap", Vector3.new(3.2, 0.5, 3.2), CFrame.new(L(37, 31, TOP + 10.2)), COLORS.stone, M.Concrete)
+	box("Chimney", Vector3.new(2.6, 12, 2.6), CFrame.new(L(37, 31, TOP - 0.1 + 6)), COLORS.brick, M.Brick) -- beginnt in der Decke
+	box("ChimneyCap", Vector3.new(3.2, 0.5, 3.2), CFrame.new(L(37, 31, TOP + 12.1)), COLORS.stone, M.Concrete)
 	-- Steinsockel unter dem Glashaus
 	for i = 1, 6 do
 		local a, b = HEX[i], HEX[i % 6 + 1]
@@ -1017,7 +1031,7 @@ local function buildFurniture()
 
 	-- Wohnzimmer: Kamin, Möbel unter Tüchern
 	Furniture.fireplace(b, at(79.5, 50, E, "W"))
-	Furniture.picture(b, at(80.02, 50, E + 8.2, "W"), 3.2, 4, Color3.fromRGB(50, 40, 34), true)
+	Furniture.picture(b, at(80.02, 50, E + 7.6, "W"), 3, 3, Color3.fromRGB(50, 40, 34), true)
 	Furniture.rug(b, at(68, 52, E), 10, 8, Color3.fromRGB(80, 34, 30))
 	Furniture.sofa(b, at(67, 50, E, "E"), 6, Color3.fromRGB(96, 36, 34), true)
 	Furniture.sofa(b, at(72, 45, E, "S"), 2.6, Color3.fromRGB(96, 36, 34), true)
@@ -1283,7 +1297,7 @@ local function buildFurniture()
 	do
 		local frame = at(25.8, 49, O, "E")
 		box("PultBase", Vector3.new(1.6, 0.25, 1.4), frame * CFrame.new(0, 0.125, 0), Color3.fromRGB(46, 34, 24), M.Wood)
-		box("PultColumn", Vector3.new(0.7, 3.1, 0.7), frame * CFrame.new(0, 1.8, 0), Color3.fromRGB(58, 44, 32), M.Wood)
+		box("PultColumn", Vector3.new(0.7, 3.4, 0.7), frame * CFrame.new(0, 1.95, 0), Color3.fromRGB(58, 44, 32), M.Wood)
 		local top = frame * CFrame.new(0, 3.55, 0) * CFrame.Angles(math.rad(12), 0, 0)
 		box("PultTop", Vector3.new(2.4, 0.2, 1.5), top, Color3.fromRGB(70, 52, 36), M.Wood)
 		box("PultEdge", Vector3.new(2.46, 0.18, 0.12), top * CFrame.new(0, 0.18, -0.72), Color3.fromRGB(46, 34, 24), M.Wood)
@@ -1350,27 +1364,30 @@ local function buildFurniture()
 	}
 	escape.doorOutside = Mansion.point(38, 37.4, O)
 	-- Wo Chemikalien und Schießpulver liegen können (jedes Mal werden mehrere Plätze ausgelost).
-	-- Pro Sorte liegt eines oben (schnell zu finden), die anderen unten im Haus.
+	-- Chemikalien liegen immer einmal oben (direkt vor Großmutters Tür), Schießpulver immer
+	-- unten im Flur; dazu je zwei weitere ausgeloste Plätze unten im Haus.
 	-- Alle Stellen sind geprüft: freier Boden, nichts im Weg.
 	-- `at` = Oberkante der Fläche (Tisch, Kiste, Arbeitsplatte …), `yaw` = Drehung in Grad
-	local function onTop(name, x, y, top, yaw)
-		return { name = name, at = (origin * CFrame.new(L(x, y, top))).Position, yaw = yaw or 0 }
+	-- `always` = dieser Platz ist jedes Mal belegt (die übrigen werden ausgelost)
+	local function onTop(name, x, y, top, yaw, always)
+		return { name = name, at = (origin * CFrame.new(L(x, y, top))).Position, yaw = yaw or 0, always = always == true }
 	end
 	escape.items = {
 		chemicals = {
+			-- immer da: oben im langen Flur, direkt vor Großmutters Tür (man sieht sie sofort)
+			onTop("Oben im Flur, direkt vor Großmutters Tür", 43.5, 39.1, O, 0, true),
 			onTop("Küche, auf der Arbeitsplatte", 41.6, 21.4, 4.9, 0),
 			onTop("Küche, auf dem Tisch", 40.8, 31.6, 4.6, 10),
 			onTop("Speisekammer, auf den Säcken", 43.3, 17.0, 3.7, 0),
 			onTop("Vorratskeller, auf einer Kiste", 42.6, 25.5, -6.7, 15),
 			onTop("Kriechkeller, auf einer Kiste", 74.8, 22.0, -6.8, 30),
-			onTop("Bad, neben der Wanne", 61.2, 26.5, O, 90),
 		},
 		powder = {
+			-- immer da: unten im Flur auf der Kommode (auf dem Weg von der Treppe zur Küche)
+			onTop("Flur, auf der Kommode", 38.9, 42.92, 4.5, 90, true),
 			onTop("Wohnzimmer, auf dem Couchtisch", 72, 50.5, 3.3, 0),
 			onTop("Turmzimmer, neben dem Tischchen", 88, 64.4, FLOOR.E, 20),
 			onTop("Flur zum Garten, auf der Bank", 24, 36.9, 3.55, 90),
-			onTop("Flur, auf der Kommode", 38.9, 42.92, 4.5, 90),
-			onTop("Gästezimmer, auf dem Nachttisch", 55.2, 41.2, 13.8, 0),
 			onTop("Kriechkeller, auf einer Kiste", 72, 34, -6.8, 0),
 		},
 	}
@@ -1693,6 +1710,8 @@ function Mansion.build(model, houseOrigin)
 	HouseInterior.build(model, origin, true)
 	task.wait()
 	lastBreath = os.clock()
+	-- Wegnetz für Sarp und die Familie gleich jetzt (nicht erst mitten im Spiel) ausrechnen
+	Mansion.prepareNavigation()
 	return root
 end
 
@@ -1763,28 +1782,84 @@ local function buildNavigation()
 			{ { 43.7, 68.2, "E", "hall" }, { 43.7, 59.3, "O", "galerie" } },
 			{ { 52.1, 33.0, "E", "kellertreppe" }, { 52.1, 22.6, "K", "vorrat" } },
 		},
-		-- Zwischenpunkte, wo Räume Ecken haben (damit man nicht um die Ecke durch die Wand sieht)
+		links = {
+			{ { 43.7, 59.3, "O", "galerie" }, { 44.5, 57.2, "O", "galerie" } },
+			-- unten vor der Treppe (seitlich sind Geländer und Pfosten)
+			{ { 43.7, 68.2, "E", "hall" }, { 44.2, 70.2, "E", "hall" } },
+		},
+		-- Zwischenpunkte (um Ecken und Möbel herum); ausgerechnet mit einem Prüfprogramm, das das
+		-- ganze Haus nachbaut: von jedem Punkt aus sieht man den nächsten ohne Wand oder Möbel dazwischen
 		hubs = {
-			{ "E", 38, 51, "flur" },
-			{ "E", 48, 47, "flur" },
-			{ "E", 66, 49, "wohn" },
-			{ "E", 72, 56, "wohn" },
-			{ "E", 48, 62, "hall" },
-			{ "E", 46, 40, "kueche" },
-			{ "E", 42, 32, "kueche" },
-			{ "O", 46, 37, "gang" },
-			{ "O", 63, 37.6, "gang" },
-			{ "O", 64.6, 44, "gang" },
-			{ "O", 67, 48.5, "gang" },
-			{ "O", 60, 62, "spiel" },
-			{ "O", 70, 58, "spiel" },
-			{ "O", 49, 57, "galerie" },
-			{ "K", 44, 28, "vorrat" },
-			{ "K", 44, 38, "kgang" },
-			{ "K", 62, 36, "heiz" },
+			{ "E", 43.95, 56.35, "hall" },
+			{ "E", 86.88, 72.89, "turm" },
+			{ "E", 64.45, 19.2, "ess" },
+			{ "E", 78.45, 25.2, "ess" },
+			{ "E", 47.2, 35.2, "kueche" },
+			{ "E", 47.2, 10.2, "speise" },
+			{ "E", 17.2, 53.2, "salon" },
+			{ "E", 39.2, 66.2, "wc" },
+			{ "E", 18.2, 21.41, "winter" },
+			{ "E", 5.2, 22.41, "winter" },
+			{ "O", 42.95, 58.35, "galerie" },
+			{ "O", 45.95, 57.35, "galerie" },
+			{ "O", 48.95, 56.35, "galerie" },
+			{ "O", 51.95, 56.35, "galerie" },
+			{ "O", 42.95, 55.35, "galerie" },
+			{ "O", 67.2, 39.2, "gang" },
+			{ "O", 49.2, 28.2, "lucy" },
+			{ "O", 62.45, 22.2, "bad" },
+			{ "K", 42.2, 32.2, "vorrat" },
+			{ "K", 18.2, 48.2, "wasch" },
 		},
 	}
+	-- Möbel als Hindernisse: alles Feste im Haus, das in Körperhöhe steht (keine Teppiche,
+	-- keine Lampen an der Decke, keine Wände/Böden/Treppen – die regelt das Raumnetz)
+	local obstacles = { K = {}, E = {}, O = {} }
+	local inverse = origin:Inverse()
+	local SKIP = { Wall = true, StoneWall = true, Floor = true, Ceiling = true, Wallpaper = true, Baseboard = true, Wainscot = true, ChairRail = true, WallTiles = true }
+	local function collect(folder)
+		for _, part in folder:GetDescendants() do
+			if part:IsA("BasePart") and part.CanCollide and part.Transparency < 0.9 and not SKIP[part.Name] and not part.Name:find("^Stair") and not part.Name:find("^Door") and not part.Name:find("^Rug") and not part.Name:find("^Cellar") and not part.Name:find("^Escape") then
+				local cf = inverse * part.CFrame
+				local half = part.Size / 2
+				local x0, y0, z0, x1, y1, z1 = math.huge, math.huge, math.huge, -math.huge, -math.huge, -math.huge
+				for _, sx in { -1, 1 } do
+					for _, sy in { -1, 1 } do
+						for _, sz in { -1, 1 } do
+							local corner = cf * Vector3.new(sx * half.X, sy * half.Y, sz * half.Z)
+							x0, x1 = math.min(x0, corner.X), math.max(x1, corner.X)
+							y0, y1 = math.min(y0, corner.Y), math.max(y1, corner.Y)
+							z0, z1 = math.min(z0, corner.Z), math.max(z1, corner.Z)
+						end
+					end
+				end
+				for _, key in { "K", "E", "O" } do
+					-- steht es im Bereich 0,4 bis 5 Studs über diesem Fußboden?
+					if y1 > FLOOR[key] + 0.4 and y0 < FLOOR[key] + 5 and (x1 - x0) < 30 and (z1 - z0) < 30 then
+						table.insert(obstacles[key], { x0 + 50, 57.4 - z1, x1 + 50, 57.4 - z0, part.Name })
+					end
+				end
+			end
+		end
+	end
+	if Mansion.model then
+		for _, name in { "Furniture", "Interior" } do
+			local folder = Mansion.model:FindFirstChild(name, true)
+			if folder then
+				collect(folder)
+			end
+		end
+	end
+	config.obstacles = obstacles
 	navigation = Nav.new(config)
+	Mansion.navGraph = navigation -- zum Prüfen
+end
+
+function Mansion.prepareNavigation()
+	local ok, problem = pcall(buildNavigation)
+	if not ok then
+		warn("Kapitel 2: Wegnetz konnte nicht gebaut werden: " .. tostring(problem))
+	end
 end
 
 local function floorOfHeight(y)
@@ -1800,7 +1875,10 @@ end
 
 -- Weg von einer Stelle im Haus zu einer anderen (Fußpositionen in der Welt): Liste von
 -- Weltpunkten durch Türen und über Treppen, oder nil (draußen / kein Weg).
-function Mansion.route(fromWorld, toWorld)
+-- `openWithin`: Türen auf dem Weg, die näher als so viele Studs sind, werden geöffnet
+-- (Sarp und die Familie laufen sonst durch geschlossene Türblätter). Zweiter Rückgabewert:
+-- zu jedem Punkt die Tür, durch die man dort geht (oder false).
+function Mansion.route(fromWorld, toWorld, openWithin)
 	if not origin then
 		return nil
 	end
@@ -1817,13 +1895,26 @@ function Mansion.route(fromWorld, toWorld)
 	if not ok or not result then
 		return nil
 	end
-	local points = {}
+	local points, doors = {}, {}
 	for _, p in result do
-		table.insert(points, Mansion.point(p.x, p.y, FLOOR[p.f]))
+		local world = Mansion.point(p.x, p.y, FLOOR[p.f])
+		table.insert(points, world)
+		local door = p.door and Mansion.doorAt(p.door.x, p.door.y, p.door.f)
+		table.insert(doors, door or false)
+		if door and openWithin and (world - fromWorld).Magnitude < openWithin then
+			Mansion.passDoor(door)
+		end
 	end
 	-- das Ziel selbst genau dort, wo verlangt (z. B. mit der Höhe des Spielers)
 	points[#points] = toWorld
-	return points
+	return points, doors
+end
+
+-- Eine Tür aufmachen, durch die gleich jemand (Sarp, Familie) geht
+function Mansion.passDoor(door)
+	if door and not door.locked and door.angle == 0 and Mansion.openDoor then
+		task.spawn(Mansion.openDoor, door)
+	end
 end
 
 -- Wie weit ist es zu Fuß? (Wege durch Türen und Treppen; ohne Wegnetz die Luftlinie.)
