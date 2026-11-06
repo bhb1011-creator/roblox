@@ -826,7 +826,7 @@ local function buildWalls()
 	int({ 54.25, 34 }, { 54.25, 42 }, { { 54.25, 38, kind = DOOR, angle = 80, swing = "ess" } })
 	int({ 54.25, 22 }, { 54.25, 34 })
 	int({ 54.25, 18 }, { 54.25, 20 })
-	int({ 40, 20 }, { 54.25, 20 }, { { 47, 20, kind = DOOR, angle = 60, swing = "kueche" } }) -- geht in die Küche auf (in der Speisekammer stehen Säcke)
+	int({ 40, 20 }, { 54.25, 20 }, { { 47, 20, kind = DOOR, angle = 60, swing = "speise" } })
 	int({ 34, 30 }, { 34, 38 }, { { 34, 34, kind = DOOR, angle = 70, swing = "gartenflur" } })
 	int({ 14, 38 }, { 34, 38 })
 	int({ 14, 60 }, { 34, 60 }, { { 24, 60, kind = DOOR, angle = 0, locked = true } }) -- Arbeitszimmer: abgeschlossen
@@ -877,7 +877,7 @@ local function buildWalls()
 	intO({ 74.56, 52 }, { 80.56, 44 })
 	local corridorDoors = {
 		{ 39, 34, kind = DOOR, angle = 25, swing = "tommy" },
-		{ 49, 34, kind = DOOR, angle = 15, swing = "gang" }, -- in den Flur (in Lucys Zimmer steht das Puppenhaus)
+		{ 49, 34, kind = DOOR, angle = 15, swing = "lucy" },
 		{ 59, 34, kind = DOOR, angle = 80, swing = "bad" },
 		{ 72, 34, kind = DOOR, angle = 0, locked = true }, -- Eltern: abgeschlossen
 	}
@@ -1104,8 +1104,9 @@ local function buildFurniture()
 	-- Regale links und rechts vom kleinen Fenster, Rückwand an der Wand
 	Furniture.shelf(b, at(42.7, 8.9, E, "S"), 5, 7.5, "jars", rng)
 	Furniture.shelf(b, at(51, 8.9, E, "S"), 5, 7.5, "jars", rng)
+	-- (Säcke links von der Tür, damit sie beim Aufgehen nicht hineinschwingt)
 	for i = 0, 2 do
-		box("Sack", Vector3.new(1.6, 2, 1.2), CFrame.new(L(41.5 + i * 1.8, 17, E + 1)) * CFrame.Angles(0, i * 0.4, 0), Color3.fromRGB(150, 130, 96), M.Fabric)
+		box("Sack", Vector3.new(1.6, 2, 1.2), CFrame.new(L(40.4 + i * 1.7, 17, E + 1)) * CFrame.Angles(0, i * 0.4, 0), Color3.fromRGB(150, 130, 96), M.Fabric)
 	end
 
 	-- Salon: Klavier (hier steht Tommy)
@@ -1190,7 +1191,7 @@ local function buildFurniture()
 	Furniture.bed(b, at(51.4, 23.5, O, "S"), 3.4, 5.8, Color3.fromRGB(150, 110, 120))
 	local stand = Furniture.nightstand(b, at(48.6, 21.2, O, "S"))
 	box("MusicBox", Vector3.new(0.8, 0.5, 0.6), stand * CFrame.new(0, 0.25, 0), Color3.fromRGB(150, 110, 90), M.Wood)
-	Furniture.dollhouse(b, at(46.5, 31.5, O, "N"))
+	Furniture.dollhouse(b, at(45.6, 31.5, O, "N")) -- nicht dort, wo die Tür aufgeht
 	box("DollShelf", Vector3.new(0.6, 0.15, 6), CFrame.new(L(44.6, 27, O + 4.5)), Color3.fromRGB(110, 84, 60), M.Wood)
 	for i = 0, 4 do
 		Furniture.doll(b, at(44.7, 24.6 + i * 1.2, O + 4.58, "E"), Color3.fromRGB(120 + i * 20, 60, 70))
@@ -1378,7 +1379,7 @@ local function buildFurniture()
 			onTop("Oben im Flur, direkt vor Großmutters Tür", 43.5, 39.1, O, 0, true),
 			onTop("Küche, auf der Arbeitsplatte", 41.6, 21.4, 4.9, 0),
 			onTop("Küche, auf dem Tisch", 40.8, 31.6, 4.6, 10),
-			onTop("Speisekammer, auf den Säcken", 43.3, 17.0, 3.7, 0),
+			onTop("Speisekammer, auf den Säcken", 42.1, 17.0, 3.7, 0),
 			onTop("Vorratskeller, auf einer Kiste", 42.6, 25.5, -6.7, 15),
 			onTop("Kriechkeller, auf einer Kiste", 74.8, 22.0, -6.8, 30),
 		},
