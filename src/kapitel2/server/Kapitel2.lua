@@ -481,10 +481,23 @@ function Kapitel2.start()
 	local duo = false
 	local knocker
 	local function say(speaker, entry, name)
+		-- entry: Text, { solo = , duo = } oder { text = ..., voice = Name der Aufnahme }
+		local voiceName
+		if type(entry) == "table" and entry.text then
+			voiceName = entry.voice
+			entry = entry.text
+			if type(voiceName) == "table" then
+				voiceName = duo and voiceName.duo or voiceName.solo
+			end
+		end
 		local text = Dialogue.text(entry, duo)
 		local voice = Config.VOICES and Config.VOICES[speaker] or {}
 		local duration = Dialogue.duration(text, voice.speed)
-		event:FireAllClients({ type = "line", speaker = speaker, name = name or Script.NAMES[speaker] or "", text = text, duration = duration })
+		local recording = voiceName and Config.VOICE_LINES and Config.VOICE_LINES[voiceName]
+		if recording and recording.id ~= "" and (recording.length or 0) > 0 then
+			duration = recording.length + 0.3
+		end
+		event:FireAllClients({ type = "line", speaker = speaker, name = name or Script.NAMES[speaker] or "", text = text, duration = duration, voice = voiceName })
 		task.wait(duration + GAP)
 	end
 
@@ -1051,6 +1064,7 @@ function Kapitel2.start()
 		tuer1 = "im Raum hinter Tür 1 (Flucht)",
 		schluessel = "im Vorratskeller vor dem Regal, mit dem Schlüssel",
 		kapitel3 = "gleich in Kapitel 3 (Ritualraum)",
+		huette = "gleich am Ende von Kapitel 3 (hinter der Brücke, Weg zu Sarps Hütte)",
 	}
 	local testStart = TEST_STARTS[Config.TEST_START_KAPITEL2] ~= nil
 	-- (tuer1, schluessel und kapitel3 beginnen alle mit der Flucht; Escape.lua springt weiter)

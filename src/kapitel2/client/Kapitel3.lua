@@ -15,6 +15,7 @@ local Config = require(Shared:WaitForChild("Config"))
 local Data = require(Shared:WaitForChild("Kapitel3Data"))
 local Beast = require(Shared:WaitForChild("Beast"))
 local Script = require(Shared:WaitForChild("Kapitel2Dialogue"))
+local Parts = require(Shared:WaitForChild("Parts"))
 
 local Kapitel3 = {}
 
@@ -2530,6 +2531,705 @@ local function updateChase(now, deltaTime)
 	end
 end
 
+------------------------------------------------------------------ Das Ende: Sarps Hütte
+-- Nach der Brücke: zu Fuß um die Kurve zur Hütte. Drinnen das Telefon (Tasten im Spiel
+-- anklicken), nach dem Anruf Spiegel und Foto (Halluzinationen), dann das Bett und die
+-- Schlussszene mit dem Polizeiauto.
+local hutState -- alles zur Hütte (nur auf diesem Computer)
+local phoneUi
+local LIGHT_BASE = {} -- Licht -> normale Helligkeit (zum Flackern)
+
+local function remoteNamed(name)
+	return remotes and remotes:FindFirstChild(name)
+end
+
+local function setOwnWalk(enabled)
+	local character = player.Character
+	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+	if not humanoid then
+		return
+	end
+	if not enabled then
+		if humanoid.WalkSpeed > 0 then
+			humanoid:SetAttribute("K3Walk", humanoid.WalkSpeed)
+		end
+		humanoid.WalkSpeed = 0
+	else
+		local saved = humanoid:GetAttribute("K3Walk")
+		if saved and humanoid.WalkSpeed == 0 then
+			humanoid.WalkSpeed = saved
+		end
+		humanoid:SetAttribute("K3Walk", nil)
+	end
+end
+
+local function buildPhoneUi()
+	if phoneUi then
+		return phoneUi
+	end
+	local screen = create("ScreenGui", {
+		Name = "Kapitel3Phone",
+		IgnoreGuiInset = true,
+		ResetOnSpawn = false,
+		DisplayOrder = 16,
+		Enabled = false,
+		Parent = player:WaitForChild("PlayerGui"),
+	})
+	local panel = create("Frame", {
+		AnchorPoint = Vector2.new(0.5, 1),
+		Position = UDim2.new(0.5, 0, 1, -24),
+		Size = UDim2.fromOffset(460, 128),
+		BackgroundColor3 = Color3.fromRGB(14, 12, 10),
+		BackgroundTransparency = 0.25,
+		Parent = screen,
+	})
+	create("UICorner", { CornerRadius = UDim.new(0, 10), Parent = panel })
+	local title = create("TextLabel", {
+		BackgroundTransparency = 1,
+		Position = UDim2.fromOffset(0, 8),
+		Size = UDim2.new(1, 0, 0, 24),
+		Font = Enum.Font.GothamMedium,
+		TextSize = 18,
+		TextColor3 = Color3.fromRGB(220, 210, 190),
+		Text = UserInputService.TouchEnabled and "Tippe die Tasten am Telefon an" or "Klicke die Tasten am Telefon an",
+		AutoLocalize = false,
+		Parent = panel,
+	})
+	local digits = create("TextLabel", {
+		BackgroundTransparency = 1,
+		Position = UDim2.fromOffset(0, 34),
+		Size = UDim2.new(1, 0, 0, 46),
+		Font = Enum.Font.Code,
+		TextSize = 40,
+		TextColor3 = Color3.fromRGB(150, 230, 150),
+		Text = "_ _ _",
+		AutoLocalize = false,
+		Parent = panel,
+	})
+	local hangUp = create("TextButton", {
+		AnchorPoint = Vector2.new(0.5, 0),
+		Position = UDim2.new(0.5, 0, 0, 86),
+		Size = UDim2.fromOffset(200, 32),
+		BackgroundColor3 = Color3.fromRGB(120, 30, 26),
+		Font = Enum.Font.GothamBold,
+		TextSize = 16,
+		TextColor3 = Color3.new(1, 1, 1),
+		Text = UserInputService.TouchEnabled and "Auflegen" or "Auflegen (Q)",
+		AutoLocalize = false,
+		Parent = panel,
+	})
+	create("UICorner", { CornerRadius = UDim.new(0, 8), Parent = hangUp })
+	phoneUi = { screen = screen, title = title, digits = digits, hangUp = hangUp }
+	return phoneUi
+end
+
+local function showDigits(dialed, note)
+	local ui = buildPhoneUi()
+	local shown = {}
+	for i = 1, 3 do
+		shown[i] = dialed:sub(i, i) ~= "" and dialed:sub(i, i) or "_"
+	end
+	ui.digits.Text = note or table.concat(shown, " ")
+end
+
+local function closePhone()
+	local H = hutState
+	if not (H and H.dialing) then
+		return
+	end
+	H.dialing = nil
+	if phoneUi then
+		phoneUi.screen.Enabled = false
+	end
+	for key, color in H.keyColors or {} do
+		if key.Parent then
+			key.Color = color
+		end
+	end
+	if not H.scaring then
+		stopCutscene()
+	end
+	setOwnWalk(true)
+end
+
+local function openPhone()
+	local H = hutState
+	if not H or H.dialing or H.scaring or not (H.phone and H.keys) then
+		return
+	end
+	H.dialing = { digits = "", busy = false }
+	H.keyColors = H.keyColors or {}
+	for _, key in H.keys:GetChildren() do
+		if key:IsA("BasePart") and not H.keyColors[key] then
+			H.keyColors[key] = key.Color
+		end
+	end
+	setOwnWalk(false)
+	startCutscene()
+	setBars(false, 0)
+	local view = H.phoneView and H.phoneView.Position or (H.phone.Position + Vector3.new(0, 0, 3))
+	still(CFrame.lookAt(view, H.phone.Position + UP * 0.05), 0.7, "inout")
+	setFov(50, 0.7)
+	play("phonePickup", { Volume = 1.2 }, H.phone)
+	local ui = buildPhoneUi()
+	ui.screen.Enabled = true
+	showDigits("")
+end
+
+local function pressKey(key)
+	local H = hutState
+	local D = H and H.dialing
+	if not D or D.busy then
+		return
+	end
+	local digit = key:GetAttribute("Digit")
+	if not digit then
+		return
+	end
+	play("phoneKey", { Volume = 1 }, key)
+	local home = key.CFrame
+	key.CFrame = home * CFrame.new(0, 0, 0.05)
+	task.delay(0.12, function()
+		if key.Parent then
+			key.CFrame = home
+		end
+	end)
+	D.digits ..= digit
+	showDigits(D.digits)
+	if #D.digits >= #Data.PHONE_NUMBER then
+		D.busy = true
+		if D.digits == Data.PHONE_NUMBER then
+			showDigits(D.digits, D.digits:gsub(".", "%0 "):sub(1, -2) .. "  – es klingelt …")
+			local remote = remoteNamed("K3Phone")
+			if remote then
+				remote:FireServer(D.digits)
+			end
+			task.delay(1.6, function()
+				if hutState == H and H.dialing == D then
+					closePhone()
+				end
+			end)
+		else
+			play("phoneWrong", { Volume = 1 }, H.phone)
+			showDigits(D.digits, "Kein Anschluss …")
+			task.delay(1.4, function()
+				if hutState == H and H.dialing == D then
+					D.digits = ""
+					D.busy = false
+					showDigits("")
+				end
+			end)
+		end
+	end
+end
+
+local function keyUnder(screenPosition, viewport)
+	local H = hutState
+	if not (H and H.keys) then
+		return nil
+	end
+	local ray = viewport and camera:ViewportPointToRay(screenPosition.X, screenPosition.Y) or camera:ScreenPointToRay(screenPosition.X, screenPosition.Y)
+	local params = RaycastParams.new()
+	params.FilterType = Enum.RaycastFilterType.Include
+	params.FilterDescendantsInstances = { H.keys }
+	local hit = workspace:Raycast(ray.Origin, ray.Direction * 20, params)
+	return hit and hit.Instance
+end
+
+-- Das Biest als Halluzination: Kopf genau bei `headPosition`, Blick zu `lookAt`
+local function scareBeast(headPosition, lookAt)
+	local model, joints = Beast.build(localFolder or workspace)
+	pcall(Beast.pose, joints, 0, 0, 1, 0.25)
+	local function place(head, target)
+		local facing = unit(flat(target - head), Vector3.new(0, 0, -1))
+		local rotation = CFrame.lookAt(Vector3.zero, facing)
+		model:PivotTo(CFrame.new(head - rotation:VectorToWorldSpace(Beast.HEAD)) * rotation)
+	end
+	place(headPosition, lookAt)
+	return model, place
+end
+
+local function removeMarker(kind)
+	local H = hutState
+	local marker = H and H.markers and H.markers[kind]
+	if marker then
+		H.markers[kind] = nil
+		for _, item in marker do
+			if item.Parent then
+				item:Destroy()
+			end
+		end
+	end
+end
+
+local function hallucination(kind)
+	local H = hutState
+	if not H or H.scaring then
+		return
+	end
+	local target = kind == "mirror" and H.mirror or H.photo
+	if not target then
+		return
+	end
+	H.scaring = true
+	H.done[kind] = true
+	removeMarker(kind)
+	local mine = token
+	task.spawn(function()
+		local ok, problem = pcall(function()
+			setOwnWalk(false)
+			local eyeFrame = camera.CFrame
+			local eye = eyeFrame.Position
+			startCutscene()
+			setBars(false, 0)
+			if kind == "mirror" then
+				-- man schaut in den Spiegel, das Licht flackert – es steht hinter einem
+				still(CFrame.lookAt(eye, target.Position), 0.5)
+				hold(mine, 0.6)
+				play("lightFlicker", { Volume = 1.4 })
+				H.blackoutUntil = os.clock() + 0.9
+				hold(mine, 0.9)
+				local away = unit(flat(eye - target.Position), Vector3.new(0, 0, 1))
+				local head = eye + away * 2.8 + UP * 0.4
+				local model = scareBeast(head, eye)
+				H.scareModel = model
+				still(CFrame.lookAt(eye, head + UP * 0.2), 0.2, "out")
+				play("mirrorScare", { Volume = 2.6 })
+				play("jumpscare", { Volume = 2.4 })
+				play("roar", { Volume = 2.2 })
+				hold(mine, 0.12)
+				redFlash(0.6, 0.7)
+				shake(0.06, 0.9)
+				setFov(58, 0.2)
+				hold(mine, 0.85)
+			else
+				-- man beugt sich über das Foto, es wird still – dann springt es heraus
+				local close = target.Position + unit(eye - target.Position, Vector3.new(0, 0, 1)) * 2.3
+				still(CFrame.lookAt(close, target.Position), 1.4, "inout")
+				setFov(55, 1.4)
+				play("heartbeat", { Volume = 1.2 })
+				hold(mine, 0.8)
+				play("heartbeat", { Volume = 1.6 })
+				hold(mine, 0.8)
+				H.blackoutUntil = os.clock() + 0.35
+				play("lightFlicker", { Volume = 1.2 })
+				hold(mine, 0.35)
+				local camPos = camera.CFrame.Position
+				local direction = unit(target.Position - camPos)
+				local model, place = scareBeast(target.Position, camPos)
+				H.scareModel = model
+				play("photoScare", { Volume = 2.6 })
+				play("jumpscare", { Volume = 2.4 })
+				play("roar", { Volume = 2.2 })
+				local start = os.clock()
+				while os.clock() - start < 0.22 do
+					local a = ease((os.clock() - start) / 0.22, "out")
+					place(target.Position:Lerp(camPos + direction * 1.5, a), camPos)
+					hold(mine, 0)
+				end
+				redFlash(0.6, 0.7)
+				shake(0.07, 0.9)
+				kick(CFrame.Angles(0.12, 0, 0))
+				hold(mine, 0.8)
+			end
+			setBlack(0, 0.05)
+			hold(mine, 0.3)
+			if H.scareModel then
+				H.scareModel:Destroy()
+				H.scareModel = nil
+			end
+			camera.CFrame = eyeFrame
+			stopCutscene()
+			setBlack(1, 0.7)
+			play("hallucinationFade", { Volume = 1.2 })
+			whisperCaption(Script.KAPITEL3.notReal, 3.2)
+			local remote = remoteNamed("K3Scare")
+			if remote then
+				remote:FireServer(kind)
+			end
+		end)
+		if H.scareModel then
+			H.scareModel:Destroy()
+			H.scareModel = nil
+		end
+		H.scaring = false
+		setOwnWalk(true)
+		if not ok and problem ~= CANCELLED then
+			warn("Kapitel 3 (Client): Halluzination: " .. tostring(problem))
+			setBlack(1, 0.4)
+			stopCutscene()
+		end
+	end)
+end
+
+-- Polizeiauto (nur auf diesem Computer): silber-blau, Blaulicht, Front zeigt nach -Z
+local function buildPoliceCar(parent)
+	local model = Instance.new("Model")
+	model.Name = "PoliceCar"
+	local function part(name, size, cframe, color, material, extra)
+		local p = Instance.new("Part")
+		p.Name = name
+		p.Anchored = true
+		p.CanCollide = false
+		p.CanQuery = false
+		p.CanTouch = false
+		p.Size = size
+		p.CFrame = cframe
+		p.Color = color
+		p.Material = material or Enum.Material.SmoothPlastic
+		p.TopSurface = Enum.SurfaceType.Smooth
+		p.BottomSurface = Enum.SurfaceType.Smooth
+		for key, value in extra or {} do
+			p[key] = value
+		end
+		p.Parent = model
+		return p
+	end
+	local SILVER = Color3.fromRGB(196, 200, 206)
+	local BLUE = Color3.fromRGB(24, 62, 150)
+	local GLASS = Color3.fromRGB(20, 24, 30)
+	local body = part("Body", Vector3.new(6.2, 1.9, 13.6), CFrame.new(0, 2, 0), SILVER, Enum.Material.Metal)
+	part("Skirt", Vector3.new(6.3, 0.5, 13.2), CFrame.new(0, 1.05, 0), Color3.fromRGB(40, 40, 44))
+	part("Hood", Vector3.new(6, 0.3, 4), CFrame.new(0, 3.05, -4.6) * CFrame.Angles(math.rad(-3), 0, 0), SILVER, Enum.Material.Metal)
+	part("Trunk", Vector3.new(6, 0.3, 2.6), CFrame.new(0, 3.05, 5.3), SILVER, Enum.Material.Metal)
+	part("Cabin", Vector3.new(5.6, 1.8, 6), CFrame.new(0, 3.9, 0.7), SILVER, Enum.Material.Metal)
+	part("Windshield", Vector3.new(5.3, 1.9, 0.12), CFrame.new(0, 3.85, -2.55) * CFrame.Angles(math.rad(-28), 0, 0), GLASS, Enum.Material.Glass, { Transparency = 0.2 })
+	part("RearWindow", Vector3.new(5.3, 1.7, 0.12), CFrame.new(0, 3.85, 3.95) * CFrame.Angles(math.rad(28), 0, 0), GLASS, Enum.Material.Glass, { Transparency = 0.2 })
+	for _, side in { -1, 1 } do
+		part("SideWindow", Vector3.new(0.12, 1.3, 5.4), CFrame.new(side * 2.81, 4, 0.7), GLASS, Enum.Material.Glass, { Transparency = 0.2 })
+		part("Pillar", Vector3.new(0.14, 1.4, 0.25), CFrame.new(side * 2.83, 4, 0.7), SILVER, Enum.Material.Metal)
+		part("Stripe", Vector3.new(0.06, 0.55, 13.4), CFrame.new(side * 3.12, 2.25, 0), BLUE)
+		part("StripeThin", Vector3.new(0.06, 0.14, 13.4), CFrame.new(side * 3.12, 1.75, 0), BLUE)
+		local label = part("Label", Vector3.new(0.05, 0.9, 4.6), CFrame.new(side * 3.16, 2.25, 0.4), BLUE, Enum.Material.SmoothPlastic, { Transparency = 1 })
+		local surface = Parts.surfaceGui(label, side > 0 and Enum.NormalId.Right or Enum.NormalId.Left, false)
+		Parts.text(surface, { Text = "POLIZEI", TextColor3 = Color3.fromRGB(240, 244, 250), Font = Enum.Font.GothamBlack })
+		part("Mirror", Vector3.new(0.6, 0.35, 0.25), CFrame.new(side * 3.2, 3.6, -2.2), SILVER, Enum.Material.Metal)
+		for _, z in { -4.3, 4.3 } do
+			part("Wheel", Vector3.new(0.9, 2.4, 2.4), CFrame.new(side * 2.85, 1.2, z), Color3.fromRGB(20, 20, 20), Enum.Material.SmoothPlastic, { Shape = Enum.PartType.Cylinder })
+			part("Rim", Vector3.new(0.92, 1.2, 1.2), CFrame.new(side * 2.86, 1.2, z), Color3.fromRGB(150, 150, 156), Enum.Material.Metal, { Shape = Enum.PartType.Cylinder })
+		end
+		local head = part("Headlight", Vector3.new(1.2, 0.45, 0.1), CFrame.new(side * 2.1, 2.45, -6.82), Color3.fromRGB(255, 250, 230), Enum.Material.Neon)
+		local spot = Instance.new("SpotLight")
+		spot.Face = Enum.NormalId.Front
+		spot.Range = 45
+		spot.Angle = 50
+		spot.Brightness = 3
+		spot.Color = Color3.fromRGB(255, 246, 220)
+		spot.Parent = head
+		part("TailLight", Vector3.new(1.2, 0.45, 0.1), CFrame.new(side * 2.2, 2.45, 6.82), Color3.fromRGB(200, 20, 20), Enum.Material.Neon)
+	end
+	part("Grille", Vector3.new(3, 0.5, 0.1), CFrame.new(0, 2.2, -6.82), Color3.fromRGB(30, 30, 34))
+	part("BumperFront", Vector3.new(6.3, 0.5, 0.4), CFrame.new(0, 1.3, -6.9), Color3.fromRGB(40, 40, 44))
+	part("BumperRear", Vector3.new(6.3, 0.5, 0.4), CFrame.new(0, 1.3, 6.9), Color3.fromRGB(40, 40, 44))
+	part("LightBar", Vector3.new(3.9, 0.3, 0.9), CFrame.new(0, 4.95, 0.4), Color3.fromRGB(30, 30, 34))
+	local blue = {}
+	for _, side in { -1, 1 } do
+		local lamp = part("BlueLight", Vector3.new(1.6, 0.45, 0.8), CFrame.new(side * 1.0, 5.3, 0.4), Color3.fromRGB(30, 70, 200), Enum.Material.Neon)
+		local glow = Instance.new("PointLight")
+		glow.Color = Color3.fromRGB(50, 100, 255)
+		glow.Range = 48
+		glow.Brightness = 4
+		glow.Shadows = true
+		glow.Parent = lamp
+		table.insert(blue, { part = lamp, light = glow })
+	end
+	model.PrimaryPart = body
+	model.WorldPivot = CFrame.new()
+	model.Parent = parent
+	return { model = model, blue = blue, body = body }
+end
+
+function handlers.walk(message)
+	token += 1
+	local mine = token
+	if not message.hut then
+		return
+	end
+	-- die Verfolgung ist vorbei: normale Kamera, ruhiger
+	chase = nil
+	cleanupScene()
+	table.clear(rigs)
+	local folder = newLocalFolder()
+	stopLoop("chaseMusic", 3)
+	stopLoop("runBreath", 4)
+	stopCutscene()
+	setBlack(1, 0.8)
+	showCard(nil, nil, false, 0.1)
+	brighten(true)
+	local moon = Instance.new("Part")
+	moon.Name = "K3Moonlight"
+	moon.Anchored = true
+	moon.CanCollide = false
+	moon.CanQuery = false
+	moon.CanTouch = false
+	moon.Transparency = 1
+	moon.Size = Vector3.new(0.5, 0.5, 0.5)
+	moon.Parent = folder
+	local moonLight = Instance.new("PointLight")
+	moonLight.Color = Color3.fromRGB(150, 165, 200)
+	moonLight.Range = 60
+	moonLight.Brightness = 1.1
+	moonLight.Shadows = false
+	moonLight.Parent = moon
+	local hut = message.hut
+	hutState = {
+		mine = mine,
+		hut = hut,
+		mirror = message.mirror,
+		photo = message.photo,
+		phone = message.phone,
+		keys = message.phoneKeys,
+		phoneView = message.phoneView,
+		carStop = message.carStop,
+		endInside = message.endInside,
+		endOutside = message.endOutside,
+		door = message.door,
+		moon = moon,
+		moonLight = moonLight,
+		done = {},
+		markers = {},
+		lights = {},
+	}
+	-- Lichter der Hütte (zum Flackern): Kerzen, Lampen, Kamin
+	table.clear(LIGHT_BASE)
+	for _, item in hut:GetDescendants() do
+		if item:IsA("PointLight") and (item.Name == "HutLight" or item.Name == "HutFire") then
+			table.insert(hutState.lights, item)
+			LIGHT_BASE[item] = item.Brightness
+		end
+	end
+	local fire
+	for _, item in hut:GetDescendants() do
+		if item.Name == "HutFire" and item.Parent then
+			fire = item.Parent
+		end
+	end
+	run(mine, function()
+		hold(mine, 0.3)
+		camera.CameraType = Enum.CameraType.Custom
+		hold(mine, 2)
+		-- Ruhe nach dem Lärm: Wald, Feuer in der Hütte
+		if fire then
+			loop("fireCrackle", 0.8, fire)
+		end
+		loop("cabinAmbience", 0.35, hutState.phone)
+	end)
+end
+
+function handlers.phone()
+	openPhone()
+end
+
+function handlers.calling(message)
+	local H = hutState
+	if not H then
+		return
+	end
+	if message.caller ~= player.UserId then
+		closePhone()
+	end
+	loop("phoneRing", 0.7, H.phone)
+	task.delay(Data.PHONE_RING, function()
+		stopLoop("phoneRing", 0.1)
+	end)
+end
+
+function handlers.hangUp()
+	local H = hutState
+	if H and H.phone then
+		play("phoneHangup", { Volume = 1.2 }, H.phone)
+	end
+end
+
+-- Nach dem Anruf: Spiegel und Foto ziehen den Blick an (leises Flüstern, schwaches rotes
+-- Glimmen). Wer nah genug hinschaut, sieht das Biest.
+function handlers.scares()
+	local H = hutState
+	if not H or H.scares then
+		return
+	end
+	H.scares = true
+	for kind, target in { mirror = H.mirror, photo = H.photo } do
+		if target and not H.done[kind] then
+			local glow = Instance.new("PointLight")
+			glow.Name = "K3ScareGlow"
+			glow.Color = Color3.fromRGB(200, 40, 30)
+			glow.Range = kind == "mirror" and 7 or 5
+			glow.Brightness = 0
+			glow.Shadows = false
+			glow.Parent = target
+			local whisper = makeSound("hutWhisper", target, { Looped = true, Volume = 0.7, RollOffMinDistance = 3, RollOffMaxDistance = 26 })
+			if whisper then
+				whisper:Play()
+			end
+			H.markers[kind] = { glow, whisper }
+		end
+	end
+end
+
+-- Ausruhen: schwarz, "Etwas später …", Blaulicht, Klopfen, draußen fährt das Auto weg, ENDE
+function handlers.rest()
+	token += 1
+	local mine = token
+	local H = hutState
+	if not H then
+		return
+	end
+	closePhone()
+	if H.scareModel then
+		H.scareModel:Destroy()
+		H.scareModel = nil
+	end
+	H.scares = false
+	removeMarker("mirror")
+	removeMarker("photo")
+	run(mine, function()
+		local started = os.clock()
+		local function at(t)
+			hold(mine, math.max(t - (os.clock() - started), 0))
+		end
+		setBlack(0, 2)
+		stopLoop("fireCrackle", 2)
+		stopLoop("cabinAmbience", 2)
+		at(Data.END_LATER)
+		showCard("", "Etwas später …", true, 1.2)
+		-- das Auto steht schon da (man sieht es erst, wenn es hell wird)
+		local car = buildPoliceCar(localFolder or workspace)
+		if H.carStop then
+			car.model:PivotTo(H.carStop)
+		end
+		H.car = car
+		loop("sirenFar", 0.6)
+		at(Data.END_INSIDE - 1.3)
+		showCard(nil, nil, false, 1.2)
+		at(Data.END_INSIDE)
+		startCutscene()
+		local inside = H.endInside or camera.CFrame
+		local insideStart = os.clock()
+		shot(function(now)
+			return inside * CFrame.new(0, 0, -(now - insideStart) * 0.18)
+		end, 0)
+		setBlack(1, 1.6)
+		at(Data.END_KNOCK)
+		stopLoop("sirenFar", 1.5)
+		if H.door then
+			playAt("policeKnock", H.door, { Volume = 2 })
+		end
+		at(Data.END_OUTSIDE - 0.5)
+		setBlack(0, 0.5)
+		at(Data.END_OUTSIDE)
+		local outside = H.endOutside or camera.CFrame
+		still(outside, 0)
+		setBlack(1, 0.9)
+		local carPosition = car.body.Position
+		at(Data.END_OUTSIDE + 1)
+		playAt("carDoor", carPosition, { Volume = 1.6 })
+		at(Data.END_OUTSIDE + 1.7)
+		playAt("carDoor", carPosition, { Volume = 1.6 })
+		at(Data.END_DRIVE - 0.9)
+		playAt("carEngine", carPosition, { Volume = 1.8 })
+		at(Data.END_DRIVE)
+		-- das Auto fährt die Straße entlang davon, die Kamera schaut ihm nach
+		loop("carDrive", 0.9, car.body)
+		local from = H.carStop or car.model:GetPivot()
+		local driveStart = os.clock()
+		shot(function()
+			return CFrame.lookAt(outside.Position, car.body.Position + UP * 1.5)
+		end, 1.2, "inout")
+		while os.clock() - started < Data.END_FADE + 2.2 do
+			local t = os.clock() - driveStart
+			local distance = 0.5 * 5 * math.min(t, 3) ^ 2 + math.max(t - 3, 0) * 15
+			car.model:PivotTo(from * CFrame.new(0, 0, -distance))
+			if os.clock() - started >= Data.END_FADE and not H.fading then
+				H.fading = true
+				setBlack(0, 2.2)
+				stopLoop("carDrive", 2.2)
+				play("endingMusic", { Volume = 1.2 })
+			end
+			hold(mine, 0)
+		end
+		at(Data.END_TITLE)
+		showCard("Die letzte Nacht", "ENDE", true, 2.2)
+		-- bleibt so (schwarz, ENDE)
+		stopCutscene(true)
+	end)
+end
+
+-- Jedes Bild: Mondlicht, Flackern der Lichter, Blicke auf Spiegel/Foto, Telefon, Blaulicht
+local function updateHut(now)
+	local H = hutState
+	if not H then
+		return
+	end
+	local root = ownRoot()
+	if H.moon and root then
+		H.moon.CFrame = CFrame.new(root.Position + UP * 14)
+		-- in der Hütte kein Mondlicht (sonst wäre es drinnen zu hell)
+		local center = H.mirror and H.phone and (H.mirror.Position + H.phone.Position) / 2
+		local insideHut = center and flat(root.Position - center).Magnitude < 13
+		H.moonLight.Brightness += ((insideHut and 0 or 1.1) - H.moonLight.Brightness) * 0.08
+	end
+	-- Flackern (Kerzen, Kamin) – bei einer Halluzination kurz fast aus
+	local blackout = H.blackoutUntil and now < H.blackoutUntil
+	for i, light in H.lights do
+		local base = LIGHT_BASE[light]
+		if base and light.Parent then
+			if blackout then
+				light.Brightness = (math.noise(now * 30, i) > 0.2) and base * 0.6 or 0
+			else
+				light.Brightness = base * (0.86 + math.noise(now * (light.Name == "HutFire" and 5 or 3), i * 1.7) * 0.28)
+			end
+		end
+	end
+	-- Glimmen bei Spiegel und Foto (pulsiert langsam)
+	for _, marker in H.markers do
+		local glow = marker[1]
+		if glow and glow.Parent then
+			glow.Brightness = 0.35 + math.sin(now * 2.2) * 0.25
+		end
+	end
+	-- Halluzination auslösen: nah genug und genau hingeschaut (und nichts dazwischen)
+	if H.scares and not H.scaring and not H.dialing and not active then
+		local cameraFrame = camera.CFrame
+		for kind, target in { mirror = H.mirror, photo = H.photo } do
+			if target and target.Parent and not H.done[kind] then
+				local offset = target.Position - cameraFrame.Position
+				local range = kind == "mirror" and Data.SCARE_MIRROR_RANGE or Data.SCARE_PHOTO_RANGE
+				if offset.Magnitude < range and cameraFrame.LookVector:Dot(offset.Unit) > 0.86 then
+					local params = RaycastParams.new()
+					params.FilterType = Enum.RaycastFilterType.Exclude
+					params.FilterDescendantsInstances = { player.Character, localFolder }
+					local hit = workspace:Raycast(cameraFrame.Position, offset, params)
+					if not hit or hit.Instance == target or (hit.Position - target.Position).Magnitude < 1.6 then
+						hallucination(kind)
+						break
+					end
+				end
+			end
+		end
+	end
+	-- beim Wählen: Maus frei, Taste unter der Maus hell
+	if H.dialing then
+		UserInputService.MouseBehavior = Enum.MouseBehavior.Default
+		UserInputService.MouseIconEnabled = true
+		local hovered = not UserInputService.TouchEnabled and keyUnder(UserInputService:GetMouseLocation(), true)
+		for key, color in H.keyColors or {} do
+			if key.Parent then
+				key.Color = key == hovered and Color3.fromRGB(255, 236, 170) or color
+			end
+		end
+	end
+	-- Blaulicht (abwechselnd links und rechts)
+	if H.car then
+		local phase = math.floor(now * 6) % 2
+		for i, lamp in H.car.blue do
+			local on = (i - 1) == phase
+			lamp.part.Color = on and Color3.fromRGB(60, 120, 255) or Color3.fromRGB(10, 20, 60)
+			lamp.light.Enabled = on
+		end
+	end
+end
+
 ------------------------------------------------------------------ Start
 function Kapitel3.run()
 	buildGui()
@@ -2589,6 +3289,24 @@ function Kapitel3.run()
 			end
 		end
 	end)
+	-- Telefon: Tasten am Telefon anklicken/antippen, Q = auflegen
+	UserInputService.InputBegan:Connect(function(input)
+		local H = hutState
+		if not (H and H.dialing) or UserInputService:GetFocusedTextBox() then
+			return
+		end
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			local key = keyUnder(input.Position, false)
+			if key then
+				pressKey(key)
+			end
+		elseif input.KeyCode == Enum.KeyCode.Q or input.KeyCode == Enum.KeyCode.Backspace or input.KeyCode == Enum.KeyCode.ButtonB then
+			closePhone()
+		end
+	end)
+	buildPhoneUi().hangUp.Activated:Connect(function()
+		closePhone()
+	end)
 	dodgeButton.Activated:Connect(function()
 		if qte and qte.kind == "dodge" then
 			qteInput("dodge", qte.dir)
@@ -2608,6 +3326,7 @@ function Kapitel3.run()
 		local ok, problem = pcall(function()
 			updateTweens(now)
 			updateChase(now, deltaTime)
+			updateHut(now)
 			for _, rig in rigs do
 				if rig.root and rig.root.Parent then
 					rig:update(now)

@@ -26,6 +26,7 @@ local Script = require(ReplicatedStorage.Shared.Kapitel2Dialogue)
 local Forest = require(ReplicatedStorage.Shared.Forest)
 local Parts = require(ReplicatedStorage.Shared.Parts)
 local Wagners = require(script.Parent.Wagners)
+local SarpHut = require(script.Parent.SarpHut)
 
 local Kapitel3 = {}
 
@@ -226,7 +227,12 @@ local FOREST_PATH = {
 	{ -14, -612 },
 	{ -14, -652 },
 	{ -14, -700 },
+	-- nach der Schlucht: um eine Kurve bis zur Straße vor Sarps Hütte
+	{ -6, -738 },
+	{ 16, -764 },
+	{ 46, -778 },
 }
+local CHASE_END = 12 -- bis hierher geht die Verfolgung (danach nur noch der Weg zur Hütte)
 local BRIDGE = 10 -- die Brücke geht von FOREST_PATH[10] bis FOREST_PATH[11]
 local PATH_HALF_WIDTH = 9.5 -- unsichtbare Wände links und rechts (breiter Weg)
 local BRIDGE_HALF_WIDTH = 2.9
@@ -236,6 +242,9 @@ local forestPoints -- Weltpunkte des Wegs
 local forestStart -- wo man aus der Luke steigt
 local bridgeStart, bridgeLength -- Strecke bis zum Anfang der Brücke, Länge der Brücke
 local bridge -- { parts, floor }
+local chaseTotal -- Länge des Wegs bis zum Ende der Verfolgung
+local hut -- Sarps Hütte (siehe SarpHut.lua)
+local roadFrame -- Ende des Wegs an der Straße (Blick zur Hütte = -Z)
 
 local function buildForest()
 	local folder = Instance.new("Folder")
@@ -252,6 +261,19 @@ local function buildForest()
 		s += (points[i + 1] - points[i]).Magnitude
 	end
 	bridgeStart = s
+	chaseTotal = 0
+	for i = 1, CHASE_END - 1 do
+		chaseTotal += (points[i + 1] - points[i]).Magnitude
+	end
+	local lastDirection = Vector3.new(points[#points].X - points[#points - 1].X, 0, points[#points].Z - points[#points - 1].Z).Unit
+	roadFrame = CFrame.lookAt(points[#points], points[#points] + lastDirection)
+	-- die Lichtung mit der Hütte (im Rahmen des Wegendes)
+	local function inClearing(position, margin)
+		local p = roadFrame:PointToObjectSpace(position)
+		margin = margin or 0
+		local onRoad = math.abs(p.Z - SarpHut.ROAD_Z) < SarpHut.ROAD_HALF + 3 + margin
+		return (math.abs(p.X) < 30 + margin and p.Z < 4 + margin and p.Z > -48 - margin) or onRoad
+	end
 	bridgeLength = (points[BRIDGE + 1] - points[BRIDGE]).Magnitude
 	local bridgeA, bridgeB = points[BRIDGE], points[BRIDGE + 1]
 	local bridgeDirection = (bridgeB - bridgeA).Unit
@@ -282,6 +304,24 @@ local function buildForest()
 	terrain:FillBlock(ravineFrame * CFrame.new(0, -60, 0), Vector3.new(280, 120, bridgeLength + 70), Enum.Material.Slate)
 	terrain:FillBlock(ravineFrame * CFrame.new(0, -58, 0), Vector3.new(340, 124, bridgeLength - 4), Enum.Material.Air)
 	task.wait()
+	-- Lichtung und die schlechte Schotterstraße (Erde, Schlamm in den Fahrspuren, Steine)
+	terrain:FillBlock(roadFrame * CFrame.new(0, -4, -24), Vector3.new(400, 8, 130), Enum.Material.LeafyGrass)
+	terrain:FillBlock(roadFrame * CFrame.new(0, 14, -24), Vector3.new(400, 28, 130), Enum.Material.Air)
+	terrain:FillBlock(roadFrame * CFrame.new(0, -3.95, SarpHut.ROAD_Z), Vector3.new(400, 8, SarpHut.ROAD_HALF * 2), Enum.Material.Ground)
+	for _, lane in { -2.6, 2.6 } do
+		terrain:FillBlock(roadFrame * CFrame.new(0, -3.9, SarpHut.ROAD_Z + lane), Vector3.new(400, 8, 1.6), Enum.Material.Mud)
+	end
+	terrain:FillBlock(roadFrame * CFrame.new(0, -3.92, SarpHut.ROAD_Z), Vector3.new(400, 8, 1.4), Enum.Material.Pebble)
+	do
+		local puddles = Random.new(5)
+		for _ = 1, 14 do
+			local x = puddles:NextNumber(-180, 180)
+			terrain:FillBlock(roadFrame * CFrame.new(x, -3.88, SarpHut.ROAD_Z + puddles:NextNumber(-3, 3)), Vector3.new(puddles:NextNumber(3, 7), 8, puddles:NextNumber(2, 4)), Enum.Material.Mud)
+		end
+	end
+	-- vom Wegende zur Hütte: festgetretene Erde
+	terrain:FillBlock(roadFrame * CFrame.new(0, -3.9, -15), Vector3.new(5, 8, 8), Enum.Material.Ground)
+	task.wait()
 
 	-- unsichtbare Wände (man bleibt auf dem Weg bzw. auf der Brücke)
 	local function wall(size, frame)
@@ -293,14 +333,26 @@ local function buildForest()
 		local length = (b - a).Magnitude
 		local half = i == BRIDGE and BRIDGE_HALF_WIDTH or PATH_HALF_WIDTH
 		local extra = i == BRIDGE and 0 or 10 -- (an Kurven keine Lücken)
+		local shift = 0
+		if i == #points - 1 then
+			-- (das letzte Stück endet genau an der Lichtung)
+			extra, shift = 5, 2.5
+		end
 		for _, side in { -1, 1 } do
-			wall(Vector3.new(1, 18, length + extra), frame * CFrame.new(side * (half + 0.5), 9, 0))
+			wall(Vector3.new(1, 18, length + extra), frame * CFrame.new(side * (half + 0.5), 9, shift))
 		end
 	end
 	-- an der Kante der Schlucht: nur die Brücke ist offen
 	local edgeWidth = PATH_HALF_WIDTH - BRIDGE_HALF_WIDTH + 6
 	for _, side in { -1, 1 } do
 		wall(Vector3.new(edgeWidth, 18, 1), CFrame.lookAt(bridgeA, bridgeB) * CFrame.new(side * (BRIDGE_HALF_WIDTH + 0.5 + edgeWidth / 2), 9, -1))
+	end
+	-- die Lichtung: links und rechts quer über die Straße, hinten, vorne (bis auf den Weg)
+	wall(Vector3.new(1, 18, 54), roadFrame * CFrame.new(-30, 9, -23))
+	wall(Vector3.new(1, 18, 54), roadFrame * CFrame.new(30, 9, -23))
+	wall(Vector3.new(61, 18, 1), roadFrame * CFrame.new(0, 9, -49))
+	for _, side in { -1, 1 } do
+		wall(Vector3.new(30 - PATH_HALF_WIDTH, 18, 1), roadFrame * CFrame.new(side * (PATH_HALF_WIDTH + (30 - PATH_HALF_WIDTH) / 2), 9, 0.5))
 	end
 	-- hinter der Luke
 	local forward = (points[2] - points[1]).Unit
@@ -312,7 +364,7 @@ local function buildForest()
 	local _, _, total = Data.progress(points, points[1])
 	local function clear(position, margin)
 		local _, distance = Data.progress(points, position)
-		return distance > margin and not nearRavine(position, 6)
+		return distance > margin and not nearRavine(position, 6) and not inClearing(position, 3)
 	end
 	local count = 0
 	s = -20
@@ -355,6 +407,42 @@ local function buildForest()
 		s += rng:NextNumber(5, 7.5)
 		if count % 8 == 0 then
 			task.wait()
+		end
+	end
+
+	-- Sarps Hütte und der Wald rund um die Lichtung und an der Straße entlang
+	local hutOk, hutResult = pcall(SarpHut.build, folder, roadFrame)
+	if hutOk then
+		hut = hutResult
+	else
+		warn("Kapitel 3: Sarps Hütte konnte nicht gebaut werden: " .. tostring(hutResult))
+	end
+	task.wait()
+	for _ = 1, 260 do
+		local p = Vector3.new(rng:NextNumber(-150, 150), 0, rng:NextNumber(-90, 30))
+		local world = roadFrame * p
+		local _, distance = Data.progress(points, world)
+		if distance > 13 and not inClearing(world, 1) and not nearRavine(world, 6) then
+			if rng:NextNumber() < 0.3 then
+				Forest.builders.pine(folder, world, rng:NextNumber(30, 46), rng)
+			else
+				Forest.builders.simplePine(folder, world, rng:NextNumber(32, 50), rng)
+			end
+			count += 1
+			if count % 8 == 0 then
+				task.wait()
+			end
+		end
+	end
+	-- Büsche am Rand der Lichtung
+	for _ = 1, 40 do
+		local p = Vector3.new(rng:NextNumber(-34, 34), 0, rng:NextNumber(-52, 2))
+		local local0 = p
+		if math.abs(local0.X) > 27 or local0.Z < -45 then
+			local world = roadFrame * p
+			if math.abs(local0.Z - SarpHut.ROAD_Z) > SarpHut.ROAD_HALF + 2 then
+				Forest.builders.bush(folder, world, rng)
+			end
 		end
 	end
 
@@ -416,7 +504,7 @@ local function buildForest()
 	block(folder, "HatchLid", Vector3.new(3.4, 0.35, 3.4), hatchFrame * CFrame.new(0, 0.3, 1.8) * CFrame.Angles(math.rad(-105), 0, 0) * CFrame.new(0, 0, 1.7), Color3.fromRGB(70, 54, 36), M.WoodPlanks)
 	forestStart = points[1] + forward * 2.5
 	forestReady = true
-	print(string.format("Kapitel 3: Waldweg fertig (%d Bäume, %.0f Studs lang, Brücke bei %.0f)", count, total, bridgeStart))
+	print(string.format("Kapitel 3: Waldweg fertig (%d Bäume, %.0f Studs lang, Brücke bei %.0f, Hütte: %s)", count, total, bridgeStart, hut and "ja" or "nein"))
 end
 
 Kapitel3.buildForest = buildForest -- (auch zum Testen)
@@ -430,6 +518,9 @@ local function collapseBridge()
 	for _, part in bridge.floor do
 		part:Destroy()
 	end
+	-- (danach kann niemand mehr in die Schlucht laufen)
+	local a, b = forestPoints[BRIDGE], forestPoints[BRIDGE + 1]
+	Parts.new("Part", { Name = "PathWall", Size = Vector3.new(PATH_HALF_WIDTH * 2 + 4, 18, 1), CFrame = CFrame.lookAt(b, b + (b - a).Unit) * CFrame.new(0, 9, 0.5), Transparency = 1, CanCollide = true, CanQuery = false, CanTouch = false, Parent = workspace:FindFirstChild("Kapitel3Forest") or workspace })
 	local rng = Random.new()
 	for _, part in bridge.parts do
 		if part.Parent then
@@ -449,7 +540,11 @@ function Kapitel3.run(kit)
 	remotes:SetAttribute("Phase", "kapitel3")
 	remotes:SetAttribute("SneakAllowed", false)
 	ctx.setMovement(false)
-	event:FireAllClients({ type = "k3", step = "card", title = Kapitel3.TITLE })
+	-- Teststart "huette": gleich hinter der Brücke (Weg zu Sarps Hütte, Telefon, Ende)
+	local skipToHut = ctx.startAt == "huette"
+	if not skipToHut then
+		event:FireAllClients({ type = "k3", step = "card", title = Kapitel3.TITLE })
+	end
 	print("Kapitel 3: " .. #Players:GetPlayers() .. " Spieler – die Tür ist offen.")
 	local hallOk, hallProblem = pcall(buildHall)
 	if not hallOk then
@@ -511,6 +606,189 @@ function Kapitel3.run(kit)
 			task.wait(0.25)
 		end
 		task.wait(1.6)
+	end
+
+	------------------------------------------------ Das Ende: Sarps Hütte
+	-- Hinter der Brücke um die Kurve: die Hütte an der Straße. Drinnen merkt man, wem sie
+	-- gehört. Telefon (Zettel: 110), dann warten: Spiegel und Foto (Halluzinationen, man muss
+	-- mindestens eine gesehen haben), danach ins Bett – die Polizei kommt und fährt einen weg.
+	local function afterBridgeFrame(index)
+		local a, b = forestPoints[BRIDGE + 1], forestPoints[BRIDGE + 2]
+		local dir = Vector3.new(b.X - a.X, 0, b.Z - a.Z).Unit
+		local side = Vector3.new(-dir.Z, 0, dir.X)
+		local feet = a + dir * (Data.BRIDGE_CLEAR + 4) + side * ((index - 1) * 2.5 - (#Players:GetPlayers() > 1 and 1.25 or 0)) + Vector3.new(0, 0.05, 0)
+		return CFrame.lookAt(feet, feet + dir)
+	end
+	local function finale()
+		if not (hut and forestPoints) then
+			event:FireAllClients({ type = "k3", step = "end" })
+			return
+		end
+		local _, _, pathLength = Data.progress(forestPoints, forestPoints[1])
+		remotes:SetAttribute("Inside", false)
+		ctx.setCheckpoint(afterBridgeFrame)
+		for _, player in Players:GetPlayers() do
+			local root = rootOf(player)
+			if root then
+				root.Anchored = false
+			end
+		end
+		ctx.setMovement(true)
+		event:FireAllClients({
+			type = "k3",
+			step = "walk",
+			hut = hut.folder,
+			mirror = hut.mirror,
+			photo = hut.photo,
+			phone = hut.phone,
+			phoneKeys = hut.phoneKeys,
+			phoneView = hut.phoneView,
+			carStop = hut.carStop,
+			endInside = hut.endInside,
+			endOutside = hut.endOutside,
+			door = hut.door,
+		})
+		event:FireAllClients({ type = "objectives", title = "Weg hier", items = { { text = "Dem Weg folgen", done = false } } })
+
+		local state = { called = false, calling = false, scared = {}, resting = false }
+		local function prompt(parent, action, object, hold)
+			local p = Instance.new("ProximityPrompt")
+			p.ActionText = action
+			p.ObjectText = object
+			p.HoldDuration = hold or 0
+			p.MaxActivationDistance = 7
+			p.RequiresLineOfSight = false
+			p.Parent = parent
+			return p
+		end
+		-- das Telefon: der Client zeigt es groß, man klickt die Tasten an
+		local phonePrompt = prompt(hut.phone, "Telefonieren", "Altes Telefon")
+		phonePrompt.Triggered:Connect(function(player)
+			if state.called or state.calling then
+				event:FireClient(player, { type = "hint", text = "Die Polizei ist schon unterwegs.", seconds = 3 })
+				return
+			end
+			event:FireClient(player, { type = "k3", step = "phone" })
+		end)
+		remote("K3Phone").OnServerEvent:Connect(function(player, number)
+			if state.called or state.calling or number ~= Data.PHONE_NUMBER then
+				return
+			end
+			state.calling = true
+			phonePrompt.Enabled = false
+			task.spawn(function()
+				event:FireAllClients({ type = "k3", step = "calling", caller = player.UserId })
+				task.wait(Data.PHONE_RING)
+				local K = Script.KAPITEL3
+				say("police", K.police1)
+				say("player", K.call1)
+				say("police", K.police2)
+				say("player", K.call2)
+				say("police", K.police3)
+				event:FireAllClients({ type = "k3", step = "hangUp" })
+				state.called = true
+				state.calling = false
+				phonePrompt.Enabled = true
+				event:FireAllClients({ type = "objectives", title = "Sarps Hütte", items = { { text = "Die Polizei rufen", done = true }, { text = "Auf die Polizei warten: ausruhen (Bett)", done = false } } })
+				event:FireAllClients({ type = "hint", text = "Die Polizei ist unterwegs. Ruh dich aus …", seconds = 5 })
+				event:FireAllClients({ type = "k3", step = "scares" })
+			end)
+		end)
+		remote("K3Scare").OnServerEvent:Connect(function(player, kind)
+			if state.called and (kind == "mirror" or kind == "photo") and not state.scared[player] then
+				state.scared[player] = true
+				print("Kapitel 3: " .. player.Name .. " hat die Halluzination gesehen (" .. kind .. ")")
+			end
+		end)
+		-- das Bett: erst nach dem Anruf und erst, wenn man mindestens einen Schreck hatte
+		local bedPrompt = prompt(hut.bed, "Ausruhen", "Bett", 0.6)
+		bedPrompt.Triggered:Connect(function(player)
+			if state.resting then
+				return
+			end
+			if not state.called then
+				event:FireClient(player, { type = "hint", text = state.calling and "Erst das Telefonat …" or "Erst die Polizei anrufen.", seconds = 3 })
+				return
+			end
+			if not state.scared[player] then
+				event:FireClient(player, { type = "hint", text = "Ich kann jetzt nicht schlafen … irgendetwas stimmt hier nicht. Sieh dich erst um.", seconds = 5 })
+				return
+			end
+			state.resting = true
+		end)
+
+		local seen, entered = false, false
+		while not state.resting do
+			for _, player in Players:GetPlayers() do
+				local root = rootOf(player)
+				if root then
+					if not seen and Data.progress(forestPoints, root.Position) > pathLength - 50 then
+						seen = true
+						task.spawn(say, "player", Script.KAPITEL3.hutSeen)
+					end
+					if not entered and hut.inside(root.Position) then
+						entered = true
+						task.spawn(function()
+							say("player", Script.KAPITEL3.hutInside)
+							if not (state.called or state.calling) then
+								say("player", Script.KAPITEL3.hutPhone)
+								if not (state.called or state.calling) then
+									event:FireAllClients({ type = "objectives", title = "Sarps Hütte", items = { { text = "Die Polizei rufen (Telefon)", done = false } } })
+								end
+							end
+						end)
+					end
+				end
+			end
+			task.wait(0.2)
+		end
+
+		-- Ende: ausruhen – später kommt die Polizei, man fährt mit (das Auto fährt weg)
+		phonePrompt.Enabled = false
+		bedPrompt.Enabled = false
+		ctx.setMovement(false)
+		for _, player in Players:GetPlayers() do
+			local root = rootOf(player)
+			if root then
+				root.Anchored = true
+			end
+		end
+		event:FireAllClients({ type = "objectives", clear = true })
+		event:FireAllClients({ type = "k3", step = "rest" })
+		local started = os.clock()
+		local function waitUntil(t)
+			local left = t - (os.clock() - started)
+			if left > 0 then
+				task.wait(left)
+			end
+		end
+		waitUntil(Data.END_KNOCK + 0.5)
+		say("police", Script.KAPITEL3.knock)
+		waitUntil(Data.END_ANSWER)
+		say("player", Script.KAPITEL3.comingOut)
+		waitUntil(Data.END_TITLE + 2)
+		print("Kapitel 3: ENDE – die Polizei hat alle abgeholt.")
+	end
+
+	if skipToHut then
+		local waitStart = os.clock()
+		while not forestReady and os.clock() - waitStart < 30 do
+			task.wait(0.1)
+		end
+		if not forestPoints then
+			return
+		end
+		task.wait(1)
+		for index, player in Players:GetPlayers() do
+			local root, humanoid = rootOf(player)
+			if root and humanoid then
+				player.Character:PivotTo(afterBridgeFrame(index) + Vector3.new(0, kit.footOffset(player), 0))
+				humanoid.JumpHeight = 2
+			end
+		end
+		collapseBridge()
+		finale()
+		return
 	end
 
 	------------------------------------------------ Aufstellung im Ritualsaal
@@ -720,7 +998,6 @@ function Kapitel3.run(kit)
 			end
 		end
 	end
-	local _, _, total = Data.progress(forestPoints, forestPoints[1])
 	local function forestRun()
 		ctx.setCheckpoint(runFrame)
 		for index, player in Players:GetPlayers() do
@@ -734,7 +1011,7 @@ function Kapitel3.run(kit)
 		end
 		table.clear(caughtBy)
 		runActive = true
-		event:FireAllClients({ type = "k3", step = "run", path = forestPoints, length = total, bridgeStart = bridgeStart, bridgeLength = bridgeLength, sarp = sarp })
+		event:FireAllClients({ type = "k3", step = "run", path = forestPoints, length = chaseTotal, bridgeStart = bridgeStart, bridgeLength = bridgeLength, sarp = sarp })
 		task.wait(1.2) -- (man klettert aus der Luke, das Bild wird hell)
 		setSpeed(Data.RUN_SPEED)
 		local started = os.clock()
@@ -765,7 +1042,7 @@ function Kapitel3.run(kit)
 					last = math.min(last, progress)
 				end
 			end
-			if not transformed and best >= total * Data.TRANSFORM_AT then
+			if not transformed and best >= chaseTotal * Data.TRANSFORM_AT then
 				transformed = true
 				-- man bleibt stehen und schaut zurück: er verwandelt sich
 				setSpeed(0)
@@ -785,15 +1062,7 @@ function Kapitel3.run(kit)
 		task.wait(Data.BRIDGE_BREAK)
 		collapseBridge()
 		task.wait(Data.BRIDGE_SCENE - Data.BRIDGE_BREAK)
-		event:FireAllClients({ type = "k3", step = "end" })
-		task.wait(0.5)
-		for _, player in Players:GetPlayers() do
-			local root = rootOf(player)
-			if root then
-				root.Anchored = true
-			end
-		end
-		print("Kapitel 3: Die Brücke ist mit dem Biest eingestürzt – schwarz (hier kommt später das Ende).")
+		print("Kapitel 3: Die Brücke ist mit dem Biest eingestürzt – weiter zur Hütte.")
 		return true
 	end
 	while true do
@@ -804,6 +1073,11 @@ function Kapitel3.run(kit)
 			break
 		end
 		if done then
+			local ok2, problem = pcall(finale)
+			if not ok2 then
+				warn("Kapitel 3: Fehler beim Ende (Sarps Hütte): " .. tostring(problem))
+				event:FireAllClients({ type = "k3", step = "end" })
+			end
 			break
 		end
 	end

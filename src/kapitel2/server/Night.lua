@@ -71,7 +71,7 @@ function Night.run(ctx)
 	-- Teststart direkt nach dem Verstecken (Config.TEST_START_KAPITEL2 = "nachVerstecken")
 	-- oder gleich im Raum hinter Tür 1 (= "tuer1", dann beginnt sofort die Flucht)
 	-- ("schluessel" und "kapitel3" starten auch hier; Escape.lua springt dann weiter)
-	local atDoorOne = ctx.startAt == "tuer1" or ctx.startAt == "schluessel" or ctx.startAt == "kapitel3"
+	local atDoorOne = ctx.startAt == "tuer1" or ctx.startAt == "schluessel" or ctx.startAt == "kapitel3" or ctx.startAt == "huette"
 	local afterHide = ctx.startAt == "afterHide" or atDoorOne
 
 	-- Stuhl am Esstisch: Mitte der Sitzfläche, Blick zum Tisch

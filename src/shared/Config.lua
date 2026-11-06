@@ -147,6 +147,25 @@ Config.SOUNDS = {
 	chaseMusic = "", -- chase_music_loop.ogg (Musik bei der Flucht durch den Wald, Schleife)
 	bridgeCrack = "", -- bridge_crack.ogg (Holz und Seile knarren und reißen)
 	bridgeCollapse = "", -- bridge_collapse.ogg (die Brücke bricht, Bretter fallen in die Tiefe)
+	-- Kapitel 3, das Ende: Sarps Hütte
+	cabinAmbience = "", -- cabin_ambience_loop.ogg (leises Knarren der Hütte, Wind draußen, Schleife)
+	fireCrackle = "", -- fire_crackle_loop.ogg (Glut im Kamin knistert, Schleife)
+	phoneKey = "", -- phone_key.ogg (Taste am alten Telefon wird gedrückt, kurzer Klick/Piep)
+	phonePickup = "", -- phone_pickup.ogg (Hörer abnehmen, Freizeichen beginnt)
+	phoneRing = "", -- phone_ring_loop.ogg (Rufton im Hörer: tuut … tuut …, Schleife)
+	phoneWrong = "", -- phone_wrong.ogg (falsche Nummer: Besetztzeichen)
+	phoneHangup = "", -- phone_hangup.ogg (Hörer wird aufgelegt)
+	hutWhisper = "", -- hut_whisper_loop.ogg (leises Flüstern beim Spiegel und beim Foto, Schleife)
+	lightFlicker = "", -- light_flicker.ogg (Lampen flackern, Brummen, kurz)
+	mirrorScare = "", -- mirror_scare.ogg (Schreck-Ton: das Biest steht hinter einem)
+	photoScare = "", -- photo_scare.ogg (Schreck-Ton: das Biest springt aus dem Foto)
+	hallucinationFade = "", -- hallucination_fade.ogg (Rauschen/Pfeifen im Ohr danach, verklingt)
+	sirenFar = "", -- siren_far_loop.ogg (Polizeisirene, kommt näher, Schleife)
+	policeKnock = "", -- police_knock.ogg (feste Schläge an die Hüttentür)
+	carDoor = "", -- car_door.ogg (Autotür fällt zu)
+	carEngine = "", -- car_engine_start.ogg (Motor springt an)
+	carDrive = "", -- car_drive_loop.ogg (Auto fährt auf Schotter, Schleife)
+	endingMusic = "", -- ending_music.ogg (ruhige, traurige Musik zum Schluss / "ENDE")
 	-- außerdem benutzt Kapitel 3: sarpStep, sarpBreath, sarpRoar, jumpscare, heartbeat,
 	-- roar, beastStep und beastBreath (siehe oben)
 }
@@ -175,10 +194,12 @@ Config.PLAYER_TTS = false
 --   "schluessel"     = im Vorratskeller direkt vor dem Regal, mit dem Schlüssel in der Hand
 --                      (Regal aufschließen, die Tür dahinter öffnen: Kapitel 3 beginnt)
 --   "kapitel3"       = gleich Kapitel 3 (Ritualraum, Quick-Time-Events, Flucht durch den Wald)
-Config.TEST_START_KAPITEL2 = "schluessel"
+--   "huette"         = gleich hinter der eingestürzten Brücke (Weg zu Sarps Hütte, Telefon,
+--                      Spiegel/Foto, Bett, Polizei – das Ende)
+Config.TEST_START_KAPITEL2 = "huette"
 -- Versionsnummer: steht beim Laden auf dem Bildschirm und im Output. So sieht man sofort,
 -- ob in Studio wirklich der neueste Stand läuft (nach "git pull").
-Config.BUILD = "K2-2026-11-06l"
+Config.BUILD = "K2-2026-11-06m"
 Config.VOICES = {
 	-- Sarp: etwas tiefer, langsam, ruhig – mit Bass, weniger Höhen und dunklem Hall
 	sarp = {
@@ -238,6 +259,18 @@ Config.VOICES = {
 		effects = {
 			{ "AudioEqualizer", { LowGain = 3, MidGain = 0, HighGain = -4 } },
 			{ "AudioReverb", { DecayTime = 1.1, WetLevel = -14, DryLevel = 0 } },
+		},
+	},
+	-- Kapitel 3: die Polizei (am Telefon und an der Tür): ruhig, sachlich, etwas dünn wie
+	-- durch einen Hörer
+	police = {
+		id = "5",
+		pitch = -1,
+		speed = 0.95,
+		volume = 2.4,
+		effects = {
+			{ "AudioEqualizer", { LowGain = -8, MidGain = 4, HighGain = -4 } },
+			{ "AudioDistortion", { Level = 0.08 } },
 		},
 	},
 	narrator = {
@@ -310,6 +343,21 @@ Config.VOICE_LINES = {
 	erzaehler_27 = { id = "rbxassetid://129011583221839", length = 2.51 }, -- We'll drive there ourselves.
 	erzaehler_28 = { id = "rbxassetid://124378973824781", length = 3.32 }, -- ...Okay. Show me the way.
 	erzaehler_29 = { id = "rbxassetid://133511673604193", length = 2.59 }, -- ...Okay. Show us the way.
+	-- Kapitel 3, das Ende (noch keine Aufnahmen: dann spricht die Roblox-Stimme bzw. nur
+	-- Untertitel). `length` nach dem Hochladen auf die Länge der Datei setzen.
+	k3_cabin_light = { id = "", length = 0 }, -- Spieler: A cabin... There's light inside!
+	k3_sarps_cabin = { id = "", length = 0 }, -- Spieler: Wait... that jacket. The name on the mailbox... This is Sarp's cabin.
+	k3_phone_solo = { id = "", length = 0 }, -- Spieler: There's a phone. I have to call the police!
+	k3_phone_duo = { id = "", length = 0 }, -- Spieler: There's a phone. We have to call the police!
+	k3_police_01 = { id = "", length = 0 }, -- Polizei: Police emergency. What happened?
+	k3_call_01_solo = { id = "", length = 0 }, -- Spieler: Please, you have to help me! I'm in a cabin by the old forest road. Something is hunting me!
+	k3_call_01_duo = { id = "", length = 0 }, -- Spieler: Please, you have to help us! We're in a cabin by the old forest road. Something is hunting us!
+	k3_police_02 = { id = "", length = 0 }, -- Polizei: Stay calm. Stay inside and lock the door. A patrol car is on its way.
+	k3_call_02 = { id = "", length = 0 }, -- Spieler: Please... hurry.
+	k3_police_03 = { id = "", length = 0 }, -- Polizei: Ten minutes. Don't open the door for anyone but us.
+	k3_police_04 = { id = "", length = 0 }, -- Polizei (an der Tür): Police! Is anyone in there?
+	k3_coming_out_solo = { id = "", length = 0 }, -- Spieler: I'm here! I'm coming out!
+	k3_coming_out_duo = { id = "", length = 0 }, -- Spieler: We're here! We're coming out!
 }
 
 return Config

@@ -29,6 +29,7 @@ Kapitel2Dialogue.NAMES = {
 	lucy = "Lucy",
 	tommy = "Tommy",
 	player = "Du", -- innere Stimme
+	police = "Polizei",
 }
 
 Kapitel2Dialogue.SCRIPT = {
@@ -241,6 +242,31 @@ Kapitel2Dialogue.KAPITEL3 = {
 	sarpNobody = "Nobody leaves this house.",
 	sarpGrab = "Stay.",
 	tunnel = "The tunnel! Go! Now!",
+	-- das Ende: Sarps Hütte (voice = Name der Aufnahme in Config.VOICE_LINES)
+	hutSeen = { text = "A cabin... There's light inside!", voice = "k3_cabin_light" },
+	hutInside = { text = "Wait... that jacket. The name on the mailbox... This is Sarp's cabin.", voice = "k3_sarps_cabin" },
+	hutPhone = {
+		text = { solo = "There's a phone. I have to call the police!", duo = "There's a phone. We have to call the police!" },
+		voice = { solo = "k3_phone_solo", duo = "k3_phone_duo" },
+	},
+	police1 = { text = "Police emergency. What happened?", voice = "k3_police_01" },
+	call1 = {
+		text = {
+			solo = "Please, you have to help me! I'm in a cabin by the old forest road. Something is hunting me!",
+			duo = "Please, you have to help us! We're in a cabin by the old forest road. Something is hunting us!",
+		},
+		voice = { solo = "k3_call_01_solo", duo = "k3_call_01_duo" },
+	},
+	police2 = { text = "Stay calm. Stay inside and lock the door. A patrol car is on its way.", voice = "k3_police_02" },
+	call2 = { text = "Please... hurry.", voice = "k3_call_02" },
+	police3 = { text = "Ten minutes. Don't open the door for anyone but us.", voice = "k3_police_03" },
+	-- (nur als Untertitel, wenn das Biest wieder weg ist)
+	notReal = "It's not real... It's not real...",
+	knock = { text = "Police! Is anyone in there?", voice = "k3_police_04" },
+	comingOut = {
+		text = { solo = "I'm here! I'm coming out!", duo = "We're here! We're coming out!" },
+		voice = { solo = "k3_coming_out_solo", duo = "k3_coming_out_duo" },
+	},
 }
 -- Sarp nach der Explosion
 Kapitel2Dialogue.SARP_ALERT = { "Who opened my door?", "I smell you.", "Little thieves..." }
