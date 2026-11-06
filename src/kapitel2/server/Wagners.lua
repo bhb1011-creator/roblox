@@ -56,6 +56,10 @@ local MOVING_JOINTS = {
 	{ "LeftLowerArm", "LeftElbow" },
 	{ "UpperTorso", "Waist" },
 	{ "LowerTorso", "Root" },
+	{ "LeftFoot", "LeftAnkle" },
+	{ "RightFoot", "RightAnkle" },
+	{ "LeftHand", "LeftWrist" },
+	{ "RightHand", "RightWrist" },
 }
 
 local function replaceJoint(model, partName, jointName)

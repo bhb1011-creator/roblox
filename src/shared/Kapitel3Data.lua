@@ -6,7 +6,7 @@ local Kapitel3Data = {}
 Kapitel3Data.CARD = 8.2
 
 -- Ritualraum: Einleitung (Puppen, Flüstern, Stille, Sarp im Eingang) bis zum ersten Event
-Kapitel3Data.INTRO = 19.5
+Kapitel3Data.INTRO = 20.5
 
 -- Die drei Quick-Time-Events (der Reihe nach). windup = Sarp holt aus, window = so lange
 -- hat man Zeit, outcome = so lange dauert danach die Animation (Treffer oder Ausweichen).

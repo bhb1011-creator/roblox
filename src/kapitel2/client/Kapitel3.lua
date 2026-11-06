@@ -462,7 +462,7 @@ end
 
 local function setBars(visible, duration)
 	for _, name in { "BarTop", "BarBottom" } do
-		TweenService:Create(gui[name], TweenInfo.new(duration or 0.8), { Size = UDim2.fromScale(1, visible and 0.09 or 0) }):Play()
+		TweenService:Create(gui[name], TweenInfo.new(duration or 0.8), { Size = UDim2.fromScale(1, visible and 0.07 or 0) }):Play()
 	end
 end
 
@@ -2396,7 +2396,15 @@ function Kapitel3.run()
 		if message.type == "k3" then
 			local handler = handlers[message.step]
 			if handler then
-				task.spawn(handler, message)
+				task.spawn(function()
+					local ok, problem = pcall(handler, message)
+					if not ok and problem ~= CANCELLED then
+						-- lieber den Raum zeigen als ein schwarzes Bild
+						warn("Kapitel 3 (Client): Fehler bei '" .. tostring(message.step) .. "': " .. tostring(problem))
+						setBlack(1, 0.5)
+						stopCutscene()
+					end
+				end)
 			end
 		elseif message.type == "gameOver" then
 			-- Game Over (Scene.lua) liegt darunter: das eigene Schwarz und die Sequenz weg

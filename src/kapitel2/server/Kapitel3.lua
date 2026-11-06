@@ -349,7 +349,11 @@ function Kapitel3.run(kit)
 			end
 			local lost = {}
 			for _, player in Players:GetPlayers() do
-				if not (results[player] and results[player][index] == true) then
+				local result = results[player] and results[player][index]
+				if result == nil then
+					-- keine Antwort vom Client (dort ist etwas kaputt): nicht als Fehler zählen
+					warn(string.format("Kapitel 3: keine Antwort von %s bei Event %d (%s) – zählt als geschafft", player.Name, index, kind))
+				elseif result == false then
 					misses[player] = (misses[player] or 0) + 1
 					print(string.format("Kapitel 3: %s hat Event %d (%s) verpasst (%d)", player.Name, index, kind, misses[player]))
 					if misses[player] > Data.MAX_MISSES then
