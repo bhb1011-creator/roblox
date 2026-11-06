@@ -42,6 +42,7 @@ local FALLBACK_KEYS = {
 	fuse = { "footstep", 2.4 },
 	explosion = { "sting", 0.5 },
 	sarpRoar = { "sting", 0.6 },
+	secretDoor = { "footstep", 0.22 },
 }
 
 local function makeSound(key, parent, props)

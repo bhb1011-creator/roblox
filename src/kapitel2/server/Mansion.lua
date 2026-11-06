@@ -1438,6 +1438,36 @@ local function buildFurniture()
 	current = before
 	secret.Parent = current
 	Mansion.secretShelf = secret
+	-- Hinter dem Regal: eine alte, schwere Tür in den Geheimgang (wer sie öffnet, startet
+	-- Kapitel 3). Eigenes Modell, nicht in Mansion.doors (bekommt keinen normalen Tür-Knopf).
+	-- Angel links (Plan x = 45.65), sie geht in den Gang hinein auf.
+	do
+		local hinge = CFrame.new(L(45.65, 19.65, Kf))
+		local door = Instance.new("Model")
+		door.Name = "SecretDoor"
+		local beforeDoor = current
+		current = door
+		local leafWidth, leafHeight = 2.8, 5.5
+		local leaf = box("SecretDoorLeaf", Vector3.new(leafWidth, leafHeight, 0.25), hinge * CFrame.new(leafWidth / 2, leafHeight / 2, 0), Color3.fromRGB(46, 34, 26), M.WoodPlanks)
+		for _, y in { 0.7, 2.75, 4.8 } do
+			box("SecretDoorBand", Vector3.new(leafWidth, 0.22, 0.32), hinge * CFrame.new(leafWidth / 2, y, 0), Color3.fromRGB(44, 44, 46), M.Metal)
+		end
+		for _, side in { 1, -1 } do
+			cyl("SecretDoorRing", 0.08, 0.5, hinge * CFrame.new(leafWidth - 0.45, 2.6, side * 0.2) * CFrame.Angles(math.rad(90), 0, 0), Color3.fromRGB(70, 60, 50), M.Metal)
+			-- ein blutrotes Zeichen auf beiden Seiten
+			for i, angle in { 35, -35, 90 } do
+				box("SecretDoorSigil", Vector3.new(1.4, 0.12, 0.02), hinge * CFrame.new(leafWidth / 2, 3.8 - (i == 3 and 0.25 or 0), side * 0.14) * CFrame.Angles(0, 0, math.rad(angle)), COLORS.blood)
+			end
+		end
+		current = beforeDoor
+		door.PrimaryPart = leaf
+		door.WorldPivot = origin * hinge
+		door.Parent = current
+		-- Sturz über der Tür (die Öffnung in der Wand ist höher als der Gang); nur auf der
+		-- Gangseite der Wand, damit er nicht in das Regal davor ragt
+		box("SecretDoorHeader", Vector3.new(3.4, FLOOR.K + 6.6 - (Kf + leafHeight), 0.5), CFrame.new(L(47, 19.75, (Kf + leafHeight + FLOOR.K + 6.6) / 2)), COLORS.stone, M.Slate)
+		Mansion.secretDoor = { model = door, hinge = origin * hinge, prompt = leaf }
+	end
 	Furniture.shelf(b, at(35, 30, Kf, "E"), 6, 7, "jars", rng)
 	for i = 0, 3 do
 		box("Crate", Vector3.new(2, 1.6, 2), CFrame.new(L(38 + i * 2.3, 25.5, Kf + 0.8)) * CFrame.Angles(0, i * 0.3, 0), Color3.fromRGB(100, 80, 56), M.WoodPlanks)

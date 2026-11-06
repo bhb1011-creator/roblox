@@ -226,6 +226,12 @@ Kapitel2Dialogue.FAMILY_ANGRY = {
 	lucy = { "Mommy says you have to stay!", "Don't go. Please don't go.", "Found you!" },
 	tommy = { "You can't leave! You can't!", "I'll tell him where you are!", "Got you!" },
 }
+-- Nach Sarps Suche ist in Wahrheit niemand mehr da – man hört die Familie aber noch flüstern
+Kapitel2Dialogue.FAMILY_PHANTOM = {
+	mrsWagner = { "Dinner is getting cold, dear...", "Where did you go?" },
+	lucy = { "I can hear you breathing...", "Mommy, they're downstairs." },
+	tommy = { "Psst... over here...", "You can't leave. Nobody leaves." },
+}
 -- Sarp nach der Explosion
 Kapitel2Dialogue.SARP_ALERT = { "Who opened my door?", "I smell you.", "Little thieves..." }
 

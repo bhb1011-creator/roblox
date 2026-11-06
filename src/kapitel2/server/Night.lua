@@ -70,7 +70,8 @@ function Night.run(ctx)
 
 	-- Teststart direkt nach dem Verstecken (Config.TEST_START_KAPITEL2 = "nachVerstecken")
 	-- oder gleich im Raum hinter Tür 1 (= "tuer1", dann beginnt sofort die Flucht)
-	local atDoorOne = ctx.startAt == "tuer1"
+	-- ("schluessel" und "kapitel3" starten auch hier; Escape.lua springt dann weiter)
+	local atDoorOne = ctx.startAt == "tuer1" or ctx.startAt == "schluessel" or ctx.startAt == "kapitel3"
 	local afterHide = ctx.startAt == "afterHide" or atDoorOne
 
 	-- Stuhl am Esstisch: Mitte der Sitzfläche, Blick zum Tisch
@@ -496,6 +497,12 @@ function Night.run(ctx)
 				local from, start = position, os.clock()
 				while true do
 					if interrupted and interrupted() then
+						-- Beine wieder gerade (sonst bleibt er mitten im Schritt stehen)
+						for _, hip in hips do
+							pcall(function()
+								hip.joint.C0 = hip.base
+							end)
+						end
 						return false
 					end
 					local a = math.min((os.clock() - start) * speed / distance, 1)

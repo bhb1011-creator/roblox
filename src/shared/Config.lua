@@ -126,6 +126,9 @@ Config.SOUNDS = {
 	fuse = "", -- fuse.ogg (Zündschnur zischt, ca. 5 Sekunden)
 	explosion = "", -- explosion.ogg (Explosion im Raum, dumpf und laut)
 	sarpRoar = "", -- sarp_roar.ogg (Sarp brüllt wütend, durchs ganze Haus)
+	secretDoor = "", -- secret_door_open.ogg (schwere alte Tür hinter dem Regal knarrt auf)
+	-- Kapitel 3
+	chapterHit = "", -- chapter3_hit.ogg (dumpfer Schlag, wenn "KAPITEL 3" erscheint)
 }
 
 -- Sprachausgabe auf Englisch mit der Text-to-Speech-Funktion von Roblox.
@@ -149,10 +152,13 @@ Config.PLAYER_TTS = false
 --                      (Richard kommt, Axt holen, Sarp läuft herum)
 --   "tuer1"          = gleich im Raum hinter Tür 1: die Flucht (Richard, Chemikalien und
 --                      Schießpulver suchen, Safe sprengen, Sarp, rote Kerzen, Ritualraum)
-Config.TEST_START_KAPITEL2 = "tuer1"
+--   "schluessel"     = im Vorratskeller direkt vor dem Regal, mit dem Schlüssel in der Hand
+--                      (Regal aufschließen, die Tür dahinter öffnen: Kapitel 3 beginnt)
+--   "kapitel3"       = gleich Kapitel 3 (Ritualraum, Quick-Time-Events, Flucht durch den Wald)
+Config.TEST_START_KAPITEL2 = "schluessel"
 -- Versionsnummer: steht beim Laden auf dem Bildschirm und im Output. So sieht man sofort,
 -- ob in Studio wirklich der neueste Stand läuft (nach "git pull").
-Config.BUILD = "K2-2026-11-06h"
+Config.BUILD = "K2-2026-11-06i"
 Config.VOICES = {
 	-- Sarp: etwas tiefer, langsam, ruhig – mit Bass, weniger Höhen und dunklem Hall
 	sarp = {

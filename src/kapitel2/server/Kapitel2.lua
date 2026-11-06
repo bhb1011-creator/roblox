@@ -990,6 +990,7 @@ function Kapitel2.start()
 			spawnPlayer = spawnPlayer,
 			setCandleMode = setCandleMode,
 			loseHeart = loseHeart,
+			gameOver = gameOver,
 			setCheckpoint = function(fn)
 				checkpoint = fn
 			end,
@@ -1045,9 +1046,17 @@ function Kapitel2.start()
 	end)
 
 	-- Teststart (Config.TEST_START_KAPITEL2): man ist schon drin, hat eine Kerze, es ist Nacht
-	local testStart = Config.TEST_START_KAPITEL2 == "nachVerstecken" or Config.TEST_START_KAPITEL2 == "tuer1"
+	local TEST_STARTS = {
+		nachVerstecken = "direkt nach dem Verstecken",
+		tuer1 = "im Raum hinter Tür 1 (Flucht)",
+		schluessel = "im Vorratskeller vor dem Regal, mit dem Schlüssel",
+		kapitel3 = "gleich in Kapitel 3 (Ritualraum)",
+	}
+	local testStart = TEST_STARTS[Config.TEST_START_KAPITEL2] ~= nil
+	-- (tuer1, schluessel und kapitel3 beginnen alle mit der Flucht; Escape.lua springt weiter)
+	local escapeTest = testStart and Config.TEST_START_KAPITEL2 ~= "nachVerstecken"
 	if testStart then
-		print("Kapitel 2: TESTSTART " .. (Config.TEST_START_KAPITEL2 == "tuer1" and "im Raum hinter Tür 1 (Flucht)" or "direkt nach dem Verstecken") .. " (Config.TEST_START_KAPITEL2)")
+		print("Kapitel 2: TESTSTART " .. TEST_STARTS[Config.TEST_START_KAPITEL2] .. " (Config.TEST_START_KAPITEL2)")
 		inside = true
 		candlesGiven = true
 		exploring = true
@@ -1061,7 +1070,7 @@ function Kapitel2.start()
 			end
 		end
 		-- Teststart "tuer1": man erscheint gleich im Raum hinter Tür 1 (nicht erst in der Halle)
-		if Config.TEST_START_KAPITEL2 == "tuer1" and Mansion.escape then
+		if escapeTest and Mansion.escape then
 			checkpoint = function(index)
 				local feet = Mansion.escape.checkpoint + Vector3.new((index - 1) * 1.2 - 0.6, 0, 0)
 				local look = Mansion.escape.checkpointLook
@@ -1090,7 +1099,7 @@ function Kapitel2.start()
 					-- Teststart: gleich in die Nacht, direkt nach dem Verstecken
 					task.wait(3)
 					asleep = true
-					nightStartAt = Config.TEST_START_KAPITEL2 == "tuer1" and "tuer1" or "afterHide"
+					nightStartAt = escapeTest and Config.TEST_START_KAPITEL2 or "afterHide"
 					remotes:SetAttribute("Night", true)
 					task.spawn(startNight)
 					return

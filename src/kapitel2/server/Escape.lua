@@ -20,6 +20,7 @@ local Script = require(ReplicatedStorage.Shared.Kapitel2Dialogue)
 local Mansion = require(script.Parent.Mansion)
 local Wagners = require(script.Parent.Wagners)
 local SarpStage2 = require(script.Parent.SarpStage2)
+local Kapitel3 = require(script.Parent.Kapitel3)
 
 local Escape = {}
 
@@ -44,6 +45,46 @@ local ITEM_COPIES = 3 -- so oft liegt jede Sorte im Haus (an verschiedenen Plät
 local LABELS = { chemicals = "Chemikalien", powder = "Schießpulver" }
 local WHERE = { chemicals = "z. B. oben im Flur", powder = "z. B. unten im Flur" } -- kurz, passt in die Liste
 local WITH_ARTICLE = { chemicals = "die Chemikalien", powder = "das Schießpulver" }
+
+-- Das Regal vor dem Geheimgang zur Seite schieben (instant = sofort, für den Teststart)
+function Escape.moveShelf(instant)
+	local shelf = Mansion.secretShelf
+	if not shelf or shelf:GetAttribute("Moved") then
+		return
+	end
+	shelf:SetAttribute("Moved", true)
+	local start = shelf:GetPivot()
+	local offset = Mansion.origin.RightVector * 3.8 -- nach rechts (Plan +x) weg
+	if instant then
+		shelf:PivotTo(start + offset)
+		return
+	end
+	for i = 1, 20 do
+		shelf:PivotTo(start + offset * (i / 20))
+		task.wait(0.06)
+	end
+end
+
+-- Die alte Tür hinter dem Regal aufschwingen lassen (in den Gang hinein)
+function Escape.swingDoor(instant)
+	local door = Mansion.secretDoor
+	if not door or door.model:GetAttribute("Open") then
+		return
+	end
+	door.model:SetAttribute("Open", true)
+	local OPEN = math.rad(-80) -- (nicht ganz, sonst stößt der Ring an die Gangwand)
+	if instant then
+		door.model:PivotTo(door.hinge * CFrame.Angles(0, OPEN, 0))
+		return
+	end
+	local steps = 30
+	for i = 1, steps do
+		local t = i / steps
+		local eased = 1 - (1 - t) ^ 3
+		door.model:PivotTo(door.hinge * CFrame.Angles(0, OPEN * eased, 0))
+		task.wait(0.05)
+	end
+end
 
 function Escape.run(kit)
 	local ctx = kit.ctx
@@ -412,11 +453,6 @@ function Escape.run(kit)
 		{ 40, 37, O }, { 46, 37, O }, { 63, 37.6, O }, { 64.6, 44, O }, { 68, 51, O }, { 66, 54.5, O }, { 58, 56.3, O },
 		{ 54.25, 56.3, O }, { 50, 57, O }, { 43.7, 59.3, O }, { 43.7, 68.2, E }, { 43.8, 69.3, E },
 	})
-	-- Beim Schleichen am Ende: nur im Erdgeschoss (Halle, Flur, Küche), wo der Kerzenweg langführt
-	local SNEAK_ROUTE = route({
-		{ 48, 66, E }, { 51.4, 58, E }, { 51.4, 50, E }, { 46, 46, E }, { 44, 40, E }, { 48, 37, E }, { 51, 36.5, E },
-		{ 48, 37, E }, { 44, 40, E }, { 46, 46, E }, { 51.4, 50, E }, { 51.4, 58, E },
-	})
 	local function patrolPhase()
 		return phase == "search" or phase == "bomb" or phase == "sneak"
 	end
@@ -620,6 +656,272 @@ function Escape.run(kit)
 		end
 		Wagners.place(sarp, kit.away, ctx.facing)
 		patrolRunning = false
+	end
+
+	------------------------------------------------------------------ Das Ende der Flucht (ab Phase 6)
+	-- Nachdem Sarp Großmutters Zimmer verlassen hat, ist in Wahrheit niemand mehr da: Sarp
+	-- und die Familie tauchen nicht mehr auf. Man soll aber glauben, dass sie noch im Haus
+	-- sind: schwere Schritte hinter der Wand, Atmen, knarrende Türen, Flüstern.
+	local function phantomPresence()
+		task.wait(5)
+		while phase == "sneak" do
+			local candidates = {}
+			for _, player in Players:GetPlayers() do
+				if alive(player) and not caught[player] then
+					table.insert(candidates, player)
+				end
+			end
+			local target = candidates[1] and candidates[math.random(1, #candidates)]
+			local root = target and rootOf(target)
+			if root then
+				local feet = root.Position - Vector3.new(0, footOffset(target), 0)
+				local angle = math.random() * math.pi * 2
+				local away = Vector3.new(math.cos(angle), 0, math.sin(angle))
+				local side = Vector3.new(-away.Z, 0, away.X) * (math.random() < 0.5 and 1 or -1)
+				local roll = math.random()
+				if roll < 0.5 then
+					-- Schritte: er geht irgendwo nebenan vorbei (wie bei seinem Rundgang)
+					local from = feet + away * math.random(14, 26)
+					for i = 1, math.random(4, 7) do
+						if phase ~= "sneak" then
+							break
+						end
+						sfx("sarpStep", from + side * (i * 1.6) + Vector3.new(0, 0.5, 0), { volume = 2.2, maxDistance = 120 })
+						task.wait(0.7)
+					end
+				elseif roll < 0.62 then
+					-- Atmen, ganz nah (hinter der nächsten Wand)
+					sfx("sarpBreath", feet + away * math.random(8, 12) + Vector3.new(0, 2.5, 0), { volume = 1.2, maxDistance = 40 })
+				elseif roll < 0.76 then
+					sfx("doorCreak", feet + away * math.random(12, 22) + Vector3.new(0, 3, 0), { volume = 0.9, speed = 0.7, maxDistance = 70 })
+				elseif roll < 0.88 then
+					kit.whisper(Script.SARP_WHISPERS[math.random(1, #Script.SARP_WHISPERS)])
+				else
+					-- die Familie flüstert (man sieht sie nicht)
+					local names = {}
+					for name in Script.FAMILY_PHANTOM do
+						table.insert(names, name)
+					end
+					local name = names[math.random(1, #names)]
+					local lines = Script.FAMILY_PHANTOM[name]
+					task.spawn(say, name, lines[math.random(1, #lines)])
+				end
+			end
+			task.wait(math.random(7, 13))
+		end
+	end
+
+	-- `keyModel`/`keyPrompt`: der Schlüssel im Safe (oder nil, dann bekommt ihn `givenTo`)
+	local function finalPart(keyModel, keyPrompt, itemFolder, givenTo)
+		phase = "sneak"
+		remotes:SetAttribute("SneakAllowed", true)
+		local pathFolder = Instance.new("Model")
+		pathFolder.Name = "EscapePathCandles"
+		pathFolder.Parent = Mansion.model or workspace
+		for _, at in room.path do
+			local base = Instance.new("Part")
+			base.Name = "RedPathCandle"
+			base.Shape = Enum.PartType.Cylinder
+			base.Size = Vector3.new(0.7, 0.28, 0.28)
+			base.CFrame = CFrame.new(at + Vector3.new(0, 0.35, 0)) * upright
+			base.Color = Color3.fromRGB(110, 20, 18)
+			base.Material = Enum.Material.SmoothPlastic
+			base.Anchored = true
+			base.CanCollide = false
+			base.CanTouch = false
+			base.CastShadow = false
+			base.Parent = pathFolder
+			local flame = Instance.new("Part")
+			flame.Name = "CandleFlame"
+			flame.Shape = Enum.PartType.Ball
+			flame.Size = Vector3.new(0.18, 0.18, 0.18)
+			flame.CFrame = CFrame.new(at + Vector3.new(0, 0.82, 0))
+			flame.Color = Color3.fromRGB(255, 40, 30)
+			flame.Material = Enum.Material.Neon
+			flame.Anchored = true
+			flame.CanCollide = false
+			flame.CanTouch = false
+			flame.CastShadow = false
+			flame.Parent = pathFolder
+			local light = Instance.new("PointLight")
+			light.Name = "CandleLight" -- flackert auf dem Client wie die anderen Kerzen
+			light.Range = 9
+			light.Brightness = 1.3
+			light.Color = Color3.fromRGB(255, 30, 24)
+			light.Parent = flame
+		end
+
+		local keyHolder
+		local shelfOpen = false
+		local function giveKey(player)
+			keyHolder = player
+			if keyModel then
+				keyModel.Parent = nil
+			end
+			attachToHand(player, "Carried_key", BUILDERS.key)
+			player.CharacterAdded:Connect(function()
+				task.wait(1)
+				if keyHolder == player then
+					attachToHand(player, "Carried_key", BUILDERS.key)
+				end
+			end)
+		end
+		if keyPrompt then
+			keyPrompt.Triggered:Connect(function(player)
+				if keyHolder then
+					return
+				end
+				giveKey(player)
+				event:FireAllClients({ type = "objectives", title = "Raus hier", items = { { text = "Schlüssel – trägt " .. player.DisplayName, done = true }, { text = "Den roten Kerzen folgen", done = false } } })
+				task.spawn(function()
+					line("takeKey")
+					line("sneakHint")
+				end)
+				hint("C: Schleichen – dann hört er dich nicht. Er sieht dich nur, wenn er ganz nah ist.", 8)
+			end)
+			keyPrompt.Enabled = true
+		end
+		Players.PlayerRemoving:Connect(function(player)
+			if player == keyHolder then
+				keyHolder = nil
+				if keyModel and itemFolder then
+					-- der Schlüssel liegt wieder im Safe
+					keyModel.Parent = itemFolder
+				elseif not shelfOpen then
+					-- (Teststart: dann bekommt ihn der andere)
+					local other = Players:GetPlayers()[1]
+					if other and other ~= player then
+						giveKey(other)
+					end
+				end
+			end
+		end)
+		if givenTo then
+			giveKey(givenTo)
+			event:FireAllClients({ type = "objectives", title = "Raus hier", items = { { text = "Schlüssel – trägt " .. givenTo.DisplayName, done = true }, { text = "Das Regal aufschließen", done = false } } })
+			hint("Das Regal vor dir: mit dem Schlüssel aufschließen (E).", 6)
+		else
+			event:FireAllClients({ type = "objectives", title = "Raus hier", items = { { text = "Schlüssel aus dem Safe nehmen", done = false } } })
+			task.spawn(function()
+				line("afterSearch")
+				if not keyHolder then
+					hint("Nimm den Schlüssel aus dem Safe.", 5)
+				end
+			end)
+		end
+
+		-- Die alte Tür hinter dem Regal (erst nach dem Aufschließen erreichbar)
+		local secretDoor = Mansion.secretDoor
+		local doorPrompt
+		local doorOpened = false
+		if secretDoor then
+			doorPrompt = Instance.new("ProximityPrompt")
+			doorPrompt.ObjectText = "Alte Tür"
+			doorPrompt.ActionText = "Öffnen"
+			doorPrompt.HoldDuration = 1
+			doorPrompt.MaxActivationDistance = 7
+			doorPrompt.RequiresLineOfSight = false
+			doorPrompt.Enabled = false
+			doorPrompt.Parent = secretDoor.prompt
+			doorPrompt.Triggered:Connect(function()
+				if doorOpened then
+					return
+				end
+				doorOpened = true
+				doorPrompt.Enabled = false
+			end)
+		end
+
+		-- Regal vor dem Geheimgang: mit dem Schlüssel aufschließen
+		local shelf = Mansion.secretShelf
+		local shelfPart
+		if shelf then
+			for _, part in shelf:GetDescendants() do
+				if part:IsA("BasePart") then
+					shelfPart = shelfPart or part
+				end
+			end
+		end
+		if shelfPart then
+			local prompt = Instance.new("ProximityPrompt")
+			prompt.ObjectText = "Regal"
+			prompt.ActionText = "Aufschließen"
+			prompt.HoldDuration = 0.8
+			prompt.MaxActivationDistance = 8
+			prompt.RequiresLineOfSight = false
+			prompt.Parent = shelfPart
+			prompt.Triggered:Connect(function(player)
+				if shelfOpen then
+					return
+				end
+				if player ~= keyHolder then
+					hint("Hinter dem Regal ist ein Schlüsselloch. " .. (keyHolder and (keyHolder.DisplayName .. " hat den Schlüssel.") or "Der Schlüssel liegt im Safe."), 4, player)
+					lineAsync("shelfLocked")
+					return
+				end
+				shelfOpen = true
+				prompt.Enabled = false
+				sfx("doorCreak", shelfPart.Position, { volume = 1, speed = 0.5 })
+				Escape.moveShelf(false)
+				event:FireAllClients({ type = "objectives", title = "Raus hier", items = { { text = "Die Tür hinter dem Regal öffnen", done = false } } })
+				lineAsync("shelfOpen")
+				if doorPrompt then
+					doorPrompt.Enabled = true
+				end
+			end)
+		end
+
+		-- Niemand ist mehr da – aber man hört sie noch
+		task.spawn(phantomPresence)
+
+		------------------------------------------------------------------ 7. Die Tür geht auf: Kapitel 3
+		while not doorOpened do
+			task.wait(0.2)
+		end
+		phase = "done"
+		remotes:SetAttribute("SneakAllowed", false)
+		event:FireAllClients({ type = "objectives", clear = true })
+		for _, player in Players:GetPlayers() do
+			leaveSpot(player, false)
+		end
+		sfx("secretDoor", secretDoor.prompt.Position, { volume = 1.4, maxDistance = 60 })
+		Escape.swingDoor(false)
+		Kapitel3.run(kit)
+	end
+
+	------------------------------------------------------------------ Teststart: mit dem Schlüssel vor dem Regal
+	-- (Config.TEST_START_KAPITEL2 = "schluessel"; "kapitel3" springt gleich in den Ritualraum)
+	local startAt = ctx.startAt
+	if startAt == "schluessel" or startAt == "kapitel3" then
+		if kit.mr then
+			Wagners.place(kit.mr, ctx.hiddenSpot, ctx.facing)
+		end
+		ctx.setCandleMode("none")
+		local K0 = Mansion.FLOORS.K
+		local look = point(47, 18, K0)
+		local function cellarFrame(index)
+			local feet = point(47, 23.6, K0) + Mansion.origin.RightVector * ((index - 1) * 1.6 - 0.8)
+			return CFrame.lookAt(feet, Vector3.new(look.X, feet.Y, look.Z))
+		end
+		ctx.setCheckpoint(cellarFrame)
+		for index, player in Players:GetPlayers() do
+			kit.bringTo(player, cellarFrame(index).Position, look)
+		end
+		task.wait(0.8)
+		ctx.setMovement(true)
+		event:FireAllClients({ type = "candleLost" })
+		if startAt == "kapitel3" then
+			phase = "done"
+			Escape.moveShelf(true)
+			Escape.swingDoor(true)
+			Kapitel3.run(kit)
+			return
+		end
+		local folder = Instance.new("Folder")
+		folder.Name = "EscapeItems"
+		folder.Parent = Mansion.model or workspace
+		finalPart(nil, nil, folder, Players:GetPlayers()[1])
+		return
 	end
 
 	------------------------------------------------------------------ 1. Richard im Raum
@@ -1182,9 +1484,12 @@ function Escape.run(kit)
 		table.insert(back, room.sarpStart)
 		-- Sobald er aus dem Zimmer ist, geht es für alle weiter (Schlüssel nehmen). Den Rückweg
 		-- nach unten läuft er im Hintergrund; erst danach beginnt sein Rundgang.
+		local sarpGone = false
 		sarpReturning = true
 		task.spawn(function()
-			kit.sarpWalk(back, SEARCH_SPEED)
+			kit.sarpWalk(back, SEARCH_SPEED, function()
+				return sarpGone
+			end)
 			sarpReturning = false
 		end)
 		local leaveBy = os.clock() + 12
@@ -1195,6 +1500,24 @@ function Escape.run(kit)
 			end
 			task.wait(0.2)
 		end
+		-- Ab jetzt taucht er nicht mehr auf: sobald ihn niemand mehr sieht, ist er weg.
+		-- (Man hört ihn aber weiter im Haus, siehe phantomPresence.)
+		task.spawn(function()
+			local giveUp = os.clock() + 6
+			while sarpReturning and os.clock() < giveUp do
+				if not kit.anyoneSees(Wagners.ground(sarp), sarp) then
+					break
+				end
+				task.wait(0.2)
+			end
+			sarpGone = true
+			local stopped = os.clock()
+			while sarpReturning and os.clock() - stopped < 1 do
+				task.wait(0.05)
+			end
+			Wagners.place(sarp, kit.away, ctx.facing)
+			SarpStage2.look(sarp, 0, 0)
+		end)
 	end
 	-- wer erwischt wurde, macht im Raum weiter
 	for _, player in Players:GetPlayers() do
@@ -1204,152 +1527,9 @@ function Escape.run(kit)
 	end
 	task.wait(0.3)
 
-	------------------------------------------------------------------ 6. Rote Kerzen, Schlüssel, schleichen
-	phase = "sneak"
-	local pathFolder = Instance.new("Model")
-	pathFolder.Name = "EscapePathCandles"
-	pathFolder.Parent = Mansion.model or workspace
-	for _, at in room.path do
-		local base = Instance.new("Part")
-		base.Name = "RedPathCandle"
-		base.Shape = Enum.PartType.Cylinder
-		base.Size = Vector3.new(0.7, 0.28, 0.28)
-		base.CFrame = CFrame.new(at + Vector3.new(0, 0.35, 0)) * upright
-		base.Color = Color3.fromRGB(110, 20, 18)
-		base.Material = Enum.Material.SmoothPlastic
-		base.Anchored = true
-		base.CanCollide = false
-		base.CanTouch = false
-		base.CastShadow = false
-		base.Parent = pathFolder
-		local flame = Instance.new("Part")
-		flame.Name = "CandleFlame"
-		flame.Shape = Enum.PartType.Ball
-		flame.Size = Vector3.new(0.18, 0.18, 0.18)
-		flame.CFrame = CFrame.new(at + Vector3.new(0, 0.82, 0))
-		flame.Color = Color3.fromRGB(255, 40, 30)
-		flame.Material = Enum.Material.Neon
-		flame.Anchored = true
-		flame.CanCollide = false
-		flame.CanTouch = false
-		flame.CastShadow = false
-		flame.Parent = pathFolder
-		local light = Instance.new("PointLight")
-		light.Name = "CandleLight" -- flackert auf dem Client wie die anderen Kerzen
-		light.Range = 9
-		light.Brightness = 1.3
-		light.Color = Color3.fromRGB(255, 30, 24)
-		light.Parent = flame
-	end
-	local keyHolder
-	keyPrompt.Triggered:Connect(function(player)
-		if keyHolder then
-			return
-		end
-		keyHolder = player
-		keyModel.Parent = nil
-		attachToHand(player, "Carried_key", BUILDERS.key)
-		player.CharacterAdded:Connect(function()
-			task.wait(1)
-			if keyHolder == player then
-				attachToHand(player, "Carried_key", BUILDERS.key)
-			end
-		end)
-		event:FireAllClients({ type = "objectives", title = "Raus hier", items = { { text = "Schlüssel – trägt " .. player.DisplayName, done = true }, { text = "Den roten Kerzen folgen", done = false } } })
-		task.spawn(function()
-			line("takeKey")
-			line("sneakHint")
-		end)
-		hint("C: Schleichen – dann hört er dich nicht. Er sieht dich nur, wenn er ganz nah ist.", 8)
-	end)
-	Players.PlayerRemoving:Connect(function(player)
-		if player == keyHolder then
-			-- der Schlüssel liegt wieder im Safe
-			keyHolder = nil
-			keyModel.Parent = itemFolder
-		end
-	end)
-	keyPrompt.Enabled = true
-	event:FireAllClients({ type = "objectives", title = "Raus hier", items = { { text = "Schlüssel aus dem Safe nehmen", done = false } } })
-	task.spawn(function()
-		line("afterSearch")
-		if not keyHolder then
-			hint("Nimm den Schlüssel aus dem Safe.", 5)
-		end
-	end)
+	------------------------------------------------------------------ 6. Rote Kerzen, Schlüssel, Regal, Tür
+	finalPart(keyModel, keyPrompt, itemFolder)
 
-	-- Regal vor dem Geheimgang: mit dem Schlüssel aufschließen
-	local shelf = Mansion.secretShelf
-	local shelfOpen = false
-	local shelfPart
-	if shelf then
-		for _, part in shelf:GetDescendants() do
-			if part:IsA("BasePart") then
-				shelfPart = shelfPart or part
-			end
-		end
-	end
-	if shelfPart then
-		local prompt = Instance.new("ProximityPrompt")
-		prompt.ObjectText = "Regal"
-		prompt.ActionText = "Aufschließen"
-		prompt.HoldDuration = 0.8
-		prompt.MaxActivationDistance = 8
-		prompt.RequiresLineOfSight = false
-		prompt.Parent = shelfPart
-		prompt.Triggered:Connect(function(player)
-			if shelfOpen then
-				return
-			end
-			if player ~= keyHolder then
-				hint("Hinter dem Regal ist ein Schlüsselloch. " .. (keyHolder and (keyHolder.DisplayName .. " hat den Schlüssel.") or "Der Schlüssel liegt im Safe."), 4, player)
-				lineAsync("shelfLocked")
-				return
-			end
-			shelfOpen = true
-			prompt.Enabled = false
-			sfx("doorCreak", shelfPart.Position, { volume = 1, speed = 0.5 })
-			local start = shelf:GetPivot()
-			local offset = Mansion.origin.RightVector * 3.8 -- nach rechts (Plan +x) weg
-			for i = 1, 20 do
-				shelf:PivotTo(start + offset * (i / 20))
-				task.wait(0.06)
-			end
-			event:FireAllClients({ type = "objectives", title = "Raus hier", items = { { text = "Durch den Geheimgang", done = false } } })
-			lineAsync("shelfOpen")
-		end)
-	end
-
-	-- Im Schleichen läuft Sarp nur im Erdgeschoss (dort, wo der Kerzenweg langführt)
-	task.spawn(function()
-		-- erst wenn Sarp unten angekommen ist, beginnt sein Rundgang
-		local waitUntil = os.clock() + 40
-		while sarpReturning and os.clock() < waitUntil do
-			task.wait(0.2)
-		end
-		sarpPatrol(SNEAK_ROUTE)
-	end)
-
-	------------------------------------------------------------------ 7. Ritualraum: schwarz
-	while true do
-		local entered
-		for _, player in Players:GetPlayers() do
-			local root = rootOf(player)
-			if root and Mansion.inRoom(root.Position, "ritual", "K") then
-				entered = player
-			end
-		end
-		if entered then
-			break
-		end
-		task.wait(0.2)
-	end
-	phase = "done"
-	remotes:SetAttribute("SneakAllowed", false)
-	ctx.setMovement(false)
-	event:FireAllClients({ type = "objectives", clear = true })
-	event:FireAllClients({ type = "alone", instant = true, title = "Der Ritualraum …", subtitle = "Fortsetzung folgt" })
-	print("Kapitel 2: Jemand hat den Ritualraum betreten – Bild schwarz (hier geht es später weiter).")
 end
 
 return Escape
