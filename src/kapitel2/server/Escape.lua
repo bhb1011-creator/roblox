@@ -1120,11 +1120,12 @@ function Escape.run(kit)
 	event:FireAllClients({ type = "dim", level = 0.4, duration = 1 })
 	task.spawn(line, "heHeard")
 	hint("Versteck dich! Er kommt!", 5)
-	task.wait(3)
+	task.wait(1.5)
 	local function sarpSays(list)
 		kit.whisper(list[math.random(1, #list)])
 	end
 	local searchingRoom = false
+	local sarpReturning = false -- Sarp läuft noch zurück nach unten (im Hintergrund)
 	local function interruptedInRoom()
 		if not searchingRoom then
 			return false
@@ -1179,7 +1180,21 @@ function Escape.run(kit)
 			table.insert(back, room.sarpApproach[i])
 		end
 		table.insert(back, room.sarpStart)
-		kit.sarpWalk(back, SEARCH_SPEED)
+		-- Sobald er aus dem Zimmer ist, geht es für alle weiter (Schlüssel nehmen). Den Rückweg
+		-- nach unten läuft er im Hintergrund; erst danach beginnt sein Rundgang.
+		sarpReturning = true
+		task.spawn(function()
+			kit.sarpWalk(back, SEARCH_SPEED)
+			sarpReturning = false
+		end)
+		local leaveBy = os.clock() + 12
+		while sarpReturning and os.clock() < leaveBy do
+			local sarpRoot = sarp:FindFirstChild("HumanoidRootPart")
+			if sarpRoot and not Mansion.inRoom(sarpRoot.Position, "tuer1", "O") and (sarpRoot.Position - room.doorOutside).Magnitude > 5 then
+				break
+			end
+			task.wait(0.2)
+		end
 	end
 	-- wer erwischt wurde, macht im Raum weiter
 	for _, player in Players:GetPlayers() do
@@ -1187,7 +1202,7 @@ function Escape.run(kit)
 			restartPlayer(player)
 		end
 	end
-	task.wait(1.5)
+	task.wait(0.3)
 
 	------------------------------------------------------------------ 6. Rote Kerzen, Schlüssel, schleichen
 	phase = "sneak"
@@ -1306,7 +1321,14 @@ function Escape.run(kit)
 	end
 
 	-- Im Schleichen läuft Sarp nur im Erdgeschoss (dort, wo der Kerzenweg langführt)
-	task.spawn(sarpPatrol, SNEAK_ROUTE)
+	task.spawn(function()
+		-- erst wenn Sarp unten angekommen ist, beginnt sein Rundgang
+		local waitUntil = os.clock() + 40
+		while sarpReturning and os.clock() < waitUntil do
+			task.wait(0.2)
+		end
+		sarpPatrol(SNEAK_ROUTE)
+	end)
 
 	------------------------------------------------------------------ 7. Ritualraum: schwarz
 	while true do

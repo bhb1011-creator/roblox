@@ -215,9 +215,18 @@ function Kapitel2.start()
 			end
 		end
 		local position = Wagners.ground(npc)
+		-- Wegpunkte (Hallen-Koordinaten oder { at = Weltposition }) in Weltpunkte umrechnen und
+		-- durchs Wegnetz führen: um Möbel herum, durch Türen, nie durch Wände
+		local targets = {}
 		for _, spot in spots do
-			-- Punkte: Hallen-Koordinaten (Vector2) oder { at = Weltposition der Füße }
-			local target = (type(spot) == "table" and rawget(spot, "at")) or hall(spot)
+			local goal = (type(spot) == "table" and rawget(spot, "at")) or hall(spot)
+			local from = targets[#targets] or position
+			local route = Mansion.route and Mansion.route(from, goal)
+			for _, step in route or { goal } do
+				table.insert(targets, step)
+			end
+		end
+		for _, target in targets do
 			local distance = (target - position).Magnitude
 			if distance > 0.05 then
 				local direction = (target - position).Unit

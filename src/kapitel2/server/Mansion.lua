@@ -1772,6 +1772,7 @@ local function buildNavigation()
 			{ "O", 39, 34, "gang", "tommy" },
 			{ "O", 49, 34, "gang", "lucy" },
 			{ "O", 59, 34, "gang", "bad" },
+			{ "O", 38, 40, "gang", "tuer1" }, -- Großmutters Zimmer (vernagelt, bis die Axt kommt)
 			{ "O", 78.12, 60.12, "spiel", "naeh", { { 76.7, 58.7 }, { 79.55, 61.55 } } },
 			{ "K", 42, 34, "vorrat", "kgang" },
 			{ "K", 34, 40, "kgang", "wasch" },
@@ -1802,10 +1803,12 @@ local function buildNavigation()
 			{ "O", 43.95, 57.35, "galerie" },
 			{ "O", 46.95, 57.35, "galerie" },
 			{ "O", 49.95, 57.35, "galerie" },
-			{ "O", 68.2, 39.2, "gang" },
+			{ "O", 67.2, 38.2, "gang" },
 			{ "O", 49.2, 29.2, "lucy" },
 			{ "O", 61.45, 26.2, "bad" },
 			{ "O", 61.45, 21.2, "bad" },
+			{ "O", 32.2, 56.2, "tuer1" },
+			{ "O", 24.2, 46.2, "tuer1" },
 			{ "K", 44.2, 31.2, "vorrat" },
 		},
 	}
