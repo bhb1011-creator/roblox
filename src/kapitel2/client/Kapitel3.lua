@@ -2768,17 +2768,32 @@ local function keyUnder(screenPosition, viewport)
 	return hit and hit.Instance
 end
 
--- Das Biest als Halluzination: Kopf genau bei `headPosition`, Blick zu `lookAt`
-local function scareBeast(headPosition, lookAt)
+-- Das Biest als Halluzination: der Kopf direkt vor der Kamera (wie der Schreck in Level 1),
+-- jedes Bild neu ausgerichtet – so ist es immer mitten im Bild
+local function scareBeast(distance)
 	local model, joints = Beast.build(localFolder or workspace)
-	pcall(Beast.pose, joints, 0, 0, 1, 0.25)
-	local function place(head, target)
-		local facing = unit(flat(target - head), Vector3.new(0, 0, -1))
-		local rotation = CFrame.lookAt(Vector3.zero, facing)
-		model:PivotTo(CFrame.new(head - rotation:VectorToWorldSpace(Beast.HEAD)) * rotation)
+	for _, part in model:GetDescendants() do
+		if part:IsA("BasePart") then
+			part.CastShadow = false
+		end
 	end
-	place(headPosition, lookAt)
-	return model, place
+	return { model = model, joints = joints, distance = distance or 3.4 }
+end
+local function updateScare(now)
+	local scare = hutState and hutState.scare
+	if not (scare and scare.model.Parent) then
+		return
+	end
+	local jitter = CFrame.new((math.random() - 0.5) * 0.12, (math.random() - 0.5) * 0.12, 0)
+	scare.model:PivotTo(camera.CFrame * jitter * CFrame.new(0, -Beast.HEAD.Y - 0.25, -scare.distance + Beast.HEAD.Z) * CFrame.Angles(0, math.pi, 0))
+	pcall(Beast.pose, scare.joints, 0, 0, 1, math.sin(now * 40) * 0.15)
+end
+local function clearScare()
+	local H = hutState
+	if H and H.scare then
+		H.scare.model:Destroy()
+		H.scare = nil
+	end
 end
 
 local function removeMarker(kind)
@@ -2821,22 +2836,21 @@ local function hallucination(kind)
 				play("lightFlicker", { Volume = 1.4 })
 				H.blackoutUntil = os.clock() + 0.9
 				hold(mine, 0.9)
+				-- blitzschnell umdrehen (auf Augenhöhe)
 				local away = unit(flat(eye - target.Position), Vector3.new(0, 0, 1))
-				local head = eye + away * 2.8 + UP * 0.4
-				local model = scareBeast(head, eye)
-				H.scareModel = model
-				still(CFrame.lookAt(eye, head + UP * 0.2), 0.2, "out")
+				still(CFrame.lookAt(eye, eye + away), 0.18, "out")
+				hold(mine, 0.1)
+				H.scare = scareBeast(3.4)
 				play("mirrorScare", { Volume = 2.6 })
 				play("jumpscare", { Volume = 2.4 })
 				play("roar", { Volume = 2.2 })
-				hold(mine, 0.12)
-				redFlash(0.6, 0.7)
-				shake(0.06, 0.9)
-				setFov(58, 0.2)
-				hold(mine, 0.85)
+				redFlash(0.55, 0.7)
+				shake(0.05, 0.9)
+				setFov(64, 0.15)
+				hold(mine, 0.95)
 			else
 				-- man beugt sich über das Foto, es wird still – dann springt es heraus
-				local close = target.Position + unit(eye - target.Position, Vector3.new(0, 0, 1)) * 2.3
+				local close = target.Position + unit(eye - target.Position, Vector3.new(0, 0, 1)) * 2.4
 				still(CFrame.lookAt(close, target.Position), 1.4, "inout")
 				setFov(55, 1.4)
 				play("heartbeat", { Volume = 1.2 })
@@ -2846,30 +2860,26 @@ local function hallucination(kind)
 				H.blackoutUntil = os.clock() + 0.35
 				play("lightFlicker", { Volume = 1.2 })
 				hold(mine, 0.35)
-				local camPos = camera.CFrame.Position
-				local direction = unit(target.Position - camPos)
-				local model, place = scareBeast(target.Position, camPos)
-				H.scareModel = model
+				-- es kommt aus dem Foto auf einen zu
+				H.scare = scareBeast(9)
+				setFov(68, 0.2)
 				play("photoScare", { Volume = 2.6 })
 				play("jumpscare", { Volume = 2.4 })
 				play("roar", { Volume = 2.2 })
 				local start = os.clock()
-				while os.clock() - start < 0.22 do
-					local a = ease((os.clock() - start) / 0.22, "out")
-					place(target.Position:Lerp(camPos + direction * 1.5, a), camPos)
+				while os.clock() - start < 0.2 do
+					H.scare.distance = 9 + (3.1 - 9) * ease((os.clock() - start) / 0.2, "out")
 					hold(mine, 0)
 				end
+				H.scare.distance = 3.1
 				redFlash(0.6, 0.7)
-				shake(0.07, 0.9)
-				kick(CFrame.Angles(0.12, 0, 0))
-				hold(mine, 0.8)
+				shake(0.06, 0.9)
+				kick(CFrame.Angles(0.08, 0, 0))
+				hold(mine, 0.85)
 			end
 			setBlack(0, 0.05)
 			hold(mine, 0.3)
-			if H.scareModel then
-				H.scareModel:Destroy()
-				H.scareModel = nil
-			end
+			clearScare()
 			camera.CFrame = eyeFrame
 			stopCutscene()
 			setBlack(1, 0.7)
@@ -2883,10 +2893,7 @@ local function hallucination(kind)
 				remote:FireServer(kind)
 			end
 		end
-		if H.scareModel then
-			H.scareModel:Destroy()
-			H.scareModel = nil
-		end
+		clearScare()
 		H.scaring = false
 		setOwnWalk(true)
 		if not ok and problem ~= CANCELLED then
@@ -2897,7 +2904,8 @@ local function hallucination(kind)
 	end)
 end
 
--- Polizeiauto (nur auf diesem Computer): silber-blau, Blaulicht, Front zeigt nach -Z
+-- Polizeiauto (nur auf diesem Computer): amerikanischer Streifenwagen, schwarz-weiß,
+-- "POLICE", rot-blaues Licht auf dem Dach. Die Front zeigt nach -Z.
 local function buildPoliceCar(parent)
 	local model = Instance.new("Model")
 	model.Name = "PoliceCar"
@@ -2920,53 +2928,71 @@ local function buildPoliceCar(parent)
 		p.Parent = model
 		return p
 	end
-	local SILVER = Color3.fromRGB(196, 200, 206)
-	local BLUE = Color3.fromRGB(24, 62, 150)
-	local GLASS = Color3.fromRGB(20, 24, 30)
-	local body = part("Body", Vector3.new(6.2, 1.9, 13.6), CFrame.new(0, 2, 0), SILVER, Enum.Material.Metal)
-	part("Skirt", Vector3.new(6.3, 0.5, 13.2), CFrame.new(0, 1.05, 0), Color3.fromRGB(40, 40, 44))
-	part("Hood", Vector3.new(6, 0.3, 4), CFrame.new(0, 3.05, -4.6) * CFrame.Angles(math.rad(-3), 0, 0), SILVER, Enum.Material.Metal)
-	part("Trunk", Vector3.new(6, 0.3, 2.6), CFrame.new(0, 3.05, 5.3), SILVER, Enum.Material.Metal)
-	part("Cabin", Vector3.new(5.6, 1.8, 6), CFrame.new(0, 3.9, 0.7), SILVER, Enum.Material.Metal)
+	local BLACK = Color3.fromRGB(18, 18, 20)
+	local WHITE = Color3.fromRGB(232, 234, 236)
+	local GLASS = Color3.fromRGB(16, 20, 26)
+	local CHROME = Color3.fromRGB(170, 172, 178)
+	local body = part("Body", Vector3.new(6.2, 1.9, 14), CFrame.new(0, 2, 0), BLACK, Enum.Material.SmoothPlastic, { Reflectance = 0.08 })
+	part("Skirt", Vector3.new(6.3, 0.45, 13.6), CFrame.new(0, 1.05, 0), Color3.fromRGB(30, 30, 32))
+	part("Hood", Vector3.new(6, 0.3, 4.2), CFrame.new(0, 3.05, -4.7) * CFrame.Angles(math.rad(-3), 0, 0), BLACK, Enum.Material.SmoothPlastic, { Reflectance = 0.08 })
+	part("Trunk", Vector3.new(6, 0.3, 2.8), CFrame.new(0, 3.05, 5.5), BLACK, Enum.Material.SmoothPlastic, { Reflectance = 0.08 })
+	part("Cabin", Vector3.new(5.6, 1.8, 6), CFrame.new(0, 3.9, 0.7), WHITE, Enum.Material.SmoothPlastic, { Reflectance = 0.05 })
 	part("Windshield", Vector3.new(5.3, 1.9, 0.12), CFrame.new(0, 3.85, -2.55) * CFrame.Angles(math.rad(-28), 0, 0), GLASS, Enum.Material.Glass, { Transparency = 0.2 })
 	part("RearWindow", Vector3.new(5.3, 1.7, 0.12), CFrame.new(0, 3.85, 3.95) * CFrame.Angles(math.rad(28), 0, 0), GLASS, Enum.Material.Glass, { Transparency = 0.2 })
 	for _, side in { -1, 1 } do
 		part("SideWindow", Vector3.new(0.12, 1.3, 5.4), CFrame.new(side * 2.81, 4, 0.7), GLASS, Enum.Material.Glass, { Transparency = 0.2 })
-		part("Pillar", Vector3.new(0.14, 1.4, 0.25), CFrame.new(side * 2.83, 4, 0.7), SILVER, Enum.Material.Metal)
-		part("Stripe", Vector3.new(0.06, 0.55, 13.4), CFrame.new(side * 3.12, 2.25, 0), BLUE)
-		part("StripeThin", Vector3.new(0.06, 0.14, 13.4), CFrame.new(side * 3.12, 1.75, 0), BLUE)
-		local label = part("Label", Vector3.new(0.05, 0.9, 4.6), CFrame.new(side * 3.16, 2.25, 0.4), BLUE, Enum.Material.SmoothPlastic, { Transparency = 1 })
-		local surface = Parts.surfaceGui(label, side > 0 and Enum.NormalId.Right or Enum.NormalId.Left, false)
-		Parts.text(surface, { Text = "POLIZEI", TextColor3 = Color3.fromRGB(240, 244, 250), Font = Enum.Font.GothamBlack })
-		part("Mirror", Vector3.new(0.6, 0.35, 0.25), CFrame.new(side * 3.2, 3.6, -2.2), SILVER, Enum.Material.Metal)
-		for _, z in { -4.3, 4.3 } do
-			part("Wheel", Vector3.new(0.9, 2.4, 2.4), CFrame.new(side * 2.85, 1.2, z), Color3.fromRGB(20, 20, 20), Enum.Material.SmoothPlastic, { Shape = Enum.PartType.Cylinder })
-			part("Rim", Vector3.new(0.92, 1.2, 1.2), CFrame.new(side * 2.86, 1.2, z), Color3.fromRGB(150, 150, 156), Enum.Material.Metal, { Shape = Enum.PartType.Cylinder })
+		part("Pillar", Vector3.new(0.14, 1.4, 0.25), CFrame.new(side * 2.83, 4, 0.7), BLACK)
+		-- weiße Türen mit "POLICE"
+		local door = part("Door", Vector3.new(0.08, 1.75, 6.2), CFrame.new(side * 3.13, 2.05, 0.6), WHITE)
+		local surface = Parts.surfaceGui(door, side > 0 and Enum.NormalId.Right or Enum.NormalId.Left, false)
+		surface.PixelsPerStud = 50
+		local label = Parts.text(surface, { Text = "POLICE", TextColor3 = BLACK, Font = Enum.Font.GothamBlack })
+		label.Size = UDim2.fromScale(0.9, 0.55)
+		label.Position = UDim2.fromScale(0.05, 0.12)
+		local small = Parts.text(surface, { Text = "TO PROTECT AND SERVE", TextColor3 = Color3.fromRGB(40, 40, 44), Font = Enum.Font.GothamBold })
+		small.Size = UDim2.fromScale(0.8, 0.16)
+		small.Position = UDim2.fromScale(0.1, 0.72)
+		part("DoorLine", Vector3.new(0.1, 1.7, 0.06), CFrame.new(side * 3.15, 2.05, 0.6), Color3.fromRGB(60, 60, 64))
+		part("Handle", Vector3.new(0.1, 0.12, 0.5), CFrame.new(side * 3.19, 2.6, -0.6), CHROME, Enum.Material.Metal)
+		part("Handle", Vector3.new(0.1, 0.12, 0.5), CFrame.new(side * 3.19, 2.6, 2.4), CHROME, Enum.Material.Metal)
+		part("Mirror", Vector3.new(0.6, 0.35, 0.25), CFrame.new(side * 3.2, 3.6, -2.2), BLACK)
+		for _, z in { -4.4, 4.4 } do
+			part("Wheel", Vector3.new(0.9, 2.4, 2.4), CFrame.new(side * 2.85, 1.2, z), Color3.fromRGB(16, 16, 16), Enum.Material.SmoothPlastic, { Shape = Enum.PartType.Cylinder })
+			part("Rim", Vector3.new(0.92, 1.3, 1.3), CFrame.new(side * 2.86, 1.2, z), CHROME, Enum.Material.Metal, { Shape = Enum.PartType.Cylinder })
 		end
-		local head = part("Headlight", Vector3.new(1.2, 0.45, 0.1), CFrame.new(side * 2.1, 2.45, -6.82), Color3.fromRGB(255, 250, 230), Enum.Material.Neon)
+		local head = part("Headlight", Vector3.new(1.2, 0.45, 0.1), CFrame.new(side * 2.1, 2.45, -7.02), Color3.fromRGB(255, 250, 230), Enum.Material.Neon)
 		local spot = Instance.new("SpotLight")
 		spot.Face = Enum.NormalId.Front
-		spot.Range = 45
-		spot.Angle = 50
+		spot.Range = 50
+		spot.Angle = 55
 		spot.Brightness = 3
 		spot.Color = Color3.fromRGB(255, 246, 220)
+		spot.Shadows = true
 		spot.Parent = head
-		part("TailLight", Vector3.new(1.2, 0.45, 0.1), CFrame.new(side * 2.2, 2.45, 6.82), Color3.fromRGB(200, 20, 20), Enum.Material.Neon)
+		part("TailLight", Vector3.new(1.2, 0.45, 0.1), CFrame.new(side * 2.2, 2.45, 7.02), Color3.fromRGB(200, 20, 20), Enum.Material.Neon)
+		part("Spotlight", Vector3.new(0.4, 0.4, 0.6), CFrame.new(side * 3.05, 3.55, -1.8), CHROME, Enum.Material.Metal)
 	end
-	part("Grille", Vector3.new(3, 0.5, 0.1), CFrame.new(0, 2.2, -6.82), Color3.fromRGB(30, 30, 34))
-	part("BumperFront", Vector3.new(6.3, 0.5, 0.4), CFrame.new(0, 1.3, -6.9), Color3.fromRGB(40, 40, 44))
-	part("BumperRear", Vector3.new(6.3, 0.5, 0.4), CFrame.new(0, 1.3, 6.9), Color3.fromRGB(40, 40, 44))
-	part("LightBar", Vector3.new(3.9, 0.3, 0.9), CFrame.new(0, 4.95, 0.4), Color3.fromRGB(30, 30, 34))
+	part("Grille", Vector3.new(3, 0.5, 0.1), CFrame.new(0, 2.2, -7.02), Color3.fromRGB(26, 26, 28))
+	part("BumperFront", Vector3.new(6.3, 0.5, 0.4), CFrame.new(0, 1.3, -7.1), Color3.fromRGB(30, 30, 32))
+	part("BumperRear", Vector3.new(6.3, 0.5, 0.4), CFrame.new(0, 1.3, 7.1), Color3.fromRGB(30, 30, 32))
+	-- Rammschutz vorne
+	part("PushBar", Vector3.new(3.4, 0.25, 0.25), CFrame.new(0, 2.6, -7.5), Color3.fromRGB(20, 20, 22), Enum.Material.Metal)
+	for _, x in { -1.4, 1.4 } do
+		part("PushBarPost", Vector3.new(0.25, 1.8, 0.25), CFrame.new(x, 2, -7.45), Color3.fromRGB(20, 20, 22), Enum.Material.Metal)
+	end
+	part("Antenna", Vector3.new(0.05, 2.4, 0.05), CFrame.new(1.8, 4.3, 5.8) * CFrame.Angles(math.rad(-10), 0, 0), Color3.fromRGB(20, 20, 20))
+	part("LightBar", Vector3.new(4.2, 0.3, 0.9), CFrame.new(0, 4.95, 0.4), Color3.fromRGB(30, 30, 34))
 	local blue = {}
-	for _, side in { -1, 1 } do
-		local lamp = part("BlueLight", Vector3.new(1.6, 0.45, 0.8), CFrame.new(side * 1.0, 5.3, 0.4), Color3.fromRGB(30, 70, 200), Enum.Material.Neon)
+	for _, info in { { -1, Color3.fromRGB(255, 40, 40), Color3.fromRGB(70, 8, 8) }, { 1, Color3.fromRGB(50, 110, 255), Color3.fromRGB(8, 16, 70) } } do
+		local lamp = part("RoofLight", Vector3.new(1.8, 0.45, 0.8), CFrame.new(info[1] * 1.05, 5.3, 0.4), info[3], Enum.Material.Neon)
 		local glow = Instance.new("PointLight")
-		glow.Color = Color3.fromRGB(50, 100, 255)
+		glow.Color = info[2]
 		glow.Range = 48
 		glow.Brightness = 4
 		glow.Shadows = true
+		glow.Enabled = false
 		glow.Parent = lamp
-		table.insert(blue, { part = lamp, light = glow })
+		table.insert(blue, { part = lamp, light = glow, on = info[2], off = info[3] })
 	end
 	model.PrimaryPart = body
 	model.WorldPivot = CFrame.new()
@@ -3111,10 +3137,7 @@ function handlers.rest()
 		return
 	end
 	closePhone()
-	if H.scareModel then
-		H.scareModel:Destroy()
-		H.scareModel = nil
-	end
+	clearScare()
 	H.scares = false
 	removeMarker("mirror")
 	removeMarker("photo")
@@ -3259,7 +3282,7 @@ local function updateHut(now)
 		local phase = math.floor(now * 6) % 2
 		for i, lamp in H.car.blue do
 			local on = (i - 1) == phase
-			lamp.part.Color = on and Color3.fromRGB(60, 120, 255) or Color3.fromRGB(10, 20, 60)
+			lamp.part.Color = on and lamp.on or lamp.off
 			lamp.light.Enabled = on
 		end
 	end
@@ -3368,6 +3391,7 @@ function Kapitel3.run()
 				end
 			end
 			updateCamera(now)
+			updateScare(now)
 		end)
 		if not ok and problem ~= lastProblem then
 			lastProblem = problem

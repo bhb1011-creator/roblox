@@ -27,6 +27,7 @@ local Forest = require(ReplicatedStorage.Shared.Forest)
 local Parts = require(ReplicatedStorage.Shared.Parts)
 local Wagners = require(script.Parent.Wagners)
 local SarpHut = require(script.Parent.SarpHut)
+local ForestDressing = require(script.Parent.ForestDressing)
 
 local Kapitel3 = {}
 
@@ -307,20 +308,45 @@ local function buildForest()
 	-- Lichtung und die schlechte Schotterstraße (Erde, Schlamm in den Fahrspuren, Steine)
 	terrain:FillBlock(roadFrame * CFrame.new(0, -4, -24), Vector3.new(400, 8, 130), Enum.Material.LeafyGrass)
 	terrain:FillBlock(roadFrame * CFrame.new(0, 14, -24), Vector3.new(400, 28, 130), Enum.Material.Air)
-	terrain:FillBlock(roadFrame * CFrame.new(0, -3.95, SarpHut.ROAD_Z), Vector3.new(400, 8, SarpHut.ROAD_HALF * 2), Enum.Material.Ground)
+	-- (alles genau bis y = 0, damit nichts halb in einem Voxel steckt und den Boden anhebt)
+	terrain:FillBlock(roadFrame * CFrame.new(0, -4, SarpHut.ROAD_Z), Vector3.new(400, 8, SarpHut.ROAD_HALF * 2), Enum.Material.Ground)
 	for _, lane in { -2.6, 2.6 } do
-		terrain:FillBlock(roadFrame * CFrame.new(0, -3.9, SarpHut.ROAD_Z + lane), Vector3.new(400, 8, 1.6), Enum.Material.Mud)
+		terrain:FillBlock(roadFrame * CFrame.new(0, -4, SarpHut.ROAD_Z + lane), Vector3.new(400, 8, 1.6), Enum.Material.Mud)
 	end
-	terrain:FillBlock(roadFrame * CFrame.new(0, -3.92, SarpHut.ROAD_Z), Vector3.new(400, 8, 1.4), Enum.Material.Pebble)
+	terrain:FillBlock(roadFrame * CFrame.new(0, -4, SarpHut.ROAD_Z), Vector3.new(400, 8, 1.4), Enum.Material.Pebble)
 	do
 		local puddles = Random.new(5)
 		for _ = 1, 14 do
 			local x = puddles:NextNumber(-180, 180)
-			terrain:FillBlock(roadFrame * CFrame.new(x, -3.88, SarpHut.ROAD_Z + puddles:NextNumber(-3, 3)), Vector3.new(puddles:NextNumber(3, 7), 8, puddles:NextNumber(2, 4)), Enum.Material.Mud)
+			terrain:FillBlock(roadFrame * CFrame.new(x, -4, SarpHut.ROAD_Z + puddles:NextNumber(-3, 3)), Vector3.new(puddles:NextNumber(3, 7), 8, puddles:NextNumber(2, 4)), Enum.Material.Mud)
 		end
 	end
 	-- vom Wegende zur Hütte: festgetretene Erde
-	terrain:FillBlock(roadFrame * CFrame.new(0, -3.9, -15), Vector3.new(5, 8, 8), Enum.Material.Ground)
+	terrain:FillBlock(roadFrame * CFrame.new(0, -4, -15), Vector3.new(5, 8, 8), Enum.Material.Ground)
+	-- auf dem Waldweg: Flecken aus Schlamm, Kies und Moos (nicht überall gleich braun)
+	do
+		local patches = Random.new(17)
+		local walked = 0
+		for i = 1, #points - 1 do
+			if i ~= BRIDGE then
+				local a, b = points[i], points[i + 1]
+				local length = (b - a).Magnitude
+				local frame = CFrame.lookAt(a, b)
+				local along = patches:NextNumber(3, 10)
+				while along < length do
+					local materials = { Enum.Material.Mud, Enum.Material.Pebble, Enum.Material.Ground, Enum.Material.Grass }
+					local material = materials[patches:NextInteger(1, #materials)]
+					local x = material == Enum.Material.Grass and (patches:NextNumber() < 0.5 and -4.5 or 4.5) or patches:NextNumber(-2.5, 2.5)
+					terrain:FillBlock(frame * CFrame.new(x, -4, -along) * CFrame.Angles(0, patches:NextNumber(-0.5, 0.5), 0), Vector3.new(patches:NextNumber(2.5, 5), 8, patches:NextNumber(3, 7)), material)
+					along += patches:NextNumber(7, 16)
+				end
+			end
+			walked += 1
+			if walked % 3 == 0 then
+				task.wait()
+			end
+		end
+	end
 	task.wait()
 
 	-- unsichtbare Wände (man bleibt auf dem Weg bzw. auf der Brücke)
@@ -411,7 +437,15 @@ local function buildForest()
 	end
 
 	-- Sarps Hütte und der Wald rund um die Lichtung und an der Straße entlang
-	local hutOk, hutResult = pcall(SarpHut.build, folder, roadFrame)
+	-- Bodenhöhe an einer Stelle (Strahl von oben auf das Terrain)
+	local groundParams = RaycastParams.new()
+	groundParams.FilterType = Enum.RaycastFilterType.Include
+	groundParams.FilterDescendantsInstances = { terrain }
+	local function groundAt(position)
+		local hit = workspace:Raycast(Vector3.new(position.X, 40, position.Z), Vector3.new(0, -80, 0), groundParams)
+		return hit and hit.Position.Y or 0
+	end
+	local hutOk, hutResult = pcall(SarpHut.build, folder, roadFrame, groundAt)
 	if hutOk then
 		hut = hutResult
 	else
@@ -433,6 +467,13 @@ local function buildForest()
 				task.wait()
 			end
 		end
+	end
+	-- Details am Weg (Farne, Gras, Laub, Wurzeln, Nebel, Glühwürmchen)
+	local dressOk, dressProblem = pcall(ForestDressing.path, folder, points, function(position)
+		return not nearRavine(position, 4) and not inClearing(position, -2)
+	end, 4, total)
+	if not dressOk then
+		warn("Kapitel 3: Details am Weg fehlen: " .. tostring(dressProblem))
 	end
 	-- Büsche am Rand der Lichtung
 	for _ = 1, 40 do

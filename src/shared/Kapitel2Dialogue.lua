@@ -249,7 +249,7 @@ Kapitel2Dialogue.KAPITEL3 = {
 		text = { solo = "There's a phone. I have to call the police!", duo = "There's a phone. We have to call the police!" },
 		voice = { solo = "k3_phone_solo", duo = "k3_phone_duo" },
 	},
-	police1 = { text = "Police emergency. What happened?", voice = "k3_police_01" },
+	police1 = { text = "911, what's your emergency?", voice = "k3_police_01" },
 	call1 = {
 		text = {
 			solo = "Please, you have to help me! I'm in a cabin by the old forest road. Something is hunting me!",

@@ -40,7 +40,7 @@ Kapitel3Data.CATCH_GAP = 2.4
 Kapitel3Data.RUN_MAX_TIME = 120 -- Sicherheitsnetz (Sekunden)
 
 -- Das Ende in Sarps Hütte
-Kapitel3Data.PHONE_NUMBER = "110" -- steht auf dem Zettel neben dem Telefon
+Kapitel3Data.PHONE_NUMBER = "911" -- steht auf dem Zettel neben dem Telefon
 Kapitel3Data.PHONE_RING = 4.2 -- so lange klingelt es, bis die Polizei abnimmt
 -- Halluzinationen (Spiegel, Foto): so nah und so genau muss man hinschauen
 Kapitel3Data.SCARE_MIRROR_RANGE = 11

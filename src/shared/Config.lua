@@ -199,7 +199,7 @@ Config.PLAYER_TTS = false
 Config.TEST_START_KAPITEL2 = "huette"
 -- Versionsnummer: steht beim Laden auf dem Bildschirm und im Output. So sieht man sofort,
 -- ob in Studio wirklich der neueste Stand läuft (nach "git pull").
-Config.BUILD = "K2-2026-11-06n"
+Config.BUILD = "K2-2026-11-06o"
 Config.VOICES = {
 	-- Sarp: etwas tiefer, langsam, ruhig – mit Bass, weniger Höhen und dunklem Hall
 	sarp = {
@@ -349,7 +349,7 @@ Config.VOICE_LINES = {
 	k3_sarps_cabin = { id = "", length = 0 }, -- Spieler: Wait... that jacket. The name on the mailbox... This is Sarp's cabin.
 	k3_phone_solo = { id = "", length = 0 }, -- Spieler: There's a phone. I have to call the police!
 	k3_phone_duo = { id = "", length = 0 }, -- Spieler: There's a phone. We have to call the police!
-	k3_police_01 = { id = "", length = 0 }, -- Polizei: Police emergency. What happened?
+	k3_police_01 = { id = "", length = 0 }, -- Polizei: 911, what's your emergency?
 	k3_call_01_solo = { id = "", length = 0 }, -- Spieler: Please, you have to help me! I'm in a cabin by the old forest road. Something is hunting me!
 	k3_call_01_duo = { id = "", length = 0 }, -- Spieler: Please, you have to help us! We're in a cabin by the old forest road. Something is hunting us!
 	k3_police_02 = { id = "", length = 0 }, -- Polizei: Stay calm. Stay inside and lock the door. A patrol car is on its way.
