@@ -11,6 +11,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Parts = require(ReplicatedStorage.Shared.Parts)
 local Route = require(ReplicatedStorage.Shared.LevelRoute)
 local Furniture = require(script.Parent.Furniture)
+local Nav = require(script.Parent.Nav)
 local HouseInterior = require(script.Parent.HouseInterior)
 
 local Mansion = {}
@@ -737,7 +738,7 @@ local function hipRoof(x0, y0, x1, y1, base, rise, overhang)
 end
 
 -- Zeltdach über einem konvexen Vieleck (Spitze über der Mitte)
-local function pyramidRoof(poly, base, rise, overhang, color, material, extra, name)
+local function pyramidRoof(poly, base, rise, overhang, color, material, extra, name, flush)
 	local cx, cy = 0, 0
 	for _, p in poly do
 		cx += p[1] / #poly
@@ -748,7 +749,9 @@ local function pyramidRoof(poly, base, rise, overhang, color, material, extra, n
 	for _, p in poly do
 		local dx, dy = p[1] - cx, p[2] - cy
 		local len = math.sqrt(dx * dx + dy * dy)
-		local scale = (len + overhang) / len
+		-- Ecken an der Wand des höheren Stockwerks: kein Überstand (sonst ragt das Dach als Keil
+		-- in die Zimmer oben und flackert im Fußboden)
+		local scale = (flush and flush(p)) and 1 or (len + overhang) / len
 		table.insert(ring, L(cx + dx * scale, cy + dy * scale, base))
 	end
 	for i = 1, #ring do
@@ -837,7 +840,7 @@ local function buildWalls()
 		{ 77, 15, kind = WIN, w = 2 }, { 72, 12, kind = WIN }, { 67, 15, kind = WIN, w = 2 },
 		{ 59, 18, kind = WIN }, { 49, 20, kind = WIN }, { 39, 20, kind = WIN },
 		{ 34, 27, kind = WIN }, { 34, 36, kind = WIN, w = 2.4 },
-		{ 24, 38, kind = WIN }, { 14, 44, kind = WIN }, { 14, 54, kind = WIN, boarded = true },
+		{ 14, 44, kind = WIN }, { 14, 54, kind = WIN, boarded = true },
 	}, true)
 
 	------------------------------------------------ Obergeschoss innen
@@ -946,12 +949,16 @@ local function buildFloorsAndRoofs()
 	hipRoof(41.75, 40, 80.56, 72, TOP, 9)
 	pyramidRoof({ { 66, 18 }, { 68, 12 }, { 76, 12 }, { 78, 18 } }, TOP, 4, 1)
 	-- niedrige Anbauten
-	pyramidRoof({ { 10, 60 }, { 36, 60 }, { 36, 80 }, { 18, 80 }, { 10, 72 } }, BASE + STORY, 5, 1.2)
+	pyramidRoof({ { 10, 60 }, { 36, 60 }, { 36, 80 }, { 18, 80 }, { 10, 72 } }, BASE + STORY, 5, 1.2, nil, nil, nil, nil, function(p)
+		return p[2] == 60 or p[1] == 36 -- Wand von Großmutters Zimmer / vom WC-Dach
+	end)
 	-- WC und Speisekammer stoßen an höhere Wände: dort kein Überstand (sonst ragt das
 	-- Dach in die Eingangshalle über der Treppe bzw. in die Kinderzimmer)
-	hipRoof(36, 60, 41.75, 72, BASE + STORY, 2.5, { x0 = 0.8, x1 = -0.45, y0 = 0.8, y1 = 0.8 })
+	hipRoof(36, 60, 41.75, 72, BASE + STORY, 2.5, { x0 = 0.8, x1 = -0.45, y0 = 0, y1 = 0.8 })
 	hipRoof(40, 8, 54.25, 20, BASE + STORY, 3.5, { x0 = 1, x1 = 1, y0 = 1, y1 = -0.45 })
-	pyramidRoof({ { 8, 30 }, { 34, 30 }, { 34, 38 }, { 14, 38 }, { 8, 34 } }, BASE + STORY, 3, 1)
+	pyramidRoof({ { 8, 30 }, { 34, 30 }, { 34, 38 }, { 14, 38 }, { 8, 34 } }, BASE + STORY, 3, 1, nil, nil, nil, nil, function(p)
+		return p[1] == 34 or p[2] == 38 -- Wände von Tommys Zimmer, Flur und Großmutters Zimmer
+	end)
 	-- Wintergarten: Glasdach mit weißen Sprossen
 	pyramidRoof(HEX, FLOOR.E + 8, 6, 0.6, COLORS.glassHouse, M.Glass, { Transparency = 0.55 }, "GlassRoof")
 	-- Turm: spitzes Achteckdach mit Wetterfahne
@@ -1346,7 +1353,8 @@ local function buildFurniture()
 		Mansion.point(30, 47, O), Mansion.point(22, 51, O), Mansion.point(30, 53.5, O), Mansion.point(36, 46, O), Mansion.point(38, 42.6, O),
 	}
 	escape.doorOutside = Mansion.point(38, 37.4, O)
-	-- Wo Chemikalien und Schießpulver liegen können (jedes Mal wird ein Platz ausgelost).
+	-- Wo Chemikalien und Schießpulver liegen können (jedes Mal werden mehrere Plätze ausgelost).
+	-- Alle liegen unten (Erdgeschoss und Keller): man muss also aus dem Obergeschoss hinunter.
 	-- Alle Stellen sind geprüft: freier Boden, nichts im Weg.
 	-- `at` = Oberkante der Fläche (Tisch, Kiste, Arbeitsplatte …), `yaw` = Drehung in Grad
 	local function onTop(name, x, y, top, yaw)
@@ -1359,14 +1367,12 @@ local function buildFurniture()
 			onTop("Speisekammer, auf den Säcken", 43.3, 17.0, 3.7, 0),
 			onTop("Vorratskeller, auf einer Kiste", 42.6, 25.5, -6.7, 15),
 			onTop("Kriechkeller, auf einer Kiste", 74.8, 22.0, -6.8, 30),
-			onTop("Bad, neben der Wanne", 61.2, 26.5, O, 90),
 		},
 		powder = {
 			onTop("Wohnzimmer, auf dem Couchtisch", 72, 50.5, 3.3, 0),
 			onTop("Turmzimmer, neben dem Tischchen", 88, 64.4, FLOOR.E, 20),
 			onTop("Flur zum Garten, auf der Bank", 24, 36.9, 3.55, 90),
 			onTop("Flur, auf der Kommode", 38.9, 42.92, 4.5, 90),
-			onTop("Gästezimmer, auf dem Nachttisch", 55.2, 41.2, 13.8, 0),
 			onTop("Kriechkeller, auf einer Kiste", 72, 34, -6.8, 0),
 		},
 	}
@@ -1711,6 +1717,134 @@ function Mansion.inRoom(worldPosition, id, floorKey)
 	end
 	local room = roomAt(floorKey, x, y)
 	return room ~= nil and room.id == id
+end
+
+------------------------------------------------------------------ Wegfindung
+-- Wo man im Haus langgehen kann: durch Türen (nicht die abgeschlossenen) und über die Treppen.
+-- Sarp und die Familie laufen nur noch über dieses Netz (siehe Nav.lua).
+local navigation
+local function buildNavigation()
+	local rooms = { E = ROOMS.E, K = ROOMS.K, O = {} }
+	for _, room in ROOMS.O do
+		if room.id == "hall" then
+			-- oben ist die Halle ein Treppenschacht: begehbar ist nur die Galerie davor
+			table.insert(rooms.O, { id = "galerie", poly = R(41.75, 54.15, 54.25, 60.2) })
+		else
+			table.insert(rooms.O, room)
+		end
+	end
+	local config = {
+		rooms = rooms,
+		doors = {
+			{ "E", 51.4, 54.15, "hall", "flur" },
+			{ "E", 54.25, 63, "hall", "wohn" },
+			{ "E", 54.25, 48, "flur", "wohn" },
+			{ "E", 44, 42, "flur", "kueche" },
+			{ "E", 34, 50, "flur", "salon" },
+			{ "E", 54.25, 38, "kueche", "ess" },
+			{ "E", 47, 20, "kueche", "speise" },
+			{ "E", 34, 34, "kueche", "gartenflur" },
+			{ "E", 39, 60, "flur", "wc" },
+			{ "E", 62, 42, "wohn", "ess" },
+			{ "E", 78.12, 60.12, "wohn", "turm", { { 77.0, 59.0 }, { 79.25, 61.25 } } },
+			{ "E", 14, 30, "gartenflur", "winter" },
+			{ "E", 52.12, 34, "kueche", "kellertreppe", { { 52.12, 35.6 }, { 52.1, 33.0 } } },
+			{ "O", 51.4, 54.15, "galerie", "gaeste" },
+			{ "O", 54.25, 56.2, "galerie", "spiel" },
+			{ "O", 68, 52, "gang", "spiel" },
+			{ "O", 39, 34, "gang", "tommy" },
+			{ "O", 49, 34, "gang", "lucy" },
+			{ "O", 59, 34, "gang", "bad" },
+			{ "O", 78.12, 60.12, "spiel", "naeh", { { 77.0, 59.0 }, { 79.25, 61.25 } } },
+			{ "K", 42, 34, "vorrat", "kgang" },
+			{ "K", 34, 40, "kgang", "wasch" },
+			{ "K", 54.25, 38, "kgang", "heiz" },
+			{ "K", 70, 30, "heiz", "kriech" },
+		},
+		stairs = {
+			{ { 43.7, 68.2, "E", "hall" }, { 43.7, 59.3, "O", "galerie" } },
+			{ { 52.1, 33.0, "E", "kellertreppe" }, { 52.1, 22.6, "K", "vorrat" } },
+		},
+		-- Zwischenpunkte, wo Räume Ecken haben (damit man nicht um die Ecke durch die Wand sieht)
+		hubs = {
+			{ "E", 38, 51, "flur" },
+			{ "E", 48, 47, "flur" },
+			{ "E", 66, 49, "wohn" },
+			{ "E", 72, 56, "wohn" },
+			{ "E", 48, 62, "hall" },
+			{ "E", 46, 40, "kueche" },
+			{ "E", 42, 32, "kueche" },
+			{ "O", 46, 37, "gang" },
+			{ "O", 63, 37.6, "gang" },
+			{ "O", 64.6, 44, "gang" },
+			{ "O", 67, 48.5, "gang" },
+			{ "O", 60, 62, "spiel" },
+			{ "O", 70, 58, "spiel" },
+			{ "O", 49, 57, "galerie" },
+			{ "K", 44, 28, "vorrat" },
+			{ "K", 44, 38, "kgang" },
+			{ "K", 62, 36, "heiz" },
+		},
+	}
+	navigation = Nav.new(config)
+end
+
+local function floorOfHeight(y)
+	local best, bestDistance = "E", math.huge
+	for _, key in { "K", "E", "O" } do
+		local d = math.abs(y - FLOOR[key])
+		if d < bestDistance then
+			best, bestDistance = key, d
+		end
+	end
+	return best
+end
+
+-- Weg von einer Stelle im Haus zu einer anderen (Fußpositionen in der Welt): Liste von
+-- Weltpunkten durch Türen und über Treppen, oder nil (draußen / kein Weg).
+function Mansion.route(fromWorld, toWorld)
+	if not origin then
+		return nil
+	end
+	if not navigation then
+		buildNavigation()
+	end
+	local function toNav(world)
+		local relative = origin:Inverse() * world
+		return { x = relative.X + 50, y = 57.4 - relative.Z, f = floorOfHeight(relative.Y) }
+	end
+	local ok, result = pcall(function()
+		return navigation:route(toNav(fromWorld), toNav(toWorld))
+	end)
+	if not ok or not result then
+		return nil
+	end
+	local points = {}
+	for _, p in result do
+		table.insert(points, Mansion.point(p.x, p.y, FLOOR[p.f]))
+	end
+	-- das Ziel selbst genau dort, wo verlangt (z. B. mit der Höhe des Spielers)
+	points[#points] = toWorld
+	return points
+end
+
+-- Wie weit ist es zu Fuß? (Wege durch Türen und Treppen; ohne Wegnetz die Luftlinie.)
+-- So können Sarp und die Familie niemanden durch eine Wand oder Decke hindurch erwischen.
+function Mansion.walkDistance(fromWorld, toWorld)
+	local straight = (toWorld - fromWorld).Magnitude
+	if straight > 14 then
+		return straight
+	end
+	local route = Mansion.route(fromWorld, toWorld)
+	if not route then
+		return straight
+	end
+	local total, last = 0, fromWorld
+	for _, point in route do
+		total += (point - last).Magnitude
+		last = point
+	end
+	return total
 end
 
 -- Die Tür an dieser Stelle im Plan (für Szenen, z. B. die Wagners schließen sie)

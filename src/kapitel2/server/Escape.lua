@@ -2,7 +2,7 @@
 --
 --  1. Richard wartet am Pult. Er erklärt, was zu tun ist (ohne zu verraten, was mit seiner
 --     Familie los ist) und gibt jedem eine rote Kerze. Taschenlampe gibt es keine mehr.
---  2. Man sucht Chemikalien und Schießpulver (je ein ausgeloster Platz, Mansion.escape.items).
+--  2. Man sucht Chemikalien und Schießpulver (je mehrere ausgeloste Plätze unten im Haus, Mansion.escape.items).
 --     Sarp läuft dabei durchs ganze Haus (Erdgeschoss, Keller, oben) und ist tödlich: Er sieht
 --     das rote Licht, hört, wer nicht schleicht. Der Raum hinter Tür 1 ist sicher.
 --     Die Familie taucht auf und packt einen (höchstens 10 Sekunden lang in der Nähe):
@@ -39,6 +39,7 @@ local SNEAK_SEE_DISTANCE = 8 -- wer schleicht, fällt später auf
 local ALERT_SPEED = 5.5 -- so schnell kommt er dorthin, wo die Familie einen gepackt hat
 local FAMILY_FIRST, FAMILY_PAUSE_MIN, FAMILY_PAUSE_MAX = 45, 40, 65 -- seltener
 local CATCH_DISTANCE = 3.2
+local ITEM_COPIES = 3 -- so oft liegt jede Sorte im Haus (an verschiedenen Plätzen)
 
 local LABELS = { chemicals = "Chemikalien", powder = "Schießpulver" }
 local WITH_ARTICLE = { chemicals = "die Chemikalien", powder = "das Schießpulver" }
@@ -384,7 +385,7 @@ function Escape.run(kit)
 		local list = {}
 		for _, kind in { "chemicals", "powder" } do
 			local item = items[kind]
-			local state = item and (item.placed and "am Pult" or (carriedBy[kind] and ("trägt " .. carriedBy[kind].DisplayName) or "gesucht (liegt 2-mal im Haus)")) or "gesucht"
+			local state = item and (item.placed and "am Pult" or (carriedBy[kind] and ("trägt " .. carriedBy[kind].DisplayName) or "gesucht (liegt mehrmals unten im Haus)")) or "gesucht"
 			table.insert(list, { text = LABELS[kind] .. " – " .. state, done = item ~= nil and item.placed == true })
 		end
 		event:FireAllClients({ type = "objectives", title = "Für den Safe", items = list })
@@ -478,7 +479,7 @@ function Escape.run(kit)
 			end
 			local feet = Wagners.ground(sarp)
 			local target = root.Position - Vector3.new(0, footOffset(player), 0)
-			if (target - feet).Magnitude <= CATCH_DISTANCE and not Mansion.inRoom(root.Position, "tuer1", "O") then
+			if Mansion.walkDistance(feet, target) <= CATCH_DISTANCE and not Mansion.inRoom(root.Position, "tuer1", "O") then
 				catchPlayer(player, 2.5)
 				break
 			end
@@ -648,10 +649,10 @@ function Escape.run(kit)
 	itemFolder.Parent = Mansion.model or workspace
 	local LIFT = { chemicals = 0.37, powder = 0.45 } -- Modell-Unterkante auf die Fläche
 	for _, kind in { "chemicals", "powder" } do
-		-- zwei verschiedene Plätze auslosen
+		-- mehrere verschiedene Plätze auslosen (alle unten im Haus, damit man leicht eins findet)
 		local spots = table.clone(room.items[kind])
 		local chosen = {}
-		for _ = 1, math.min(2, #spots) do
+		for _ = 1, math.min(ITEM_COPIES, #spots) do
 			table.insert(chosen, table.remove(spots, math.random(1, #spots)))
 		end
 		local item = { models = {}, placed = false }
@@ -659,12 +660,18 @@ function Escape.run(kit)
 		for _, spot in chosen do
 			print("[Kapitel2] " .. LABELS[kind] .. ": " .. spot.name)
 			local model = buildWorldModel(kind, CFrame.new(spot.at + Vector3.new(0, LIFT[kind] + 0.02, 0)) * CFrame.Angles(0, math.rad(spot.yaw or 0), 0), itemFolder)
-			-- ein ganz schwaches Glimmen, damit man es im Dunkeln findet
+			-- Glimmen und ein dünner Umriss (auch durch Wände sichtbar), damit man es leicht findet
 			local glow = Instance.new("PointLight")
-			glow.Range = 5
-			glow.Brightness = 0.6
+			glow.Range = 8
+			glow.Brightness = 0.9
 			glow.Color = Color3.fromRGB(255, 200, 150)
 			glow.Parent = model.PrimaryPart
+			local outline = Instance.new("Highlight")
+			outline.FillTransparency = 1
+			outline.OutlineColor = Color3.fromRGB(255, 214, 140)
+			outline.OutlineTransparency = 0.4
+			outline.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+			outline.Parent = model
 			local prompt = Instance.new("ProximityPrompt")
 			prompt.ObjectText = LABELS[kind]
 			prompt.ActionText = "Nehmen"
@@ -682,7 +689,7 @@ function Escape.run(kit)
 					hint("Du trägst schon etwas. Das muss dein Partner tragen.", 3, player)
 					return
 				end
-				-- dieses nehmen, das zweite verschwindet
+				-- dieses nehmen, die anderen verschwinden
 				item.model, item.spot, item.prompt = model, spot, prompt
 				for _, other in item.models do
 					if other ~= model then
@@ -701,7 +708,7 @@ function Escape.run(kit)
 		end
 	end
 	showObjectives()
-	hint("Sucht Chemikalien und Schießpulver im ganzen Haus – auch im Keller.", 7)
+	hint("Sucht Chemikalien und Schießpulver unten im Haus – Erdgeschoss und Keller. Sie leuchten schwach.", 8)
 	-- wer das Spiel verlässt, lässt seine Sachen fallen (sie liegen dann wieder am Fundort)
 	local leavingConnection = Players.PlayerRemoving:Connect(function(player)
 		for _, kind in carrying(player) do
@@ -811,7 +818,7 @@ function Escape.run(kit)
 						end
 					end
 					local targetFeet = nearest.root.Position - Vector3.new(0, footOffset(nearest.player), 0)
-					if (targetFeet - position).Magnitude <= CATCH_DISTANCE and not nearest.player:GetAttribute("Grabbed") then
+					if Mansion.walkDistance(position, targetFeet) <= CATCH_DISTANCE and not nearest.player:GetAttribute("Grabbed") then
 						-- packen: Quick-Time-Event
 						Wagners.place(model, position, targetFeet)
 						sfx("jumpscare", nearest.root.Position, { volume = 0.9, maxDistance = 40, speed = 1.5 })

@@ -470,7 +470,15 @@ function Night.run(ctx)
 			end
 		end
 		local nextStep = 0
-		for _, target in points do
+		-- jedes Ziel über Türen und Treppen ansteuern, nie durch Wände oder Decken
+		local legs = {}
+		for _, goal in points do
+			local from = legs[#legs] or position
+			for _, step in Mansion.route(from, goal) or { goal } do
+				table.insert(legs, step)
+			end
+		end
+		for _, target in legs do
 			local distance = (target - position).Magnitude
 			if distance > 0.05 then
 				local direction = (target - position).Unit
@@ -976,6 +984,15 @@ function Night.run(ctx)
 		PathfindingService = game:GetService("PathfindingService")
 	end)
 	local function nextWaypoint(from, to)
+		-- erst unser eigenes Wegnetz (Türen, Treppen), die Roblox-Wegfindung nur als Notlösung
+		local route = Mansion.route(from, to)
+		if route then
+			local first = route[1]
+			if route[2] and (first - from).Magnitude < 0.4 then
+				first = route[2]
+			end
+			return first
+		end
 		if PathfindingService then
 			local ok, result = pcall(function()
 				local path = PathfindingService:CreatePath({ AgentRadius = 1.5, AgentHeight = 7, AgentCanJump = false })
@@ -1015,7 +1032,7 @@ function Night.run(ctx)
 			end
 			local feet = Wagners.ground(sarp)
 			local target = root.Position - Vector3.new(0, footOffset(player), 0)
-			local distance = (target - feet).Magnitude
+			local distance = Mansion.walkDistance(feet, target)
 			if distance <= HIT_DISTANCE then
 				Wagners.place(sarp, feet, target)
 				if os.clock() > (hitCooldown[player] or 0) then
