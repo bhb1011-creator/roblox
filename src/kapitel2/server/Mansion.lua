@@ -579,6 +579,15 @@ local function buildWall(floorKey, a, b, kind, openings, topOverride)
 				for _, f in { 1, -1 } do
 					box("DoorKnob", Vector3.new(0.25, 0.25, 0.25), lcf * CFrame.new((item.w / 2 - 0.45) * -1, -0.2, f * 0.16), Color3.fromRGB(120, 96, 52), M.Metal, { Shape = Enum.PartType.Ball })
 				end
+				if o.boards then
+					-- Kratzer direkt auf dem Türblatt (gehören zur Tür und gehen mit auf; sonst
+					-- schweben sie nach dem Aufbrechen als dunkle Striche im Türrahmen)
+					local side = (rooms[-1] and rooms[-1].id == o.boards) and -1 or 1
+					for i = 1, 5 do
+						local c = middle + dir * (-0.9 + i * 0.32) + normal * side * 0.12 + Vector3.new(0, bottom + 1.5, 0)
+						box("Scratch", Vector3.new(0.05, 1.4, 0.02), CFrame.lookAt(c, c + normal * side) * CFrame.Angles(0, 0, math.rad(8 - i * 3)), Color3.fromRGB(30, 22, 18))
+					end
+				end
 				current = wallFolder
 				doorModel.PrimaryPart = leaf
 				local entry = Mansion.doors[#Mansion.doors]
@@ -598,11 +607,6 @@ local function buildWall(floorKey, a, b, kind, openings, topOverride)
 						-- liegen auf dem Türrahmen auf
 						local c = middle + normal * side * (t / 2 + 0.25) + Vector3.new(0, bottom + 1.6 + i * 1.5, 0)
 						box("Board", Vector3.new(item.w + 0.6, 0.55, 0.14), CFrame.lookAt(c, c + normal * side) * CFrame.Angles(0, 0, math.rad(angle)), COLORS.board, M.WoodPlanks)
-					end
-					for i = 1, 5 do
-						-- direkt auf dem Türblatt
-						local c = middle + dir * (-0.9 + i * 0.32) + normal * side * 0.12 + Vector3.new(0, bottom + 1.5, 0)
-						box("Scratch", Vector3.new(0.05, 1.4, 0.02), CFrame.lookAt(c, c + normal * side) * CFrame.Angles(0, 0, math.rad(8 - i * 3)), Color3.fromRGB(30, 22, 18))
 					end
 				end
 			end
