@@ -77,6 +77,24 @@ local FALLBACK = {
 	bridgeCollapse = { "sting", 0.4 },
 	jumpscare = { "sting", 0.85 },
 	qteFail = { "sting", 1.6 },
+	-- das Ende (Sarps Hütte)
+	cabinAmbience = { "wind", 0.8 },
+	fireCrackle = { "radioStatic", 0.35 },
+	phoneKey = { "blinker", 1.6 },
+	phonePickup = { "footstep", 1.6 },
+	phoneRing = { "blinker", 0.5 },
+	phoneWrong = { "blinker", 2.2 },
+	phoneHangup = { "footstep", 0.8 },
+	hutWhisper = { "radioStatic", 0.5 },
+	lightFlicker = { "lampBuzz", 1.4 },
+	mirrorScare = { "sting", 0.8 },
+	photoScare = { "sting", 0.9 },
+	hallucinationFade = { "radioStatic", 0.7 },
+	policeKnock = { "footstep", 0.7 },
+	carDoor = { "footstep", 0.45 },
+	carEngine = { "engine", 1 },
+	carDrive = { "engine", 1.1 },
+	endingMusic = { "music", 1 },
 }
 
 local function makeSound(key, parent, props)
@@ -2650,6 +2668,14 @@ local function closePhone()
 		stopCutscene()
 	end
 	setOwnWalk(true)
+	-- (der Server schaltet sie selbst aus, solange telefoniert wird)
+	local phonePrompt = H.hiddenPrompt
+	H.hiddenPrompt = nil
+	if phonePrompt and phonePrompt.Parent then
+		task.delay(0.3, function()
+			phonePrompt.Enabled = true
+		end)
+	end
 end
 
 local function openPhone()
@@ -2665,6 +2691,12 @@ local function openPhone()
 		end
 	end
 	setOwnWalk(false)
+	-- (die Anzeige "Telefonieren" würde sonst über den Tasten hängen)
+	local phonePrompt = H.phone:FindFirstChildOfClass("ProximityPrompt")
+	if phonePrompt then
+		H.hiddenPrompt = phonePrompt
+		phonePrompt.Enabled = false
+	end
 	startCutscene()
 	setBars(false, 0)
 	local view = H.phoneView and H.phoneView.Position or (H.phone.Position + Vector3.new(0, 0, 3))
@@ -2843,11 +2875,14 @@ local function hallucination(kind)
 			setBlack(1, 0.7)
 			play("hallucinationFade", { Volume = 1.2 })
 			whisperCaption(Script.KAPITEL3.notReal, 3.2)
+		end)
+		-- (auch wenn hier etwas kaputtging: zählt als gesehen, sonst ginge das Bett nie)
+		if ok or problem ~= CANCELLED then
 			local remote = remoteNamed("K3Scare")
 			if remote then
 				remote:FireServer(kind)
 			end
-		end)
+		end
 		if H.scareModel then
 			H.scareModel:Destroy()
 			H.scareModel = nil
@@ -3054,7 +3089,7 @@ function handlers.scares()
 			local glow = Instance.new("PointLight")
 			glow.Name = "K3ScareGlow"
 			glow.Color = Color3.fromRGB(200, 40, 30)
-			glow.Range = kind == "mirror" and 7 or 5
+			glow.Range = kind == "mirror" and 10 or 9
 			glow.Brightness = 0
 			glow.Shadows = false
 			glow.Parent = target
@@ -3185,7 +3220,7 @@ local function updateHut(now)
 	for _, marker in H.markers do
 		local glow = marker[1]
 		if glow and glow.Parent then
-			glow.Brightness = 0.35 + math.sin(now * 2.2) * 0.25
+			glow.Brightness = 1.5 + math.sin(now * 2.2) * 0.5
 		end
 	end
 	-- Halluzination auslösen: nah genug und genau hingeschaut (und nichts dazwischen)

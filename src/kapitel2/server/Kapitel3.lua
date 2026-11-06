@@ -689,8 +689,8 @@ function Kapitel3.run(kit)
 				state.called = true
 				state.calling = false
 				phonePrompt.Enabled = true
-				event:FireAllClients({ type = "objectives", title = "Sarps Hütte", items = { { text = "Die Polizei rufen", done = true }, { text = "Auf die Polizei warten: ausruhen (Bett)", done = false } } })
-				event:FireAllClients({ type = "hint", text = "Die Polizei ist unterwegs. Ruh dich aus …", seconds = 5 })
+				event:FireAllClients({ type = "objectives", title = "Sarps Hütte", items = { { text = "Die Polizei rufen", done = true }, { text = "Irgendetwas stimmt nicht … (Spiegel, Foto am Bett)", done = false }, { text = "Auf die Polizei warten: ausruhen (Bett)", done = false } } })
+				event:FireAllClients({ type = "hint", text = "Die Polizei ist unterwegs. Ruh dich aus … (Bett hinter dem Vorhang)", seconds = 5 })
 				event:FireAllClients({ type = "k3", step = "scares" })
 			end)
 		end)
@@ -711,7 +711,7 @@ function Kapitel3.run(kit)
 				return
 			end
 			if not state.scared[player] then
-				event:FireClient(player, { type = "hint", text = "Ich kann jetzt nicht schlafen … irgendetwas stimmt hier nicht. Sieh dich erst um.", seconds = 5 })
+				event:FireClient(player, { type = "hint", text = "Ich kann jetzt nicht schlafen … Der Spiegel … das Foto neben dem Bett … irgendetwas stimmt hier nicht.", seconds = 5 })
 				return
 			end
 			state.resting = true
