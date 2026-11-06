@@ -72,6 +72,8 @@ local FALLBACK = {
 	heartbeat = { "footstep", 0.3 },
 	roar = { "sting", 0.6 },
 	sarpRoar = { "sting", 0.6 },
+	bridgeCrack = { "footstep", 0.5 },
+	bridgeCollapse = { "sting", 0.4 },
 	jumpscare = { "sting", 0.85 },
 	qteFail = { "sting", 1.6 },
 }
@@ -362,7 +364,7 @@ local function buildGui()
 	})
 	create("UICorner", { CornerRadius = UDim.new(0, 14), Parent = dodgeButton })
 	create("UIStroke", { Color = Color3.fromRGB(255, 200, 170), Thickness = 3, Parent = dodgeButton })
-	-- 2) Losreißen: E schnell drücken, Balken füllt sich
+	-- 2) Losreißen: E drücken (einmal)
 	struggleButton = create("TextButton", {
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		Position = UDim2.fromScale(0.5, 0.44),
@@ -897,6 +899,7 @@ end
 
 ------------------------------------------------------------------ Szene im Ritualraum
 local scene -- alles, was zur aktuellen Sequenz gehört
+local chase -- Zustand der Flucht durch den Wald
 local localFolder -- eigene Kopien und Requisiten (nur auf diesem Computer)
 
 local function newLocalFolder()
@@ -909,12 +912,11 @@ local function newLocalFolder()
 	return localFolder
 end
 
--- Kerzen im Ritualraum (zum Flackern und Ausgehen)
-local function ritualCandles(center)
+-- Kerzen und Feuerschalen im Ritualsaal (zum Flackern und Ausgehen)
+local function ritualCandles(hall)
 	local list = {}
-	local house = workspace:FindFirstChild("WagnerHouse", true)
-	for _, light in house and house:GetDescendants() or {} do
-		if light:IsA("PointLight") and light.Parent and light.Parent:IsA("BasePart") and (light.Parent.Position - center).Magnitude < 12 then
+	for _, light in hall and hall:GetDescendants() or {} do
+		if light:IsA("PointLight") and light.Name == "HallCandle" and light.Parent and light.Parent:IsA("BasePart") then
 			table.insert(list, light)
 		end
 	end
@@ -1162,10 +1164,9 @@ local function startQte(kind, dir, window, onDone, onTap)
 		qte.need = Data.QTE.struggle.taps
 		qte.count = 0
 		qteTitle.Text = "REISS DICH LOS!"
-		qteSub.Text = UserInputService.TouchEnabled and "schnell tippen" or "E schnell drücken"
+		qteSub.Text = UserInputService.TouchEnabled and "einmal tippen" or "E drücken"
 		struggleFill.Size = UDim2.fromScale(0, 1)
 		struggleButton.Visible = true
-		struggleBar.Visible = true
 	elseif kind == "timing" then
 		qteTitle.Text = "JETZT – IM RICHTIGEN MOMENT!"
 		qteSub.Text = UserInputService.TouchEnabled and "tippen, wenn der Kreis passt" or "Leertaste, wenn der Kreis passt"
@@ -1352,7 +1353,7 @@ function handlers.ritual(message)
 	local side = (spot - center):Dot(right) >= 0 and right or -right
 	S.candelabrumBase = spot + side * 1.7 + toDoor * 0.7
 	S.candelabrum = buildCandelabrum(folder, S.candelabrumBase)
-	S.candles = ritualCandles(center)
+	S.candles = ritualCandles(message.hall)
 
 	startCutscene()
 	run(mine, function()
@@ -1365,11 +1366,11 @@ function handlers.ritual(message)
 			return Vector3.new(first.X * c - first.Z * s, 0, first.X * s + first.Z * c)
 		end
 		local startDir = ringDir(math.rad(35))
-		still(CFrame.lookAt(center + startDir * 7.6 + UP * 5.0, center + UP * 2.2), 0)
+		still(CFrame.lookAt(center + startDir * 15 + UP * 10, center + UP * 2.2), 0)
 		shot(function(now)
 			local a = ease((now - S.t0) / 3.4, "inout")
-			local position = (center + startDir * (7.6 - a * 1.0) + UP * (5.0 - a * 0.7))
-			return CFrame.lookAt(position, center + UP * (2.2 + a * 0.6))
+			local position = (center + startDir * (15 - a * 3) + UP * (10 - a * 3.5))
+			return CFrame.lookAt(position, center + UP * (2.2 + a * 0.8))
 		end, 0)
 		S.t0 = os.clock()
 		setBlack(1, 2.2)
@@ -1386,8 +1387,8 @@ function handlers.ritual(message)
 		shot(function(now)
 			local a = ease((now - orbitStart) / 7.6, "inout")
 			local angle = fromAngle + a * math.rad(215)
-			local position = center + ringDir(angle) * 6.9 + UP * (4.2 + math.sin(a * math.pi) * 0.3)
-			local look = center + UP * 3.3 + Vector3.new(noise(now * 0.6, 1) * 0.15, noise(now * 0.5, 2) * 0.1, 0)
+			local position = center + ringDir(angle) * 10.5 + UP * (5.2 + math.sin(a * math.pi) * 0.6)
+			local look = center + UP * 3.4 + Vector3.new(noise(now * 0.6, 1) * 0.15, noise(now * 0.5, 2) * 0.1, 0)
 			return CFrame.lookAt(position, look)
 		end, 0.8)
 		task.delay(1.0, function()
@@ -1473,15 +1474,15 @@ function handlers.ritual(message)
 				S.sarp.walkState.phase = (now - walkStart) * 4.2
 				return nil
 			end)
-			tweenValue(S.sarp, "feet", stand, 2.4, "inout")
-			for i = 0, 2 do
-				task.delay(i * 0.75, function()
+			tweenValue(S.sarp, "feet", stand, 3.2, "inout")
+			for i = 0, 3 do
+				task.delay(i * 0.8, function()
 					if current(mine) then
 						playAt("sarpStep", S.sarp.feet + UP * 0.5, { Volume = 2.2 })
 					end
 				end)
 			end
-			task.delay(2.4, function()
+			task.delay(3.2, function()
 				if current(mine) then
 					S.sarp.walkState.walk = 0
 				end
@@ -1853,7 +1854,7 @@ function handlers.flee()
 		end
 		shot(function(now)
 			local t = now - runStart
-			local s = math.min(t * 5.2, total)
+			local s = math.min(t * 8, total)
 			local position, direction = along(s)
 			local bob = math.abs(math.sin(t * 9)) * 0.22
 			local look = position + direction * 6
@@ -1909,9 +1910,8 @@ end
 
 -- Der Partner wurde erwischt (man selbst wartet)
 function handlers.partnerKilled()
-	local S = scene
-	if not S then
-		return
+	if chase then
+		chase.chasing = false
 	end
 	qte = nil
 	qteFrame.Visible = false
@@ -1975,7 +1975,41 @@ local SARP_KNEEL = {
 	RightKnee = CFrame.Angles(-1.6, 0, 0),
 }
 
-local chase -- Zustand der Flucht
+-- (chase = Zustand der Flucht, oben bei `scene` deklariert)
+
+-- Im Wald heller als in der Nacht davor (man soll den Weg erkennen): nur auf diesem Computer
+local Lighting = game:GetService("Lighting")
+local savedLighting
+local function brighten(on)
+	if on and not savedLighting then
+		local atmosphere = Lighting:FindFirstChildOfClass("Atmosphere")
+		savedLighting = {
+			Ambient = Lighting.Ambient,
+			OutdoorAmbient = Lighting.OutdoorAmbient,
+			ExposureCompensation = Lighting.ExposureCompensation,
+			atmosphere = atmosphere,
+			density = atmosphere and atmosphere.Density,
+			color = atmosphere and atmosphere.Color,
+		}
+		Lighting.Ambient = Color3.fromRGB(58, 62, 74)
+		Lighting.OutdoorAmbient = Color3.fromRGB(88, 96, 120)
+		Lighting.ExposureCompensation = savedLighting.ExposureCompensation + 0.35
+		if atmosphere then
+			atmosphere.Density = 0.24
+			atmosphere.Color = Color3.fromRGB(26, 30, 40)
+		end
+	elseif not on and savedLighting then
+		local saved = savedLighting
+		savedLighting = nil
+		Lighting.Ambient = saved.Ambient
+		Lighting.OutdoorAmbient = saved.OutdoorAmbient
+		Lighting.ExposureCompensation = saved.ExposureCompensation
+		if saved.atmosphere and saved.atmosphere.Parent then
+			saved.atmosphere.Density = saved.density
+			saved.atmosphere.Color = saved.color
+		end
+	end
+end
 
 local function ownRoot()
 	local character = player.Character
@@ -1995,8 +2029,19 @@ function handlers.run(message)
 	if #points < 2 then
 		return
 	end
-	local C = { mine = mine, points = points, length = message.length or 0, form = "sarp", gap = 22, s = -3, started = os.clock() }
+	table.clear(rigs)
+	local C = {
+		mine = mine,
+		points = points,
+		length = message.length or 0,
+		bridgeStart = message.bridgeStart,
+		bridgeLength = message.bridgeLength,
+		form = "sarp",
+		s = -3,
+		started = os.clock(),
+	}
 	chase = C
+	brighten(true)
 	-- Mondlicht (sonst sieht man im Wald gar nichts mehr – die Kerze ist weg)
 	local moon = Instance.new("Part")
 	moon.Name = "K3Moonlight"
@@ -2009,8 +2054,8 @@ function handlers.run(message)
 	moon.Parent = folder
 	local moonLight = Instance.new("PointLight")
 	moonLight.Color = Color3.fromRGB(150, 165, 200)
-	moonLight.Range = 34
-	moonLight.Brightness = 0.55
+	moonLight.Range = 60
+	moonLight.Brightness = 1.1
 	moonLight.Shadows = false
 	moonLight.Parent = moon
 	C.moon = moon
@@ -2068,6 +2113,7 @@ function handlers.run(message)
 			hold(mine, 0.8)
 			rig:change(SARP_RUN, 0.4, "inout")
 		end
+		C.chaseStart = os.clock()
 		C.chasing = true
 	end)
 end
@@ -2297,35 +2343,110 @@ function handlers.transform()
 		stopCutscene()
 		showBigHint("LAUF!", 2)
 		loop("chaseMusic", 0.9)
-		C.gap = math.max(10, (root and Data.progress(C.points, root.Position) or 0) - C.s)
 		C.chasing = true
 	end)
 end
 
--- Ende: es springt – schwarz
-handlers["end"] = function()
+-- Alle sind über die Brücke: umdrehen – das Biest ist auf der Brücke, sie stürzt ein
+function handlers.bridge(message)
 	local C = chase
-	local mine = token
-	if C then
-		C.lunge = true
+	if not C or not C.rig then
+		return
 	end
+	local mine = C.mine
+	C.bridgeStart = message.bridgeStart or C.bridgeStart or 0
+	C.bridgeLength = message.bridgeLength or C.bridgeLength or 40
+	C.chasing = false
+	C.onBridge = true
+	-- (falls es noch davor ist: es ist schon auf der Brücke)
+	C.s = math.max(C.s, C.bridgeStart + 4)
 	run(mine, function()
-		play("roar", { Volume = 2.8 })
-		redFlash(0.6, 0.3)
-		hold(mine, 0.32)
-		setBlack(0, 0)
-		stopAllLoops()
-		hold(mine, 0.2)
-		chase = nil
-		for i = #rigs, 1, -1 do
-			table.remove(rigs, i)
+		local beast = C.rig
+		local function eye()
+			local character = player.Character
+			local head = character and character:FindFirstChild("Head")
+			return head and head.Position + UP * 0.2 or camera.CFrame.Position
 		end
+		startCutscene()
+		shot(function()
+			return CFrame.lookAt(eye(), sarpHeadPosition(beast) - UP * 1.5)
+		end, 0.6, "out")
+		play("roar", { Volume = 2.4 })
+		hold(mine, Data.BRIDGE_BREAK - 0.3)
+		playAt("bridgeCrack", beast.feet + UP * 2, { Volume = 2.4 })
+		shake(0.015, 0.4)
+		hold(mine, 0.3)
+		-- die Brücke bricht unter ihm weg: es stürzt in die Schlucht
+		C.onBridge = false
+		C.falling = true
+		C.fallSpeed = 3
+		C.fallTurn = 0
+		beast.grounded = false
+		beast.walkState.amount = 0
+		beast:setPose(BEAST_ROAR, 0.35, "out")
+		playAt("bridgeCollapse", beast.feet, { Volume = 2.6 })
+		play("roar", { Volume = 2.8, PlaybackSpeed = 0.85 })
+		shake(0.03, 1.4)
+		-- die Kamera schaut ihm nach (etwas nach unten)
+		local fallStart = os.clock()
+		local fallFrom = sarpHeadPosition(beast)
+		shot(function(now)
+			local target = sarpHeadPosition(beast)
+			local a = math.clamp((now - fallStart) / 1.2, 0, 1)
+			return CFrame.lookAt(eye(), fallFrom:Lerp(target, 0.35 + a * 0.4))
+		end, 0.2)
+		hold(mine, math.max(Data.BRIDGE_SCENE - Data.BRIDGE_BREAK - 0.2, 0.5))
+	end)
+end
+
+-- Ende: schwarz (hier kommt später das Ende)
+handlers["end"] = function()
+	token += 1
+	local mine = token
+	run(mine, function()
+		setBlack(0, 0.15)
+		hold(mine, 0.2)
+		stopAllLoops()
+		stopCutscene(true)
+		chase = nil
+		table.clear(rigs)
 		if localFolder then
 			localFolder:Destroy()
 			localFolder = nil
 		end
+		brighten(false)
 		hold(mine, 3)
 		showCard("", "Fortsetzung folgt …", true, 2)
+	end)
+end
+
+-- Erwischt (zu langsam): er springt einen an – schwarz, Game Over kommt vom Server
+local function caughtInForest(C)
+	C.caught = true
+	C.lunge = true
+	local remote = remotes and remotes:FindFirstChild("K3Caught")
+	if remote then
+		remote:FireServer()
+	end
+	local mine = C.mine
+	run(mine, function()
+		local rig = C.rig
+		play("jumpscare", { Volume = 2.4 })
+		play("roar", { Volume = 2.2 })
+		redFlash(0.6, 0.6)
+		startCutscene()
+		setBars(false, 0)
+		local character = player.Character
+		local head = character and character:FindFirstChild("Head")
+		local eye = head and head.Position + UP * 0.2 or camera.CFrame.Position
+		shot(function()
+			return CFrame.lookAt(eye, sarpHeadPosition(rig))
+		end, 0.12)
+		setFov(80, 0.3)
+		shake(0.05, 1)
+		hold(mine, 0.9)
+		setBlack(0, 0.05)
+		stopAllLoops()
 	end)
 end
 
@@ -2338,40 +2459,62 @@ local function updateChase(now, deltaTime)
 	end
 	local root = ownRoot()
 	if C.moon and root then
-		C.moon.CFrame = CFrame.new(root.Position + UP * 9)
+		C.moon.CFrame = CFrame.new(root.Position + UP * 14)
 	end
 	local rig = C.rig
-	if not (C.chasing or C.lunge) or not root then
+	if C.falling then
+		-- es fällt in die Schlucht
+		C.fallSpeed += 70 * deltaTime
+		C.fallTurn += deltaTime
+		rig.feet -= UP * C.fallSpeed * deltaTime
+		rig.tilt = CFrame.Angles(-C.fallTurn * 1.3, 0, C.fallTurn * 0.5)
+		return
+	end
+	if not (C.chasing or C.onBridge or C.lunge) or not root then
 		return
 	end
 	local playerS = Data.progress(C.points, root.Position)
-	-- er bleibt knapp hinter einem (kommt näher, wenn man langsamer wird), fängt einen aber nie
-	local wanted = C.form == "beast" and (8.5 + math.sin(now * 0.8) * 2) or (11 + math.sin(now * 0.6) * 2.5)
-	if C.form == "beast" then
-		C.gap += (wanted - C.gap) * math.min(deltaTime * 0.6, 1)
+	local target
+	if C.onBridge then
+		-- läuft weiter auf die Brücke (bis kurz nach der Mitte)
+		target = math.min(C.s + 12 * deltaTime, C.bridgeStart + C.bridgeLength * 0.6)
+	elseif C.lunge then
+		target = math.min(playerS - 1, C.s + 60 * deltaTime)
 	else
-		C.gap = wanted
+		-- etwas langsamer als man selbst; wer stehen bleibt, wird eingeholt.
+		-- Höchstens MAX_GAP Studs zurück (holt schnell auf, wenn er weiter weg ist)
+		local ramp = math.clamp((now - (C.chaseStart or now)) / 3, 0.4, 1)
+		local speed = (C.form == "beast" and Data.BEAST_SPEED or Data.SARP_SPEED) * ramp
+		target = C.s + speed * deltaTime
+		if playerS - target > Data.MAX_GAP then
+			target = math.min(playerS - Data.MAX_GAP, C.s + 40 * deltaTime)
+		end
 	end
-	local target = playerS - C.gap
-	if C.lunge then
-		target = playerS - 1.2
-	end
-	local maxSpeed = C.lunge and 60 or (C.form == "beast" and 30 or 22)
 	local before = C.s
-	C.s = math.min(C.s + math.clamp(target - C.s, -2 * deltaTime, maxSpeed * deltaTime), playerS - (C.lunge and 1 or 4.5))
+	C.s = math.max(C.s, target)
+	if C.chasing and not C.caught and playerS - C.s <= Data.CATCH_GAP then
+		caughtInForest(C)
+	end
 	local moved = math.max(C.s - before, 0)
 	local position, direction = Data.pointAt(C.points, math.max(C.s, 0))
 	if C.s < 0 then
 		position += direction * C.s
 	end
+	-- auf der Brücke hängt der Weg durch
+	if C.bridgeStart and C.bridgeLength then
+		local along = C.s - C.bridgeStart
+		if along > 0 and along < C.bridgeLength then
+			position -= UP * math.sin(along / C.bridgeLength * math.pi) * 1.2
+		end
+	end
 	rig.feet = position
 	rig.facing = direction
 	local speed = moved / math.max(deltaTime, 1e-3)
 	if C.form == "beast" then
-		rig.walkState.amount = math.clamp(speed / 14, 0, 1)
+		rig.walkState.amount = math.clamp(speed / 12, 0, 1)
 		rig.walkState.phase = (rig.walkState.phase or 0) + moved / 11 * math.pi * 2
 	else
-		rig.walkState.walk = math.clamp(speed / 10, 0, 1)
+		rig.walkState.walk = math.clamp(speed / 9, 0, 1)
 		rig.walkState.phase = (rig.walkState.phase or 0) + moved / 6.5 * math.pi * 2
 	end
 	-- Schritte und Herzschlag
@@ -2380,10 +2523,10 @@ local function updateChase(now, deltaTime)
 		nextStep = now + (C.form == "beast" and 0.28 or 0.36)
 		play(C.form == "beast" and "beastStep" or "sarpStep", { Volume = C.form == "beast" and 2 or 1.6 }, rig.root)
 	end
-	if now >= nextBeat then
-		local closeness = 1 - math.clamp((distance - 4) / 20, 0, 1)
-		nextBeat = now + 0.95 - closeness * 0.55
-		play("heartbeat", { Volume = 0.5 + closeness * 1.4 })
+	if now >= nextBeat and not C.onBridge then
+		local closeness = 1 - math.clamp((distance - 3) / 11, 0, 1)
+		nextBeat = now + 0.95 - closeness * 0.6
+		play("heartbeat", { Volume = 0.5 + closeness * 1.6 })
 	end
 end
 
@@ -2415,6 +2558,7 @@ function Kapitel3.run()
 			showCard(nil, nil, false, 0.1)
 			stopAllLoops()
 			stopCutscene(true)
+			chase = nil
 		end
 	end)
 

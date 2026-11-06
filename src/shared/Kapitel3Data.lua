@@ -6,14 +6,14 @@ local Kapitel3Data = {}
 Kapitel3Data.CARD = 8.2
 
 -- Ritualraum: Einleitung (Puppen, Flüstern, Stille, Sarp im Eingang) bis zum ersten Event
-Kapitel3Data.INTRO = 20.5
+Kapitel3Data.INTRO = 21.5
 
--- Die drei Quick-Time-Events (der Reihe nach). windup = Sarp holt aus, window = so lange
--- hat man Zeit, outcome = so lange dauert danach die Animation (Treffer oder Ausweichen).
+-- Die drei Quick-Time-Events (der Reihe nach), jeweils EIN Tastendruck. windup = Sarp holt
+-- aus, window = so lange hat man Zeit, outcome = so lange dauert danach die Animation.
 Kapitel3Data.ORDER = { "dodge", "struggle", "timing" }
 Kapitel3Data.QTE = {
 	dodge = { windup = 1.0, window = 1.25, outcome = 2.4 }, -- Pfeil: A oder D
-	struggle = { windup = 1.2, window = 3.8, taps = 12, outcome = 2.7 }, -- E schnell drücken
+	struggle = { windup = 1.2, window = 1.6, taps = 1, outcome = 2.7 }, -- E drücken
 	timing = { windup = 1.6, window = 1.8, outcome = 3.4 }, -- Kreis schrumpft: Leertaste
 }
 Kapitel3Data.MAX_MISSES = 1 -- so viele Events darf man verpassen (beim zweiten: Game Over)
@@ -25,8 +25,19 @@ Kapitel3Data.FLEE = 7.6
 Kapitel3Data.RUN_SPEED = 17
 Kapitel3Data.TRANSFORM_AT = 0.42 -- so weit (Anteil des Wegs), dann verwandelt er sich
 Kapitel3Data.TRANSFORM_TIME = 6.8 -- so lange schaut man zurück (man bleibt stehen)
-Kapitel3Data.END_MARGIN = 28 -- so weit vor dem Ende des Wegs wird es schwarz
-Kapitel3Data.RUN_MAX_TIME = 70 -- Sicherheitsnetz (Sekunden)
+-- Am Ende: alle sind über die Brücke (BRIDGE_CLEAR Studs dahinter), man dreht sich um, das
+-- Biest ist auf der Brücke – nach BRIDGE_BREAK Sekunden stürzt sie ein, nach BRIDGE_SCENE schwarz
+Kapitel3Data.BRIDGE_CLEAR = 6
+Kapitel3Data.BRIDGE_BREAK = 1.3
+Kapitel3Data.BRIDGE_SCENE = 4.6
+-- Wer zu langsam ist, wird erwischt: Sarp/das Biest laufen etwas langsamer als man selbst
+-- und bleiben höchstens MAX_GAP Studs zurück. Bleibt man stehen, ist er in gut einer
+-- Sekunde da; wer durchläuft, ist sicher.
+Kapitel3Data.SARP_SPEED = 10.5
+Kapitel3Data.BEAST_SPEED = 11.5
+Kapitel3Data.MAX_GAP = 14
+Kapitel3Data.CATCH_GAP = 2.4
+Kapitel3Data.RUN_MAX_TIME = 120 -- Sicherheitsnetz (Sekunden)
 
 -- Wo auf dem Weg (Liste von Punkten) steht `position`? Gibt die Strecke ab dem Anfang
 -- zurück, den seitlichen Abstand und die Länge des ganzen Wegs.
