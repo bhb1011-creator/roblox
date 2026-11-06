@@ -932,7 +932,7 @@ function SarpHut.build(parent, road, ground)
 		-- Telefonmasten an der Straße (eine Leitung führt zur Hütte)
 		local poleZ = SarpHut.ROAD_Z + SarpHut.ROAD_HALF + 0.8
 		local tops = {}
-		for _, x in { -128, -90, -52, -14, 14, 52, 90, 128 } do
+		for _, x in { -128, -90, -52, 14, 52, 90, 128 } do
 			local base = R(x, poleZ, rng:NextNumber(-3, 3)) * CFrame.Angles(rng:NextNumber(-0.03, 0.03), 0, rng:NextNumber(-0.03, 0.03))
 			Parts.column({ Name = "TelephonePole", Color = Color3.fromRGB(72, 56, 42), Material = M.Wood, Parent = folder }, 17, 0.75, base)
 			deco("PoleCrossbar", Vector3.new(4.2, 0.35, 0.35), base * CFrame.new(0, 15.6, 0), Color3.fromRGB(72, 56, 42), M.Wood)
@@ -961,7 +961,7 @@ function SarpHut.build(parent, road, ground)
 			end
 		end
 		-- Straßenschild am Ende des Wegs und ein Warnschild am Zaun
-		local signPost = R(-12, SarpHut.ROAD_Z + SarpHut.ROAD_HALF + 1.2, 180)
+		local signPost = R(-11.5, SarpHut.ROAD_Z - SarpHut.ROAD_HALF - 1.6, 0)
 		Parts.column({ Name = "SignPost", Color = LOG_DARK, Material = M.Wood, Parent = folder }, 7, 0.35, signPost)
 		local sign = deco("RoadSign", Vector3.new(4.4, 1, 0.12), signPost * CFrame.new(0, 6.3, -0.2) * CFrame.Angles(0, 0, math.rad(-3)), Color3.fromRGB(46, 80, 50), M.Metal)
 		for _, face in { Enum.NormalId.Front, Enum.NormalId.Back } do
@@ -1009,7 +1009,7 @@ function SarpHut.build(parent, road, ground)
 	info.bedView = bed * CFrame.new(0, 3.6, 0.6)
 	-- Kamera beim Ende: drinnen (Blick zur offenen Tür, Blaulicht) und draußen über die Straße
 	info.endInside = CFrame.lookAt(L(-3.5, FLOOR + 4.6, -15).Position, L(0.5, FLOOR + 3.4, 0).Position)
-	info.endOutside = CFrame.lookAt((road * CFrame.new(-24, 6, 4)).Position, (road * CFrame.new(-2, 3, -9)).Position)
+	info.endOutside = CFrame.lookAt((road * CFrame.new(-23, 6, -1)).Position, (road * CFrame.new(-2, 3, -9)).Position)
 	return info
 end
 

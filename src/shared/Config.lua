@@ -199,7 +199,7 @@ Config.PLAYER_TTS = false
 Config.TEST_START_KAPITEL2 = "huette"
 -- Versionsnummer: steht beim Laden auf dem Bildschirm und im Output. So sieht man sofort,
 -- ob in Studio wirklich der neueste Stand läuft (nach "git pull").
-Config.BUILD = "K2-2026-11-06o"
+Config.BUILD = "K2-2026-11-06p"
 Config.VOICES = {
 	-- Sarp: etwas tiefer, langsam, ruhig – mit Bass, weniger Höhen und dunklem Hall
 	sarp = {

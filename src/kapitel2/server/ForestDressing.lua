@@ -235,7 +235,7 @@ function ForestDressing.path(parent, points, free, from, to)
 			end
 		end
 		s += 3
-		if step % 20 == 0 then
+		if step % 4 == 0 then
 			task.wait()
 		end
 	end

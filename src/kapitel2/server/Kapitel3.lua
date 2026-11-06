@@ -546,6 +546,9 @@ local function buildForest()
 	forestStart = points[1] + forward * 2.5
 	forestReady = true
 	print(string.format("Kapitel 3: Waldweg fertig (%d Bäume, %.0f Studs lang, Brücke bei %.0f, Hütte: %s)", count, total, bridgeStart, hut and "ja" or "nein"))
+	if hut then
+		print(string.format("Kapitel 3: Hütte steht auf Höhe %.2f, Polizeiauto hält auf Höhe %.2f (Boden am Wegende %.2f)", hut.frame.Y, hut.carStop.Y, groundAt(roadFrame.Position)))
+	end
 end
 
 Kapitel3.buildForest = buildForest -- (auch zum Testen)

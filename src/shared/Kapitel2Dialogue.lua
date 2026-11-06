@@ -29,7 +29,7 @@ Kapitel2Dialogue.NAMES = {
 	lucy = "Lucy",
 	tommy = "Tommy",
 	player = "Du", -- innere Stimme
-	police = "Polizei",
+	police = "Police",
 }
 
 Kapitel2Dialogue.SCRIPT = {

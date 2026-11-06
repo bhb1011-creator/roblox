@@ -2860,7 +2860,17 @@ local function hallucination(kind)
 				H.blackoutUntil = os.clock() + 0.35
 				play("lightFlicker", { Volume = 1.2 })
 				hold(mine, 0.35)
-				-- es kommt aus dem Foto auf einen zu
+				-- es kommt aus dem Foto auf einen zu (man zuckt zurück; Foto und Nachttisch-Kram
+				-- kurz unsichtbar, damit nichts vor dem Gesicht ist)
+				for _, item in H.hut:GetDescendants() do
+					if item:IsA("BasePart") and (item.Position - target.Position).Magnitude < 1.6 then
+						item.LocalTransparencyModifier = 1
+						H.hiddenNearPhoto = H.hiddenNearPhoto or {}
+						table.insert(H.hiddenNearPhoto, item)
+					end
+				end
+				local back = target.Position + unit(eye - target.Position, Vector3.new(0, 0, 1)) * 5.6
+				still(CFrame.lookAt(back, target.Position), 0.16, "out")
 				H.scare = scareBeast(9)
 				setFov(68, 0.2)
 				play("photoScare", { Volume = 2.6 })
@@ -2880,6 +2890,10 @@ local function hallucination(kind)
 			setBlack(0, 0.05)
 			hold(mine, 0.3)
 			clearScare()
+			for _, item in H.hiddenNearPhoto or {} do
+				item.LocalTransparencyModifier = 0
+			end
+			H.hiddenNearPhoto = nil
 			camera.CFrame = eyeFrame
 			stopCutscene()
 			setBlack(1, 0.7)
@@ -2894,6 +2908,10 @@ local function hallucination(kind)
 			end
 		end
 		clearScare()
+		for _, item in H.hiddenNearPhoto or {} do
+			item.LocalTransparencyModifier = 0
+		end
+		H.hiddenNearPhoto = nil
 		H.scaring = false
 		setOwnWalk(true)
 		if not ok and problem ~= CANCELLED then
