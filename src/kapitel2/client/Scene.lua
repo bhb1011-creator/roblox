@@ -627,6 +627,10 @@ function Kapitel2.run()
 					necks[model] = info
 				end
 				local look = model:GetAttribute("Look")
+				if look == "puppet" then
+					-- Kapitel 3 (Kapitel3.lua) bewegt den Kopf selbst
+					continue
+				end
 				local yaw, pitch = 0, 0
 				local target
 				if look == "player" then

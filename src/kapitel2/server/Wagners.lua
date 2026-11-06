@@ -51,6 +51,11 @@ local MOVING_JOINTS = {
 	{ "RightUpperLeg", "RightHip" },
 	{ "LeftLowerLeg", "LeftKnee" },
 	{ "RightLowerLeg", "RightKnee" },
+	-- für Kapitel 3 (Puppen im Ritualraum, Sarps Angriffe und Verwandlung)
+	{ "LeftUpperArm", "LeftShoulder" },
+	{ "LeftLowerArm", "LeftElbow" },
+	{ "UpperTorso", "Waist" },
+	{ "LowerTorso", "Root" },
 }
 
 local function replaceJoint(model, partName, jointName)

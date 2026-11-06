@@ -232,6 +232,16 @@ Kapitel2Dialogue.FAMILY_PHANTOM = {
 	lucy = { "I can hear you breathing...", "Mommy, they're downstairs." },
 	tommy = { "Psst... over here...", "You can't leave. Nobody leaves." },
 }
+-- Kapitel 3 (Kapitel3.lua): was im Ritualraum gesagt wird. Bewusst ohne Erklärung, warum
+-- die Familie so ist (das kommt erst im DLC).
+Kapitel2Dialogue.KAPITEL3 = {
+	-- die Familie flüstert im Chor (Untertitel auf dem Client, ohne Namen)
+	whispers = { "...he is coming...", "...stay...", "...stay with us...", "...forever..." },
+	sarpDoor = "You opened my door.",
+	sarpNobody = "Nobody leaves this house.",
+	sarpGrab = "Stay.",
+	tunnel = "The tunnel! Go! Now!",
+}
 -- Sarp nach der Explosion
 Kapitel2Dialogue.SARP_ALERT = { "Who opened my door?", "I smell you.", "Little thieves..." }
 

@@ -127,8 +127,26 @@ Config.SOUNDS = {
 	explosion = "", -- explosion.ogg (Explosion im Raum, dumpf und laut)
 	sarpRoar = "", -- sarp_roar.ogg (Sarp brüllt wütend, durchs ganze Haus)
 	secretDoor = "", -- secret_door_open.ogg (schwere alte Tür hinter dem Regal knarrt auf)
-	-- Kapitel 3
+	-- Kapitel 3 (solange leer: ein vorhandener Sound als Ersatz, manche bleiben still)
 	chapterHit = "", -- chapter3_hit.ogg (dumpfer Schlag, wenn "KAPITEL 3" erscheint)
+	ritualWhisper = "", -- ritual_whisper_loop.ogg (die Familie flüstert im Chor, Schleife)
+	neckCrack = "", -- neck_crack.ogg (Genick knackt, wenn ein Kopf herumruckt)
+	ritualSting = "", -- ritual_sting.ogg (Schreck-Ton: Kerzen gehen aus, Sarp steht im Eingang)
+	clawSwipe = "", -- claw_swipe.ogg (Klauen sausen durch die Luft)
+	clawHit = "", -- claw_hit.ogg (Klauen treffen einen)
+	sarpGrab = "", -- sarp_grab.ogg (er packt einen, Keuchen und Knurren)
+	bodyFall = "", -- body_fall.ogg (man fällt hart auf den Steinboden)
+	candleFall = "", -- candelabrum_fall.ogg (eiserner Kerzenständer kippt und scheppert)
+	fireBurst = "", -- fire_burst.ogg (Feuer fängt schlagartig an)
+	sarpBurn = "", -- sarp_burn_scream.ogg (Sarp schreit, als er brennt)
+	puppetCollapse = "", -- puppet_collapse.ogg (ein Körper sackt zu Boden, wie eine Puppe)
+	qteSuccess = "", -- qte_success.ogg (kurzer Ton: geschafft)
+	qteFail = "", -- qte_fail.ogg (kurzer Ton: verpasst)
+	transformCrack = "", -- transform_crack.ogg (Knochen knacken und brechen bei der Verwandlung)
+	runBreath = "", -- run_breath_loop.ogg (man keucht beim Rennen, Schleife)
+	chaseMusic = "", -- chase_music_loop.ogg (Musik bei der Flucht durch den Wald, Schleife)
+	-- außerdem benutzt Kapitel 3: sarpStep, sarpBreath, sarpRoar, jumpscare, heartbeat,
+	-- roar, beastStep und beastBreath (siehe oben)
 }
 
 -- Sprachausgabe auf Englisch mit der Text-to-Speech-Funktion von Roblox.
@@ -158,7 +176,7 @@ Config.PLAYER_TTS = false
 Config.TEST_START_KAPITEL2 = "schluessel"
 -- Versionsnummer: steht beim Laden auf dem Bildschirm und im Output. So sieht man sofort,
 -- ob in Studio wirklich der neueste Stand läuft (nach "git pull").
-Config.BUILD = "K2-2026-11-06i"
+Config.BUILD = "K2-2026-11-06j"
 Config.VOICES = {
 	-- Sarp: etwas tiefer, langsam, ruhig – mit Bass, weniger Höhen und dunklem Hall
 	sarp = {
