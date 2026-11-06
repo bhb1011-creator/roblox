@@ -826,7 +826,7 @@ local function buildWalls()
 	int({ 54.25, 34 }, { 54.25, 42 }, { { 54.25, 38, kind = DOOR, angle = 80, swing = "ess" } })
 	int({ 54.25, 22 }, { 54.25, 34 })
 	int({ 54.25, 18 }, { 54.25, 20 })
-	int({ 40, 20 }, { 54.25, 20 }, { { 47, 20, kind = DOOR, angle = 60, swing = "speise" } })
+	int({ 40, 20 }, { 54.25, 20 }, { { 47, 20, kind = DOOR, angle = 60, swing = "kueche" } }) -- geht in die Küche auf (in der Speisekammer stehen Säcke)
 	int({ 34, 30 }, { 34, 38 }, { { 34, 34, kind = DOOR, angle = 70, swing = "gartenflur" } })
 	int({ 14, 38 }, { 34, 38 })
 	int({ 14, 60 }, { 34, 60 }, { { 24, 60, kind = DOOR, angle = 0, locked = true } }) -- Arbeitszimmer: abgeschlossen
@@ -864,7 +864,7 @@ local function buildWalls()
 	intO({ 41.75, 54.15 }, { 48.6, 54.15 }, { { 46.4, 54.15, kind = DOOR, angle = 0, w = 3.2, locked = true } }) -- Kammer: abgeschlossen (Rahmen nicht in der Querwand)
 	intO({ 48.6, 54.15 }, { 54.25, 54.15 }, { { 51.4, 54.15, kind = DOOR, angle = 75, w = 3.2, swing = "gaeste" } })
 	-- vom Ende der Galerie ins Spielzimmer (und von dort in den langen Flur)
-	intO({ 54.25, 54.15 }, { 54.25, 72 }, { { 54.25, 56.2, kind = DOOR, angle = 70, w = 3.2, swing = "spiel" } })
+	intO({ 54.25, 54.15 }, { 54.25, 72 }, { { 54.25, 56.8, kind = DOOR, angle = 70, w = 3.2, swing = "spiel" } })
 	intO({ 48.6, 40 }, { 48.6, 54.15 })
 	-- Tür 1: Großmutters Zimmer, vernagelt (mit der Axt aufbrechen); geht ins Zimmer auf
 	intO({ 34, 40 }, { 41.75, 40 }, { { 38, 40, kind = DOOR, angle = 0, boards = "gang", swing = "tuer1", locked = true } })
@@ -877,7 +877,7 @@ local function buildWalls()
 	intO({ 74.56, 52 }, { 80.56, 44 })
 	local corridorDoors = {
 		{ 39, 34, kind = DOOR, angle = 25, swing = "tommy" },
-		{ 49, 34, kind = DOOR, angle = 15, swing = "lucy" },
+		{ 49, 34, kind = DOOR, angle = 15, swing = "gang" }, -- in den Flur (in Lucys Zimmer steht das Puppenhaus)
 		{ 59, 34, kind = DOOR, angle = 80, swing = "bad" },
 		{ 72, 34, kind = DOOR, angle = 0, locked = true }, -- Eltern: abgeschlossen
 	}
@@ -1767,7 +1767,7 @@ local function buildNavigation()
 			{ "E", 14, 30, "gartenflur", "winter" },
 			{ "E", 52.12, 34, "kueche", "kellertreppe", { { 52.12, 36.0 }, { 52.1, 33.0 } } },
 			{ "O", 51.4, 54.15, "galerie", "gaeste" },
-			{ "O", 54.25, 56.2, "galerie", "spiel" },
+			{ "O", 54.25, 56.8, "galerie", "spiel" },
 			{ "O", 68, 52, "gang", "spiel" },
 			{ "O", 39, 34, "gang", "tommy" },
 			{ "O", 49, 34, "gang", "lucy" },
