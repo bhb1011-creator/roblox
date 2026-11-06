@@ -92,6 +92,37 @@ function Kapitel2.run()
 		DisplayOrder = 10,
 		Parent = player:WaitForChild("PlayerGui"),
 	})
+	-- Versionsnummer: die ersten 2 Sekunden groß in der Mitte (damit man sieht, ob der neueste Stand läuft)
+	do
+		local versionScreen = create("Frame", {
+			Name = "VersionScreen",
+			Size = UDim2.fromScale(1, 1),
+			BackgroundColor3 = Color3.new(0, 0, 0),
+			BorderSizePixel = 0,
+			ZIndex = 100,
+			Parent = gui,
+		})
+		local versionText = create("TextLabel", {
+			AnchorPoint = Vector2.new(0.5, 0.5),
+			Position = UDim2.fromScale(0.5, 0.5),
+			Size = UDim2.new(0.9, 0, 0, 120),
+			BackgroundTransparency = 1,
+			Font = Enum.Font.SpecialElite,
+			Text = "Version " .. tostring(Config.BUILD or "?"),
+			TextSize = 56,
+			TextColor3 = Color3.fromRGB(235, 225, 210),
+			AutoLocalize = false,
+			ZIndex = 101,
+			Parent = versionScreen,
+		})
+		task.delay(2, function()
+			TweenService:Create(versionScreen, TweenInfo.new(0.5), { BackgroundTransparency = 1 }):Play()
+			TweenService:Create(versionText, TweenInfo.new(0.5), { TextTransparency = 1 }):Play()
+			task.delay(0.6, function()
+				versionScreen:Destroy()
+			end)
+		end)
+	end
 	local fade = create("Frame", {
 		Size = UDim2.fromScale(1, 1),
 		BackgroundColor3 = Color3.new(0, 0, 0),
