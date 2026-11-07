@@ -110,6 +110,11 @@ Zu zweit testen: **Test → Clients und Server → 2 Spieler**.
 
 ### Sounds und Musik hochladen (einmalig)
 
+**Kapitel 3:** alle Sounds liegen zusammen in `assets/audio/kapitel3` (56 Dateien, selbst
+erzeugt mit `python3 tools/make_kapitel3_audio.py assets/audio/kapitel3`). In Studio: Asset
+Manager → **Bulk Import** → alle Dateien aus dem Ordner auswählen. Danach die IDs bei
+`Config.SOUNDS` eintragen (der Dateiname steht dort jeweils im Kommentar).
+
 Die Sounds liegen in `assets/audio` (selbst erzeugt, frei verwendbar):
 
 | Datei | Wofür |
