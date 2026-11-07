@@ -196,10 +196,10 @@ Config.PLAYER_TTS = false
 --   "kapitel3"       = gleich Kapitel 3 (Ritualraum, Quick-Time-Events, Flucht durch den Wald)
 --   "huette"         = gleich hinter der eingestürzten Brücke (Weg zu Sarps Hütte, Telefon,
 --                      Spiegel/Foto, Bett, Polizei – das Ende)
-Config.TEST_START_KAPITEL2 = "huette"
+Config.TEST_START_KAPITEL2 = "kapitel3"
 -- Versionsnummer: steht beim Laden auf dem Bildschirm und im Output. So sieht man sofort,
 -- ob in Studio wirklich der neueste Stand läuft (nach "git pull").
-Config.BUILD = "K2-2026-11-06p"
+Config.BUILD = "K2-2026-11-07a"
 Config.VOICES = {
 	-- Sarp: etwas tiefer, langsam, ruhig – mit Bass, weniger Höhen und dunklem Hall
 	sarp = {
