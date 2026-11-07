@@ -57,7 +57,7 @@ Kapitel3Data.OBSTACLES = {
 	{ kind = "side", s = 548, beast = true },
 	{ kind = "jump", s = 582 },
 }
-Kapitel3Data.PROMPT_DISTANCE = 11 -- so weit vorher erscheint "LEERTASTE" / "C"
+Kapitel3Data.PROMPT_DISTANCE = 17 -- so weit vorher erscheint "LEERTASTE" / "C"
 Kapitel3Data.STUMBLE_TIME = 0.75 -- verpasst: so lange kommt man kaum vorwärts
 Kapitel3Data.MUD_SPEED = 11.5
 Kapitel3Data.CREEK_SPEED = 10

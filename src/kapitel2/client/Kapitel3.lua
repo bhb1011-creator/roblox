@@ -1159,6 +1159,10 @@ local function qteInput(kind, value)
 		return
 	end
 	if kind == "dodge" then
+		-- (beim Rennen ist A/D auch Laufen: dann zählt nur die richtige Richtung)
+		if qte.lenient and value ~= qte.dir then
+			return
+		end
 		finishQte(value == qte.dir)
 	elseif kind == "struggle" then
 		qte.count += 1
@@ -1179,8 +1183,8 @@ local function qteInput(kind, value)
 	end
 end
 
-local function startQte(kind, dir, window, onDone, onTap)
-	qte = { kind = kind, dir = dir, deadline = os.clock() + window, window = window, onDone = onDone, onTap = onTap }
+local function startQte(kind, dir, window, onDone, onTap, lenient)
+	qte = { kind = kind, dir = dir, deadline = os.clock() + window, window = window, onDone = onDone, onTap = onTap, lenient = lenient }
 	qteFrame.Visible = true
 	timeFill.Size = UDim2.fromScale(1, 1)
 	TweenService:Create(timeFill, TweenInfo.new(window, Enum.EasingStyle.Linear), { Size = UDim2.fromScale(0, 1) }):Play()
@@ -2149,10 +2153,12 @@ local function buildChaseObstacles(C, folder)
 			-- schräger Stamm auf Kopfhöhe (liegt auf einem Felsen/Baum am Rand)
 			local frame = chaseObstacleFrame(C.points, o.s)
 			local side = rng:NextNumber() < 0.5 and -1 or 1
-			local low = (frame * CFrame.new(side * 13, 0.6, 0)).Position
-			local high = (frame * CFrame.new(-side * 13, 6.2, 0.8)).Position
+			local low = (frame * CFrame.new(side * 13, 3.5, 0)).Position
+			local high = (frame * CFrame.new(-side * 13, 3.9, 0.8)).Position
 			beam("LowTrunk", low, high, 1.4)
-			part("LowTrunkRock", Vector3.new(3, 3.4, 3), CFrame.new((frame * CFrame.new(-side * 12.4, 2.2, 0.8)).Position), Color3.fromRGB(90, 90, 86), Enum.Material.Slate)
+			-- liegt auf beiden Seiten auf Felsen
+			part("LowTrunkRock", Vector3.new(3, 3.4, 3), CFrame.new((frame * CFrame.new(-side * 12.4, 1.7, 0.8)).Position), Color3.fromRGB(90, 90, 86), Enum.Material.Slate)
+			part("LowTrunkRock", Vector3.new(3, 3.2, 3), CFrame.new((frame * CFrame.new(side * 12.4, 1.5, 0)).Position), Color3.fromRGB(84, 86, 80), Enum.Material.Slate)
 			for k = 1, 7 do
 				local at = low:Lerp(high, rng:NextNumber(0.25, 0.8))
 				local length = rng:NextNumber(0.8, 2)
@@ -2252,7 +2258,7 @@ local function updateObstacles(C, now, playerS, root)
 						showBigHint(o.kind == "jump" and (UserInputService.TouchEnabled and "SPRINGEN!" or "LEERTASTE – SPRINGEN!") or (UserInputService.TouchEnabled and "DUCKEN!" or "C – DUCKEN!"), 1.4, Color3.fromRGB(255, 210, 60))
 					end
 					prompt = o
-					if (C.pressed[o.kind] or 0) >= o.promptStart then
+					if (C.pressed[o.kind] or 0) >= o.promptStart - 0.45 then
 						o.done = true
 						if o.kind == "jump" and humanoid then
 							humanoid.JumpHeight = 5
@@ -2346,7 +2352,7 @@ local function updateObstacles(C, now, playerS, root)
 							shakeCustom(C, 0.07, 0.8)
 							C.stopUntil = os.clock() + 0.8
 						end
-					end)
+					end, nil, true)
 				end
 			end
 		end
@@ -2368,9 +2374,9 @@ local function updateObstacles(C, now, playerS, root)
 			speed = zoneSpeed
 		end
 		humanoid.WalkSpeed = speed
-		-- ducken: Kamera tiefer
+		-- ducken: Kamera tiefer (das Wackeln kommt in updateChaseFeel dazu)
 		local target = (C.duckUntil and now < C.duckUntil) and Vector3.new(0, -2.4, 0) or Vector3.zero
-		humanoid.CameraOffset = humanoid.CameraOffset:Lerp(target, 0.25)
+		C.duckOffset = (C.duckOffset or Vector3.zero):Lerp(target, 0.25)
 	end
 	-- der Baum fällt
 	local fall = C.treeFall
@@ -2410,14 +2416,15 @@ local function updateChaseFeel(C, now, distance)
 	if beastBreath and beastBreath.Parent then
 		beastBreath.Volume = C.silent and 0 or 0.5 + closeness * 1.8
 	end
-	if not active then
-		local strength = closeness * 0.01
+	-- Wackeln über den Kamera-Versatz (nicht über die Drehung: sonst verzieht sich der Blick)
+	local humanoid = ownHumanoid()
+	if humanoid and C.chasing and not C.caught then
+		local strength = closeness * 0.12
 		if C.camShakeUntil and now < C.camShakeUntil then
-			strength += C.camShake * math.clamp((C.camShakeUntil - now) / C.camShakeDuration, 0, 1)
+			strength += C.camShake * 9 * math.clamp((C.camShakeUntil - now) / C.camShakeDuration, 0, 1)
 		end
-		if strength > 0.0005 then
-			camera.CFrame *= CFrame.Angles(noise(now * 19, 7.1) * strength, noise(now * 23, 8.3) * strength, noise(now * 17, 9.7) * strength * 0.5)
-		end
+		local wobble = Vector3.new(noise(now * 19, 7.1), noise(now * 23, 8.3), 0) * strength
+		humanoid.CameraOffset = (C.duckOffset or Vector3.zero) + wobble
 	end
 end
 
