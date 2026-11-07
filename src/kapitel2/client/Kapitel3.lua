@@ -2188,12 +2188,21 @@ local PLAYER_POSES = {
 local R6_NAMES = { Root = "RootJoint" }
 local playerPose = { weight = 0 }
 
-local function playerMotors()
+local function playerMotors(rescan)
 	local character = player.Character
-	if not character then
+	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+	if not (humanoid and humanoid.RigType == Enum.HumanoidRigType.R15) then
 		return nil
 	end
-	if playerPose.character ~= character then
+	if not rescan then
+		for _, info in playerPose.motors or {} do
+			if not info.motor.Parent then
+				rescan = true
+				break
+			end
+		end
+	end
+	if playerPose.character ~= character or rescan then
 		playerPose.character = character
 		playerPose.motors = {}
 		for _, joint in character:GetDescendants() do
@@ -2212,6 +2221,10 @@ end
 
 -- Haltung einnehmen: einblenden, halten, ausblenden (Sekunden)
 local function playPlayerPose(name, fadeIn, holdTime, fadeOut)
+	-- Ausgangshaltung jetzt neu merken (Avatar kann inzwischen anders skaliert sein)
+	if playerPose.weight == 0 then
+		playerMotors(true)
+	end
 	playerPose.name = name
 	playerPose.start = os.clock()
 	playerPose.fadeIn, playerPose.hold, playerPose.fadeOut = fadeIn, holdTime, fadeOut
@@ -2269,6 +2282,9 @@ local function resetChaseEffects()
 	local humanoid = ownHumanoid()
 	if humanoid then
 		humanoid.CameraOffset = Vector3.zero
+		if humanoid.JumpHeight == 0 or humanoid.JumpHeight > 5 then
+			humanoid.JumpHeight = 2
+		end
 	end
 	resetPlayerPose()
 	for _, o in (chase and chase.obstacles) or {} do
@@ -2477,38 +2493,42 @@ local function updateObstacles(C, now, playerS, root)
 	for _, o in C.obstacles or {} do
 		if (not o.beast or C.form == "beast") and not o.done then
 			if o.kind == "jump" or o.kind == "duck" then
-				if playerS >= o.s - Data.PROMPT_DISTANCE and playerS < o.s + 0.5 then
+				if playerS >= o.s - Data.PROMPT_DISTANCE and (playerS < o.s + 0.5 or o.armed) then
 					if not o.promptStart then
 						o.promptStart = now
 						play("qteSuccess", { Volume = 0.5, PlaybackSpeed = 1.4 })
 					end
 					prompt = o
-					if (C.pressed[o.kind] or 0) >= o.promptStart - 0.45 then
+					-- Taste gedrückt: das Hindernis ist "scharf" (grün); gesprungen bzw. gerutscht
+					-- wird erst direkt davor, damit man wirklich drüber/drunter kommt
+					-- (zu spät = weniger als 2,5 Studs davor: dann reicht es nicht mehr)
+					if not o.armed and (C.pressed[o.kind] or 0) >= o.promptStart - 0.45 and playerS <= o.s - 2.5 then
+						o.armed = true
+						play("qteSuccess", { Volume = 0.7 })
+					end
+					if o.armed and playerS >= o.s - 4 then
 						o.done = true
 						o.passed = true
 						if o.kind == "jump" then
-							-- richtiger Sprung: hoch und nach vorne, Knie angezogen
-							local forward = unit(flat(root.CFrame.LookVector))
-							local _, pathDirection = Data.pointAt(C.points, playerS)
-							forward = unit(flat(pathDirection), forward)
+							-- richtiger Sprung: hoch, Knie angezogen (Sprunghöhe nur jetzt erlaubt)
+							C.jumpUntil = now + 0.8
 							if humanoid then
-								humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+								humanoid.JumpHeight = 5.4
+								humanoid.Jump = true
 							end
-							root.AssemblyLinearVelocity = forward * Data.RUN_SPEED + Vector3.new(0, 44, 0)
-							playPlayerPose("tuck", 0.12, 0.38, 0.2)
+							playPlayerPose("tuck", 0.1, 0.36, 0.2)
 							play("stumble", { Volume = 0.6, PlaybackSpeed = 1.6 })
-							task.delay(0.62, function()
+							task.delay(0.5, function()
 								play("jumpLand", { Volume = 1.3 })
 							end)
 						else
 							-- unter dem Stamm durchrutschen
 							C.duckUntil = now + 1.0
-							C.slideUntil = now + 0.9
-							playPlayerPose("slide", 0.12, 0.7, 0.25)
+							playPlayerPose("slide", 0.06, 0.8, 0.25)
 							play("mudStep", { Volume = 1.4, PlaybackSpeed = 0.7 })
 						end
 					end
-				elseif playerS >= o.s + 0.5 then
+				elseif playerS >= o.s + 0.5 and not o.armed then
 					-- verpasst: stolpern bzw. Kopf anschlagen
 					o.done = true
 					playPlayerPose(o.kind == "jump" and "stumble" or "headHit", 0.08, 0.4, 0.35)
@@ -2599,7 +2619,8 @@ local function updateObstacles(C, now, playerS, root)
 			if near then
 				local urgent = o == prompt
 				o.highlight.FillTransparency = urgent and (0.65 + math.sin(now * 18) * 0.15) or 0.9
-				o.highlight.OutlineColor = o.passed and Color3.fromRGB(120, 255, 120) or Color3.fromRGB(255, 220, 90)
+				o.highlight.OutlineColor = o.armed and Color3.fromRGB(120, 255, 120) or Color3.fromRGB(255, 220, 90)
+				o.highlight.FillColor = o.armed and Color3.fromRGB(120, 255, 120) or Color3.fromRGB(255, 210, 60)
 			elseif o.passed then
 				o.highlight.OutlineColor = Color3.fromRGB(120, 255, 120)
 				o.highlight.FillTransparency = 1
@@ -2609,7 +2630,8 @@ local function updateObstacles(C, now, playerS, root)
 	ui.prompt.Visible = prompt ~= nil
 	if prompt then
 		local touch = UserInputService.TouchEnabled
-		ui.keyBox.Text = prompt.kind == "jump" and (touch and "TIPP" or "LEER") or (touch and "TIPP" or "C")
+		ui.keyBox.Text = prompt.armed and "✓" or (prompt.kind == "jump" and (touch and "TIPP" or "LEER") or (touch and "TIPP" or "C"))
+		ui.keyBox.BackgroundColor3 = prompt.armed and Color3.fromRGB(120, 230, 120) or Color3.fromRGB(255, 210, 60)
 		ui.word.Text = prompt.kind == "jump" and "SPRINGEN!" or "DUCKEN!"
 		local left = math.clamp((prompt.s - playerS) / Data.PROMPT_DISTANCE, 0, 1)
 		ui.bar.Size = UDim2.fromScale(left, 1)
@@ -2634,6 +2656,10 @@ local function updateObstacles(C, now, playerS, root)
 			speed = zoneSpeed
 		end
 		humanoid.WalkSpeed = speed
+		-- (normales Hüpfen aus: gesprungen wird nur über die Bäume)
+		if not (C.jumpUntil and now < C.jumpUntil) then
+			humanoid.JumpHeight = 0
+		end
 		-- ducken: Kamera tiefer (das Wackeln kommt in updateChaseFeel dazu)
 		local target = (C.duckUntil and now < C.duckUntil) and Vector3.new(0, -2.4, 0) or Vector3.zero
 		C.duckOffset = (C.duckOffset or Vector3.zero):Lerp(target, 0.25)

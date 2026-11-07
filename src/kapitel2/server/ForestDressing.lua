@@ -220,9 +220,17 @@ function ForestDressing.terrain(points, free, from, to)
 		local center, direction = Data.pointAt(points, s)
 		local right = Vector3.new(-direction.Z, 0, direction.X)
 		local frame = CFrame.lookAt(center, center + Vector3.new(direction.X, 0, direction.Z))
+		local wet = false -- (kein Gras im Bach und im Schlamm)
+		for _, obstacle in Data.OBSTACLES do
+			local a = obstacle.from or (obstacle.length and obstacle.s - obstacle.length / 2 - 4)
+			local b = obstacle.to or (obstacle.length and obstacle.s + obstacle.length / 2 + 4)
+			if a and b and s >= a - 3 and s <= b + 3 then
+				wet = true
+			end
+		end
 		for _, side in { -1, 1 } do
 			local edge = center + right * side * 6.8
-			if free(edge) then
+			if free(edge) and not wet then
 				terrain:FillBlock(frame * CFrame.new(side * 6.8, -4, 0), Vector3.new(3.4, 8, 4.5), Enum.Material.Grass)
 			end
 		end
