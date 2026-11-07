@@ -111,9 +111,72 @@ local FALLBACK = {
 	endingMusic = { "music", 1 },
 }
 
+-- Mehrere IDs für einen Sound (Liste in Config.SOUNDS): alle laufen übereinander, jede
+-- etwas versetzt, mit anderer Tonhöhe, gedämpft und mit Hall – so wird es zu einem
+-- Flüster-Chor. Die erste ist der "Haupt-Sound": Lautstärke, Start, Stopp und Löschen
+-- gelten für alle.
+local function layerSounds(main, ids, parent, props)
+	local layers = {}
+	for i = 2, #ids do
+		local layer = Instance.new("Sound")
+		layer.Name = main.Name .. "Layer" .. i
+		layer.SoundId = ids[i]
+		layer.RollOffMinDistance = main.RollOffMinDistance
+		layer.RollOffMaxDistance = main.RollOffMaxDistance
+		layer.Looped = main.Looped
+		layer.PlaybackSpeed = main.PlaybackSpeed * (0.9 + 0.2 * ((i * 0.37) % 1))
+		layer.Parent = parent
+		table.insert(layers, layer)
+	end
+	local all = { main }
+	for _, layer in layers do
+		table.insert(all, layer)
+	end
+	for _, sound in all do
+		local eq = Instance.new("EqualizerSoundEffect")
+		eq.LowGain, eq.MidGain, eq.HighGain = -12, -2, 3
+		eq.Parent = sound
+		local reverb = Instance.new("ReverbSoundEffect")
+		reverb.DecayTime, reverb.WetLevel, reverb.DryLevel = 2.6, -2, -4
+		reverb.Parent = sound
+	end
+	local share = 1 / math.sqrt(#all)
+	local function sync()
+		for _, layer in layers do
+			layer.Volume = main.Volume * share
+		end
+	end
+	main:GetPropertyChangedSignal("Volume"):Connect(sync)
+	main.Played:Connect(function()
+		for i, layer in layers do
+			task.delay(i * 0.37, function()
+				if layer.Parent and main.IsPlaying then
+					layer:Play()
+				end
+			end)
+		end
+	end)
+	main.Stopped:Connect(function()
+		for _, layer in layers do
+			layer:Stop()
+		end
+	end)
+	main.Destroying:Connect(function()
+		for _, layer in layers do
+			layer:Destroy()
+		end
+	end)
+	sync()
+end
+
 local function makeSound(key, parent, props)
 	local id = Config.SOUNDS[key] or ""
 	local speed = 1
+	local ids
+	if type(id) == "table" then
+		ids = id
+		id = ids[1] or ""
+	end
 	if id == "" and FALLBACK[key] then
 		id = Config.SOUNDS[FALLBACK[key][1]] or ""
 		speed = FALLBACK[key][2]
@@ -131,6 +194,9 @@ local function makeSound(key, parent, props)
 	end
 	sound.PlaybackSpeed *= speed
 	sound.Parent = parent or SoundService
+	if ids and #ids > 1 then
+		layerSounds(sound, ids, sound.Parent, props)
+	end
 	return sound
 end
 

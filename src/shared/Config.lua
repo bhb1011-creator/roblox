@@ -88,7 +88,7 @@ Config.SOUNDS = {
 	knock = "", -- knock.ogg (Klopfen ans Autofenster)
 	twig = "", -- twig_snap.ogg (knackender Ast im Wald)
 	growl = "", -- beast_growl.ogg (das Biest knurrt im Wald)
-	roar = "", -- beast_roar.ogg (das Biest brüllt und jagt einen)
+	roar = "rbxassetid://9006117664", -- (vorerst derselbe wie sarpRoar) beast_roar.ogg (das Biest brüllt und jagt einen)
 	beastBreath = "", -- beast_breath_loop.ogg (Atmen des Biests)
 	beastStep = "", -- beast_step.ogg (schwere Schritte des Biests)
 	-- Umgebung
@@ -121,30 +121,31 @@ Config.SOUNDS = {
 	doorBurst = "", -- door_burst.ogg (Tür wird aufgerissen und knallt gegen die Wand)
 	sarpStep = "", -- sarp_step.ogg (schwerer, schleifender Schritt)
 	sarpBreath = "", -- sarp_breath.ogg (rasselndes Atmen ganz nah)
-	jumpscare = "", -- jumpscare.ogg (lauter Schreck-Ton mit Schrei)
+	jumpscare = "rbxassetid://130990524400761", -- jumpscare.ogg (lauter Schreck-Ton mit Schrei)
 	-- Die Flucht (Kapitel 2)
 	fuse = "", -- fuse.ogg (Zündschnur zischt, ca. 5 Sekunden)
 	explosion = "", -- explosion.ogg (Explosion im Raum, dumpf und laut)
-	sarpRoar = "", -- sarp_roar.ogg (Sarp brüllt wütend, durchs ganze Haus)
+	sarpRoar = "rbxassetid://9006117664", -- sarp_roar.ogg (Sarp brüllt wütend, durchs ganze Haus)
 	secretDoor = "", -- secret_door_open.ogg (schwere alte Tür hinter dem Regal knarrt auf)
 	-- Kapitel 3 (solange leer: ein vorhandener Sound als Ersatz, manche bleiben still)
 	chapterHit = "rbxassetid://136966836614941", -- chapter3_hit.ogg (TEST: gruseliger Sound, wird noch getauscht) (dumpfer Schlag, wenn "KAPITEL 3" erscheint)
-	ritualWhisper = "", -- ritual_whisper_loop.ogg (die Familie flüstert im Chor, Schleife)
+	-- (mehrere IDs = alle übereinander, gedämpft und mit Hall: klingt wie ein Flüster-Chor)
+	ritualWhisper = { "rbxassetid://115345760128165", "rbxassetid://74868894015573", "rbxassetid://95274202843162", "rbxassetid://127343335777838" }, -- die Familie flüstert im Chor, Schleife
 	neckCrack = "", -- neck_crack.ogg (Genick knackt, wenn ein Kopf herumruckt)
 	ritualSting = "", -- ritual_sting.ogg (Schreck-Ton: Kerzen gehen aus, Sarp steht im Eingang)
 	clawSwipe = "", -- claw_swipe.ogg (Klauen sausen durch die Luft)
 	clawHit = "", -- claw_hit.ogg (Klauen treffen einen)
-	sarpGrab = "", -- sarp_grab.ogg (er packt einen, Keuchen und Knurren)
+	sarpGrab = "rbxassetid://84954592162666", -- sarp_grab.ogg (er packt einen, Keuchen und Knurren)
 	bodyFall = "", -- body_fall.ogg (man fällt hart auf den Steinboden)
 	candleFall = "", -- candelabrum_fall.ogg (eiserner Kerzenständer kippt und scheppert)
 	fireBurst = "", -- fire_burst.ogg (Feuer fängt schlagartig an)
-	sarpBurn = "", -- sarp_burn_scream.ogg (Sarp schreit, als er brennt)
+	sarpBurn = "rbxassetid://118927754771809", -- sarp_burn_scream.ogg (Sarp schreit, als er brennt)
 	puppetCollapse = "", -- puppet_collapse.ogg (ein Körper sackt zu Boden, wie eine Puppe)
 	qteSuccess = "", -- qte_success.ogg (kurzer Ton: geschafft)
 	qteFail = "", -- qte_fail.ogg (kurzer Ton: verpasst)
 	transformCrack = "", -- transform_crack.ogg (Knochen knacken und brechen bei der Verwandlung)
 	runBreath = "", -- run_breath_loop.ogg (man keucht beim Rennen, Schleife)
-	chaseMusic = "", -- chase_music_loop.ogg (Musik bei der Flucht durch den Wald, Schleife)
+	chaseMusic = "rbxassetid://71374905925238", -- chase_music_loop.ogg (Musik bei der Flucht durch den Wald, Schleife)
 	bridgeCrack = "", -- bridge_crack.ogg (Holz und Seile knarren und reißen)
 	bridgeCollapse = "", -- bridge_collapse.ogg (die Brücke bricht, Bretter fallen in die Tiefe)
 	-- Kapitel 3, die Verfolgung
@@ -157,7 +158,7 @@ Config.SOUNDS = {
 	mudStep = "", -- mud_step.ogg (schmatzender Schritt im Schlamm)
 	splash = "", -- splash.ogg (Schritt ins Wasser, Platschen)
 	bushRustle = "", -- bush_rustle.ogg (Gebüsch raschelt heftig, gleich neben einem)
-	beastLunge = "", -- beast_lunge.ogg (Kreischen, als das Biest aus dem Gebüsch springt)
+	beastLunge = "rbxassetid://84954592162666", -- (vorerst derselbe wie sarpGrab) beast_lunge.ogg (Kreischen, als das Biest aus dem Gebüsch springt)
 	-- Kapitel 3, das Ende: Sarps Hütte
 	cabinAmbience = "", -- cabin_ambience_loop.ogg (leises Knarren der Hütte, Wind draußen, Schleife)
 	fireCrackle = "", -- fire_crackle_loop.ogg (Glut im Kamin knistert, Schleife)
@@ -166,7 +167,7 @@ Config.SOUNDS = {
 	phoneRing = "", -- phone_ring_loop.ogg (Rufton im Hörer: tuut … tuut …, Schleife)
 	phoneWrong = "", -- phone_wrong.ogg (falsche Nummer: Besetztzeichen)
 	phoneHangup = "", -- phone_hangup.ogg (Hörer wird aufgelegt)
-	hutWhisper = "", -- hut_whisper_loop.ogg (leises Flüstern beim Spiegel und beim Foto, Schleife)
+	hutWhisper = { "rbxassetid://115345760128165", "rbxassetid://74868894015573", "rbxassetid://95274202843162", "rbxassetid://127343335777838" }, -- (dieselben wie ritualWhisper) hut_whisper_loop.ogg (leises Flüstern beim Spiegel und beim Foto, Schleife)
 	lightFlicker = "", -- light_flicker.ogg (Lampen flackern, Brummen, kurz)
 	mirrorScare = "", -- mirror_scare.ogg (Schreck-Ton: das Biest steht hinter einem)
 	photoScare = "", -- photo_scare.ogg (Schreck-Ton: das Biest springt aus dem Foto)
@@ -210,7 +211,7 @@ Config.PLAYER_TTS = false
 Config.TEST_START_KAPITEL2 = "kapitel3"
 -- Versionsnummer: steht beim Laden auf dem Bildschirm und im Output. So sieht man sofort,
 -- ob in Studio wirklich der neueste Stand läuft (nach "git pull").
-Config.BUILD = "K2-2026-11-07j"
+Config.BUILD = "K2-2026-11-07k"
 Config.VOICES = {
 	-- Sarp: etwas tiefer, langsam, ruhig – mit Bass, weniger Höhen und dunklem Hall
 	sarp = {
