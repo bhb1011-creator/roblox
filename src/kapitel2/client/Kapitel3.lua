@@ -89,6 +89,8 @@ local FALLBACK = {
 	bushRustle = { "footstep", 1.6 },
 	beastLunge = { "sting", 0.75 },
 	beastBreath = { "radioStatic", 0.4 },
+	doorCreak = { "footstep", 0.5 },
+	doorSlam = { "footstep", 0.35 },
 	-- das Ende (Sarps Hütte)
 	cabinAmbience = { "wind", 0.8 },
 	fireCrackle = { "radioStatic", 0.35 },
@@ -1047,8 +1049,9 @@ local function stareAngles(rig, target)
 		return 0, 0
 	end
 	local relative = torso.CFrame:Inverse() * target - Vector3.new(0, torso.Size.Y / 2 + head.Size.Y / 2, 0)
-	local yaw = math.clamp(math.atan2(-relative.X, -relative.Z), -2.95, 2.95)
-	local pitch = math.clamp(math.atan2(relative.Y, Vector2.new(relative.X, relative.Z).Magnitude), -0.7, 0.7)
+	-- (höchstens etwa 70° zur Seite: sonst sieht der Hals verdreht aus)
+	local yaw = math.clamp(math.atan2(-relative.X, -relative.Z), -1.2, 1.2)
+	local pitch = math.clamp(math.atan2(relative.Y, Vector2.new(relative.X, relative.Z).Magnitude), -0.5, 0.5)
 	return yaw, pitch
 end
 
@@ -1179,7 +1182,7 @@ local function qteInput(kind, value)
 		local size = timingRing.AbsoluteSize.X
 		local target = timingTarget.AbsoluteSize.X
 		local ratio = target > 0 and size / target or 0
-		finishQte(ratio >= 0.78 and ratio <= 1.3)
+		finishQte(ratio >= 0.6 and ratio <= 1.55)
 	end
 end
 
@@ -1443,9 +1446,10 @@ function handlers.ritual(message)
 				whisperCaption(whispers[4] or "...", 2)
 			end
 		end)
-		-- die Köpfe rucken herum, einer nach dem anderen – zur Kamera
+		-- die Köpfe rucken herum, einer nach dem anderen – zu einem selbst (nicht zur Kamera,
+		-- die um den Kreis fährt: sonst würden sich die Hälse überdrehen)
 		local cameraPoint = function()
-			return camera.CFrame.Position
+			return S.eye
 		end
 		for i, delay in { 3.2, 4.3, 5.1, 5.9 } do
 			task.delay(delay, function()
@@ -3861,6 +3865,12 @@ function handlers.calling(message)
 	end)
 end
 
+function handlers.door(message)
+	if message.position then
+		playAt(message.open and "doorCreak" or "doorSlam", message.position, { Volume = 1.6 })
+	end
+end
+
 function handlers.hangUp()
 	local H = hutState
 	if H and H.phone then
@@ -3920,6 +3930,11 @@ function handlers.rest()
 		-- das Auto steht schon da (man sieht es erst, wenn es hell wird)
 		local car = buildPoliceCar(localFolder or workspace)
 		if H.carStop then
+			local params = RaycastParams.new()
+			params.FilterType = Enum.RaycastFilterType.Include
+			params.FilterDescendantsInstances = { workspace.Terrain }
+			local hit = workspace:Raycast(H.carStop.Position + Vector3.new(0, 15, 0), Vector3.new(0, -40, 0), params)
+			H.carStop += Vector3.new(0, (hit and hit.Position.Y or H.carStop.Y) - H.carStop.Y, 0)
 			car.model:PivotTo(H.carStop)
 		end
 		H.car = car
@@ -3943,6 +3958,8 @@ function handlers.rest()
 		setBlack(0, 0.5)
 		at(Data.END_OUTSIDE)
 		local outside = H.endOutside or camera.CFrame
+		H.outsideShot = true
+		H.dark = 0
 		still(outside, 0)
 		setBlack(1, 0.9)
 		local carPosition = car.body.Position
@@ -3960,10 +3977,19 @@ function handlers.rest()
 		shot(function()
 			return CFrame.lookAt(outside.Position, car.body.Position + UP * 1.5)
 		end, 1.2, "inout")
+		local groundParams = RaycastParams.new()
+		groundParams.FilterType = Enum.RaycastFilterType.Include
+		groundParams.FilterDescendantsInstances = { workspace.Terrain }
 		while os.clock() - started < Data.END_FADE + 2.2 do
 			local t = os.clock() - driveStart
 			local distance = 0.5 * 5 * math.min(t, 3) ^ 2 + math.max(t - 3, 0) * 15
-			car.model:PivotTo(from * CFrame.new(0, 0, -distance))
+			-- immer auf dem Boden (Terrain unter dem Auto messen)
+			local pivot = from * CFrame.new(0, 0, -distance)
+			local hit = workspace:Raycast(pivot.Position + Vector3.new(0, 15, 0), Vector3.new(0, -40, 0), groundParams)
+			if hit then
+				pivot += Vector3.new(0, hit.Position.Y - pivot.Y, 0)
+			end
+			car.model:PivotTo(pivot)
 			if os.clock() - started >= Data.END_FADE and not H.fading then
 				H.fading = true
 				setBlack(0, 2.2)
@@ -3992,6 +4018,15 @@ local function updateHut(now)
 		local center = H.mirror and H.phone and (H.mirror.Position + H.phone.Position) / 2
 		local insideHut = center and flat(root.Position - center).Magnitude < 13
 		H.moonLight.Brightness += ((insideHut and 0 or 1.1) - H.moonLight.Brightness) * 0.08
+		-- drinnen dunkler (nur Kerzen, Lampe, Kamin); für die Außenaufnahme am Ende wieder hell
+		local want = (insideHut and not H.outsideShot) and 1 or 0
+		H.dark = (H.dark or 0) + (want - (H.dark or 0)) * 0.05
+		if savedLighting then
+			local d = H.dark
+			Lighting.Ambient = Color3.fromRGB(58, 62, 74):Lerp(Color3.fromRGB(12, 10, 10), d)
+			Lighting.OutdoorAmbient = Color3.fromRGB(88, 96, 120):Lerp(Color3.fromRGB(26, 28, 36), d)
+			Lighting.ExposureCompensation = savedLighting.ExposureCompensation + 0.35 - d * 0.55
+		end
 	end
 	-- Flackern (Kerzen, Kamin) – bei einer Halluzination kurz fast aus
 	local blackout = H.blackoutUntil and now < H.blackoutUntil

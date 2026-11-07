@@ -319,7 +319,9 @@ local function buildForest()
 	-- Die Schlucht: tief, unten schmaler (V-förmig), die Wände unregelmäßig – Vorsprünge
 	-- aus verschiedenem Fels, Höhlen, Moos, ein zerklüfteter Rand; unten ein Fluss mit
 	-- Geröll, darüber Nebel. (In der Mitte unter der Brücke bleibt Platz zum Fallen.)
-	terrain:FillBlock(ravineFrame * CFrame.new(0, -60, 0), Vector3.new(280, 120, bridgeLength + 70), Enum.Material.Slate)
+	terrain:FillBlock(ravineFrame * CFrame.new(0, -60, 0), Vector3.new(360, 120, bridgeLength + 70), Enum.Material.Slate)
+	-- (die oberste Schicht am Rand auch Stein, nicht Gras/Erde)
+	terrain:FillBlock(ravineFrame * CFrame.new(0, -2, 0), Vector3.new(360, 4, bridgeLength + 6), Enum.Material.Rock)
 	local RAVINE_DEPTH = 112
 	local function ravineWidth(depth)
 		return (bridgeLength - 4) * (1 - math.clamp(depth / RAVINE_DEPTH, 0, 1) * 0.5)
@@ -331,7 +333,7 @@ local function buildForest()
 	terrain:FillBlock(ravineFrame * CFrame.new(0, -RAVINE_DEPTH + 2, 0), Vector3.new(340, 6, ravineWidth(RAVINE_DEPTH) + 2), Enum.Material.Water)
 	do
 		local rocks = Random.new(23)
-		local materials = { Enum.Material.Rock, Enum.Material.Slate, Enum.Material.Basalt, Enum.Material.Rock, Enum.Material.Limestone }
+		local materials = { Enum.Material.Rock, Enum.Material.Slate, Enum.Material.Basalt, Enum.Material.Rock }
 		local count = 0
 		for _, side in { -1, 1 } do
 			for x = -150, 150, 6 do
@@ -345,13 +347,10 @@ local function buildForest()
 					local py = -depth + rocks:NextNumber(-3, 3)
 					local roll = rocks:NextNumber()
 					if roll < 0.5 and math.abs(px) > 10 then
-						-- Vorsprung (ragt in die Schlucht), manchmal mit Moos obendrauf
+						-- Felsvorsprung (ragt in die Schlucht)
 						local radius = rocks:NextNumber(2.5, 7)
 						local center = ravineFrame * Vector3.new(px, py, wall - side * rocks:NextNumber(0, radius * 0.55))
 						terrain:FillBall(center, radius, materials[rocks:NextInteger(1, #materials)])
-						if rocks:NextNumber() < 0.2 then
-							terrain:FillBall(center + Vector3.new(0, radius * 0.75, 0), radius * 0.45, Enum.Material.Grass)
-						end
 					elseif roll < 0.72 and depth > 10 then
 						-- Höhle / Nische in der Wand
 						terrain:FillBall(ravineFrame * Vector3.new(px, py, wall + side * rocks:NextNumber(0.5, 2)), rocks:NextNumber(2, 5), Enum.Material.Air)
@@ -841,6 +840,16 @@ function Kapitel3.run(kit)
 			state.resting = true
 		end)
 
+		-- die Haustür: auf- und zumachen
+		local doorPrompt = prompt(hut.doorPrompt, "Tür schließen", "Tür")
+		doorPrompt.MaxActivationDistance = 8
+		doorPrompt.Triggered:Connect(function()
+			local open = not hut.doorOpen
+			hut.setDoor(open)
+			doorPrompt.ActionText = open and "Tür schließen" or "Tür öffnen"
+			event:FireAllClients({ type = "k3", step = "door", open = open, position = hut.door })
+		end)
+
 		local seen, entered = false, false
 		while not state.resting do
 			for _, player in Players:GetPlayers() do
@@ -870,6 +879,7 @@ function Kapitel3.run(kit)
 		-- Ende: ausruhen – später kommt die Polizei, man fährt mit (das Auto fährt weg)
 		phonePrompt.Enabled = false
 		bedPrompt.Enabled = false
+		doorPrompt.Enabled = false
 		ctx.setMovement(false)
 		for _, player in Players:GetPlayers() do
 			local root = rootOf(player)

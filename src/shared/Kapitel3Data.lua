@@ -12,9 +12,9 @@ Kapitel3Data.INTRO = 21.5
 -- aus, window = so lange hat man Zeit, outcome = so lange dauert danach die Animation.
 Kapitel3Data.ORDER = { "dodge", "struggle", "timing" }
 Kapitel3Data.QTE = {
-	dodge = { windup = 1.0, window = 1.25, outcome = 2.4 }, -- Pfeil: A oder D
-	struggle = { windup = 1.2, window = 1.6, taps = 1, outcome = 2.7 }, -- E drücken
-	timing = { windup = 1.6, window = 1.8, outcome = 3.4 }, -- Kreis schrumpft: Leertaste
+	dodge = { windup = 1.0, window = 1.9, outcome = 2.4 }, -- Pfeil: A oder D
+	struggle = { windup = 1.2, window = 2.3, taps = 1, outcome = 2.7 }, -- E drücken
+	timing = { windup = 1.6, window = 2.6, outcome = 3.4 }, -- Kreis schrumpft: Leertaste
 }
 Kapitel3Data.MAX_MISSES = 1 -- so viele Events darf man verpassen (beim zweiten: Game Over)
 
@@ -63,7 +63,7 @@ Kapitel3Data.STUMBLE_TIME = 0.75 -- verpasst: so lange kommt man kaum vorwärts
 Kapitel3Data.MUD_SPEED = 11.5
 Kapitel3Data.CREEK_SPEED = 10
 Kapitel3Data.SIDE_SILENCE = 30 -- so viele Studs vor dem Angriff wird es still
-Kapitel3Data.SIDE_WINDOW = 1.15 -- so lange hat man Zeit zum Ausweichen
+Kapitel3Data.SIDE_WINDOW = 1.5 -- so lange hat man Zeit zum Ausweichen
 Kapitel3Data.TREE_BLOCK = 1.5 -- so lange hält der umgestürzte Baum das Biest auf
 
 -- Das Ende in Sarps Hütte

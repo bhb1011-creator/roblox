@@ -109,7 +109,7 @@ function SarpHut.build(parent, road, ground)
 		flame.Size = Vector3.new(0.12, 0.24, 0.12)
 		-- Wachs-Tropfen
 		ball("Wax", 0.14, at * CFrame.new(0.13, height * 0.7, 0), Color3.fromRGB(226, 214, 190), M.SmoothPlastic)
-		light("CandleLight", at * CFrame.new(0, height + 0.4, 0), Color3.fromRGB(255, 170, 90), range or 9, 0.9)
+		light("CandleLight", at * CFrame.new(0, height + 0.4, 0), Color3.fromRGB(255, 170, 90), (range or 9) * 0.8, 0.55)
 		return c
 	end
 
@@ -247,16 +247,46 @@ function SarpHut.build(parent, road, ground)
 	deco("DoorFrame", Vector3.new(0.35, 7.3, 1.2), L(2.15, FLOOR + 3.65, -0.5), frameColor, M.Wood)
 	deco("DoorFrame", Vector3.new(4.7, 0.4, 1.2), L(0, FLOOR + 7.3, -0.5), frameColor, M.Wood)
 	deco("Threshold", Vector3.new(4.2, 0.14, 1.2), L(0, FLOOR + 0.07, -0.5), PLANK_DARK, M.Wood)
-	local hinge = L(-1.95, FLOOR + 3.6, -0.95) * CFrame.Angles(0, math.rad(78), 0)
+	-- die Tür (man kann sie auf- und zumachen; am Anfang steht sie offen)
+	local hingeClosed = L(-1.95, FLOOR + 3.6, -0.6)
+	local doorParts = {}
+	local function doorPart(part)
+		table.insert(doorParts, { part = part, offset = hingeClosed:ToObjectSpace(part.CFrame) })
+		return part
+	end
 	for k = 0, 4 do
-		deco("Door", Vector3.new(0.76, 7.1, 0.22), hinge * CFrame.new(0.4 + k * 0.78, 0, 0), shade(PLANK, 0.3), M.WoodPlanks)
+		doorPart(deco("Door", Vector3.new(0.76, 7.1, 0.22), hingeClosed * CFrame.new(0.4 + k * 0.78, 0, 0), shade(PLANK, 0.3), M.WoodPlanks))
 	end
 	for _, y in { -2.6, 0, 2.6 } do
-		deco("DoorBrace", Vector3.new(3.8, 0.4, 0.12), hinge * CFrame.new(1.95, y, -0.16), PLANK_DARK, M.Wood)
+		doorPart(deco("DoorBrace", Vector3.new(3.8, 0.4, 0.12), hingeClosed * CFrame.new(1.95, y, -0.16), PLANK_DARK, M.Wood))
 	end
-	deco("DoorBrace", Vector3.new(0.35, 5.6, 0.12), hinge * CFrame.new(1.95, -1.3, -0.17) * CFrame.Angles(0, 0, math.rad(42)), PLANK_DARK, M.Wood)
-	ball("DoorKnob", 0.26, hinge * CFrame.new(3.6, 0, 0.2), IRON, M.Metal)
-	deco("Latch", Vector3.new(0.8, 0.12, 0.08), hinge * CFrame.new(3.4, 0.3, 0.18), IRON, M.Metal)
+	doorPart(deco("DoorBrace", Vector3.new(0.35, 5.6, 0.12), hingeClosed * CFrame.new(1.95, -1.3, -0.17) * CFrame.Angles(0, 0, math.rad(42)), PLANK_DARK, M.Wood))
+	doorPart(ball("DoorKnob", 0.26, hingeClosed * CFrame.new(3.6, 0, 0.2), IRON, M.Metal))
+	doorPart(ball("DoorKnob", 0.26, hingeClosed * CFrame.new(3.6, 0, -0.2), IRON, M.Metal))
+	doorPart(deco("Latch", Vector3.new(0.8, 0.12, 0.08), hingeClosed * CFrame.new(3.4, 0.3, 0.18), IRON, M.Metal))
+	local doorCollider = doorPart(block("DoorCollider", Vector3.new(3.9, 7.1, 0.3), hingeClosed * CFrame.new(1.95, 0, 0), PLANK, M.Wood, { Transparency = 1 }))
+	local doorAngle = 0
+	local function placeDoor(angle)
+		doorAngle = angle
+		local hinge = hingeClosed * CFrame.Angles(0, angle, 0)
+		for _, item in doorParts do
+			item.part.CFrame = hinge * item.offset
+		end
+	end
+	placeDoor(math.rad(78))
+	info.doorPrompt = doorCollider
+	info.doorOpen = true
+	-- Tür langsam auf- oder zudrehen
+	function info.setDoor(open)
+		info.doorOpen = open
+		local from, to = doorAngle, open and math.rad(78) or 0
+		task.spawn(function()
+			for k = 1, 15 do
+				placeDoor(from + (to - from) * (k / 15) ^ (open and 1 or 2))
+				task.wait(0.03)
+			end
+		end)
+	end
 	-- Riegel innen (abgebrochen, liegt am Boden)
 	deco("BrokenBar", Vector3.new(3.4, 0.3, 0.3), L(-3.6, FLOOR + 0.18, -2.2) * CFrame.Angles(0, math.rad(25), 0), PLANK_DARK, M.Wood)
 
@@ -349,7 +379,7 @@ function SarpHut.build(parent, road, ground)
 	for k = -1, 1, 2 do
 		cyl("FireLog", 1.8, 0.4, L(-HALF_W + 2.2, FLOOR + 0.5, chimneyZ + k * 0.3) * CFrame.Angles(0, math.rad(90 + k * 15), 0), Color3.fromRGB(30, 22, 18), M.Wood, { CanCollide = false })
 	end
-	local _, fireLight = light("FireLight", L(-HALF_W + 3, FLOOR + 1.2, chimneyZ), Color3.fromRGB(255, 120, 50), 18, 1.4)
+	local _, fireLight = light("FireLight", L(-HALF_W + 3, FLOOR + 1.2, chimneyZ), Color3.fromRGB(255, 120, 50), 15, 0.95)
 	fireLight.Name = "HutFire"
 	deco("Mantel", Vector3.new(1.1, 0.3, 5.4), L(-HALF_W + 2.3, FLOOR + 5.35, chimneyZ), LOG_DARK, M.Wood)
 	-- auf dem Sims: Kerzen, Gläser, eine kleine Holzpuppe (wie im Ritualsaal)
@@ -446,7 +476,7 @@ function SarpHut.build(parent, road, ground)
 	ball("LampGlass", 0.75, lamp * CFrame.new(0, 0.85, 0), Color3.fromRGB(255, 220, 160), M.Glass)
 	deco("LampFlame", Vector3.new(0.12, 0.3, 0.12), lamp * CFrame.new(0, 0.8, 0), Color3.fromRGB(255, 190, 90), M.Neon)
 	cyl("LampTop", 0.25, 0.4, lamp * CFrame.new(0, 1.3, 0) * CFrame.Angles(0, 0, math.rad(90)), Color3.fromRGB(60, 50, 40), M.Metal, { CanCollide = false })
-	light("TableLamp", lamp * CFrame.new(0, 1, 0), WARM, 22, 1.3)
+	light("TableLamp", lamp * CFrame.new(0, 1, 0), WARM, 15, 0.7)
 	cyl("Plate", 0.08, 0.9, table0 * CFrame.new(-1.1, 3.06, 0.5) * CFrame.Angles(0, 0, math.rad(90)), Color3.fromRGB(200, 196, 186), M.SmoothPlastic, { CanCollide = false })
 	ball("Bone", 0.25, table0 * CFrame.new(-1.1, 3.18, 0.5), Color3.fromRGB(210, 200, 180), M.SmoothPlastic)
 	cyl("Mug", 0.45, 0.35, table0 * CFrame.new(-0.3, 3.25, 0.7) * CFrame.Angles(0, 0, math.rad(90)), Color3.fromRGB(90, 60, 50), M.SmoothPlastic, { CanCollide = false })
@@ -558,7 +588,7 @@ function SarpHut.build(parent, road, ground)
 	deco("LanternHook", Vector3.new(0.08, 0.08, 0.7), phoneFrame * CFrame.new(-0.3, 2.6, -0.3), IRON, M.Metal)
 	deco("Lantern", Vector3.new(0.5, 0.6, 0.5), lantern, Color3.fromRGB(255, 210, 150), M.Glass, { Transparency = 0.3 })
 	deco("LanternTop", Vector3.new(0.6, 0.15, 0.6), lantern * CFrame.new(0, 0.38, 0), IRON, M.Metal)
-	light("PhoneLantern", lantern, WARM, 12, 1)
+	light("PhoneLantern", lantern, WARM, 9, 0.55)
 	info.phone = phone
 	info.phoneKeys = keys
 	info.phoneFrame = phoneFrame
@@ -758,7 +788,7 @@ function SarpHut.build(parent, road, ground)
 	deco("DoorLantern", Vector3.new(0.55, 0.75, 0.55), doorLantern, Color3.fromRGB(255, 210, 150), M.Glass, { Transparency = 0.25 })
 	deco("DoorLanternFlame", Vector3.new(0.14, 0.3, 0.14), doorLantern, Color3.fromRGB(255, 190, 90), M.Neon)
 	deco("DoorLanternTop", Vector3.new(0.7, 0.18, 0.7), doorLantern * CFrame.new(0, 0.46, 0), IRON, M.Metal)
-	light("PorchLight", doorLantern * CFrame.new(0, 0, 0.6), WARM, 22, 1.5)
+	light("PorchLight", doorLantern * CFrame.new(0, 0, 0.6), WARM, 18, 1.1)
 	-- Schaukelstuhl, Fußmatte, Eimer
 	local rocker = L(-4.4, FLOOR, 1.4) * CFrame.Angles(0, math.rad(200), 0)
 	deco("RockerSeat", Vector3.new(1.6, 0.2, 1.6), rocker * CFrame.new(0, 1.6, 0), PLANK, M.Wood)
@@ -999,13 +1029,14 @@ function SarpHut.build(parent, road, ground)
 	-- wo die Spieler zum Schluss stehen (vor der Tür auf der Veranda) und wo das Auto hält
 	info.porch = L(0, FLOOR, 2)
 	info.door = L(0, FLOOR + 3.5, -0.5).Position
-	info.carStop = onGround(road * CFrame.new(-2, 0, SarpHut.ROAD_Z) * CFrame.Angles(0, math.rad(-90), 0)) -- Blick nach +X
+	-- (fährt danach Richtung -X weg: auf der anderen Seite liegt hinter dem Wald die Schlucht)
+	info.carStop = onGround(road * CFrame.new(2, 0, SarpHut.ROAD_Z) * CFrame.Angles(0, math.rad(90), 0)) -- Blick nach -X
 	info.roadFrom = road * CFrame.new(-150, 0, SarpHut.ROAD_Z)
 	info.roadTo = road * CFrame.new(150, 0, SarpHut.ROAD_Z)
 	info.bedView = bed * CFrame.new(0, 3.6, 0.6)
 	-- Kamera beim Ende: drinnen (Blick zur offenen Tür, Blaulicht) und draußen über die Straße
 	info.endInside = CFrame.lookAt(L(-3.5, FLOOR + 4.6, -15).Position, L(0.5, FLOOR + 3.4, 0).Position)
-	info.endOutside = CFrame.lookAt((road * CFrame.new(-23, 6, -1)).Position, (road * CFrame.new(-2, 3, -9)).Position)
+	info.endOutside = CFrame.lookAt((road * CFrame.new(24, 6, -3)).Position, (road * CFrame.new(2, 3, -9)).Position)
 	return info
 end
 
