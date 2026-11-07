@@ -128,7 +128,7 @@ Config.SOUNDS = {
 	sarpRoar = "", -- sarp_roar.ogg (Sarp brüllt wütend, durchs ganze Haus)
 	secretDoor = "", -- secret_door_open.ogg (schwere alte Tür hinter dem Regal knarrt auf)
 	-- Kapitel 3 (solange leer: ein vorhandener Sound als Ersatz, manche bleiben still)
-	chapterHit = "", -- chapter3_hit.ogg (dumpfer Schlag, wenn "KAPITEL 3" erscheint)
+	chapterHit = "rbxassetid://136966836614941", -- chapter3_hit.ogg (TEST: gruseliger Sound, wird noch getauscht) (dumpfer Schlag, wenn "KAPITEL 3" erscheint)
 	ritualWhisper = "", -- ritual_whisper_loop.ogg (die Familie flüstert im Chor, Schleife)
 	neckCrack = "", -- neck_crack.ogg (Genick knackt, wenn ein Kopf herumruckt)
 	ritualSting = "", -- ritual_sting.ogg (Schreck-Ton: Kerzen gehen aus, Sarp steht im Eingang)
@@ -210,7 +210,7 @@ Config.PLAYER_TTS = false
 Config.TEST_START_KAPITEL2 = "kapitel3"
 -- Versionsnummer: steht beim Laden auf dem Bildschirm und im Output. So sieht man sofort,
 -- ob in Studio wirklich der neueste Stand läuft (nach "git pull").
-Config.BUILD = "K2-2026-11-07h"
+Config.BUILD = "K2-2026-11-07i"
 Config.VOICES = {
 	-- Sarp: etwas tiefer, langsam, ruhig – mit Bass, weniger Höhen und dunklem Hall
 	sarp = {
