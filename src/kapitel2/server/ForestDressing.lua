@@ -140,17 +140,6 @@ function ForestDressing.overhead(parent, frame, side, rng)
 	return to
 end
 
--- Spinnennetz zwischen zwei Punkten am Rand
-function ForestDressing.cobweb(parent, center, rng)
-	local frame = CFrame.new(center) * CFrame.Angles(0, rng:NextNumber(0, 6.28), 0)
-	deco(parent, "Cobweb", Vector3.new(2.4, 2.4, 0.02), frame, Color3.fromRGB(220, 220, 215), M.SmoothPlastic, { Transparency = 0.85 })
-	for k = 0, 5 do
-		local a = k / 6 * math.pi
-		local d = Vector3.new(math.cos(a), math.sin(a), 0) * 1.3
-		Parts.beam({ Name = "Thread", Color = Color3.fromRGB(230, 230, 225), Material = M.SmoothPlastic, Transparency = 0.5, CanCollide = false, CanQuery = false, CanTouch = false, CastShadow = false, Parent = parent }, (frame * CFrame.new(d)).Position, (frame * CFrame.new(-d)).Position, 0.02)
-	end
-end
-
 -- Klauenspuren im Boden (das Biest war schon hier)
 function ForestDressing.clawPrint(parent, frame, rng)
 	for k = -1, 1 do
@@ -348,14 +337,6 @@ function ForestDressing.path(parent, points, free, from, to)
 			local side = rng:NextNumber() < 0.5 and -1 or 1
 			if free(center + right * side * 15) and free(center) then
 				ForestDressing.overhead(folder, frame, side, rng)
-			end
-		end
-		-- Spinnennetze am Rand
-		if rng:NextNumber() < 0.05 then
-			local side = rng:NextNumber() < 0.5 and -1 or 1
-			local at = center + right * side * rng:NextNumber(8.5, 9.3) + Vector3.new(0, rng:NextNumber(2.5, 5), 0)
-			if free(at) then
-				ForestDressing.cobweb(folder, at, rng)
 			end
 		end
 		-- Klauenspuren auf dem Weg

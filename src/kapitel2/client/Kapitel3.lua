@@ -2368,7 +2368,7 @@ local function buildChaseObstacles(C, folder)
 			else
 				-- tiefer Stamm auf Kopfhöhe: liegt auf zwei Felsen, Moos und Ranken hängen herab,
 				-- darunter ist es dunkel – man muss drunter durchrutschen
-				local y = 3.7
+				local y = 5.1 -- (Unterkante ~4.3: stehend stößt man mit dem Kopf an, rutschend passt man locker drunter)
 				local low = (frame * CFrame.new(14, y - 0.2, 0)).Position
 				local high = (frame * CFrame.new(-14, y + 0.2, 0.6)).Position
 				beam("LowTrunk", low, high, 1.6)
@@ -3075,8 +3075,10 @@ function handlers.bridge(message)
 	C.chasing = false
 	C.onBridge = true
 	resetChaseEffects()
-	-- (falls es noch davor ist: es ist schon auf der Brücke)
-	C.s = math.max(C.s, C.bridgeStart + 4)
+	-- es steht im vorderen Teil der Brücke, wenn sie bricht (nicht am Ende: dort ist schon
+	-- der Fels der anderen Seite)
+	C.bridgeStopAt = C.bridgeStart + C.bridgeLength * 0.4
+	C.s = math.clamp(C.s, C.bridgeStart + 3, C.bridgeStopAt - 3)
 	run(mine, function()
 		local beast = C.rig
 		local function eye()
@@ -3182,10 +3184,18 @@ local function updateChase(now, deltaTime)
 	local rig = C.rig
 	if C.falling then
 		-- es fällt in die Schlucht
-		C.fallSpeed += 70 * deltaTime
-		C.fallTurn += deltaTime
-		rig.feet -= UP * C.fallSpeed * deltaTime
-		rig.tilt = CFrame.Angles(-C.fallTurn * 1.3, 0, C.fallTurn * 0.5)
+		-- (unten im Fluss bleibt es liegen)
+		local bottom = (C.points[1] and C.points[1].Y or 0) - 106.5
+		if rig.feet.Y > bottom then
+			C.fallSpeed += 70 * deltaTime
+			C.fallTurn += deltaTime
+			rig.feet -= UP * C.fallSpeed * deltaTime
+			rig.tilt = CFrame.Angles(-C.fallTurn * 1.3, 0, C.fallTurn * 0.5)
+			if rig.feet.Y <= bottom then
+				rig.feet = Vector3.new(rig.feet.X, bottom, rig.feet.Z)
+				playAt("splash", rig.feet, { Volume = 2.5, PlaybackSpeed = 0.5, RollOffMaxDistance = 300 })
+			end
+		end
 		return
 	end
 	if not (C.chasing or C.onBridge or C.lunge) or not root then
@@ -3214,7 +3224,7 @@ local function updateChase(now, deltaTime)
 		if t >= A.duration then
 			C.attack = nil
 			rig.lift = 0
-			C.s = playerS - (A.result and 13 or 12) -- (getroffen: man taumelt, kommt aber noch davon)
+			C.s = playerS - (A.result and 20 or 16) -- (getroffen: man taumelt, kommt aber noch davon)
 			play("roar", { Volume = 2 })
 		end
 		updateChaseFeel(C, now, 99)
@@ -3223,7 +3233,7 @@ local function updateChase(now, deltaTime)
 	local target
 	if C.onBridge then
 		-- läuft weiter auf die Brücke (bis kurz nach der Mitte)
-		target = math.min(C.s + 12 * deltaTime, C.bridgeStart + C.bridgeLength * 0.6)
+		target = math.min(C.s + 12 * deltaTime, C.bridgeStopAt or (C.bridgeStart + C.bridgeLength * 0.4))
 	elseif C.lunge then
 		target = math.min(playerS - 1, C.s + 60 * deltaTime)
 	else

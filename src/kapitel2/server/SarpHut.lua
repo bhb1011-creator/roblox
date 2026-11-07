@@ -320,10 +320,6 @@ function SarpHut.build(parent, road, ground)
 		end
 	end
 	deco("RidgeBeam", Vector3.new(0.55, 0.55, -BACK), L(0, FLOOR + WALL_H + RIDGE - 0.35, BACK / 2), LOG_DARK, M.Wood)
-	-- Spinnweben in den Ecken unter dem Dach
-	for _, corner in { { -HALF_W + 0.8, -1.2 }, { HALF_W - 0.8, BACK + 0.8 }, { -HALF_W + 0.8, BACK + 0.8 } } do
-		deco("Cobweb", Vector3.new(1.6, 1.6, 0.02), L(corner[1], FLOOR + WALL_H - 1, corner[2]) * CFrame.Angles(0, math.rad(45), math.rad(45)), Color3.fromRGB(200, 200, 196), M.SmoothPlastic, { Transparency = 0.8 })
-	end
 
 	------------------------------------------------------------ Schornstein und Kamin (links)
 	local chimneyZ = -12

@@ -31,11 +31,12 @@ Kapitel3Data.BRIDGE_CLEAR = 6
 Kapitel3Data.BRIDGE_BREAK = 1.3
 Kapitel3Data.BRIDGE_SCENE = 4.6
 -- Wer zu langsam ist, wird erwischt: Sarp/das Biest laufen etwas langsamer als man selbst
--- und bleiben höchstens MAX_GAP Studs zurück. Bleibt man stehen, ist er in gut einer
--- Sekunde da; wer durchläuft, ist sicher.
+-- und bleiben höchstens MAX_GAP Studs zurück (weit genug, dass er nicht direkt hinter
+-- einem ist, nah genug, dass man ihn beim Umdrehen immer sieht). Wer stehen bleibt oder
+-- mehrmals stolpert, wird eingeholt; wer durchläuft, ist sicher.
 Kapitel3Data.SARP_SPEED = 10.5
 Kapitel3Data.BEAST_SPEED = 11.5
-Kapitel3Data.MAX_GAP = 14
+Kapitel3Data.MAX_GAP = 22
 Kapitel3Data.CATCH_GAP = 2.4
 Kapitel3Data.RUN_MAX_TIME = 120 -- Sicherheitsnetz (Sekunden)
 

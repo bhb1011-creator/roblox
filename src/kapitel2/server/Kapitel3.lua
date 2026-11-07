@@ -316,9 +316,71 @@ local function buildForest()
 			end
 		end
 	end
-	-- Die Schlucht: Fels rundherum, in der Mitte tief nach unten
+	-- Die Schlucht: tief, unten schmaler (V-förmig), die Wände unregelmäßig – Vorsprünge
+	-- aus verschiedenem Fels, Höhlen, Moos, ein zerklüfteter Rand; unten ein Fluss mit
+	-- Geröll, darüber Nebel. (In der Mitte unter der Brücke bleibt Platz zum Fallen.)
 	terrain:FillBlock(ravineFrame * CFrame.new(0, -60, 0), Vector3.new(280, 120, bridgeLength + 70), Enum.Material.Slate)
-	terrain:FillBlock(ravineFrame * CFrame.new(0, -58, 0), Vector3.new(340, 124, bridgeLength - 4), Enum.Material.Air)
+	local RAVINE_DEPTH = 112
+	local function ravineWidth(depth)
+		return (bridgeLength - 4) * (1 - math.clamp(depth / RAVINE_DEPTH, 0, 1) * 0.5)
+	end
+	for depth = 0, RAVINE_DEPTH, 4 do
+		terrain:FillBlock(ravineFrame * CFrame.new(0, -depth - 2, 0), Vector3.new(340, 4.4, ravineWidth(depth)), Enum.Material.Air)
+	end
+	task.wait()
+	terrain:FillBlock(ravineFrame * CFrame.new(0, -RAVINE_DEPTH + 2, 0), Vector3.new(340, 6, ravineWidth(RAVINE_DEPTH) + 2), Enum.Material.Water)
+	do
+		local rocks = Random.new(23)
+		local materials = { Enum.Material.Rock, Enum.Material.Slate, Enum.Material.Basalt, Enum.Material.Rock, Enum.Material.Limestone }
+		local count = 0
+		for _, side in { -1, 1 } do
+			for x = -150, 150, 6 do
+				-- zerklüfteter Rand oben (nicht am Weg und an der Brücke)
+				if math.abs(x) > 14 and rocks:NextNumber() < 0.6 then
+					terrain:FillBall(ravineFrame * Vector3.new(x + rocks:NextNumber(-2, 2), -1, side * (ravineWidth(0) / 2 + rocks:NextNumber(0, 1.5))), rocks:NextNumber(2, 3.6), Enum.Material.Air)
+				end
+				for depth = 3, RAVINE_DEPTH - 6, 7 do
+					local wall = side * ravineWidth(depth) / 2
+					local px = x + rocks:NextNumber(-3, 3)
+					local py = -depth + rocks:NextNumber(-3, 3)
+					local roll = rocks:NextNumber()
+					if roll < 0.5 and math.abs(px) > 10 then
+						-- Vorsprung (ragt in die Schlucht), manchmal mit Moos obendrauf
+						local radius = rocks:NextNumber(2.5, 7)
+						local center = ravineFrame * Vector3.new(px, py, wall - side * rocks:NextNumber(0, radius * 0.55))
+						terrain:FillBall(center, radius, materials[rocks:NextInteger(1, #materials)])
+						if rocks:NextNumber() < 0.2 then
+							terrain:FillBall(center + Vector3.new(0, radius * 0.75, 0), radius * 0.45, Enum.Material.Grass)
+						end
+					elseif roll < 0.72 and depth > 10 then
+						-- Höhle / Nische in der Wand
+						terrain:FillBall(ravineFrame * Vector3.new(px, py, wall + side * rocks:NextNumber(0.5, 2)), rocks:NextNumber(2, 5), Enum.Material.Air)
+					end
+					count += 1
+					if count % 30 == 0 then
+						task.wait()
+					end
+				end
+				-- Geröll unten am Fluss
+				if rocks:NextNumber() < 0.5 then
+					terrain:FillBall(ravineFrame * Vector3.new(x + rocks:NextNumber(-3, 3), -RAVINE_DEPTH + 3, side * (ravineWidth(RAVINE_DEPTH) / 2 - rocks:NextNumber(0, 2))), rocks:NextNumber(1.5, 3.5), Enum.Material.Rock)
+				end
+			end
+		end
+		-- Nebel tief in der Schlucht
+		local mist = Parts.new("Part", { Name = "RavineMist", Size = Vector3.new(260, 24, ravineWidth(75)), CFrame = ravineFrame * CFrame.new(0, -75, 0), Transparency = 1, CanCollide = false, CanQuery = false, CanTouch = false, Parent = folder })
+		local emitter = Instance.new("ParticleEmitter")
+		emitter.Texture = "rbxasset://textures/particles/smoke_main.dds"
+		emitter.Color = ColorSequence.new(Color3.fromRGB(150, 158, 170))
+		emitter.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.4, 0.75), NumberSequenceKeypoint.new(1, 1) })
+		emitter.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 10), NumberSequenceKeypoint.new(1, 18) })
+		emitter.Lifetime = NumberRange.new(10, 16)
+		emitter.Rate = 6
+		emitter.Speed = NumberRange.new(0.5, 1.5)
+		emitter.SpreadAngle = Vector2.new(180, 20)
+		emitter.Shape = Enum.ParticleEmitterShape.Box
+		emitter.Parent = mist
+	end
 	task.wait()
 	-- Lichtung und die schlechte Schotterstraße (Erde, Schlamm in den Fahrspuren, Steine)
 	terrain:FillBlock(roadFrame * CFrame.new(0, -4, -24), Vector3.new(400, 8, 130), Enum.Material.LeafyGrass)
