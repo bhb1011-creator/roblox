@@ -2083,7 +2083,47 @@ local function buildChaseUi()
 		Parent = holder,
 	})
 	create("UICorner", { CornerRadius = UDim.new(0.5, 0), Parent = action })
-	chaseUi = { edges = edges, white = white, action = action, redness = 0 }
+	-- großes Tastensymbol in der Mitte (mit Balken: so viel Zeit bleibt noch)
+	local prompt = create("Frame", {
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.62),
+		Size = UDim2.fromOffset(260, 130),
+		BackgroundTransparency = 1,
+		Visible = false,
+		ZIndex = 8,
+		Parent = holder,
+	})
+	local keyBox = create("TextLabel", {
+		AnchorPoint = Vector2.new(0.5, 0),
+		Position = UDim2.fromScale(0.5, 0),
+		Size = UDim2.fromOffset(150, 74),
+		BackgroundColor3 = Color3.fromRGB(255, 210, 60),
+		Font = Enum.Font.GothamBlack,
+		TextSize = 34,
+		TextColor3 = Color3.fromRGB(20, 16, 10),
+		Text = "",
+		ZIndex = 8,
+		AutoLocalize = false,
+		Parent = prompt,
+	})
+	create("UICorner", { CornerRadius = UDim.new(0, 12), Parent = keyBox })
+	create("UIStroke", { Color = Color3.fromRGB(40, 30, 10), Thickness = 3, Parent = keyBox })
+	local word = create("TextLabel", {
+		Position = UDim2.fromOffset(0, 80),
+		Size = UDim2.new(1, 0, 0, 30),
+		BackgroundTransparency = 1,
+		Font = Enum.Font.GothamBlack,
+		TextSize = 28,
+		TextColor3 = Color3.fromRGB(255, 225, 120),
+		TextStrokeTransparency = 0.3,
+		Text = "",
+		ZIndex = 8,
+		AutoLocalize = false,
+		Parent = prompt,
+	})
+	local barBack = create("Frame", { Position = UDim2.new(0.1, 0, 0, 116), Size = UDim2.new(0.8, 0, 0, 8), BackgroundColor3 = Color3.fromRGB(30, 26, 20), BorderSizePixel = 0, ZIndex = 8, Parent = prompt })
+	local bar = create("Frame", { Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.fromRGB(255, 210, 60), BorderSizePixel = 0, ZIndex = 9, Parent = barBack })
+	chaseUi = { edges = edges, white = white, action = action, redness = 0, prompt = prompt, keyBox = keyBox, word = word, bar = bar }
 	return chaseUi
 end
 
@@ -2100,6 +2140,125 @@ local function ownHumanoid()
 	return character and character:FindFirstChildOfClass("Humanoid")
 end
 
+-- Haltungen der eigenen Figur (nur auf diesem Computer, über C0 der Gelenke – die normalen
+-- Lauf-Animationen laufen darunter weiter). R15; bei R6 nur die Hüfte.
+local PLAYER_POSES = {
+	-- Sprung: Knie hoch angezogen, leicht nach vorne gebeugt, Arme nach vorne
+	tuck = {
+		Root = CFrame.Angles(math.rad(-18), 0, 0),
+		LeftHip = CFrame.Angles(math.rad(85), 0, 0),
+		RightHip = CFrame.Angles(math.rad(65), 0, 0),
+		LeftKnee = CFrame.Angles(math.rad(-105), 0, 0),
+		RightKnee = CFrame.Angles(math.rad(-95), 0, 0),
+		LeftShoulder = CFrame.Angles(math.rad(55), 0, math.rad(-25)),
+		RightShoulder = CFrame.Angles(math.rad(55), 0, math.rad(25)),
+		Neck = CFrame.Angles(math.rad(10), 0, 0),
+	},
+	-- Rutschen: tief, nach hinten gelehnt, Beine voraus, ein Knie angewinkelt
+	slide = {
+		Root = CFrame.new(0, -1.75, 0) * CFrame.Angles(math.rad(58), 0, 0),
+		Waist = CFrame.Angles(math.rad(-12), 0, 0),
+		Neck = CFrame.Angles(math.rad(-38), 0, 0),
+		LeftHip = CFrame.Angles(math.rad(22), 0, 0),
+		RightHip = CFrame.Angles(math.rad(38), 0, 0),
+		LeftKnee = CFrame.Angles(math.rad(-10), 0, 0),
+		RightKnee = CFrame.Angles(math.rad(-70), 0, 0),
+		LeftShoulder = CFrame.Angles(math.rad(-30), 0, math.rad(-35)),
+		RightShoulder = CFrame.Angles(math.rad(95), 0, math.rad(20)),
+	},
+	-- gestolpert: nach vorne geknickt, Arme fangen ab
+	stumble = {
+		Root = CFrame.new(0, -0.7, 0) * CFrame.Angles(math.rad(-38), 0, math.rad(6)),
+		Waist = CFrame.Angles(math.rad(-15), 0, 0),
+		LeftShoulder = CFrame.Angles(math.rad(85), 0, math.rad(-15)),
+		RightShoulder = CFrame.Angles(math.rad(85), 0, math.rad(15)),
+		LeftHip = CFrame.Angles(math.rad(35), 0, 0),
+		LeftKnee = CFrame.Angles(math.rad(-60), 0, 0),
+		RightHip = CFrame.Angles(math.rad(-15), 0, 0),
+	},
+	-- Kopf angeschlagen: Kopf und Oberkörper fliegen nach hinten
+	headHit = {
+		Root = CFrame.Angles(math.rad(14), 0, math.rad(-4)),
+		Waist = CFrame.Angles(math.rad(18), 0, 0),
+		Neck = CFrame.Angles(math.rad(40), 0, math.rad(8)),
+		LeftShoulder = CFrame.Angles(math.rad(30), 0, math.rad(-50)),
+		RightShoulder = CFrame.Angles(math.rad(120), 0, math.rad(10)),
+	},
+}
+local R6_NAMES = { Root = "RootJoint" }
+local playerPose = { weight = 0 }
+
+local function playerMotors()
+	local character = player.Character
+	if not character then
+		return nil
+	end
+	if playerPose.character ~= character then
+		playerPose.character = character
+		playerPose.motors = {}
+		for _, joint in character:GetDescendants() do
+			if joint:IsA("Motor6D") then
+				playerPose.motors[joint.Name] = { motor = joint, base = joint.C0 }
+			end
+		end
+		for name, r6 in R6_NAMES do
+			if not playerPose.motors[name] and playerPose.motors[r6] then
+				playerPose.motors[name] = playerPose.motors[r6]
+			end
+		end
+	end
+	return playerPose.motors
+end
+
+-- Haltung einnehmen: einblenden, halten, ausblenden (Sekunden)
+local function playPlayerPose(name, fadeIn, holdTime, fadeOut)
+	playerPose.name = name
+	playerPose.start = os.clock()
+	playerPose.fadeIn, playerPose.hold, playerPose.fadeOut = fadeIn, holdTime, fadeOut
+	playerPose.from = playerPose.weight
+end
+
+local function updatePlayerPose(now)
+	local motors = playerMotors()
+	if not motors then
+		return
+	end
+	local pose = playerPose.name and PLAYER_POSES[playerPose.name]
+	local weight = 0
+	if pose then
+		local t = now - playerPose.start
+		if t < playerPose.fadeIn then
+			weight = playerPose.from + (1 - playerPose.from) * ease(t / playerPose.fadeIn, "out")
+		elseif t < playerPose.fadeIn + playerPose.hold then
+			weight = 1
+		elseif t < playerPose.fadeIn + playerPose.hold + playerPose.fadeOut then
+			weight = 1 - ease((t - playerPose.fadeIn - playerPose.hold) / playerPose.fadeOut, "inout")
+		else
+			playerPose.name = nil
+		end
+	end
+	if weight == 0 and playerPose.weight == 0 then
+		return
+	end
+	playerPose.weight = weight
+	for name, info in motors do
+		if info.motor.Parent then
+			local offset = pose and pose[name]
+			info.motor.C0 = offset and info.base * CFrame.identity:Lerp(offset, weight) or info.base
+		end
+	end
+end
+
+local function resetPlayerPose()
+	playerPose.name = nil
+	playerPose.weight = 0
+	for _, info in playerPose.motors or {} do
+		if info.motor.Parent then
+			info.motor.C0 = info.base
+		end
+	end
+end
+
 -- alles zurück (Ende der Flucht, Game Over, neuer Versuch)
 local function resetChaseEffects()
 	if chaseUi then
@@ -2110,6 +2269,15 @@ local function resetChaseEffects()
 	local humanoid = ownHumanoid()
 	if humanoid then
 		humanoid.CameraOffset = Vector3.zero
+	end
+	resetPlayerPose()
+	for _, o in (chase and chase.obstacles) or {} do
+		if o.highlight then
+			o.highlight.Enabled = false
+		end
+	end
+	if chaseUi then
+		chaseUi.prompt.Visible = false
 	end
 end
 
@@ -2137,34 +2305,91 @@ local function buildChaseObstacles(C, folder)
 	for _, info in Data.OBSTACLES do
 		local o = table.clone(info)
 		table.insert(C.obstacles, o)
-		if o.kind == "jump" then
-			-- umgestürzter Baum quer über den Weg (mit Aststümpfen, Moos, Wurzelteller)
-			local frame = chaseObstacleFrame(C.points, o.s) * CFrame.Angles(0, rng:NextNumber(-0.2, 0.2), 0)
-			part("FallenTrunk", Vector3.new(26, 1.6, 1.6), frame * CFrame.new(0, 0.85, 0), BARK, Enum.Material.Wood, { Shape = Enum.PartType.Cylinder })
-			part("TrunkMoss", Vector3.new(9, 0.25, 1.1), frame * CFrame.new(rng:NextNumber(-4, 4), 1.62, 0), Color3.fromRGB(58, 78, 40), Enum.Material.Grass)
-			local side = rng:NextNumber() < 0.5 and -1 or 1
-			part("RootPlate", Vector3.new(0.8, 6, 6), frame * CFrame.new(side * 13.2, 2, 0), Color3.fromRGB(60, 46, 34), Enum.Material.Ground, { Shape = Enum.PartType.Cylinder })
-			for k = 1, 5 do
-				local at = (frame * CFrame.new(rng:NextNumber(-10, 10), 1, 0)).Position
-				beam("Stub", at, at + Vector3.new(0, rng:NextNumber(0.8, 1.8), 0) + frame.LookVector * rng:NextNumber(-0.8, 0.8) + frame.RightVector * rng:NextNumber(-0.5, 0.5), 0.25)
-			end
-			o.frame = frame
-		elseif o.kind == "duck" then
-			-- schräger Stamm auf Kopfhöhe (liegt auf einem Felsen/Baum am Rand)
+		if o.kind == "jump" or o.kind == "duck" then
+			-- jedes Hindernis ist ein eigenes Model (zum Aufleuchten, wenn man reagieren muss)
+			local model = Instance.new("Model")
+			model.Name = o.kind == "jump" and "JumpObstacle" or "DuckObstacle"
+			model.Parent = folder
+			local saved = folder
+			folder = model
 			local frame = chaseObstacleFrame(C.points, o.s)
-			local side = rng:NextNumber() < 0.5 and -1 or 1
-			local low = (frame * CFrame.new(side * 13, 3.5, 0)).Position
-			local high = (frame * CFrame.new(-side * 13, 3.9, 0.8)).Position
-			beam("LowTrunk", low, high, 1.4)
-			-- liegt auf beiden Seiten auf Felsen
-			part("LowTrunkRock", Vector3.new(3, 3.4, 3), CFrame.new((frame * CFrame.new(-side * 12.4, 1.7, 0.8)).Position), Color3.fromRGB(90, 90, 86), Enum.Material.Slate)
-			part("LowTrunkRock", Vector3.new(3, 3.2, 3), CFrame.new((frame * CFrame.new(side * 12.4, 1.5, 0)).Position), Color3.fromRGB(84, 86, 80), Enum.Material.Slate)
-			for k = 1, 7 do
-				local at = low:Lerp(high, rng:NextNumber(0.25, 0.8))
-				local length = rng:NextNumber(0.8, 2)
-				part("HangingMoss", Vector3.new(0.2, length, 0.2), CFrame.new(at - Vector3.new(0, length / 2 + 0.5, 0)), Color3.fromRGB(70, 90, 50), Enum.Material.Grass, { Transparency = 0.15 })
+			if o.kind == "jump" then
+				-- umgestürzter Baum quer über den Weg: dicker Stamm, Rinde, abgebrochene Äste,
+				-- Wurzelteller mit Erde auf der einen Seite, die gesplitterte Krone auf der anderen
+				frame *= CFrame.Angles(0, rng:NextNumber(-0.15, 0.15), 0)
+				local side = rng:NextNumber() < 0.5 and -1 or 1
+				part("FallenTrunk", Vector3.new(30, 2, 2), frame * CFrame.new(0, 1.05, 0) * CFrame.Angles(0, 0, math.rad(side * 2)), BARK, Enum.Material.Wood, { Shape = Enum.PartType.Cylinder })
+				for k = -3, 3 do
+					part("BarkRing", Vector3.new(0.35, 2.12, 2.12), frame * CFrame.new(k * 3.7 + rng:NextNumber(-0.6, 0.6), 1.05, 0), BARK:Lerp(Color3.new(0, 0, 0), 0.25), Enum.Material.Wood, { Shape = Enum.PartType.Cylinder })
+				end
+				part("TrunkMoss", Vector3.new(11, 0.3, 1.3), frame * CFrame.new(rng:NextNumber(-3, 3), 2.02, 0.1), Color3.fromRGB(58, 80, 40), Enum.Material.Grass)
+				part("TrunkMoss", Vector3.new(5, 0.3, 1), frame * CFrame.new(side * -8, 1.98, -0.2), Color3.fromRGB(66, 86, 44), Enum.Material.Grass)
+				-- Wurzelteller mit Erde und Wurzeln
+				local plate = frame * CFrame.new(side * 15.4, 2.6, 0)
+				part("RootPlate", Vector3.new(1.2, 7, 7), plate, Color3.fromRGB(64, 48, 34), Enum.Material.Ground, { Shape = Enum.PartType.Cylinder })
+				for k = 1, 9 do
+					local a = k / 9 * math.pi * 2
+					local from = (plate * CFrame.new(0, math.sin(a) * 2.6, math.cos(a) * 2.6)).Position
+					local to = (plate * CFrame.new(side * rng:NextNumber(0.8, 2), math.sin(a) * 4.4, math.cos(a) * 4.4)).Position
+					beam("Root", from, to, 0.3, Color3.fromRGB(80, 60, 42))
+				end
+				part("PlateHole", Vector3.new(6, 0.3, 6), frame * CFrame.new(side * 15.4, 0.02, 2.5), Color3.fromRGB(40, 30, 22), Enum.Material.Mud)
+				-- abgebrochene Äste, die nach oben und zur Seite stehen
+				for k = 1, 8 do
+					local at = (frame * CFrame.new(rng:NextNumber(-12, 12), 1.6, rng:NextNumber(-0.6, 0.6))).Position
+					local up = Vector3.new(0, rng:NextNumber(1, 2.6), 0) + frame.LookVector * rng:NextNumber(-1.4, 1.4) + frame.RightVector * rng:NextNumber(-0.8, 0.8)
+					beam("Stub", at, at + up, rng:NextNumber(0.2, 0.35))
+				end
+				-- gesplittertes Ende der Krone mit trockenen Nadeln
+				for k = 1, 5 do
+					local at = (frame * CFrame.new(-side * rng:NextNumber(12, 16), rng:NextNumber(1, 3), rng:NextNumber(-2.5, 2.5))).Position
+					part("DeadNeedles", Vector3.new(3, 3, 3), CFrame.new(at), Color3.fromRGB(86, 70, 44), Enum.Material.Grass, { Shape = Enum.PartType.Ball })
+				end
+				for k = 1, 4 do
+					part("Splinter", Vector3.new(0.25, rng:NextNumber(1, 2), 0.25), frame * CFrame.new(-side * 15, 1.4, rng:NextNumber(-0.7, 0.7)) * CFrame.Angles(rng:NextNumber(-0.6, 0.6), 0, rng:NextNumber(-0.6, 0.6)), Color3.fromRGB(170, 140, 100), Enum.Material.Wood)
+				end
+				o.height = 2.1
+			else
+				-- tiefer Stamm auf Kopfhöhe: liegt auf zwei Felsen, Moos und Ranken hängen herab,
+				-- darunter ist es dunkel – man muss drunter durchrutschen
+				local y = 3.7
+				local low = (frame * CFrame.new(14, y - 0.2, 0)).Position
+				local high = (frame * CFrame.new(-14, y + 0.2, 0.6)).Position
+				beam("LowTrunk", low, high, 1.6)
+				for k = 1, 6 do
+					local at = low:Lerp(high, k / 7)
+					part("BarkRing", Vector3.new(1.75, 1.75, 0.3), CFrame.lookAt(at, high), BARK:Lerp(Color3.new(0, 0, 0), 0.25), Enum.Material.Wood)
+				end
+				part("LowTrunkMoss", Vector3.new(0.3, 1.2, 9), CFrame.lookAt(low:Lerp(high, 0.5) + Vector3.new(0, 0.75, 0), high) * CFrame.Angles(0, math.rad(90), 0), Color3.fromRGB(58, 80, 40), Enum.Material.Grass)
+				for _, x in { -13, 13 } do
+					part("LowTrunkRock", Vector3.new(3.6, y + 0.4, 3.4), frame * CFrame.new(x, (y - 0.6) / 2, 0.3) * CFrame.Angles(0, rng:NextNumber(-0.3, 0.3), 0), Color3.fromRGB(88, 88, 84), Enum.Material.Slate)
+				end
+				for k = 1, 14 do
+					local at = low:Lerp(high, rng:NextNumber(0.05, 0.95))
+					local length = rng:NextNumber(0.6, 1.5)
+					part("HangingMoss", Vector3.new(0.18, length, 0.18), CFrame.new(at - Vector3.new(0, length / 2 + 0.6, 0)), Color3.fromRGB(70, 92, 50), Enum.Material.Grass, { Transparency = 0.1 })
+				end
+				-- Zweige mit Blättern, die nach unten hängen
+				for k = 1, 5 do
+					local at = low:Lerp(high, rng:NextNumber(0.15, 0.85))
+					local tip = at + Vector3.new(0, rng:NextNumber(1.5, 3), 0) + frame.LookVector * rng:NextNumber(-1.5, 1.5)
+					beam("TrunkBranch", at, tip, 0.22)
+					part("Leaves", Vector3.new(2, 2, 2), CFrame.new(tip), Color3.fromRGB(44, 66, 36), Enum.Material.Grass, { Shape = Enum.PartType.Ball })
+				end
+				o.height = y - 0.8
 			end
+			-- leuchtet auf, wenn man reagieren muss
+			local highlight = Instance.new("Highlight")
+			highlight.FillColor = Color3.fromRGB(255, 210, 60)
+			highlight.OutlineColor = Color3.fromRGB(255, 220, 90)
+			highlight.FillTransparency = 0.85
+			highlight.OutlineTransparency = 0.1
+			highlight.DepthMode = Enum.HighlightDepthMode.Occluded
+			highlight.Enabled = false
+			highlight.Parent = model
+			o.highlight = highlight
 			o.frame = frame
+			folder = saved
 		elseif o.kind == "creek" then
 			-- flacher Bach quer über den Weg, mit Steinen
 			local frame = chaseObstacleFrame(C.points, o.s)
@@ -2255,29 +2480,38 @@ local function updateObstacles(C, now, playerS, root)
 				if playerS >= o.s - Data.PROMPT_DISTANCE and playerS < o.s + 0.5 then
 					if not o.promptStart then
 						o.promptStart = now
-						showBigHint(o.kind == "jump" and (UserInputService.TouchEnabled and "SPRINGEN!" or "LEERTASTE – SPRINGEN!") or (UserInputService.TouchEnabled and "DUCKEN!" or "C – DUCKEN!"), 1.4, Color3.fromRGB(255, 210, 60))
+						play("qteSuccess", { Volume = 0.5, PlaybackSpeed = 1.4 })
 					end
 					prompt = o
 					if (C.pressed[o.kind] or 0) >= o.promptStart - 0.45 then
 						o.done = true
-						if o.kind == "jump" and humanoid then
-							humanoid.JumpHeight = 5
-							humanoid.Jump = true
-							task.delay(0.7, function()
-								if humanoid.Parent then
-									humanoid.JumpHeight = 2
-								end
-							end)
-							task.delay(0.55, function()
-								play("jumpLand", { Volume = 1.2 })
+						o.passed = true
+						if o.kind == "jump" then
+							-- richtiger Sprung: hoch und nach vorne, Knie angezogen
+							local forward = unit(flat(root.CFrame.LookVector))
+							local _, pathDirection = Data.pointAt(C.points, playerS)
+							forward = unit(flat(pathDirection), forward)
+							if humanoid then
+								humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+							end
+							root.AssemblyLinearVelocity = forward * Data.RUN_SPEED + Vector3.new(0, 44, 0)
+							playPlayerPose("tuck", 0.12, 0.38, 0.2)
+							play("stumble", { Volume = 0.6, PlaybackSpeed = 1.6 })
+							task.delay(0.62, function()
+								play("jumpLand", { Volume = 1.3 })
 							end)
 						else
-							C.duckUntil = now + 0.95
+							-- unter dem Stamm durchrutschen
+							C.duckUntil = now + 1.0
+							C.slideUntil = now + 0.9
+							playPlayerPose("slide", 0.12, 0.7, 0.25)
+							play("mudStep", { Volume = 1.4, PlaybackSpeed = 0.7 })
 						end
 					end
 				elseif playerS >= o.s + 0.5 then
 					-- verpasst: stolpern bzw. Kopf anschlagen
 					o.done = true
+					playPlayerPose(o.kind == "jump" and "stumble" or "headHit", 0.08, 0.4, 0.35)
 					C.stopUntil = now + Data.STUMBLE_TIME + (o.kind == "duck" and 0.15 or 0)
 					play(o.kind == "jump" and "stumble" or "headHit", { Volume = 1.6 })
 					redFlash(o.kind == "duck" and 0.45 or 0.3, 0.6)
@@ -2356,6 +2590,32 @@ local function updateObstacles(C, now, playerS, root)
 				end
 			end
 		end
+	end
+	-- Hindernis leuchtet auf, großes Tastensymbol mit Zeitbalken
+	for _, o in C.obstacles or {} do
+		if o.highlight then
+			local near = not o.done and playerS >= o.s - Data.PROMPT_DISTANCE - 14 and playerS < o.s + 1
+			o.highlight.Enabled = near or (o.passed and playerS < o.s + 3)
+			if near then
+				local urgent = o == prompt
+				o.highlight.FillTransparency = urgent and (0.65 + math.sin(now * 18) * 0.15) or 0.9
+				o.highlight.OutlineColor = o.passed and Color3.fromRGB(120, 255, 120) or Color3.fromRGB(255, 220, 90)
+			elseif o.passed then
+				o.highlight.OutlineColor = Color3.fromRGB(120, 255, 120)
+				o.highlight.FillTransparency = 1
+			end
+		end
+	end
+	ui.prompt.Visible = prompt ~= nil
+	if prompt then
+		local touch = UserInputService.TouchEnabled
+		ui.keyBox.Text = prompt.kind == "jump" and (touch and "TIPP" or "LEER") or (touch and "TIPP" or "C")
+		ui.word.Text = prompt.kind == "jump" and "SPRINGEN!" or "DUCKEN!"
+		local left = math.clamp((prompt.s - playerS) / Data.PROMPT_DISTANCE, 0, 1)
+		ui.bar.Size = UDim2.fromScale(left, 1)
+		ui.bar.BackgroundColor3 = Color3.fromRGB(255, 210, 60):Lerp(Color3.fromRGB(230, 50, 30), 1 - left)
+		local pulse = 1 + math.sin(now * 16) * 0.05
+		ui.keyBox.Size = UDim2.fromOffset(150 * pulse, 74 * pulse)
 	end
 	-- Hinweis-Knopf (Handy)
 	ui.action.Visible = prompt ~= nil and UserInputService.TouchEnabled
@@ -3874,6 +4134,7 @@ function Kapitel3.run()
 		local ok, problem = pcall(function()
 			updateTweens(now)
 			updateChase(now, deltaTime)
+			updatePlayerPose(now)
 			updateHut(now)
 			for _, rig in rigs do
 				if rig.root and rig.root.Parent then

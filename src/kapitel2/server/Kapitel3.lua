@@ -484,6 +484,9 @@ local function buildForest()
 		end
 	end
 	-- Details am Weg (Farne, Gras, Laub, Wurzeln, Nebel, Glühwürmchen)
+	pcall(ForestDressing.terrain, points, function(position)
+		return not nearRavine(position, 4) and not inClearing(position, -2)
+	end, 2, total)
 	local dressOk, dressProblem = pcall(ForestDressing.path, folder, points, function(position)
 		return not nearRavine(position, 4) and not inClearing(position, -2)
 	end, 4, total)
