@@ -3934,7 +3934,7 @@ function handlers.rest()
 			params.FilterType = Enum.RaycastFilterType.Include
 			params.FilterDescendantsInstances = { workspace.Terrain }
 			local hit = workspace:Raycast(H.carStop.Position + Vector3.new(0, 15, 0), Vector3.new(0, -40, 0), params)
-			H.carStop += Vector3.new(0, (hit and hit.Position.Y or H.carStop.Y) - H.carStop.Y, 0)
+			H.carStop += Vector3.new(0, (hit and hit.Position.Y + 0.6 or H.carStop.Y) - H.carStop.Y, 0)
 			car.model:PivotTo(H.carStop)
 		end
 		H.car = car
@@ -3987,7 +3987,7 @@ function handlers.rest()
 			local pivot = from * CFrame.new(0, 0, -distance)
 			local hit = workspace:Raycast(pivot.Position + Vector3.new(0, 15, 0), Vector3.new(0, -40, 0), groundParams)
 			if hit then
-				pivot += Vector3.new(0, hit.Position.Y - pivot.Y, 0)
+				pivot += Vector3.new(0, hit.Position.Y + 0.6 - pivot.Y, 0) -- (+0,6: Terrain sieht etwas höher aus, als der Strahl misst)
 			end
 			car.model:PivotTo(pivot)
 			if os.clock() - started >= Data.END_FADE and not H.fading then
