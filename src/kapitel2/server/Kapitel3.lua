@@ -301,6 +301,21 @@ local function buildForest()
 			terrain:FillBlock(frame * CFrame.new(0, -3.9, 0), Vector3.new(10, 8, (b - a).Magnitude + 8), Enum.Material.Ground)
 		end
 	end
+	-- Schlamm und Bach auf dem Weg (Kapitel3Data.OBSTACLES); was dort zu sehen ist, baut der Client
+	for _, obstacle in Data.OBSTACLES do
+		local from, to, width = obstacle.from, obstacle.to, 11
+		if obstacle.kind == "creek" then
+			from, to, width = obstacle.s - obstacle.length / 2 - 3, obstacle.s + obstacle.length / 2 + 3, 30
+		end
+		if from and to then
+			local at = from
+			while at <= to do
+				local center, direction = Data.pointAt(points, at)
+				terrain:FillBlock(CFrame.lookAt(center, center + Vector3.new(direction.X, 0, direction.Z)) * CFrame.new(0, -4, 0), Vector3.new(width, 8, 4.5), Enum.Material.Mud)
+				at += 3
+			end
+		end
+	end
 	-- Die Schlucht: Fels rundherum, in der Mitte tief nach unten
 	terrain:FillBlock(ravineFrame * CFrame.new(0, -60, 0), Vector3.new(280, 120, bridgeLength + 70), Enum.Material.Slate)
 	terrain:FillBlock(ravineFrame * CFrame.new(0, -58, 0), Vector3.new(340, 124, bridgeLength - 4), Enum.Material.Air)

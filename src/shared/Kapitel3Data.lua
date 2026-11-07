@@ -39,6 +39,32 @@ Kapitel3Data.MAX_GAP = 14
 Kapitel3Data.CATCH_GAP = 2.4
 Kapitel3Data.RUN_MAX_TIME = 120 -- Sicherheitsnetz (Sekunden)
 
+-- Was auf dem Weg passiert (s = Strecke ab der Luke in Studs; die Verwandlung ist bei
+-- etwa 305, die Brücke beginnt bei 637). "beast" = erst nach der Verwandlung.
+--   jump  = umgestürzter Baum quer über dem Weg: LEERTASTE (sonst stolpert man)
+--   duck  = tiefer Stamm auf Kopfhöhe: C (sonst stößt man sich den Kopf)
+--   mud   = Schlamm: man wird langsamer        creek = Bach: noch langsamer
+--   tree  = das Biest rammt einen Baum, der hinter einem auf den Weg kracht
+--   side  = Angriff aus dem Gebüsch (vorher wird es still): A oder D
+Kapitel3Data.OBSTACLES = {
+	{ kind = "jump", s = 125 },
+	{ kind = "duck", s = 195 },
+	{ kind = "mud", from = 236, to = 270 },
+	{ kind = "creek", s = 392, length = 12 },
+	{ kind = "jump", s = 420 },
+	{ kind = "tree", s = 470, beast = true },
+	{ kind = "duck", s = 502 },
+	{ kind = "side", s = 548, beast = true },
+	{ kind = "jump", s = 582 },
+}
+Kapitel3Data.PROMPT_DISTANCE = 11 -- so weit vorher erscheint "LEERTASTE" / "C"
+Kapitel3Data.STUMBLE_TIME = 0.75 -- verpasst: so lange kommt man kaum vorwärts
+Kapitel3Data.MUD_SPEED = 11.5
+Kapitel3Data.CREEK_SPEED = 10
+Kapitel3Data.SIDE_SILENCE = 30 -- so viele Studs vor dem Angriff wird es still
+Kapitel3Data.SIDE_WINDOW = 1.15 -- so lange hat man Zeit zum Ausweichen
+Kapitel3Data.TREE_BLOCK = 1.5 -- so lange hält der umgestürzte Baum das Biest auf
+
 -- Das Ende in Sarps Hütte
 Kapitel3Data.PHONE_NUMBER = "911" -- steht auf dem Zettel neben dem Telefon
 Kapitel3Data.PHONE_RING = 4.2 -- so lange klingelt es, bis die Polizei abnimmt

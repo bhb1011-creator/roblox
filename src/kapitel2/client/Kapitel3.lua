@@ -77,6 +77,18 @@ local FALLBACK = {
 	bridgeCollapse = { "sting", 0.4 },
 	jumpscare = { "sting", 0.85 },
 	qteFail = { "sting", 1.6 },
+	-- die Verfolgung
+	thunder = { "sting", 0.3 },
+	treeCrash = { "sting", 0.35 },
+	woodSplinter = { "footstep", 0.7 },
+	stumble = { "footstep", 0.6 },
+	headHit = { "footstep", 0.45 },
+	jumpLand = { "footstep", 0.8 },
+	mudStep = { "footstep", 0.55 },
+	splash = { "footstep", 1.3 },
+	bushRustle = { "footstep", 1.6 },
+	beastLunge = { "sting", 0.75 },
+	beastBreath = { "radioStatic", 0.4 },
 	-- das Ende (Sarps Hütte)
 	cabinAmbience = { "wind", 0.8 },
 	fireCrackle = { "radioStatic", 0.35 },
@@ -2035,6 +2047,380 @@ local function ownRoot()
 	return character and character:FindFirstChild("HumanoidRootPart")
 end
 
+------------------------------------------------------------------ Die Verfolgung: Hindernisse und Effekte
+-- Umgestürzte Bäume (springen), tiefe Stämme (ducken), Schlamm und Bach (langsamer), ein
+-- Baum, den das Biest hinter einem umrammt, ein Angriff aus dem Gebüsch (vorher Stille),
+-- Atem im Nacken (roter Rand, Wackeln), Blitze mit Donner. Alles nur auf diesem Computer.
+local chaseUi -- roter Rand, weißer Blitz, Knopf zum Springen/Ducken (Handy)
+local function buildChaseUi()
+	if chaseUi then
+		return chaseUi
+	end
+	local holder = create("Frame", { Name = "ChaseEffects", BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), ZIndex = 5, Parent = gui })
+	local edges = {}
+	for _, info in { { UDim2.fromScale(0, 0), UDim2.fromScale(1, 0.32), 90 }, { UDim2.fromScale(0, 0.68), UDim2.fromScale(1, 0.32), -90 }, { UDim2.fromScale(0, 0), UDim2.fromScale(0.26, 1), 0 }, { UDim2.fromScale(0.74, 0), UDim2.fromScale(0.26, 1), 180 } } do
+		local edge = create("Frame", { BackgroundColor3 = Color3.fromRGB(150, 0, 0), BorderSizePixel = 0, Position = info[1], Size = info[2], BackgroundTransparency = 1, ZIndex = 5, Parent = holder })
+		create("UIGradient", { Rotation = info[3], Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(1, 1) }), Parent = edge })
+		table.insert(edges, edge)
+	end
+	local white = create("Frame", { BackgroundColor3 = Color3.fromRGB(225, 232, 255), BorderSizePixel = 0, Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, ZIndex = 6, Parent = holder })
+	local action = create("TextButton", {
+		AnchorPoint = Vector2.new(1, 1),
+		Position = UDim2.new(1, -30, 1, -150),
+		Size = UDim2.fromOffset(150, 150),
+		BackgroundColor3 = Color3.fromRGB(200, 160, 40),
+		Font = Enum.Font.GothamBlack,
+		TextSize = 24,
+		TextColor3 = Color3.new(0, 0, 0),
+		Text = "",
+		Visible = false,
+		ZIndex = 7,
+		AutoLocalize = false,
+		Parent = holder,
+	})
+	create("UICorner", { CornerRadius = UDim.new(0.5, 0), Parent = action })
+	chaseUi = { edges = edges, white = white, action = action, redness = 0 }
+	return chaseUi
+end
+
+local function setRedEdge(amount)
+	local ui = buildChaseUi()
+	ui.redness = amount
+	for _, edge in ui.edges do
+		edge.BackgroundTransparency = 1 - math.clamp(amount, 0, 1) * 0.85
+	end
+end
+
+local function ownHumanoid()
+	local character = player.Character
+	return character and character:FindFirstChildOfClass("Humanoid")
+end
+
+-- alles zurück (Ende der Flucht, Game Over, neuer Versuch)
+local function resetChaseEffects()
+	if chaseUi then
+		setRedEdge(0)
+		chaseUi.white.BackgroundTransparency = 1
+		chaseUi.action.Visible = false
+	end
+	local humanoid = ownHumanoid()
+	if humanoid then
+		humanoid.CameraOffset = Vector3.zero
+	end
+end
+
+-- Hindernisse am Weg bauen (eigene Kopien im localFolder)
+local function chaseObstacleFrame(points, s, side)
+	local center, direction = Data.pointAt(points, s)
+	local forward = unit(flat(direction))
+	return CFrame.lookAt(center, center + forward)
+end
+
+local function buildChaseObstacles(C, folder)
+	local rng = Random.new(1234)
+	local BARK = Color3.fromRGB(70, 54, 40)
+	local function part(name, size, cframe, color, material, extra)
+		local props = { Name = name, Size = size, CFrame = cframe, Color = color, Material = material or Enum.Material.Wood, CanCollide = false, CanQuery = false, CanTouch = false, Parent = folder }
+		for key, value in extra or {} do
+			props[key] = value
+		end
+		return Parts.new("Part", props)
+	end
+	local function beam(name, from, to, thickness, color, material)
+		return Parts.beam({ Name = name, Color = color or BARK, Material = material or Enum.Material.Wood, CanCollide = false, CanQuery = false, CanTouch = false, Parent = folder }, from, to, thickness)
+	end
+	C.obstacles = {}
+	for _, info in Data.OBSTACLES do
+		local o = table.clone(info)
+		table.insert(C.obstacles, o)
+		if o.kind == "jump" then
+			-- umgestürzter Baum quer über den Weg (mit Aststümpfen, Moos, Wurzelteller)
+			local frame = chaseObstacleFrame(C.points, o.s) * CFrame.Angles(0, rng:NextNumber(-0.2, 0.2), 0)
+			part("FallenTrunk", Vector3.new(26, 1.6, 1.6), frame * CFrame.new(0, 0.85, 0), BARK, Enum.Material.Wood, { Shape = Enum.PartType.Cylinder })
+			part("TrunkMoss", Vector3.new(9, 0.25, 1.1), frame * CFrame.new(rng:NextNumber(-4, 4), 1.62, 0), Color3.fromRGB(58, 78, 40), Enum.Material.Grass)
+			local side = rng:NextNumber() < 0.5 and -1 or 1
+			part("RootPlate", Vector3.new(0.8, 6, 6), frame * CFrame.new(side * 13.2, 2, 0), Color3.fromRGB(60, 46, 34), Enum.Material.Ground, { Shape = Enum.PartType.Cylinder })
+			for k = 1, 5 do
+				local at = (frame * CFrame.new(rng:NextNumber(-10, 10), 1, 0)).Position
+				beam("Stub", at, at + Vector3.new(0, rng:NextNumber(0.8, 1.8), 0) + frame.LookVector * rng:NextNumber(-0.8, 0.8) + frame.RightVector * rng:NextNumber(-0.5, 0.5), 0.25)
+			end
+			o.frame = frame
+		elseif o.kind == "duck" then
+			-- schräger Stamm auf Kopfhöhe (liegt auf einem Felsen/Baum am Rand)
+			local frame = chaseObstacleFrame(C.points, o.s)
+			local side = rng:NextNumber() < 0.5 and -1 or 1
+			local low = (frame * CFrame.new(side * 13, 0.6, 0)).Position
+			local high = (frame * CFrame.new(-side * 13, 6.2, 0.8)).Position
+			beam("LowTrunk", low, high, 1.4)
+			part("LowTrunkRock", Vector3.new(3, 3.4, 3), CFrame.new((frame * CFrame.new(-side * 12.4, 2.2, 0.8)).Position), Color3.fromRGB(90, 90, 86), Enum.Material.Slate)
+			for k = 1, 7 do
+				local at = low:Lerp(high, rng:NextNumber(0.25, 0.8))
+				local length = rng:NextNumber(0.8, 2)
+				part("HangingMoss", Vector3.new(0.2, length, 0.2), CFrame.new(at - Vector3.new(0, length / 2 + 0.5, 0)), Color3.fromRGB(70, 90, 50), Enum.Material.Grass, { Transparency = 0.15 })
+			end
+			o.frame = frame
+		elseif o.kind == "creek" then
+			-- flacher Bach quer über den Weg, mit Steinen
+			local frame = chaseObstacleFrame(C.points, o.s)
+			part("CreekWater", Vector3.new(30, 0.2, o.length), frame * CFrame.new(0, 0.18, 0), Color3.fromRGB(40, 58, 66), Enum.Material.Glass, { Transparency = 0.25, Reflectance = 0.25 })
+			for k = 1, 16 do
+				local size = rng:NextNumber(0.6, 1.6)
+				part("CreekStone", Vector3.new(size, size * 0.6, size), frame * CFrame.new(rng:NextNumber(-14, 14), 0.2, (rng:NextNumber() < 0.5 and -1 or 1) * rng:NextNumber(o.length / 2 - 1, o.length / 2 + 1)) * CFrame.Angles(0, rng:NextNumber(0, 6), 0), Color3.fromRGB(96, 98, 92), Enum.Material.Slate)
+			end
+			for k = 1, 4 do
+				part("SteppingStone", Vector3.new(1.4, 0.5, 1.2), frame * CFrame.new(rng:NextNumber(-3, 3), 0.25, -o.length / 2 + k * o.length / 5), Color3.fromRGB(110, 110, 104), Enum.Material.Slate)
+			end
+			o.from, o.to = o.s - o.length / 2, o.s + o.length / 2
+		elseif o.kind == "mud" then
+			for k = 1, 6 do
+				local frame = chaseObstacleFrame(C.points, rng:NextNumber(o.from + 2, o.to - 2))
+				part("MudPuddle", Vector3.new(rng:NextNumber(2.5, 5), 0.06, rng:NextNumber(2, 4)), frame * CFrame.new(rng:NextNumber(-3, 3), 0.14, 0) * CFrame.Angles(0, rng:NextNumber(0, 6), 0), Color3.fromRGB(44, 34, 26), Enum.Material.Glass, { Transparency = 0.15, Reflectance = 0.15 })
+			end
+		elseif o.kind == "tree" then
+			-- großer Baum am Rand; er kippt um 90° quer über den Weg
+			local frame = chaseObstacleFrame(C.points, o.s)
+			local side = 1
+			local hinge = frame * CFrame.new(side * 11.5, 0, 0)
+			local pieces = {}
+			local function add(p)
+				table.insert(pieces, { part = p, offset = hinge:ToObjectSpace(p.CFrame) })
+			end
+			add(Parts.column({ Name = "FallTrunk", Color = BARK, Material = Enum.Material.Wood, CanCollide = false, CanQuery = false, CanTouch = false, Parent = folder }, 30, 2, hinge))
+			for k = 0, 4 do
+				local y = 14 + k * 3.4
+				local radius = 7 - k * 1.2
+				add(part("FallNeedles", Vector3.new(radius * 2, radius * 2, radius * 2) * 0.8, hinge * CFrame.new(0, y, 0), Color3.fromRGB(34, 54, 36):Lerp(Color3.fromRGB(46, 64, 40), k / 5), Enum.Material.Grass, { Shape = Enum.PartType.Ball }))
+			end
+			o.hinge, o.pieces, o.side = hinge, pieces, side
+		elseif o.kind == "side" then
+			-- dichtes Gebüsch an der Seite (dort springt es heraus); die Seite ist zufällig
+			o.side = rng:NextNumber() < 0.5 and -1 or 1
+			local frame = chaseObstacleFrame(C.points, o.s + 5)
+			for k = 1, 9 do
+				local size = rng:NextNumber(3, 5.5)
+				part("AmbushBush", Vector3.new(size, size, size), frame * CFrame.new(o.side * rng:NextNumber(9.5, 13), size * 0.3, rng:NextNumber(-4, 4)), Color3.fromRGB(30, 50, 30):Lerp(Color3.fromRGB(44, 62, 36), rng:NextNumber()), Enum.Material.Grass, { Shape = Enum.PartType.Ball })
+			end
+			o.bush = (frame * CFrame.new(o.side * 10.5, 0, 0)).Position
+		end
+	end
+end
+
+-- Blitz und Donner (wird auch bei besonderen Momenten ausgelöst)
+local function lightning(C)
+	if C.flashing then
+		return
+	end
+	C.flashing = true
+	task.spawn(function()
+		local ui = buildChaseUi()
+		local saved = Lighting.ExposureCompensation
+		for _, step in { { 0.25, 1.6, 0.07 }, { 1, 0, 0.06 }, { 0.4, 1.2, 0.12 }, { 1, 0, 0 } } do
+			if chase ~= C then
+				break
+			end
+			ui.white.BackgroundTransparency = 1 - (1 - step[1]) * 0.55
+			Lighting.ExposureCompensation = saved + step[2]
+			task.wait(step[3])
+		end
+		ui.white.BackgroundTransparency = 1
+		Lighting.ExposureCompensation = saved
+		task.wait(math.random() * 1 + 0.5)
+		play("thunder", { Volume = 2 })
+		C.flashing = false
+	end)
+end
+
+local function shakeCustom(C, strength, duration)
+	C.camShake = strength
+	C.camShakeUntil = os.clock() + duration
+	C.camShakeDuration = duration
+end
+
+-- jedes Bild während der Flucht (vor der Bewegung des Verfolgers)
+local nextMudStep = 0
+local function updateObstacles(C, now, playerS, root)
+	local humanoid = ownHumanoid()
+	local ui = buildChaseUi()
+	local prompt
+	local zoneSpeed
+	for _, o in C.obstacles or {} do
+		if (not o.beast or C.form == "beast") and not o.done then
+			if o.kind == "jump" or o.kind == "duck" then
+				if playerS >= o.s - Data.PROMPT_DISTANCE and playerS < o.s + 0.5 then
+					if not o.promptStart then
+						o.promptStart = now
+						showBigHint(o.kind == "jump" and (UserInputService.TouchEnabled and "SPRINGEN!" or "LEERTASTE – SPRINGEN!") or (UserInputService.TouchEnabled and "DUCKEN!" or "C – DUCKEN!"), 1.4, Color3.fromRGB(255, 210, 60))
+					end
+					prompt = o
+					if (C.pressed[o.kind] or 0) >= o.promptStart then
+						o.done = true
+						if o.kind == "jump" and humanoid then
+							humanoid.JumpHeight = 5
+							humanoid.Jump = true
+							task.delay(0.7, function()
+								if humanoid.Parent then
+									humanoid.JumpHeight = 2
+								end
+							end)
+							task.delay(0.55, function()
+								play("jumpLand", { Volume = 1.2 })
+							end)
+						else
+							C.duckUntil = now + 0.95
+						end
+					end
+				elseif playerS >= o.s + 0.5 then
+					-- verpasst: stolpern bzw. Kopf anschlagen
+					o.done = true
+					C.stopUntil = now + Data.STUMBLE_TIME + (o.kind == "duck" and 0.15 or 0)
+					play(o.kind == "jump" and "stumble" or "headHit", { Volume = 1.6 })
+					redFlash(o.kind == "duck" and 0.45 or 0.3, 0.6)
+					shakeCustom(C, o.kind == "duck" and 0.05 or 0.035, 0.6)
+				end
+			elseif o.kind == "mud" or o.kind == "creek" then
+				if playerS >= o.from and playerS <= o.to then
+					zoneSpeed = o.kind == "mud" and Data.MUD_SPEED or Data.CREEK_SPEED
+					if not o.entered then
+						o.entered = true
+						if o.kind == "creek" then
+							play("splash", { Volume = 1.6 })
+						end
+					end
+					if now >= nextMudStep and root.AssemblyLinearVelocity.Magnitude > 2 then
+						nextMudStep = now + 0.32
+						play(o.kind == "mud" and "mudStep" or "splash", { Volume = 1 })
+					end
+				elseif playerS > o.to then
+					o.done = true
+				end
+			elseif o.kind == "tree" then
+				if playerS >= o.s + 8 then
+					-- das Biest rammt den Baum: er kracht hinter einem quer auf den Weg
+					o.done = true
+					o.fallStart = now
+					C.treeFall = o
+					if C.s < o.s - 1 then
+						C.treeBlock = { s = o.s, untilTime = now + Data.TREE_BLOCK }
+					end
+					play("woodSplinter", { Volume = 2 })
+					play("roar", { Volume = 2.2 })
+					lightning(C)
+				end
+			elseif o.kind == "side" then
+				if playerS >= o.s - Data.SIDE_SILENCE and not C.silent and not o.silenced then
+					-- Stille vor dem Angriff: Musik und Atem fast weg, kein Herzschlag
+					o.silenced = true
+					C.silent = true
+					loop("chaseMusic", 0.03)
+					loop("runBreath", 0.12)
+				end
+				if playerS >= o.s and C.rig then
+					o.done = true
+					local right = Vector3.new(-root.CFrame.LookVector.Z, 0, root.CFrame.LookVector.X)
+					local _, direction = Data.pointAt(C.points, playerS)
+					right = unit(Vector3.new(-direction.Z, 0, direction.X), right)
+					local playerFeet = root.Position - UP * 2.8
+					local attack = {
+						start = now,
+						side = o.side,
+						from = o.bush,
+						hit = playerFeet,
+						miss = playerFeet - right * o.side * 7 + unit(flat(direction)) * 2,
+						duration = Data.SIDE_WINDOW + 0.35,
+					}
+					C.attack = attack
+					play("bushRustle", { Volume = 2.2 })
+					play("beastLunge", { Volume = 2.4 })
+					play("jumpscare", { Volume = 1.6 })
+					startQte("dodge", -o.side, Data.SIDE_WINDOW, function(success)
+						attack.result = success
+						C.silent = false
+						loop("chaseMusic", 0.9)
+						loop("runBreath", 0.8)
+						if success then
+							shakeCustom(C, 0.03, 0.4)
+						else
+							play("clawHit", { Volume = 2 })
+							redFlash(0.65, 0.8)
+							showScratches()
+							shakeCustom(C, 0.07, 0.8)
+							C.stopUntil = os.clock() + 0.8
+						end
+					end)
+				end
+			end
+		end
+	end
+	-- Hinweis-Knopf (Handy)
+	ui.action.Visible = prompt ~= nil and UserInputService.TouchEnabled
+	if prompt then
+		ui.action.Text = prompt.kind == "jump" and "SPRINGEN" or "DUCKEN"
+	end
+	C.prompt = prompt
+	-- Geschwindigkeit (die vom Server wird hier überschrieben, solange man rennt)
+	if humanoid and C.chasing and not C.caught then
+		local speed = Data.RUN_SPEED
+		if C.stopUntil and now < C.stopUntil then
+			speed = 3
+		elseif C.attack and not C.attack.result then
+			speed = 7
+		elseif zoneSpeed then
+			speed = zoneSpeed
+		end
+		humanoid.WalkSpeed = speed
+		-- ducken: Kamera tiefer
+		local target = (C.duckUntil and now < C.duckUntil) and Vector3.new(0, -2.4, 0) or Vector3.zero
+		humanoid.CameraOffset = humanoid.CameraOffset:Lerp(target, 0.25)
+	end
+	-- der Baum fällt
+	local fall = C.treeFall
+	if fall and fall.fallStart then
+		local t = now - fall.fallStart
+		local angle = math.rad(88) * ease(math.clamp(t / 1.1, 0, 1), "in")
+		for _, piece in fall.pieces do
+			if piece.part.Parent then
+				piece.part.CFrame = fall.hinge * CFrame.Angles(0, 0, angle * fall.side) * piece.offset
+			end
+		end
+		if t >= 1.1 and not fall.landed then
+			fall.landed = true
+			play("treeCrash", { Volume = 2.4 })
+			shakeCustom(C, 0.05, 0.9)
+		end
+	end
+	-- Blitze ab und zu
+	if C.chasing and now >= (C.nextLightning or math.huge) then
+		C.nextLightning = now + 11 + math.random() * 9
+		lightning(C)
+	end
+end
+
+-- jedes Bild: Atem im Nacken (roter Rand, Wackeln, Keuchen) und die eigene Kamera wackeln
+local function updateChaseFeel(C, now, distance)
+	local closeness = (C.chasing and not C.attack and not C.silent) and 1 - math.clamp((distance - 2.5) / 7.5, 0, 1) or 0
+	if C.caught then
+		closeness = 1
+	end
+	setRedEdge(buildChaseUi().redness + (closeness - buildChaseUi().redness) * 0.1)
+	local breath = loops.runBreath
+	if breath and not C.silent then
+		breath.Volume = 0.8 + closeness * 0.9
+	end
+	local beastBreath = C.breathSound
+	if beastBreath and beastBreath.Parent then
+		beastBreath.Volume = C.silent and 0 or 0.5 + closeness * 1.8
+	end
+	if not active then
+		local strength = closeness * 0.01
+		if C.camShakeUntil and now < C.camShakeUntil then
+			strength += C.camShake * math.clamp((C.camShakeUntil - now) / C.camShakeDuration, 0, 1)
+		end
+		if strength > 0.0005 then
+			camera.CFrame *= CFrame.Angles(noise(now * 19, 7.1) * strength, noise(now * 23, 8.3) * strength, noise(now * 17, 9.7) * strength * 0.5)
+		end
+	end
+end
+
 function handlers.run(message)
 	token += 1
 	local mine = token
@@ -2060,6 +2446,10 @@ function handlers.run(message)
 		started = os.clock(),
 	}
 	chase = C
+	C.pressed = {}
+	C.nextLightning = os.clock() + 9
+	resetChaseEffects()
+	buildChaseObstacles(C, folder)
 	brighten(true)
 	-- Mondlicht (sonst sieht man im Wald gar nichts mehr – die Kerze ist weg)
 	local moon = Instance.new("Part")
@@ -2270,6 +2660,19 @@ function handlers.transform()
 		rig.model:Destroy()
 		local model = Beast.build(localFolder)
 		local beastRoot = model.PrimaryPart
+		-- das rote Glühen wirft den eigenen Schatten nach vorne auf den Weg
+		local beastHead = model:FindFirstChild("Head")
+		if beastHead then
+			local glare = Instance.new("SpotLight")
+			glare.Name = "RedGlare"
+			glare.Face = Enum.NormalId.Front
+			glare.Color = Color3.fromRGB(255, 40, 25)
+			glare.Range = 55
+			glare.Angle = 80
+			glare.Brightness = 2.6
+			glare.Shadows = true
+			glare.Parent = beastHead
+		end
 		local beast = Rig.new(model, beastRoot, false, CFrame.new(0, 0.5, 0))
 		beast.grounded = true
 		beast.feet = feet
@@ -2330,6 +2733,7 @@ function handlers.transform()
 		if breath then
 			breath:Play()
 		end
+		C.breathSound = breath
 		shot(function()
 			return CFrame.lookAt(eye(), sarpHeadPosition(beast))
 		end, 0.4)
@@ -2377,6 +2781,7 @@ function handlers.bridge(message)
 	C.bridgeLength = message.bridgeLength or C.bridgeLength or 40
 	C.chasing = false
 	C.onBridge = true
+	resetChaseEffects()
 	-- (falls es noch davor ist: es ist schon auf der Brücke)
 	C.s = math.max(C.s, C.bridgeStart + 4)
 	run(mine, function()
@@ -2420,6 +2825,7 @@ end
 
 -- Ende: schwarz (hier kommt später das Ende)
 handlers["end"] = function()
+	resetChaseEffects()
 	token += 1
 	local mine = token
 	run(mine, function()
@@ -2493,6 +2899,34 @@ local function updateChase(now, deltaTime)
 		return
 	end
 	local playerS = Data.progress(C.points, root.Position)
+	if C.chasing and not C.caught then
+		updateObstacles(C, now, playerS, root)
+	end
+	-- Angriff aus dem Gebüsch: erst lauert es im Busch, dann springt es (vorbei oder trifft)
+	local A = C.attack
+	if A then
+		local t = now - A.start
+		if t < Data.SIDE_WINDOW then
+			rig.feet = A.from
+			rig.facing = flat(root.Position - A.from)
+			rig.lift = 0
+		else
+			local b = math.clamp((t - Data.SIDE_WINDOW) / (A.duration - Data.SIDE_WINDOW), 0, 1)
+			local to = A.result == false and A.hit or A.miss
+			rig.feet = A.from:Lerp(to, ease(b, "out"))
+			rig.facing = flat(to - A.from)
+			rig.lift = math.sin(b * math.pi) * 3
+			rig.walkState.amount = 1
+		end
+		if t >= A.duration then
+			C.attack = nil
+			rig.lift = 0
+			C.s = playerS - (A.result and 13 or 12) -- (getroffen: man taumelt, kommt aber noch davon)
+			play("roar", { Volume = 2 })
+		end
+		updateChaseFeel(C, now, 99)
+		return
+	end
 	local target
 	if C.onBridge then
 		-- läuft weiter auf die Brücke (bis kurz nach der Mitte)
@@ -2507,6 +2941,15 @@ local function updateChase(now, deltaTime)
 		target = C.s + speed * deltaTime
 		if playerS - target > Data.MAX_GAP then
 			target = math.min(playerS - Data.MAX_GAP, C.s + 40 * deltaTime)
+		end
+	end
+	-- der umgestürzte Baum hält es kurz auf (es klettert drüber)
+	local block = C.treeBlock
+	if block and not C.onBridge and not C.lunge then
+		if now < block.untilTime then
+			target = math.min(target, block.s - 3)
+		else
+			C.treeBlock = nil
 		end
 	end
 	local before = C.s
@@ -2542,11 +2985,12 @@ local function updateChase(now, deltaTime)
 		nextStep = now + (C.form == "beast" and 0.28 or 0.36)
 		play(C.form == "beast" and "beastStep" or "sarpStep", { Volume = C.form == "beast" and 2 or 1.6 }, rig.root)
 	end
-	if now >= nextBeat and not C.onBridge then
+	if now >= nextBeat and not C.onBridge and not C.silent then
 		local closeness = 1 - math.clamp((distance - 3) / 11, 0, 1)
 		nextBeat = now + 0.95 - closeness * 0.6
-		play("heartbeat", { Volume = 0.5 + closeness * 1.6 })
+		play("heartbeat", { Volume = 0.5 + closeness * 1.9 })
 	end
+	updateChaseFeel(C, now, distance)
 end
 
 ------------------------------------------------------------------ Das Ende: Sarps Hütte
@@ -3019,6 +3463,7 @@ local function buildPoliceCar(parent)
 end
 
 function handlers.walk(message)
+	resetChaseEffects()
 	token += 1
 	local mine = token
 	if not message.hut then
@@ -3326,6 +3771,7 @@ function Kapitel3.run()
 				end)
 			end
 		elseif message.type == "gameOver" then
+			resetChaseEffects()
 			-- Game Over (Scene.lua) liegt darunter: das eigene Schwarz und die Sequenz weg
 			token += 1
 			qte = nil
@@ -3363,6 +3809,25 @@ function Kapitel3.run()
 			if qte and qte.kind == "struggle" then
 				qteInput("struggle") -- (Leertaste geht beim Losreißen auch)
 			end
+		end
+	end)
+	-- Verfolgung: Leertaste = springen, C = ducken (auch der runde Knopf auf dem Handy)
+	UserInputService.InputBegan:Connect(function(input)
+		local C = chase
+		if not (C and C.chasing and C.pressed) or UserInputService:GetFocusedTextBox() then
+			return
+		end
+		local key = input.KeyCode
+		if key == Enum.KeyCode.Space or key == Enum.KeyCode.ButtonA then
+			C.pressed.jump = os.clock()
+		elseif key == Enum.KeyCode.C or key == Enum.KeyCode.LeftControl or key == Enum.KeyCode.ButtonB then
+			C.pressed.duck = os.clock()
+		end
+	end)
+	buildChaseUi().action.Activated:Connect(function()
+		local C = chase
+		if C and C.prompt and C.pressed then
+			C.pressed[C.prompt.kind] = os.clock()
 		end
 	end)
 	-- Telefon: Tasten am Telefon anklicken/antippen, Q = auflegen

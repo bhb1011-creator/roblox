@@ -147,6 +147,17 @@ Config.SOUNDS = {
 	chaseMusic = "", -- chase_music_loop.ogg (Musik bei der Flucht durch den Wald, Schleife)
 	bridgeCrack = "", -- bridge_crack.ogg (Holz und Seile knarren und reißen)
 	bridgeCollapse = "", -- bridge_collapse.ogg (die Brücke bricht, Bretter fallen in die Tiefe)
+	-- Kapitel 3, die Verfolgung
+	thunder = "", -- thunder.ogg (Donner nach einem Blitz, rollt lange nach)
+	treeCrash = "", -- tree_crash.ogg (großer Baum kracht auf den Boden)
+	woodSplinter = "", -- wood_splinter.ogg (Holz splittert, als das Biest den Baum rammt)
+	stumble = "", -- stumble.ogg (man stolpert über einen Stamm, Keuchen)
+	headHit = "", -- head_hit.ogg (Kopf knallt gegen Holz, dumpf)
+	jumpLand = "", -- jump_land.ogg (Landen nach einem Sprung auf Waldboden)
+	mudStep = "", -- mud_step.ogg (schmatzender Schritt im Schlamm)
+	splash = "", -- splash.ogg (Schritt ins Wasser, Platschen)
+	bushRustle = "", -- bush_rustle.ogg (Gebüsch raschelt heftig, gleich neben einem)
+	beastLunge = "", -- beast_lunge.ogg (Kreischen, als das Biest aus dem Gebüsch springt)
 	-- Kapitel 3, das Ende: Sarps Hütte
 	cabinAmbience = "", -- cabin_ambience_loop.ogg (leises Knarren der Hütte, Wind draußen, Schleife)
 	fireCrackle = "", -- fire_crackle_loop.ogg (Glut im Kamin knistert, Schleife)
@@ -199,7 +210,7 @@ Config.PLAYER_TTS = false
 Config.TEST_START_KAPITEL2 = "kapitel3"
 -- Versionsnummer: steht beim Laden auf dem Bildschirm und im Output. So sieht man sofort,
 -- ob in Studio wirklich der neueste Stand läuft (nach "git pull").
-Config.BUILD = "K2-2026-11-07a"
+Config.BUILD = "K2-2026-11-07b"
 Config.VOICES = {
 	-- Sarp: etwas tiefer, langsam, ruhig – mit Bass, weniger Höhen und dunklem Hall
 	sarp = {
