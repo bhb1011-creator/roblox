@@ -1,26 +1,25 @@
-Ich arbeite mit dir an meinem Roblox-Horrorspiel „Die letzte Nacht“ (Fears-to-Fathom-Stil,
-allein oder zu zweit, gebaut mit Rojo). Ich bin Anfänger und nutze einen Mac – erkläre bitte
-alles in einfachem Deutsch, in kurzen Schritten.
+Ich arbeite mit dir an meinem Roblox-Horrorspiel „Guesthouse“ (im Code auch „Die letzte Nacht“,
+Fears-to-Fathom-Stil, allein oder zu zweit, gebaut mit Rojo). Das Spiel ist auf Englisch.
+Ich bin Anfänger und nutze einen Mac – erkläre bitte alles in einfachem Deutsch, in kurzen Schritten.
 
-Lies zuerst `handoff.md` im Repo (Stand, Dateien, Fehler, nächste Schritte) und danach
-`docs/konzept/wagners.md` (Geschichte und Ablauf von Kapitel 2).
+Lies zuerst `handoff.md` im Repo (Stand, Dateien, Regeln, offene Punkte), danach
+`docs/konzept/wagners.md` (Geschichte Kapitel 2).
 
 Regeln:
 - Arbeite NUR auf dem Branch `claude/optimistic-bardeen-4tmohk`, committe und pushe dort.
   Kein Pull Request, außer ich verlange ihn.
-- Schick mir Vorschau-Bilder nur, wenn ich es sage (Bauplan oder Figuren zeige ich nur auf Wunsch).
-- Erst Gameplay, Sounds/Audio kommen ganz am Ende.
-- Die Geschichte NICHT spoilern: Sarp wurde von der Familie erschaffen und Richard stand lange
-  auf ihrer Seite – das kommt erst im DLC und wird in Kapitel 2 nicht erzählt.
-- Ich teste selbst: `git pull`, dann `~/Desktop/rojo serve kapitel2.project.json --port 34872`,
-  in Roblox Studio „Connect“ und „Play“. Sag mir nach jeder Änderung, was ich neu testen soll.
-- Sei ehrlich: Was du in Studio nicht testen konntest, sag klar dazu.
+- Schick mir KEINE Screenshots, Bilder oder Dateien, außer ich verlange es.
+- Zähle bei jeder Änderung `Config.BUILD` in `src/shared/Config.lua` hoch und nenne mir
+  danach Version + Commit-Hash.
+- Den ElevenLabs-Wasserzeichen-Ton NICHT entfernen.
+- Keine DLC-Hintergrundgeschichte erzählen (Sarp wurde von der Familie erschaffen,
+  Richard stand lange auf ihrer Seite – das kommt erst im DLC).
+- Ich teste selbst: in `~/Documents/roblox-neu` `git pull`, dann
+  `~/Downloads/rojo serve kapitel2.project.json --port 34872`, in Studio „Connect“ und „Play“.
+- Sei ehrlich: Du kannst Studio nicht starten – sag klar, was ungetestet ist.
+  Arbeite gründlich und sag, wenn etwas fertig ist.
 
-Aktueller Stand: Die ganze Flucht aus dem Haus ist eingebaut (Großmutters Zimmer hinter der
-vernagelten Tür 1, Chemikalien + Schießpulver suchen, Bombe, Safe sprengen, Sarp als
-Hauptgefahr, Familie mit Quick-Time-Event, 3 Herzen + Game Over, roter Kerzenweg,
-Ritualraum = schwarzer Bildschirm). Ich teste das gerade in Studio und gebe dir Rückmeldung.
-
-Als Nächstes: (1) Fehler aus meinem Studio-Test beheben, (2) dann die Fortsetzung hinter dem
-Ritualraum (Sarp mutiert) bauen – dazu frage ich dich vorher nach meinen Ideen.
+Stand: Kapitel 1, 2 und 3 sind gebaut (Kapitel 3: Ritual, Flucht vor dem Biest durch den Wald,
+Brücke, Sarps Hütte, Notruf 911, Halluzinations-Jumpscares, Polizei holt einen ab, ENDE).
+Gerade kümmern wir uns um die Sounds für Kapitel 3 (siehe Abschnitt „Audio“ in handoff.md).
 Fang damit an, dass du die Dateien liest und mir in 5 Sätzen sagst, wo wir stehen.

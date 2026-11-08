@@ -1,6 +1,7 @@
-# Handoff – Horror-Spiel „Die letzte Nacht“ (Roblox, Kapitel 2)
+# Handoff – Horror-Spiel „Guesthouse“ (Roblox)
 
-Stand: 6. November 2026, Branch `claude/optimistic-bardeen-4tmohk`, letzter Spielcode-Commit `185aacc`.
+Stand: 8. November 2026, Branch `claude/optimistic-bardeen-4tmohk`, Version `K2-2026-11-08b`.
+Abschnitte 2–8 beschreiben Kapitel 2 (Stand 6. Nov.); **neu: Abschnitt 0 (Kapitel 3 + Audio).**
 Diese Datei ist für einen **neuen Chat** gedacht: erst den Prompt unten kopieren, der Rest ist Nachschlagewerk.
 
 ---
@@ -8,33 +9,82 @@ Diese Datei ist für einen **neuen Chat** gedacht: erst den Prompt unten kopiere
 ## 1. Prompt zum Einfügen in den neuen Chat
 
 ```text
-Ich arbeite mit dir an meinem Roblox-Horrorspiel „Die letzte Nacht“ (Fears-to-Fathom-Stil,
-allein oder zu zweit, gebaut mit Rojo). Ich bin Anfänger und nutze einen Mac – erkläre bitte
-alles in einfachem Deutsch, in kurzen Schritten.
+Ich arbeite mit dir an meinem Roblox-Horrorspiel „Guesthouse“ (im Code auch „Die letzte Nacht“,
+Fears-to-Fathom-Stil, allein oder zu zweit, gebaut mit Rojo). Das Spiel ist auf Englisch.
+Ich bin Anfänger und nutze einen Mac – erkläre bitte alles in einfachem Deutsch, in kurzen Schritten.
 
-Lies zuerst `handoff.md` im Repo (Stand, Dateien, Fehler, nächste Schritte) und danach
-`docs/konzept/wagners.md` (Geschichte und Ablauf von Kapitel 2).
+Lies zuerst `handoff.md` im Repo (Stand, Dateien, Regeln, offene Punkte), danach
+`docs/konzept/wagners.md` (Geschichte Kapitel 2).
 
 Regeln:
 - Arbeite NUR auf dem Branch `claude/optimistic-bardeen-4tmohk`, committe und pushe dort.
   Kein Pull Request, außer ich verlange ihn.
-- Schick mir Vorschau-Bilder nur, wenn ich es sage (Bauplan oder Figuren zeige ich nur auf Wunsch).
-- Erst Gameplay, Sounds/Audio kommen ganz am Ende.
-- Die Geschichte NICHT spoilern: Sarp wurde von der Familie erschaffen und Richard stand lange
-  auf ihrer Seite – das kommt erst im DLC und wird in Kapitel 2 nicht erzählt.
-- Ich teste selbst: `git pull`, dann `~/Desktop/rojo serve kapitel2.project.json --port 34872`,
-  in Roblox Studio „Connect“ und „Play“. Sag mir nach jeder Änderung, was ich neu testen soll.
-- Sei ehrlich: Was du in Studio nicht testen konntest, sag klar dazu.
+- Schick mir KEINE Screenshots, Bilder oder Dateien, außer ich verlange es.
+- Zähle bei jeder Änderung `Config.BUILD` in `src/shared/Config.lua` hoch und nenne mir
+  danach Version + Commit-Hash.
+- Den ElevenLabs-Wasserzeichen-Ton NICHT entfernen.
+- Keine DLC-Hintergrundgeschichte erzählen (Sarp wurde von der Familie erschaffen,
+  Richard stand lange auf ihrer Seite – das kommt erst im DLC).
+- Ich teste selbst: in `~/Documents/roblox-neu` `git pull`, dann
+  `~/Downloads/rojo serve kapitel2.project.json --port 34872`, in Studio „Connect“ und „Play“.
+- Sei ehrlich: Du kannst Studio nicht starten – sag klar, was ungetestet ist.
+  Arbeite gründlich und sag, wenn etwas fertig ist.
 
-Aktueller Stand: Die ganze Flucht aus dem Haus ist eingebaut (Großmutters Zimmer hinter der
-vernagelten Tür 1, Chemikalien + Schießpulver suchen, Bombe, Safe sprengen, Sarp als
-Hauptgefahr, Familie mit Quick-Time-Event, 3 Herzen + Game Over, roter Kerzenweg,
-Ritualraum = schwarzer Bildschirm). Ich teste das gerade in Studio und gebe dir Rückmeldung.
-
-Als Nächstes: (1) Fehler aus meinem Studio-Test beheben, (2) dann die Fortsetzung hinter dem
-Ritualraum (Sarp mutiert) bauen – dazu frage ich dich vorher nach meinen Ideen.
+Stand: Kapitel 1, 2 und 3 sind gebaut (Kapitel 3: Ritual, Flucht vor dem Biest durch den Wald,
+Brücke, Sarps Hütte, Notruf 911, Halluzinations-Jumpscares, Polizei holt einen ab, ENDE).
+Gerade kümmern wir uns um die Sounds für Kapitel 3 (siehe Abschnitt „Audio“ in handoff.md).
 Fang damit an, dass du die Dateien liest und mir in 5 Sätzen sagst, wo wir stehen.
 ```
+
+---
+
+## 0. NEU seit 6. November: Kapitel 3 und Audio
+
+### Wichtige Änderungen gegenüber unten
+- Rojo liegt beim User jetzt in `~/Downloads/rojo`, Projektordner `~/Documents/roblox-neu`.
+- Regeln: keine Screenshots/Dateien schicken; `Config.BUILD` bei jeder Änderung hochzählen;
+  Sounds sind jetzt dran (die alte Regel „Audio ganz am Ende“ ist erledigt).
+- Kapitel 2 ist fertig und geht nahtlos in Kapitel 3 über.
+- `Config.TEST_START_KAPITEL2 = "kapitel3"` (weitere: `""`, `"nachVerstecken"`, `"tuer1"`, `"huette"` = direkt bei der Hütte).
+
+### Kapitel 3 – Ablauf
+1. Karte „KAPITEL 3“, Ritual im Ritualraum (Familie flüstert im Chor, Kamerafahrt, Familie schaut auf einen Punkt, nicht in die Kamera).
+2. Quick-Time-Events (dodge/struggle/timing, bewusst leicht), Partner wird ggf. getötet, Flucht.
+3. Sarp verwandelt sich ins Biest → Verfolgung durch den Wald (`Data.OBSTACLES`): über Stämme springen (Leertaste),
+   unter Stämmen rutschen (C), Schlamm/Bach bremsen, Biest rammt einen Baum, Hinterhalt aus dem Gebüsch (A/D),
+   Atem im Nacken, Blitz/Donner, rotes Leuchten wirft den Schatten nach vorn. Biest bleibt sichtbar, aber mit Abstand (MAX_GAP 22).
+4. Hängebrücke über eine Felsschlucht; das Biest stürzt in der Mitte ab.
+5. Kurve → **Sarps Hütte** an einer Schotterstraße (`SarpHut.lua`, sehr detailliert, Tür auf/zu, dunkel).
+6. Altes Telefon, Zettel „EMERGENCY 911“, Tasten in der Welt anklicken → Polizei-Anruf.
+7. Optionale Halluzinations-Jumpscares am **Spiegel** und am **Foto**; mindestens einer muss gesehen werden, bevor das Bett geht.
+8. Bett → „Etwas später …“, Blaulicht, Klopfen, Polizeiauto fährt weg, „ENDE“.
+
+### Kapitel-3-Dateien
+| Datei | Zweck |
+|---|---|
+| `src/kapitel2/server/Kapitel3.lua` | Server: Ablauf, Wald/Weg/Schlucht/Terrain, Brücke, Hütte, Telefon, Bett, Ende, Teststart `huette` |
+| `src/kapitel2/client/Kapitel3.lua` (~4000 Z.) | Client: Kamera, Rig-Animationen, QTE, Verfolgung + Hindernisse, Telefon-UI, Jumpscares, Polizeiauto, Ende |
+| `src/kapitel2/server/SarpHut.lua` | Die Hütte + Hof |
+| `src/kapitel2/server/ForestDressing.lua` | Farne, Pilze, Steine, Nebel usw. am Weg |
+| `src/shared/Kapitel3Data.lua` | Gemeinsame Werte (Weg, Hindernisse, QTE-Zeiten, Ende-Zeitplan) |
+| `src/shared/Kapitel2Dialogue.lua` | Texte, auch `KAPITEL3` (Polizei-Anruf usw.) |
+| `tools/make_kapitel3_audio.py` | Erzeugt die selbstgemachten Kapitel-3-Sounds nach `assets/audio/kapitel3` (numpy + ffmpeg) |
+
+**Nichts davon wurde in echtem Studio getestet** – nur Syntax-Prüfung und eigene Mock-Tests.
+
+### Audio – Stand 8. November
+- IDs stehen in `Config.SOUNDS` (leer = Sound fällt weg). Listen von IDs = mehrere Ebenen gleichzeitig (Flüster-Chor).
+- Sprachdateien Sarp (01–19) und Erzähler (01–29) sind hochgeladen und eingetragen (`Config.VOICE_LINES`).
+  Die Kapitel-3-Sätze (`k3_*`, Polizei-Anruf usw.) haben noch **keine** Aufnahmen.
+- Aus `assets/audio/kapitel3` (55 Dateien) ist **noch nichts hochgeladen**. Einige Slots nutzen Toolbox-IDs vom User.
+- Aus `assets/audio` fehlen noch: knock, twig_snap, house_creak, forest_wind_loop, leaves_rustle, tree_creak,
+  swing_creak_loop, shutter_rattle_loop, radio_voices, owl_hoot, wolf_howl, raven_caw, fox_scream,
+  heartbeat_loop, scared_breath_loop, step_gravel, step_dirt, step_wood.
+- **Upload-Grenze:** Uploads klappen gerade nicht („Hochladen fehlgeschlagen“). Der User hat sich mit Ausweis verifiziert.
+  Erster Upload war am 24. Okt. Löschen gibt keinen Platz zurück.
+- **Geplante Lösung (noch nicht gebaut):** viele kurze Sounds zu wenigen **Sammeldateien** zusammenschneiden und im Spiel
+  per `Sound.PlaybackRegion` nur das passende Stück abspielen. Schleifen (Feuer, Sirene …) bleiben einzelne Dateien.
+  Alternative: Sounds aus der Studio-Toolbox (ohne Schloss = öffentlich) – zählen nicht zur Grenze.
 
 ---
 
