@@ -87,10 +87,10 @@ Config.SOUNDS = {
 	sting = "rbxassetid://94291824225136", -- sting.ogg
 	knock = "", -- knock.ogg (Klopfen ans Autofenster)
 	twig = "", -- twig_snap.ogg (knackender Ast im Wald)
-	growl = "", -- beast_growl.ogg (das Biest knurrt im Wald)
-	roar = "rbxassetid://9006117664", -- (vorerst derselbe wie sarpRoar) beast_roar.ogg (das Biest brüllt und jagt einen)
-	beastBreath = "", -- beast_breath_loop.ogg (Atmen des Biests)
-	beastStep = "", -- beast_step.ogg (schwere Schritte des Biests)
+	growl = "rbxassetid://87596429746180", -- beast_growl.ogg (das Biest knurrt im Wald)
+	roar = "rbxassetid://132506850280672", -- beast_roar.ogg (das Biest brüllt und jagt einen)
+	beastBreath = "rbxassetid://82147632891190", -- beast_breath_loop.ogg (Atmen des Biests)
+	beastStep = "rbxassetid://132958859672585", -- beast_step.ogg (schwere Schritte des Biests)
 	-- Umgebung
 	forestWind = "", -- forest_wind_loop.ogg (Wind in den Tannen)
 	rustle = "", -- leaves_rustle.ogg (Rascheln im Laub, aus zufälligen Richtungen)
@@ -98,13 +98,13 @@ Config.SOUNDS = {
 	houseCreak = "", -- house_creak.ogg (das Haus knarrt, als wäre jemand drin)
 	swingCreak = "", -- swing_creak_loop.ogg (quietschende Reifenschaukel)
 	shutterRattle = "", -- shutter_rattle_loop.ogg (klappernder Fensterladen)
-	carTick = "", -- car_tick_loop.ogg (abkühlender Motor)
+	carTick = "rbxassetid://119917449651022", -- car_tick_loop.ogg (abkühlender Motor)
 	radioVoices = "", -- radio_voices.ogg (verzerrte Stimmen im Radiorauschen)
 	owl = "", -- owl_hoot.ogg (Waldkauz in der Ferne)
 	wolf = "", -- wolf_howl.ogg (Wolf heult weit weg)
 	raven = "", -- raven_caw.ogg (Rabe)
 	foxScream = "", -- fox_scream.ogg (Fuchs-Schrei, klingt fast wie ein Mensch)
-	birdFlyaway = "", -- bird_flyaway.ogg (Vogel fliegt erschrocken auf, ganz nah)
+	birdFlyaway = "rbxassetid://118432000072644", -- bird_flyaway.ogg (Vogel fliegt erschrocken auf, ganz nah)
 	-- Spieler
 	heartbeat = "", -- heartbeat_loop.ogg (Herzschlag, wenn das Biest nah ist)
 	scaredBreath = "", -- scared_breath_loop.ogg (panisches Atmen bei der Jagd)
@@ -112,9 +112,9 @@ Config.SOUNDS = {
 	stepDirt = "", -- step_dirt.ogg (Schritt auf Waldboden)
 	stepWood = "", -- step_wood.ogg (Schritt auf Holz, z. B. Veranda)
 	-- Kapitel 2: die Haustür der Wagners
-	doorCreak = "", -- door_creak.ogg (Tür geht knarrend auf)
-	doorSlam = "", -- door_slam.ogg (Tür fällt hinter einem zu)
-	doorChain = "", -- door_chain.ogg (Türkette wird abgenommen)
+	doorCreak = "rbxassetid://89379094265587", -- door_creak.ogg (Tür geht knarrend auf)
+	doorSlam = "rbxassetid://86447926680262", -- door_slam.ogg (Tür fällt hinter einem zu)
+	doorChain = "rbxassetid://137199544602877", -- door_chain.ogg (Türkette wird abgenommen)
 	-- Kapitel 2, die erste Nacht
 	scream = "", -- scream_distant.ogg (Schrei irgendwo im Haus, weckt einen auf)
 	heavyKnock = "", -- heavy_knock.ogg (drei schwere Schläge gegen die Haustür)
@@ -211,7 +211,7 @@ Config.PLAYER_TTS = false
 Config.TEST_START_KAPITEL2 = "kapitel3"
 -- Versionsnummer: steht beim Laden auf dem Bildschirm und im Output. So sieht man sofort,
 -- ob in Studio wirklich der neueste Stand läuft (nach "git pull").
-Config.BUILD = "K2-2026-11-07k"
+Config.BUILD = "K2-2026-11-08a"
 Config.VOICES = {
 	-- Sarp: etwas tiefer, langsam, ruhig – mit Bass, weniger Höhen und dunklem Hall
 	sarp = {
