@@ -44,12 +44,12 @@ Fang damit an, dass du die Dateien liest und mir in 5 Sätzen sagst, wo wir steh
 
 ---
 
-## 000. NEU: Realistische Familie (Version K2-2026-11-09i)
+## 000. NEU: Realistische Familie (Version K2-2026-11-09j)
 
-- **09i:** Sprechen sichtbar: `Speech.onSay` (Speech.lua) meldet jeden Satz; `Scene.lua` (updateNecks) lässt den Kopf
-  des Sprechers im Satzrhythmus nicken/neigen. Mundbewegung (FaceControls.JawDrop) ist eingebaut, wirkt aber nur bei
-  Köpfen mit Gesichtsknochen – die jetzigen KI-Köpfe haben keine (nur `HeadBase`). Dafür müssten die Figuren mit
-  `dynamicHead = true` neu erzeugt werden. Außerdem: Stimmen-Emitter für Lucy/Tommy waren falsch zugeordnet (behoben).
+- **09i/09j:** Sprechen sichtbar: `Speech.onSay` (Speech.lua) meldet jeden Satz; `Scene.lua` (updateNecks) lässt den Kopf
+  des Sprechers im Satzrhythmus nicken/neigen und bewegt den Mund (FaceControls `JawDrop`, `Left/RightLowerLipDepressor`).
+  Die KI-Köpfe haben FaceControls, die das Gesicht direkt im Modell bewegen (ohne Gesichtsknochen) – Neu-Erzeugen war
+  nicht nötig. Stimmen-Emitter für Lucy/Tommy waren falsch zugeordnet (behoben).
 
 - **09h:** Lucy neu erzeugt (altes Nachthemd hatte fleckige beige-rosa Textur). Alte Version in Place1 unter
   ServerStorage.KI_Figuren_Originale.Gen_Lucy_alt_fleckig.

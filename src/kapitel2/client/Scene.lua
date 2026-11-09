@@ -613,7 +613,7 @@ function Kapitel2.run()
 	local necks = {} -- Modell -> { joint, base, yaw, pitch }
 
 	-- Wer gerade spricht: Kopf bewegt sich im Satzrhythmus (leichtes Nicken/Neigen), und
-	-- hat der Kopf ein bewegliches Gesicht (FaceControls mit Gesichtsknochen), geht auch der Mund.
+	-- hat der Kopf ein bewegliches Gesicht (FaceControls, z. B. die KI-Figuren), geht auch der Mund.
 	local SPEAKER_OF = { MrsWagner = "mrsWagner", MrWagner = "mrWagner", Lucy = "lucy", Tommy = "tommy" }
 	local talking = {} -- speaker -> { start, stop, seed }
 	Speech.onSay(function(speaker, duration, text)
@@ -625,17 +625,8 @@ function Kapitel2.run()
 	local function faceOf(head)
 		local known = faces[head]
 		if known == nil then
-			known = false
-			local controls = head:FindFirstChildOfClass("FaceControls")
-			local bones = 0
-			for _, item in head:GetDescendants() do
-				if item:IsA("Bone") then
-					bones += 1
-				end
-			end
-			if controls and bones > 3 then
-				known = controls
-			end
+			-- die KI-Köpfe bewegen das Gesicht direkt im Modell (ohne eigene Knochen)
+			known = head:FindFirstChildOfClass("FaceControls") or false
 			faces[head] = known
 		end
 		return known
@@ -710,11 +701,12 @@ function Kapitel2.run()
 					local open = 0
 					if amount > 0 then
 						local syllable = math.abs(math.sin(t * 9.5 + seed)) * (0.6 + 0.4 * math.sin(t * 3.7 + seed))
-						open = math.clamp(syllable, 0, 1) * 0.55 * amount
+						open = math.clamp(syllable, 0, 1) * 0.4 * amount
 					end
 					pcall(function()
 						face.JawDrop = open
-						face.LowerLipDepressor = open * 0.6
+						face.LeftLowerLipDepressor = open * 0.5
+						face.RightLowerLipDepressor = open * 0.5
 					end)
 				end
 				if speaker then
