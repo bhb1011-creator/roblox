@@ -579,7 +579,7 @@ local function footOffset(model)
 end
 
 -- Echte Figuren (KI-Avatare aus Roblox Studio): liegen als Modelldateien in
--- assets/figuren (Rojo legt sie nach ServerStorage.Wagners). Gibt es dort ein Modell mit
+-- assets/figuren (Rojo legt sie nach ReplicatedStorage.Wagners). Gibt es dort ein Modell mit
 -- diesem Namen ("MrsWagner", "MrWagner", "Lucy", "Tommy"), wird eine Kopie davon benutzt
 -- statt der selbst gebauten Figur. Skripte darin werden zur Sicherheit entfernt.
 local FIGURE_HEIGHT = { MrsWagner = 5.3, MrWagner = 5.9, Lucy = 4.3, Tommy = 3.6 }
@@ -631,7 +631,7 @@ end
 
 -- Kam ein Körperteil ohne Form an (Rojo darf MeshId nicht setzen), wird es hier mit der
 -- gesicherten Modell-ID neu erzeugt; Kinder (Knochen, Gelenke, Textur) ziehen mit um.
--- Passiert einmal pro Figur am Original in ServerStorage.
+-- Passiert einmal pro Figur am Original in ReplicatedStorage.Wagners.
 local function repairMeshes(source, name)
 	if source:GetAttribute("MeshesChecked") then
 		return
@@ -675,8 +675,10 @@ local function repairMeshes(source, name)
 end
 
 function Wagners.fromStudio(name, parent)
+	-- ReplicatedStorage: dort können die Spieler sie schon vorladen (FigurenVorladen.client.lua)
 	local found, folder = pcall(function()
-		return game:GetService("ServerStorage"):FindFirstChild("Wagners")
+		return game:GetService("ReplicatedStorage"):FindFirstChild("Wagners")
+			or game:GetService("ServerStorage"):FindFirstChild("Wagners")
 	end)
 	folder = found and folder or nil
 	local source = folder and folder:FindFirstChild(name)

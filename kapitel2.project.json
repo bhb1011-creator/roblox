@@ -5,6 +5,9 @@
     "ReplicatedStorage": {
       "Shared": {
         "$path": "src/shared"
+      },
+      "Wagners": {
+        "$path": "assets/figuren"
       }
     },
     "ServerScriptService": {
@@ -20,11 +23,6 @@
         "ForestWalk": {
           "$path": "src/level/server/ForestWalk.lua"
         }
-      }
-    },
-    "ServerStorage": {
-      "Wagners": {
-        "$path": "assets/figuren"
       }
     },
     "StarterPlayer": {

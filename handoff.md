@@ -44,7 +44,14 @@ Fang damit an, dass du die Dateien liest und mir in 5 Sätzen sagst, wo wir steh
 
 ---
 
-## 000. NEU: Realistische Familie (Version K2-2026-11-09f)
+## 000. NEU: Realistische Familie (Version K2-2026-11-09g)
+
+- **09g:** Figuren-Dateien verschlankt (ohne Kleidungs-Käfige/WrapTarget, Metall-Texturen, InitialPoses, Ragdoll-Teile;
+  ~200 statt ~550 KB je Figur). Sie liegen jetzt in **ReplicatedStorage.Wagners** (nicht mehr ServerStorage), damit
+  `src/kapitel2/client/FigurenVorladen.client.lua` sie schon beim Spielstart (während Kapitel 1) vorladen kann.
+  Meldungen „Asset content representation is being generated“ = Roblox verarbeitet frisch hochgeladene Dateien noch;
+  verschwinden von selbst. Originale (ungekürzt) liegen in Place1 unter ServerStorage.KI_Figuren_Originale.
+
 
 - Mrs. Wagner, Mr. Wagner, Lucy und Tommy sind jetzt **KI-Avatare** (Roblox `generate_avatar` über das Studio-MCP),
   gespeichert als `assets/figuren/*.rbxm`. Rojo legt sie nach `ServerStorage.Wagners` (in `spiel.project.json`

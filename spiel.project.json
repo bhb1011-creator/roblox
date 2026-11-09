@@ -8,6 +8,9 @@
       },
       "Shared": {
         "$path": "src/shared"
+      },
+      "Wagners": {
+        "$path": "assets/figuren"
       }
     },
     "ServerScriptService": {
@@ -29,11 +32,6 @@
       },
       "Spiel": {
         "$path": "src/spiel/server"
-      }
-    },
-    "ServerStorage": {
-      "Wagners": {
-        "$path": "assets/figuren"
       }
     },
     "StarterPlayer": {

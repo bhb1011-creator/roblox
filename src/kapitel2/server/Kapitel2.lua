@@ -139,7 +139,7 @@ function Kapitel2.start()
 		end
 		return result
 	end
-	-- eigene Figuren aus ServerStorage.Wagners, sonst die eingebauten
+	-- echte Figuren aus ReplicatedStorage.Wagners (assets/figuren), sonst die eingebauten
 	local mrs = build("Mrs. Wagner", function(folder)
 		return Wagners.fromStudio("MrsWagner", folder) or Wagners.buildMrs(folder)
 	end)
