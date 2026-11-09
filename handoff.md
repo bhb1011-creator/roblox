@@ -44,7 +44,10 @@ Fang damit an, dass du die Dateien liest und mir in 5 Sätzen sagst, wo wir steh
 
 ---
 
-## 000. NEU: Realistische Familie (Version K2-2026-11-09g)
+## 000. NEU: Realistische Familie (Version K2-2026-11-09h)
+
+- **09h:** Lucy neu erzeugt (altes Nachthemd hatte fleckige beige-rosa Textur). Alte Version in Place1 unter
+  ServerStorage.KI_Figuren_Originale.Gen_Lucy_alt_fleckig.
 
 - **09g:** Figuren-Dateien verschlankt (ohne Kleidungs-Käfige/WrapTarget, Metall-Texturen, InitialPoses, Ragdoll-Teile;
   ~200 statt ~550 KB je Figur). Sie liegen jetzt in **ReplicatedStorage.Wagners** (nicht mehr ServerStorage), damit
