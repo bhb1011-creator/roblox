@@ -253,7 +253,17 @@ local function playRecording(speaker, name)
 	return true
 end
 
+-- Wer beim Sprechen mitmachen will (z. B. Kopf und Mund der Figuren bewegen), meldet
+-- sich hier an: fn(speaker, duration, text) wird bei jedem Satz aufgerufen.
+local sayListeners = {}
+function Speech.onSay(fn)
+	table.insert(sayListeners, fn)
+end
+
 function Speech.say(speaker, name, text, duration, voiceName)
+	for _, listener in sayListeners do
+		task.spawn(pcall, listener, speaker, duration, text)
+	end
 	current += 1
 	local mine = current
 	speakingUntil = os.clock() + duration

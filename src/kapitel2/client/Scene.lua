@@ -611,6 +611,50 @@ function Kapitel2.run()
 
 	------------------------------------------------------------------ Die Wagners schauen einen an
 	local necks = {} -- Modell -> { joint, base, yaw, pitch }
+
+	-- Wer gerade spricht: Kopf bewegt sich im Satzrhythmus (leichtes Nicken/Neigen), und
+	-- hat der Kopf ein bewegliches Gesicht (FaceControls mit Gesichtsknochen), geht auch der Mund.
+	local SPEAKER_OF = { MrsWagner = "mrsWagner", MrWagner = "mrWagner", Lucy = "lucy", Tommy = "tommy" }
+	local talking = {} -- speaker -> { start, stop, seed }
+	Speech.onSay(function(speaker, duration, text)
+		-- Untertitel stehen oft länger da, als gesprochen wird: Sprechdauer grob aus dem Text schätzen
+		local spoken = math.min(duration or 3, 0.5 + #(text or "") * 0.06)
+		talking[speaker] = { start = os.clock(), stop = os.clock() + spoken, seed = math.random() * 10 }
+	end)
+	local faces = {} -- Kopf -> FaceControls oder false (kein bewegliches Gesicht)
+	local function faceOf(head)
+		local known = faces[head]
+		if known == nil then
+			known = false
+			local controls = head:FindFirstChildOfClass("FaceControls")
+			local bones = 0
+			for _, item in head:GetDescendants() do
+				if item:IsA("Bone") then
+					bones += 1
+				end
+			end
+			if controls and bones > 3 then
+				known = controls
+			end
+			faces[head] = known
+		end
+		return known
+	end
+	-- 0..1: wie stark gerade gesprochen wird (weich ein- und ausblenden)
+	local function talkAmount(speaker)
+		local info = speaker and talking[speaker]
+		if not info then
+			return 0, 0, 0
+		end
+		local now = os.clock()
+		if now > info.stop + 0.3 then
+			talking[speaker] = nil
+			return 0, 0, 0
+		end
+		local t = now - info.start
+		local fade = math.clamp(math.min(t / 0.2, (info.stop + 0.3 - now) / 0.3), 0, 1)
+		return fade, t, info.seed
+	end
 	local function updateNecks(deltaTime)
 		local family = workspace:FindFirstChild("Wagners")
 		if not family then
@@ -648,10 +692,34 @@ function Kapitel2.run()
 				local blend = math.min(deltaTime * 4, 1)
 				info.yaw += (yaw - info.yaw) * blend
 				info.pitch += (pitch - info.pitch) * blend
+				-- beim Sprechen: kleines Nicken und Neigen im Rhythmus der Silben
+				local speaker = SPEAKER_OF[model.Name]
+				local amount, t, seed = talkAmount(speaker)
+				local nod, turn, tilt = 0, 0, 0
+				if amount > 0 then
+					nod = (math.sin(t * 6.8 + seed) * 0.035 + math.sin(t * 2.9 + seed * 2) * 0.03) * amount
+					turn = math.sin(t * 1.9 + seed) * 0.05 * amount
+					tilt = math.sin(t * 1.3 + seed * 3) * 0.035 * amount
+				end
 				pcall(function()
-					info.joint.C0 = info.base * CFrame.Angles(info.pitch, info.yaw, 0)
+					info.joint.C0 = info.base * CFrame.Angles(info.pitch + nod, info.yaw + turn, tilt)
 				end)
-				Speech.setEmitter(model.Name == "MrsWagner" and "mrsWagner" or "mrWagner", head)
+				local face = faceOf(head)
+				if face then
+					-- Mund auf/zu wie Silben (nur bei Köpfen mit beweglichem Gesicht)
+					local open = 0
+					if amount > 0 then
+						local syllable = math.abs(math.sin(t * 9.5 + seed)) * (0.6 + 0.4 * math.sin(t * 3.7 + seed))
+						open = math.clamp(syllable, 0, 1) * 0.55 * amount
+					end
+					pcall(function()
+						face.JawDrop = open
+						face.LowerLipDepressor = open * 0.6
+					end)
+				end
+				if speaker then
+					Speech.setEmitter(speaker, head)
+				end
 			end
 		end
 	end
