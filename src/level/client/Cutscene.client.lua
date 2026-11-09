@@ -24,6 +24,7 @@ local Speech = require(script.Parent:WaitForChild("Speech"))
 local Choices = require(script.Parent:WaitForChild("Choices"))
 local BeastView = require(script.Parent:WaitForChild("BeastView"))
 local Ambience = require(script.Parent:WaitForChild("Ambience"))
+require(Shared:WaitForChild("Mood")).start() -- Vignette und Schatten-Budget
 local player = Players.LocalPlayer
 local cutscene = ReplicatedStorage:WaitForChild("Cutscene")
 local puppets = cutscene:WaitForChild("Puppets")
@@ -323,6 +324,7 @@ local FALLBACK_KEYS = {
 	beastBreath = { "wind", 0.45 },
 	beastStep = { "footstep", 0.4 },
 }
+local madeSounds = {} -- alle Sounds von Kapitel 1 (im ganzen Spiel am Ende stoppen)
 local function makeSound(key, parent, props)
 	local id = Config.SOUNDS and Config.SOUNDS[key] or ""
 	local fallback = FALLBACK_KEYS[key]
@@ -344,6 +346,7 @@ local function makeSound(key, parent, props)
 		sound[property] = value
 	end
 	sound.Parent = parent
+	table.insert(madeSounds, sound)
 	return sound
 end
 
@@ -705,7 +708,27 @@ local function updateStranger(t, bt, deltaTime, carPosition, driveS)
 end
 
 ------------------------------------------------------------------ Jedes Bild
-RunService.RenderStepped:Connect(function(deltaTime)
+-- Ganzes Spiel (spiel.project.json): sobald Kapitel 2 startet, räumt Kapitel 1 auf
+local FULL_GAME = ReplicatedStorage:GetAttribute("FullGame") == true
+local renderConnection
+local function handOverToKapitel2()
+	renderConnection:Disconnect()
+	for _, sound in madeSounds do
+		sound:Stop()
+		sound:Destroy()
+	end
+	if flashlight then
+		flashlight:Destroy()
+	end
+	gui:Destroy()
+	camera.CameraType = Enum.CameraType.Custom
+	UserInputService.MouseBehavior = Enum.MouseBehavior.Default
+end
+renderConnection = RunService.RenderStepped:Connect(function(deltaTime)
+	if FULL_GAME and ReplicatedStorage:FindFirstChild("Kapitel2") then
+		handOverToKapitel2()
+		return
+	end
 	local now = workspace:GetServerTimeNow()
 	local t = now - startTime
 	local bt = branchStart and now - branchStart or nil
@@ -943,7 +966,7 @@ RunService.RenderStepped:Connect(function(deltaTime)
 			TweenService:Create(fade, TweenInfo.new(3), { BackgroundTransparency = 0 }):Play()
 			task.delay(3.5, function()
 				chapter.Text = "ENDE VON KAPITEL 1"
-				chapterTitle.Text = "Fortsetzung folgt …"
+				chapterTitle.Text = FULL_GAME and "Weiter zu Kapitel 2 …" or "Fortsetzung folgt …"
 				showText(chapter, true, 1.5)
 				showText(chapterTitle, true, 2)
 			end)

@@ -6,6 +6,28 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 Players.CharacterAutoLoads = false
 
+-- Ganzes Spiel (spiel.project.json): Kapitel 1 läuft zuerst. Kapitel 2 startet, wenn es
+-- zu Ende ist (Bild schwarz, "Ende von Kapitel 1"), und räumt dann Kapitel 1 weg.
+if ReplicatedStorage:GetAttribute("FullGame") then
+	local cutscene = ReplicatedStorage:WaitForChild("Cutscene", math.huge)
+	while not cutscene:GetAttribute("Finished") do
+		cutscene:GetAttributeChangedSignal("Finished"):Wait()
+	end
+	task.wait(9) -- Abblenden und Karte "Ende von Kapitel 1" zeigen lassen
+	for _, player in Players:GetPlayers() do
+		if player.Character then
+			player.Character:Destroy()
+			player.Character = nil
+		end
+		player.ReplicationFocus = nil
+	end
+	for _, leftover in workspace:GetChildren() do
+		if leftover.Name == "BeastAnchor" or leftover.Name:sub(1, 12) == "StreamFocus_" then
+			leftover:Destroy()
+		end
+	end
+end
+
 -- Alte Skripte aus der Lobby oder aus Kapitel 1, die noch im selben Studio-Ort liegen,
 -- stoppen und entfernen (inklusive allem, was sie schon gebaut haben)
 for _, container in { script.Parent.Parent, StarterPlayer.StarterPlayerScripts } do

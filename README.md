@@ -44,6 +44,7 @@ Jeder Teil ist ein eigenes Rojo-Projekt (am Ende wird alles zusammengefügt):
 | Lobby | `rojo serve` (nutzt `default.project.json`) |
 | Kapitel 1 – Die Fahrt | `rojo serve level.project.json --port 34873` |
 | Kapitel 2 – Die Wagners | `rojo serve kapitel2.project.json --port 34874` |
+| **Ganzes Spiel** (Kapitel 1 → 2 → 3 am Stück) | `rojo serve spiel.project.json --port 34875` |
 
 Danach in Studio: **Plugins → Rojo → Connect** (beim Port die richtige Zahl eintragen), dann **Play**.
 Am besten jeden Teil in einem eigenen Studio-Ort (eigene Datei) testen.

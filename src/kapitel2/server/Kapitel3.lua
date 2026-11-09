@@ -675,6 +675,7 @@ function Kapitel3.run(kit)
 	end
 	task.spawn(function()
 		local ok, problem = pcall(buildForest)
+		pcall(Parts.optimize, workspace) -- Leistung (siehe Parts.optimize)
 		if not ok then
 			warn("Kapitel 3: Waldweg konnte nicht gebaut werden: " .. tostring(problem))
 			forestReady = true

@@ -36,11 +36,13 @@ local function setupLighting()
 	Lighting.GeographicLatitude = 41
 	Lighting.Brightness = 0
 	Lighting.ExposureCompensation = 0.3
-	Lighting.Ambient = Color3.fromRGB(30, 30, 34)
-	Lighting.OutdoorAmbient = Color3.fromRGB(42, 42, 48)
+	-- Grundlicht leicht kühl-blau (wie eine mondlose Nacht), damit die warmen Laternen,
+	-- Kerzen und Scheinwerfer stärker dagegen wirken. Drinnen etwas dunkler als draußen.
+	Lighting.Ambient = Color3.fromRGB(26, 27, 33)
+	Lighting.OutdoorAmbient = Color3.fromRGB(36, 40, 52)
 	Lighting.EnvironmentDiffuseScale = 0.3
 	Lighting.EnvironmentSpecularScale = 0.6
-	Lighting.ShadowSoftness = 0.2
+	Lighting.ShadowSoftness = 0.12 -- schärfere Schatten wirken bedrohlicher
 	Lighting.GlobalShadows = true
 	for _, child in Lighting:GetChildren() do
 		if child:IsA("Atmosphere") or child:IsA("PostEffect") or child:IsA("Sky") then
@@ -53,27 +55,30 @@ local function setupLighting()
 	sky.CelestialBodiesShown = false
 	sky.Parent = Lighting
 
-	-- Schwarzer Dunst: in der Ferne verschwindet alles im Dunkeln
+	-- Dunkler, leicht bläulicher Nebel: in der Ferne verschwindet alles. Etwas Haze, damit
+	-- man den Nebel im Licht von Taschenlampe, Scheinwerfern und Laternen sieht.
 	local atmosphere = Instance.new("Atmosphere")
-	atmosphere.Density = 0.35
-	atmosphere.Offset = 0
-	atmosphere.Color = Color3.fromRGB(8, 8, 10)
-	atmosphere.Decay = Color3.fromRGB(0, 0, 0)
+	atmosphere.Density = 0.38
+	atmosphere.Offset = 0.05
+	atmosphere.Color = Color3.fromRGB(16, 18, 24)
+	atmosphere.Decay = Color3.fromRGB(4, 5, 8)
 	atmosphere.Glare = 0
-	atmosphere.Haze = 0
+	atmosphere.Haze = 0.6
 	atmosphere.Parent = Lighting
 
+	-- Farben etwas entsättigt und kontrastreicher (Horror-Look), ganz leicht kühl
 	local grading = Instance.new("ColorCorrectionEffect")
-	grading.Saturation = 0
-	grading.Contrast = 0.15
-	grading.Brightness = 0
-	grading.TintColor = Color3.fromRGB(255, 250, 245)
+	grading.Saturation = -0.15
+	grading.Contrast = 0.2
+	grading.Brightness = -0.02
+	grading.TintColor = Color3.fromRGB(244, 247, 255)
 	grading.Parent = Lighting
 
+	-- Nur sehr helle Dinge (Flammen, Laternen, Neon) leuchten weich nach
 	local bloom = Instance.new("BloomEffect")
-	bloom.Intensity = 0.45
-	bloom.Size = 24
-	bloom.Threshold = 1.3
+	bloom.Intensity = 0.5
+	bloom.Size = 20
+	bloom.Threshold = 1.25
 	bloom.Parent = Lighting
 end
 

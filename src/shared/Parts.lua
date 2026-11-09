@@ -75,6 +75,24 @@ function Parts.text(parent, props)
 	return label
 end
 
+-- Leistung: nach dem Bauen einmal über alles gehen. Kein Skript nutzt Touched, also
+-- brauchen verankerte Teile keine Berührungsabfrage. Winzige Teile (Schrauben, Knöpfe,
+-- Zweige …) werfen keinen Schatten – den sieht man ohnehin kaum, er kostet aber viel.
+function Parts.optimize(root)
+	local changed = 0
+	for _, part in root:GetDescendants() do
+		if part:IsA("BasePart") and part.Anchored and not part:IsA("Seat") and not part:IsA("VehicleSeat") then
+			part.CanTouch = false
+			local size = part.Size
+			if part.CastShadow and math.max(size.X, size.Y, size.Z) < 1 then
+				part.CastShadow = false
+				changed += 1
+			end
+		end
+	end
+	return changed
+end
+
 function Parts.light(className, parent, props)
 	local light = Instance.new(className)
 	for key, value in props do

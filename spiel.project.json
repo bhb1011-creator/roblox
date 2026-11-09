@@ -1,0 +1,62 @@
+{
+  "name": "GanzesSpiel",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "$attributes": {
+        "FullGame": true
+      },
+      "Shared": {
+        "$path": "src/shared"
+      }
+    },
+    "ServerScriptService": {
+      "$ignoreUnknownInstances": false,
+      "Kapitel1": {
+        "$path": "src/level/server"
+      },
+      "Kapitel2": {
+        "$path": "src/kapitel2/server",
+        "World": {
+          "$path": "src/level/server/World.lua"
+        },
+        "House": {
+          "$path": "src/level/server/House.lua"
+        },
+        "ForestWalk": {
+          "$path": "src/level/server/ForestWalk.lua"
+        }
+      }
+    },
+    "StarterPlayer": {
+      "StarterPlayerScripts": {
+        "$ignoreUnknownInstances": false,
+        "Kapitel1": {
+          "$path": "src/level/client"
+        },
+        "Kapitel2": {
+          "$path": "src/kapitel2/client",
+          "Speech": {
+            "$path": "src/level/client/Speech.lua"
+          },
+          "Choices": {
+            "$path": "src/level/client/Choices.lua"
+          },
+          "Ambience": {
+            "$path": "src/level/client/Ambience.lua"
+          }
+        }
+      }
+    },
+    "Lighting": {
+      "$properties": {
+        "Technology": "Future"
+      }
+    },
+    "Workspace": {
+      "$properties": {
+        "StreamingEnabled": false
+      }
+    }
+  }
+}

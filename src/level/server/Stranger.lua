@@ -47,9 +47,28 @@ function Stranger.build(parent)
 	description.LeftLegColor = JEANS
 	description.RightLegColor = JEANS
 
-	local ok, model = pcall(function()
-		return Players:CreateHumanoidModelFromDescription(description, Enum.HumanoidRigType.R15)
-	end)
+	-- echte Roblox-Frisur (kurze, dunkle, etwas zerzauste Haare); lädt sie nicht: Bausteine
+	description.HairAccessory = "13655562"
+	local function create()
+		return pcall(function()
+			return Players:CreateHumanoidModelFromDescription(description, Enum.HumanoidRigType.R15)
+		end)
+	end
+	local ok, model = create()
+	if not ok then
+		description.HairAccessory = ""
+		ok, model = create()
+	end
+	local realHair = ok and model:FindFirstChildOfClass("Accessory") ~= nil
+	if realHair then
+		for _, part in model:GetDescendants() do
+			if part:IsA("BasePart") and part:FindFirstAncestorOfClass("Accessory") then
+				part.CanCollide = false
+				part.CanQuery = false
+				part.Massless = true
+			end
+		end
+	end
 	if not ok then
 		warn("Der Fremde konnte nicht erstellt werden:", model)
 		return nil
@@ -80,9 +99,11 @@ function Stranger.build(parent)
 	if head then
 		local size = head.Size
 		local front, top = -size.Z / 2 - 0.005, size.Y / 2
-		-- Kurze Haare
-		attach(model, head, "Hair", Vector3.new(size.X + 0.05, 0.35, size.Z + 0.05), CFrame.new(0, top - 0.1, 0.05), HAIR, Enum.Material.Fabric)
-		attach(model, head, "HairBack", Vector3.new(size.X + 0.05, size.Y * 0.55, 0.3), CFrame.new(0, top * 0.35, size.Z / 2 - 0.05), HAIR, Enum.Material.Fabric)
+		-- Kurze Haare (nur falls die echten Haare nicht geladen haben)
+		if not realHair then
+			attach(model, head, "Hair", Vector3.new(size.X + 0.05, 0.35, size.Z + 0.05), CFrame.new(0, top - 0.1, 0.05), HAIR, Enum.Material.Fabric)
+			attach(model, head, "HairBack", Vector3.new(size.X + 0.05, size.Y * 0.55, 0.3), CFrame.new(0, top * 0.35, size.Z / 2 - 0.05), HAIR, Enum.Material.Fabric)
+		end
 		-- Normales Gesicht: Augen, die einen anstarren, ein leichtes Lächeln
 		local face = head:FindFirstChildOfClass("Decal")
 		if face then

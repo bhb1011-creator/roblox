@@ -49,6 +49,7 @@ cutscene.Parent = ReplicatedStorage
 World.build()
 CutsceneCar.build(cutscene)
 Stranger.build(cutscene)
+require(ReplicatedStorage.Shared.Parts).optimize(workspace) -- Leistung (siehe Parts.optimize)
 
 -- Damit die Welt entlang der Strecke geladen wird, folgt für jeden Spieler ein
 -- unsichtbarer Punkt dem Auto (Roblox lädt die Umgebung um diesen Punkt).

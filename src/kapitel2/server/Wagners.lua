@@ -93,6 +93,21 @@ local function replaceJoint(model, partName, jointName)
 	joint.Parent = part
 end
 
+-- Echte Roblox-Frisuren aus dem Katalog (von Roblox selbst, für NPCs frei nutzbar).
+-- Lädt eine nicht, bekommt die Figur die alten Haare aus Bausteinen.
+local HAIR = {
+	MrsWagner = { 81688919 }, -- ungemachter, kastanienbrauner Dutt
+	MrWagner = { 13477818 }, -- kurze, normale Haare
+	Lucy = { 12819326 }, -- langes schwarzes Haar
+	Tommy = { 147193065 }, -- zerzauste braune Haare
+}
+
+local function createModel(description)
+	return pcall(function()
+		return Players:CreateHumanoidModelFromDescription(description, Enum.HumanoidRigType.R15)
+	end)
+end
+
 local function newBody(name, colors, scale)
 	local description = Instance.new("HumanoidDescription")
 	pcall(function()
@@ -110,9 +125,20 @@ local function newBody(name, colors, scale)
 			description[property] = value
 		end)
 	end
-	local ok, model = pcall(function()
-		return Players:CreateHumanoidModelFromDescription(description, Enum.HumanoidRigType.R15)
-	end)
+	local hair = HAIR[name]
+	if hair then
+		local ids = {}
+		for _, id in hair do
+			table.insert(ids, tostring(id))
+		end
+		description.HairAccessory = table.concat(ids, ",")
+	end
+	local ok, model = createModel(description)
+	if not ok and hair then
+		warn(name .. ": echte Haare konnten nicht geladen werden, nehme Bausteine.", model)
+		description.HairAccessory = ""
+		ok, model = createModel(description)
+	end
 	if not ok then
 		warn(name .. " konnte nicht erstellt werden:", model)
 		return nil
@@ -154,6 +180,22 @@ local function newBody(name, colors, scale)
 			foot.Color = colors.shoes
 		end
 	end
+	-- Haare aus dem Katalog: nicht anklickbar, ohne Gewicht, kein Kollidieren
+	local hasHair = false
+	for _, accessory in model:GetChildren() do
+		if accessory:IsA("Accessory") then
+			hasHair = true
+			for _, part in accessory:GetDescendants() do
+				if part:IsA("BasePart") then
+					part.CanCollide = false
+					part.CanQuery = false
+					part.CanTouch = false
+					part.Massless = true
+				end
+			end
+		end
+	end
+	model:SetAttribute("RealHair", hasHair)
 	model.HumanoidRootPart.Anchored = true
 	for _, info in MOVING_JOINTS do
 		replaceJoint(model, info[1], info[2])
@@ -309,12 +351,14 @@ function Wagners.buildMrs(parent)
 	local head, torso, hips = model.Head, model.UpperTorso, model.LowerTorso
 	face(model, head, "friendly", colors)
 	local size = head.Size
-	-- Haare: locker hochgesteckt, ein paar Strähnen an den Seiten
-	attach(model, head, "Hair", Vector3.new(size.X + 0.08, 0.36, size.Z + 0.08), CFrame.new(0, size.Y / 2 - 0.1, 0.03), colors.hair, Enum.Material.Fabric)
-	attach(model, head, "HairBack", Vector3.new(size.X + 0.08, size.Y * 0.7, 0.32), CFrame.new(0, size.Y * 0.12, size.Z / 2 - 0.08), colors.hair, Enum.Material.Fabric)
-	attach(model, head, "HairBun", Vector3.new(0.75, 0.6, 0.6), CFrame.new(0, size.Y * 0.3, size.Z / 2 + 0.18), colors.hair, Enum.Material.Fabric, Enum.PartType.Ball)
-	for _, side in { -1, 1 } do
-		attach(model, head, "HairSide", Vector3.new(0.14, size.Y * 0.62, 0.3), CFrame.new(side * (size.X / 2 + 0.02), size.Y * 0.06, -0.05), colors.hair, Enum.Material.Fabric)
+	-- Haare: locker hochgesteckt (nur falls die echten Haare nicht geladen haben)
+	if not model:GetAttribute("RealHair") then
+		attach(model, head, "Hair", Vector3.new(size.X + 0.08, 0.36, size.Z + 0.08), CFrame.new(0, size.Y / 2 - 0.1, 0.03), colors.hair, Enum.Material.Fabric)
+		attach(model, head, "HairBack", Vector3.new(size.X + 0.08, size.Y * 0.7, 0.32), CFrame.new(0, size.Y * 0.12, size.Z / 2 - 0.08), colors.hair, Enum.Material.Fabric)
+		attach(model, head, "HairBun", Vector3.new(0.75, 0.6, 0.6), CFrame.new(0, size.Y * 0.3, size.Z / 2 + 0.18), colors.hair, Enum.Material.Fabric, Enum.PartType.Ball)
+		for _, side in { -1, 1 } do
+			attach(model, head, "HairSide", Vector3.new(0.14, size.Y * 0.62, 0.3), CFrame.new(side * (size.X / 2 + 0.02), size.Y * 0.06, -0.05), colors.hair, Enum.Material.Fabric)
+		end
 	end
 	-- Kleid bis unter die Knie, weißer Kragen, kleine Kette
 	attach(model, hips, "Skirt", Vector3.new(hips.Size.X + 0.45, 2.5, hips.Size.Z + 0.45), CFrame.new(0, -1.15, 0), colors.torso, Enum.Material.Fabric)
@@ -352,9 +396,11 @@ function Wagners.buildMr(parent)
 	local head, torso, hips = model.Head, model.UpperTorso, model.LowerTorso
 	face(model, head, "kind", colors)
 	local size = head.Size
-	-- kurze, ordentlich gekämmte Haare
-	attach(model, head, "Hair", Vector3.new(size.X + 0.06, 0.26, size.Z + 0.04), CFrame.new(0, size.Y / 2 - 0.06, 0.02), colors.hair, Enum.Material.Fabric)
-	attach(model, head, "HairBack", Vector3.new(size.X + 0.04, size.Y * 0.45, 0.25), CFrame.new(0, size.Y * 0.15, size.Z / 2 - 0.08), colors.hair, Enum.Material.Fabric)
+	-- kurze, ordentlich gekämmte Haare (nur falls die echten Haare nicht geladen haben)
+	if not model:GetAttribute("RealHair") then
+		attach(model, head, "Hair", Vector3.new(size.X + 0.06, 0.26, size.Z + 0.04), CFrame.new(0, size.Y / 2 - 0.06, 0.02), colors.hair, Enum.Material.Fabric)
+		attach(model, head, "HairBack", Vector3.new(size.X + 0.04, size.Y * 0.45, 0.25), CFrame.new(0, size.Y * 0.15, size.Z / 2 - 0.08), colors.hair, Enum.Material.Fabric)
+	end
 	-- Hosenträger und Gürtel
 	local chest, back = -torso.Size.Z / 2 - 0.01, torso.Size.Z / 2 + 0.01
 	for _, side in { -1, 1 } do
@@ -396,10 +442,12 @@ function Wagners.buildLucy(parent)
 	local head, hips = model.Head, model.LowerTorso
 	face(model, head, "smile", colors)
 	local size = head.Size
-	attach(model, head, "Hair", Vector3.new(size.X + 0.06, 0.3, size.Z + 0.06), CFrame.new(0, size.Y / 2 - 0.08, 0.03), colors.hair, Enum.Material.Fabric)
-	attach(model, head, "HairLong", Vector3.new(size.X + 0.1, size.Y * 1.5, 0.3), CFrame.new(0, -size.Y * 0.2, size.Z / 2 - 0.04), colors.hair, Enum.Material.Fabric)
-	for _, side in { -1, 1 } do
-		attach(model, head, "HairSide", Vector3.new(0.18, size.Y * 1.2, size.Z * 0.5), CFrame.new(side * (size.X / 2 + 0.04), -size.Y * 0.1, 0.1), colors.hair, Enum.Material.Fabric)
+	if not model:GetAttribute("RealHair") then
+		attach(model, head, "Hair", Vector3.new(size.X + 0.06, 0.3, size.Z + 0.06), CFrame.new(0, size.Y / 2 - 0.08, 0.03), colors.hair, Enum.Material.Fabric)
+		attach(model, head, "HairLong", Vector3.new(size.X + 0.1, size.Y * 1.5, 0.3), CFrame.new(0, -size.Y * 0.2, size.Z / 2 - 0.04), colors.hair, Enum.Material.Fabric)
+		for _, side in { -1, 1 } do
+			attach(model, head, "HairSide", Vector3.new(0.18, size.Y * 1.2, size.Z * 0.5), CFrame.new(side * (size.X / 2 + 0.04), -size.Y * 0.1, 0.1), colors.hair, Enum.Material.Fabric)
+		end
 	end
 	attach(model, hips, "Nightgown", Vector3.new(hips.Size.X + 0.35, 2.9, hips.Size.Z + 0.35), CFrame.new(0, -1.35, 0), colors.torso, Enum.Material.Fabric)
 	attach(model, hips, "NightgownHem", Vector3.new(hips.Size.X + 0.45, 0.12, hips.Size.Z + 0.45), CFrame.new(0, -2.75, 0), Color3.fromRGB(190, 184, 172), Enum.Material.Fabric)
@@ -429,9 +477,11 @@ function Wagners.buildTommy(parent)
 	local head, torso = model.Head, model.UpperTorso
 	face(model, head, "child", colors)
 	local size = head.Size
-	attach(model, head, "Hair", Vector3.new(size.X + 0.08, 0.36, size.Z + 0.08), CFrame.new(0, size.Y / 2 - 0.06, 0.02), colors.hair, Enum.Material.Fabric)
-	for i = -1, 1 do
-		attach(model, head, "HairTuft", Vector3.new(0.3, 0.2, 0.3), CFrame.new(i * 0.32, size.Y / 2 + 0.1, -0.1 + i * 0.1) * CFrame.Angles(0, 0, math.rad(i * 30)), colors.hair, Enum.Material.Fabric)
+	if not model:GetAttribute("RealHair") then
+		attach(model, head, "Hair", Vector3.new(size.X + 0.08, 0.36, size.Z + 0.08), CFrame.new(0, size.Y / 2 - 0.06, 0.02), colors.hair, Enum.Material.Fabric)
+		for i = -1, 1 do
+			attach(model, head, "HairTuft", Vector3.new(0.3, 0.2, 0.3), CFrame.new(i * 0.32, size.Y / 2 + 0.1, -0.1 + i * 0.1) * CFrame.Angles(0, 0, math.rad(i * 30)), colors.hair, Enum.Material.Fabric)
+		end
 	end
 	-- Streifen auf dem Schlafanzug
 	for k = -2, 2 do
