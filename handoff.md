@@ -44,6 +44,22 @@ Fang damit an, dass du die Dateien liest und mir in 5 Sätzen sagst, wo wir steh
 
 ---
 
+## 00. NEU am 9. November (Version K2-2026-11-09e)
+
+- **Ganzes Spiel am Stück:** `spiel.project.json` (beim User auf Port 34872). Kapitel 1 → 2 → 3 ohne Neustart.
+  Kapitel 2 wartet auf das Ende von Kapitel 1 (`Cutscene.Finished`), räumt Kapitel 1 weg und startet.
+- **Testmenü (nur Studio, Taste O, Knopf unten links):** `src/spiel/` + `src/shared/TestStarts.lua`. Startpunkte:
+  Kapitel 1, Haustür, nach dem Verstecken, Flucht, Schlüssel, Ritual, Hütte, **Figuren ansehen** (Familie auf einer Bühne,
+  Kamera fährt von Figur zu Figur; N = nächste, B = frei). `Config.TEST_AUTOSTART` = sofort dort starten (ohne Menü).
+- **Inventarleiste** unten in der Mitte: `src/shared/Inventory.lua` (Kerze, Axt, Chemikalien, Pulver, Schlüssel, Handy).
+- **Stimmung/Leistung:** `src/shared/Mood.lua` (Vignette, Schatten nur für die nächsten 8 Lichter, schaltet selten um),
+  `Parts.optimize` (kleine Teile ohne Schatten, kein CanTouch), neues Licht in `World.lua` (kühler, Nebel sichtbar).
+- **Figuren:** echte Katalog-Haare (`HAIR` in `Wagners.lua`, Sarp in `Stranger.lua`), Fallback = alte Klötze.
+  Mrs. Wagner und Lucy: rote Mundwinkel, **bodenlanges Kleid/Nachthemd** (`longDress`), Beine schwingen nicht (`StepScale` 0),
+  untere Stufen werden beim Sitzen/Knien ausgeblendet (`DressLower`).
+- In Studio getestet (vom Claude-Agenten per Bildschirmsteuerung): Kapitel 1 (Ende „weiterfahren“) und Übergang zu Kapitel 2
+  ohne Skriptfehler; Figuren-Ansicht. **Nicht** getestet: Laufen, Klopfen und alles danach (Tastatur ging nicht, Bildschirm gesperrt).
+
 ## 0. NEU seit 6. November: Kapitel 3 und Audio
 
 ### Wichtige Änderungen gegenüber unten

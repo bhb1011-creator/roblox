@@ -12,8 +12,7 @@ local ITEMS = {
 	{ child = "Carried_chemicals", icon = "🧪", name = "Chemikalien" },
 	{ child = "Carried_powder", icon = "💥", name = "Schießpulver" },
 	{ child = "Carried_key", icon = "🔑", name = "Schlüssel" },
-	{ child = "PhoneLight", icon = "📱", name = "Handy", light = true, deep = true },
-	{ child = "Flashlight", icon = "📱", name = "Handy", light = true, deep = true },
+	-- (das Handy-Licht ist ein eigenes Teil im Workspace, siehe unten)
 }
 local SLOT = 64
 
@@ -102,6 +101,15 @@ function Inventory.start()
 				slot.Icon.TextTransparency = off and 0.6 or 0
 				slot.Label.Text = off and (name .. " (aus)") or name
 			end
+		end
+		-- Handy: das Licht-Teil "PhoneLight" folgt der Kamera (Kapitel 1 und 2)
+		local phone = workspace:FindFirstChild("PhoneLight")
+		local spot = phone and phone:FindFirstChildOfClass("SpotLight")
+		if spot and not (seen["Kerze"] and not spot.Enabled) then
+			seen["Handy"] = true
+			local slot = slotFor({ icon = "📱", name = "Handy" }, 0)
+			slot.Icon.TextTransparency = spot.Enabled and 0 or 0.6
+			slot.Label.Text = spot.Enabled and "Handy" or "Handy (aus)"
 		end
 		for name, slot in slots do
 			if not seen[name] then
