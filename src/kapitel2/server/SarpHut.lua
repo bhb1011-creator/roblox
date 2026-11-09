@@ -463,13 +463,21 @@ function SarpHut.build(parent, road, ground)
 		end
 	end
 	chair(table0 * CFrame.new(-0.8, 0, 2) * CFrame.Angles(0, math.rad(8), 0))
-	-- der zweite Stuhl ist umgekippt
-	local fallen = table0 * CFrame.new(1.6, 0.75, -2.4) * CFrame.Angles(math.rad(90), math.rad(20), 0)
-	deco("ChairSeat", Vector3.new(1.4, 0.2, 1.4), fallen * CFrame.new(0, 0, 0), PLANK, M.Wood)
+	-- der zweite Stuhl ist nach hinten umgekippt: er liegt flach auf der Lehne, die Sitzfläche
+	-- steht senkrecht, die Vorderbeine zeigen waagerecht in den Raum. Gleicher Bau wie der
+	-- stehende Stuhl, erst gekippt (90° um X), dann gedreht (um die Senkrechte) – so steckt
+	-- nichts im Boden und nichts schwebt. Kein Teil ist begehbar (sonst bleibt man hängen).
+	local fallen = table0 * CFrame.new(2.4, 0.72, -1.4) * CFrame.Angles(0, math.rad(75), 0) * CFrame.Angles(math.rad(90), 0, 0)
+	deco("ChairSeat", Vector3.new(1.4, 0.2, 1.4), fallen * CFrame.new(0, 1.7, 0), PLANK, M.Wood)
 	for _, leg in { { -0.6, -0.6 }, { 0.6, -0.6 }, { -0.6, 0.6 }, { 0.6, 0.6 } } do
-		deco("ChairLeg", Vector3.new(0.18, 1.7, 0.18), fallen * CFrame.new(leg[1], -0.85, leg[2]), LOG_DARK, M.Wood)
+		deco("ChairLeg", Vector3.new(0.18, 1.7, 0.18), fallen * CFrame.new(leg[1], 0.85, leg[2]), LOG_DARK, M.Wood)
 	end
-	deco("ChairBack", Vector3.new(1.3, 1.9, 0.18), fallen * CFrame.new(0, 0.95, 0.62), PLANK, M.Wood)
+	for _, x in { -0.6, 0.6 } do
+		deco("ChairBack", Vector3.new(0.18, 1.9, 0.18), fallen * CFrame.new(x, 2.65, 0.62), LOG_DARK, M.Wood)
+	end
+	for _, y in { 2.4, 3.3 } do
+		deco("ChairRail", Vector3.new(1.3, 0.25, 0.12), fallen * CFrame.new(0, y, 0.62), PLANK, M.Wood)
+	end
 	-- auf dem Tisch: Lampe, Teller, Becher, Zeitung, Messer im Holz
 	local lamp = table0 * CFrame.new(0.6, 3.02, -0.2)
 	cyl("LampBase", 0.4, 0.8, lamp * CFrame.new(0, 0.2, 0) * CFrame.Angles(0, 0, math.rad(90)), Color3.fromRGB(110, 80, 40), M.Metal, { CanCollide = false })

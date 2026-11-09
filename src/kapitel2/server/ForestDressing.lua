@@ -246,10 +246,10 @@ local function fog(parent, cframe, size)
 	emitter.Name = "Fog"
 	emitter.Texture = "rbxasset://textures/particles/smoke_main.dds"
 	emitter.Color = ColorSequence.new(Color3.fromRGB(150, 160, 175))
-	emitter.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.3, 0.88), NumberSequenceKeypoint.new(0.7, 0.9), NumberSequenceKeypoint.new(1, 1) })
+	emitter.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.3, 0.8), NumberSequenceKeypoint.new(0.7, 0.84), NumberSequenceKeypoint.new(1, 1) })
 	emitter.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 6), NumberSequenceKeypoint.new(1, 11) })
 	emitter.Lifetime = NumberRange.new(9, 14)
-	emitter.Rate = 1.2
+	emitter.Rate = 2.2
 	emitter.Speed = NumberRange.new(0.3, 0.8)
 	emitter.SpreadAngle = Vector2.new(180, 10)
 	emitter.Rotation = NumberRange.new(0, 360)
@@ -287,7 +287,7 @@ function ForestDressing.path(parent, points, free, from, to)
 	local rng = Random.new(91)
 	local s = from or 0
 	local step = 0
-	local fogEvery, flyEvery = 55, 90
+	local fogEvery, flyEvery = 24, 90
 	while s < to do
 		local center, direction = Data.pointAt(points, s)
 		local right = Vector3.new(-direction.Z, 0, direction.X)
@@ -395,7 +395,7 @@ function ForestDressing.path(parent, points, free, from, to)
 		if step % math.floor(fogEvery / 3) == 0 then
 			local at = center + Vector3.new(0, 1.5, 0)
 			if free(at) then
-				fog(folder, CFrame.lookAt(at, at + direction), Vector3.new(30, 2, 20))
+				fog(folder, CFrame.lookAt(at, at + direction), Vector3.new(36, 3, 26))
 			end
 		end
 		if step % math.floor(flyEvery / 3) == 0 then

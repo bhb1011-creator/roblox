@@ -1512,22 +1512,7 @@ function handlers.ritual(message)
 				whisperCaption(whispers[4] or "...", 2)
 			end
 		end)
-		-- die Köpfe rucken herum, einer nach dem anderen – zu einem selbst (nicht zur Kamera,
-		-- die um den Kreis fährt: sonst würden sich die Hälse überdrehen)
-		local cameraPoint = function()
-			return S.eye
-		end
-		for i, delay in { 3.2, 4.3, 5.1, 5.9 } do
-			task.delay(delay, function()
-				local rig = S.puppets[i]
-				if current(mine) and rig then
-					rig.stare = cameraPoint
-					rig.snapped = nil
-					local head = rig:part("Head")
-					playAt("neckCrack", head and head.Position or center, { Volume = 1.4 })
-				end
-			end)
-		end
+		-- (die Köpfe der Familie drehen sich beim Ritual nicht: sie bleiben gesenkt)
 		hold(mine, 7.6)
 		------------------------------------------------ 11 s: Stille. Man selbst, alle starren einen an
 		stopLoop("ritualWhisper", 0)
@@ -1552,13 +1537,7 @@ function handlers.ritual(message)
 		setCandles(S.candles, true)
 		------------------------------------------------ 13.5 s: ein Schritt hinter einem – umdrehen
 		playAt("sarpStep", door + UP * 0.5, { Volume = 2.4 })
-		for _, rig in S.puppets do
-			-- alle Köpfe rucken zum Eingang (an einem vorbei)
-			rig.stare = function()
-				return sarpHeadPosition(S.sarp)
-			end
-			rig.snapped = nil
-		end
+		-- (die Familie dreht die Köpfe nicht zum Eingang – sie bleiben gesenkt)
 		hold(mine, 0.35)
 		local turnStart = os.clock()
 		shot(function(now)
@@ -2085,25 +2064,39 @@ local SARP_KNEEL = {
 -- Im Wald heller als in der Nacht davor (man soll den Weg erkennen): nur auf diesem Computer
 local Lighting = game:GetService("Lighting")
 local savedLighting
-local function brighten(on)
-	if on and not savedLighting then
+local function brighten(on, mode)
+	if on then
 		local atmosphere = Lighting:FindFirstChildOfClass("Atmosphere")
-		savedLighting = {
-			Ambient = Lighting.Ambient,
-			OutdoorAmbient = Lighting.OutdoorAmbient,
-			ExposureCompensation = Lighting.ExposureCompensation,
-			atmosphere = atmosphere,
-			density = atmosphere and atmosphere.Density,
-			color = atmosphere and atmosphere.Color,
-		}
+		if not savedLighting then
+			savedLighting = {
+				Ambient = Lighting.Ambient,
+				OutdoorAmbient = Lighting.OutdoorAmbient,
+				ExposureCompensation = Lighting.ExposureCompensation,
+				atmosphere = atmosphere,
+				density = atmosphere and atmosphere.Density,
+				color = atmosphere and atmosphere.Color,
+				haze = atmosphere and atmosphere.Haze,
+				offset = atmosphere and atmosphere.Offset,
+			}
+		end
 		Lighting.Ambient = Color3.fromRGB(58, 62, 74)
 		Lighting.OutdoorAmbient = Color3.fromRGB(88, 96, 120)
 		Lighting.ExposureCompensation = savedLighting.ExposureCompensation + 0.35
 		if atmosphere then
-			atmosphere.Density = 0.24
-			atmosphere.Color = Color3.fromRGB(26, 30, 40)
+			if mode == "chase" then
+				-- Verfolgung: dichter, kalter Nebel – der Weg vorne verschwindet im Grau
+				atmosphere.Density = 0.45
+				atmosphere.Offset = 0.15
+				atmosphere.Haze = 2.4
+				atmosphere.Color = Color3.fromRGB(52, 58, 70)
+			else
+				atmosphere.Density = 0.24
+				atmosphere.Offset = savedLighting.offset or 0
+				atmosphere.Haze = savedLighting.haze or 0
+				atmosphere.Color = Color3.fromRGB(26, 30, 40)
+			end
 		end
-	elseif not on and savedLighting then
+	elseif savedLighting then
 		local saved = savedLighting
 		savedLighting = nil
 		Lighting.Ambient = saved.Ambient
@@ -2112,8 +2105,46 @@ local function brighten(on)
 		if saved.atmosphere and saved.atmosphere.Parent then
 			saved.atmosphere.Density = saved.density
 			saved.atmosphere.Color = saved.color
+			saved.atmosphere.Haze = saved.haze
+			saved.atmosphere.Offset = saved.offset
 		end
 	end
+end
+
+-- Nebelschwaden, die bei der Verfolgung mit einem mitziehen (Bodennebel um die Füße und
+-- Schwaden vorne auf dem Weg). Nur auf diesem Computer.
+local function chaseFogEmitter(parent, name, size, rate, sizes, transparency)
+	local part = Instance.new("Part")
+	part.Name = name
+	part.Anchored = true
+	part.CanCollide = false
+	part.CanQuery = false
+	part.CanTouch = false
+	part.Transparency = 1
+	part.Size = size
+	local emitter = Instance.new("ParticleEmitter")
+	emitter.Name = "Fog"
+	emitter.Texture = "rbxasset://textures/particles/smoke_main.dds"
+	emitter.Color = ColorSequence.new(Color3.fromRGB(140, 150, 165))
+	emitter.Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 1),
+		NumberSequenceKeypoint.new(0.3, transparency),
+		NumberSequenceKeypoint.new(0.7, transparency + 0.03),
+		NumberSequenceKeypoint.new(1, 1),
+	})
+	emitter.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, sizes[1]), NumberSequenceKeypoint.new(1, sizes[2]) })
+	emitter.Lifetime = NumberRange.new(5, 8)
+	emitter.Rate = rate
+	emitter.Speed = NumberRange.new(0.4, 1.2)
+	emitter.SpreadAngle = Vector2.new(180, 10)
+	emitter.Rotation = NumberRange.new(0, 360)
+	emitter.RotSpeed = NumberRange.new(-8, 8)
+	emitter.LightInfluence = 0.7
+	emitter.Shape = Enum.ParticleEmitterShape.Box
+	emitter.LockedToPart = false
+	emitter.Parent = part
+	part.Parent = parent
+	return part
 end
 
 local function ownRoot()
@@ -2813,7 +2844,9 @@ function handlers.run(message)
 	C.nextLightning = os.clock() + 9
 	resetChaseEffects()
 	buildChaseObstacles(C, folder)
-	brighten(true)
+	brighten(true, "chase")
+	C.groundFog = chaseFogEmitter(folder, "K3ChaseGroundFog", Vector3.new(40, 1.5, 50), 9, { 8, 14 }, 0.82)
+	C.aheadFog = chaseFogEmitter(folder, "K3ChaseAheadFog", Vector3.new(30, 8, 12), 5, { 10, 18 }, 0.78)
 	-- Mondlicht (sonst sieht man im Wald gar nichts mehr – die Kerze ist weg)
 	local moon = Instance.new("Part")
 	moon.Name = "K3Moonlight"
@@ -3250,6 +3283,18 @@ local function updateChase(now, deltaTime)
 	local root = ownRoot()
 	if C.moon and root then
 		C.moon.CFrame = CFrame.new(root.Position + UP * 14)
+	end
+	if root then
+		-- der Nebel zieht mit: unten um die Füße, und vorne auf dem Weg (in Laufrichtung)
+		local look = root.CFrame.LookVector
+		local flat = Vector3.new(look.X, 0, look.Z)
+		flat = flat.Magnitude > 0.01 and flat.Unit or Vector3.new(0, 0, -1)
+		if C.groundFog and C.groundFog.Parent then
+			C.groundFog.CFrame = CFrame.lookAt(root.Position - UP * 2.2 + flat * 10, root.Position - UP * 2.2 + flat * 11)
+		end
+		if C.aheadFog and C.aheadFog.Parent then
+			C.aheadFog.CFrame = CFrame.lookAt(root.Position + UP * 1 + flat * 34, root.Position + UP * 1 + flat * 35)
+		end
 	end
 	local rig = C.rig
 	if C.falling then
