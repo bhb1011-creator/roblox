@@ -188,7 +188,7 @@ function Kapitel2.start()
 				local position = from:Lerp(target, a * a * (3 - 2 * a))
 				Wagners.place(npc, position, facing)
 				for index, hip in hips do
-					local swing = a < 1 and math.sin(elapsed * 6 + index * math.pi) * 0.3 or 0
+					local swing = a < 1 and math.sin(elapsed * 6 + index * math.pi) * 0.3 * (npc:GetAttribute("StepScale") or 1) or 0
 					pcall(function()
 						hip.joint.C0 = hip.base * CFrame.Angles(swing, 0, 0)
 					end)
@@ -243,7 +243,7 @@ function Kapitel2.start()
 					end
 					for index, hip in hips do
 						pcall(function()
-							hip.joint.C0 = hip.base * CFrame.Angles(math.sin(os.clock() * 7 + index * math.pi) * 0.35, 0, 0)
+							hip.joint.C0 = hip.base * CFrame.Angles(math.sin(os.clock() * 7 + index * math.pi) * 0.35 * (npc:GetAttribute("StepScale") or 1), 0, 0)
 						end)
 					end
 					if a >= 1 then

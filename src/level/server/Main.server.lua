@@ -17,6 +17,17 @@ local START_DELAY = 2
 
 Players.CharacterAutoLoads = false
 
+-- Ganzes Spiel: Kapitel 1 nur, wenn im Testmenü (Taste O) "Kapitel 1" gewählt wurde
+-- (außerhalb von Studio immer)
+if ReplicatedStorage:GetAttribute("FullGame") then
+	while ReplicatedStorage:GetAttribute("StartChoice") == nil do
+		ReplicatedStorage:GetAttributeChangedSignal("StartChoice"):Wait()
+	end
+	if ReplicatedStorage:GetAttribute("StartChoice") ~= "kapitel1" then
+		return
+	end
+end
+
 -- Alte Lobby-Skripte, die noch im selben Studio-Ort liegen, stoppen und entfernen
 -- (inklusive der Lobby, die sie vielleicht schon gebaut haben). Sonst stehen
 -- Lobby-Bäume und -Schranke mitten auf der Straße.

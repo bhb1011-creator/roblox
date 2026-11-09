@@ -8,7 +8,17 @@ Players.CharacterAutoLoads = false
 
 -- Ganzes Spiel (spiel.project.json): Kapitel 1 läuft zuerst. Kapitel 2 startet, wenn es
 -- zu Ende ist (Bild schwarz, "Ende von Kapitel 1"), und räumt dann Kapitel 1 weg.
-if ReplicatedStorage:GetAttribute("FullGame") then
+-- Im Testmenü (Taste O) kann man auch gleich irgendwo in Kapitel 2 oder 3 anfangen.
+local function startChoice()
+	while ReplicatedStorage:GetAttribute("StartChoice") == nil do
+		ReplicatedStorage:GetAttributeChangedSignal("StartChoice"):Wait()
+	end
+	return ReplicatedStorage:GetAttribute("StartChoice")
+end
+if ReplicatedStorage:GetAttribute("FullGame") and startChoice() == "figuren" then
+	return -- (Testmenü: nur die Figuren ansehen, siehe src/spiel/server/Figuren.lua)
+end
+if ReplicatedStorage:GetAttribute("FullGame") and startChoice() == "kapitel1" then
 	local cutscene = ReplicatedStorage:WaitForChild("Cutscene", math.huge)
 	while not cutscene:GetAttribute("Finished") do
 		cutscene:GetAttributeChangedSignal("Finished"):Wait()

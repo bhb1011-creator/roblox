@@ -209,9 +209,12 @@ Config.PLAYER_TTS = false
 --   "huette"         = gleich hinter der eingestürzten Brücke (Weg zu Sarps Hütte, Telefon,
 --                      Spiegel/Foto, Bett, Polizei – das Ende)
 Config.TEST_START_KAPITEL2 = ""
+-- Ganzes Spiel (spiel.project.json) in Studio: steht hier eine Wahl aus dem Testmenü
+-- (z. B. "figuren", "kapitel3"), startet das Spiel sofort dort – ohne Menü. "" = Menü zeigen.
+Config.TEST_AUTOSTART = ""
 -- Versionsnummer: steht beim Laden auf dem Bildschirm und im Output. So sieht man sofort,
 -- ob in Studio wirklich der neueste Stand läuft (nach "git pull").
-Config.BUILD = "K2-2026-11-09b"
+Config.BUILD = "K2-2026-11-09d"
 Config.VOICES = {
 	-- Sarp: etwas tiefer, langsam, ruhig – mit Bass, weniger Höhen und dunklem Hall
 	sarp = {

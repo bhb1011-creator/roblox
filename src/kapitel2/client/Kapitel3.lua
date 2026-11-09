@@ -702,6 +702,13 @@ function Rig.new(model, root, useBaseAttribute, rootOffset)
 		end
 	end
 	self:captureWelds()
+	-- langes Kleid (Wagners.lua): beim Knien/Sitzen die unteren Stufen ausblenden
+	self.dressLower = {}
+	for _, item in model:GetDescendants() do
+		if item:IsA("BasePart") and item:GetAttribute("DressLower") then
+			table.insert(self.dressLower, item)
+		end
+	end
 	return self
 end
 
@@ -807,6 +814,22 @@ function Rig:update(now)
 			end)
 			-- (manche Gelenke lassen sich nicht ändern: dann in Ruhe lassen)
 			joint.broken = not ok
+		end
+	end
+	if #self.dressLower > 0 then
+		local bent = false
+		for _, name in { "LeftHip", "RightHip" } do
+			local joint = self.joints[name]
+			if joint then
+				local _, angle = (joint.current * (extra[name] or CFrame.identity)):ToAxisAngle()
+				bent = bent or math.abs(angle) > 0.6
+			end
+		end
+		if bent ~= self.dressHidden then
+			self.dressHidden = bent
+			for _, part in self.dressLower do
+				part.LocalTransparencyModifier = bent and 1 or 0
+			end
 		end
 	end
 	if self.feet then
@@ -1088,18 +1111,20 @@ local SARP_IDLE = {
 
 -- Gehen/Rennen (R15): Phase in Bogenmaß, amount 0..1
 local function walkLayer(state)
-	return function()
+	return function(_, rig)
 		local amount = state.walk or 0
 		if amount < 0.01 then
 			return nil
 		end
 		local p = state.phase or 0
 		local swing = math.sin(p) * amount
+		-- im Kleid / Nachthemd kleinere Schritte (sonst stechen die Beine heraus)
+		local legs = rig and rig.model and rig.model:GetAttribute("StepScale") or 1
 		return {
-			LeftHip = CFrame.Angles(swing * 0.75, 0, 0),
-			RightHip = CFrame.Angles(-swing * 0.75, 0, 0),
-			LeftKnee = CFrame.Angles(-math.max(0, math.cos(p)) * 0.9 * amount, 0, 0),
-			RightKnee = CFrame.Angles(-math.max(0, -math.cos(p)) * 0.9 * amount, 0, 0),
+			LeftHip = CFrame.Angles(swing * 0.75 * legs, 0, 0),
+			RightHip = CFrame.Angles(-swing * 0.75 * legs, 0, 0),
+			LeftKnee = CFrame.Angles(-math.max(0, math.cos(p)) * 0.9 * amount * legs, 0, 0),
+			RightKnee = CFrame.Angles(-math.max(0, -math.cos(p)) * 0.9 * amount * legs, 0, 0),
 			LeftShoulder = CFrame.Angles(-swing * 0.6, 0, 0),
 			RightShoulder = CFrame.Angles(swing * 0.6, 0, 0),
 			Waist = CFrame.Angles(-0.25 * amount, math.sin(p) * 0.12 * amount, 0),

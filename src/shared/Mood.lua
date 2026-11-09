@@ -8,9 +8,10 @@ local RunService = game:GetService("RunService")
 
 local Mood = {}
 
-local MAX_SHADOW_LIGHTS = 6 -- so viele Lichter dürfen gleichzeitig Schatten werfen
-local MAX_SHADOW_DISTANCE = 70 -- weiter weg wirft kein Licht Schatten
-local UPDATE_EVERY = 0.35 -- Sekunden
+local MAX_SHADOW_LIGHTS = 8 -- so viele Lichter dürfen gleichzeitig Schatten werfen
+local SHADOW_ON, SHADOW_OFF = 40, 60 -- Studs: näher = Schatten an, weiter = aus
+local MAX_SWITCHES = 2 -- pro Durchgang höchstens so viele Lichter umschalten
+local UPDATE_EVERY = 0.5 -- Sekunden
 
 local started = false
 
@@ -74,9 +75,12 @@ local function startShadowBudget()
 		end)
 	end)
 
+	-- Schatten an/aus kostet selbst kurz Leistung (Ruckler). Darum nur selten umschalten:
+	-- an, wenn ein Licht näher als SHADOW_ON kommt, aus erst ab SHADOW_OFF (dazwischen bleibt
+	-- es, wie es ist), und pro Durchgang höchstens MAX_SWITCHES Lichter.
 	local camera = workspace.CurrentCamera
 	local nextUpdate = 0
-	local candidates = {}
+	local turnOn, turnOff, onList = {}, {}, {}
 	RunService.Heartbeat:Connect(function()
 		local now = os.clock()
 		if now < nextUpdate then
@@ -88,27 +92,56 @@ local function startShadowBudget()
 			return
 		end
 		local eye = camera.CFrame.Position
-		table.clear(candidates)
+		table.clear(turnOn)
+		table.clear(turnOff)
+		table.clear(onList)
+		local active = 0
 		for light in lights do
 			local holder = light.Parent
 			local position = holder and (holder:IsA("BasePart") and holder.Position or holder:IsA("Attachment") and holder.WorldPosition)
-			if position and light.Enabled then
+			if position then
 				local distance = (position - eye).Magnitude
-				if distance < MAX_SHADOW_DISTANCE then
-					table.insert(candidates, { light = light, distance = distance })
-				elseif light.Shadows then
-					light.Shadows = false
+				if light.Shadows then
+					if distance > SHADOW_OFF or not light.Enabled then
+						table.insert(turnOff, light)
+					else
+						active += 1
+						table.insert(onList, { light = light, distance = distance })
+					end
+				elseif light.Enabled and distance < SHADOW_ON then
+					table.insert(turnOn, { light = light, distance = distance })
 				end
 			end
 		end
-		table.sort(candidates, function(a, b)
+		-- zu viele Schatten an (z. B. am Anfang im Haus): die entferntesten ausschalten
+		if active > MAX_SHADOW_LIGHTS then
+			table.sort(onList, function(a, b)
+				return a.distance > b.distance
+			end)
+			for index = 1, active - MAX_SHADOW_LIGHTS do
+				table.insert(turnOff, onList[index].light)
+			end
+			active = MAX_SHADOW_LIGHTS
+		end
+		local switches = 0
+		for _, light in turnOff do
+			-- (Ausschalten ist billig: davon dürfen es mehr sein)
+			if switches >= MAX_SWITCHES * 4 then
+				break
+			end
+			light.Shadows = false
+			switches += 1
+		end
+		table.sort(turnOn, function(a, b)
 			return a.distance < b.distance
 		end)
-		for index, entry in candidates do
-			local want = index <= MAX_SHADOW_LIGHTS
-			if entry.light.Shadows ~= want then
-				entry.light.Shadows = want
+		for _, entry in turnOn do
+			if switches >= MAX_SWITCHES or active >= MAX_SHADOW_LIGHTS then
+				break
 			end
+			entry.light.Shadows = true
+			active += 1
+			switches += 1
 		end
 	end)
 end

@@ -25,6 +25,7 @@ local Choices = require(script.Parent:WaitForChild("Choices"))
 local BeastView = require(script.Parent:WaitForChild("BeastView"))
 local Ambience = require(script.Parent:WaitForChild("Ambience"))
 require(Shared:WaitForChild("Mood")).start() -- Vignette und Schatten-Budget
+require(Shared:WaitForChild("Inventory")).start() -- Inventarleiste
 local player = Players.LocalPlayer
 local cutscene = ReplicatedStorage:WaitForChild("Cutscene")
 local puppets = cutscene:WaitForChild("Puppets")

@@ -125,7 +125,7 @@ Kapitel2Dialogue.NIGHT_DINNER = {
 	{
 		choice = {
 			{
-				text = "Why are we eating in the middle of the night?",
+				text = { solo = "Why am I eating in the middle of the night?", duo = "Why are we eating in the middle of the night?" },
 				reply = { { speaker = "mrWagner", text = "Because that's when it's safe.", wait = 0.8 } },
 			},
 			{
@@ -154,7 +154,7 @@ Kapitel2Dialogue.NIGHT_RICHARD = {
 				reply = { { speaker = "mrWagner", look = "down", text = "The reason you are here.", wait = 0.8 } },
 			},
 			{
-				text = "Why should we trust you?",
+				text = { solo = "Why should I trust you?", duo = "Why should we trust you?" },
 				reply = { { speaker = "mrWagner", text = "Because I'm the only one left who still fights him.", wait = 0.8 } },
 			},
 		},
@@ -187,7 +187,7 @@ Kapitel2Dialogue.ESCAPE_INTRO = {
 	{
 		choice = {
 			{
-				text = "Why are you helping us?",
+				text = { solo = "Why are you helping me?", duo = "Why are you helping us?" },
 				reply = { { speaker = "mrWagner", look = "down", text = "Because somebody should have done this a long time ago.", wait = 0.8 } },
 			},
 			{

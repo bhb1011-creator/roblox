@@ -40,6 +40,48 @@ local function attach(model, bodyPart, name, size, offset, color, material, shap
 	return part
 end
 
+-- Langes Kleid / Nachthemd bis zum Boden, in drei Stufen nach unten weiter (A-Linie).
+-- Die Beine sind ganz verdeckt und schwingen beim Gehen nicht (StepScale 0): die Figur
+-- gleitet. So kann nichts mehr durch den Stoff stechen. Die unteren Stufen haben das
+-- Attribut "DressLower": beim Sitzen/Knien werden sie ausgeblendet.
+local function longDress(model, hips, name, color, hemColor, topExtra, bottomExtra)
+	local lowest = math.huge
+	for _, footName in { "LeftFoot", "RightFoot" } do
+		local foot = model:FindFirstChild(footName)
+		if foot then
+			lowest = math.min(lowest, foot.Position.Y - foot.Size.Y / 2)
+		end
+	end
+	if lowest == math.huge then
+		lowest = hips.Position.Y - 3
+	end
+	local top = hips.Size.Y * 0.3 -- etwas unter der Taille
+	local bottom = lowest - hips.Position.Y + 0.06 -- knapp über dem Boden
+	local length = top - bottom
+	local tiers = 3
+	for i = 0, tiers - 1 do
+		local extra = topExtra + (bottomExtra - topExtra) * (i + 0.5) / tiers
+		local height = length / tiers + 0.02
+		local y = top - length * (i + 0.5) / tiers
+		local part = attach(model, hips, name, Vector3.new(hips.Size.X + extra, height, hips.Size.Z + extra), CFrame.new(0, y, 0), color, Enum.Material.Fabric)
+		if i > 0 then
+			part:SetAttribute("DressLower", true)
+		end
+	end
+	local hem = attach(model, hips, name .. "Hem", Vector3.new(hips.Size.X + bottomExtra + 0.06, 0.12, hips.Size.Z + bottomExtra + 0.06), CFrame.new(0, bottom + 0.06, 0), hemColor, Enum.Material.Fabric)
+	hem:SetAttribute("DressLower", true)
+	model:SetAttribute("StepScale", 0) -- Beine bewegen sich nicht, die Figur gleitet
+end
+
+-- unteres Kleid ein-/ausblenden (Sitzen, Knien)
+function Wagners.showLowerDress(model, visible)
+	for _, part in model:GetChildren() do
+		if part:IsA("BasePart") and part:GetAttribute("DressLower") then
+			part.Transparency = visible and 0 or 1
+		end
+	end
+end
+
 -- Gelenke, die sich bewegen (Kopf drehen, Arm anwinkeln, Beine beim Gehen). In
 -- manchen Roblox-Versionen sind die Gelenke dieser Figuren schreibgeschützt
 -- ("C0 is read only"). Deshalb werden sie durch eigene, gleichwertige ersetzt.
@@ -98,7 +140,7 @@ end
 local HAIR = {
 	MrsWagner = { 81688919 }, -- ungemachter, kastanienbrauner Dutt
 	MrWagner = { 13477818 }, -- kurze, normale Haare
-	Lucy = { 12819326 }, -- langes schwarzes Haar
+	Lucy = { 1772372988 }, -- langes, glattes schwarzes Haar ohne Pony (Augen frei)
 	Tommy = { 147193065 }, -- zerzauste braune Haare
 }
 
@@ -247,10 +289,11 @@ local function face(model, head, style, colors)
 	end
 	if style == "friendly" then
 		-- freundliches, leichtes Lächeln
-		local lips = Color3.fromRGB(168, 92, 92)
-		attach(model, head, "Mouth", Vector3.new(0.22 * s, 0.04 * s, 0.02), CFrame.new(0, -0.26 * s, front), lips)
+		-- (Mundwinkel in derselben roten Farbe und dicht am Mund, sonst wirken sie wie Zähne)
+		local lips = Color3.fromRGB(170, 46, 52)
+		attach(model, head, "Mouth", Vector3.new(0.22 * s, 0.045 * s, 0.02), CFrame.new(0, -0.26 * s, front), lips)
 		for _, side in { -1, 1 } do
-			attach(model, head, "MouthCorner", Vector3.new(0.07 * s, 0.035 * s, 0.02), CFrame.new(side * 0.135 * s, -0.245 * s, front) * CFrame.Angles(0, 0, math.rad(side * 22)), lips)
+			attach(model, head, "MouthCorner", Vector3.new(0.06 * s, 0.035 * s, 0.02), CFrame.new(side * 0.125 * s, -0.25 * s, front - 0.001) * CFrame.Angles(0, 0, math.rad(side * 18)), lips)
 		end
 		-- etwas Rouge auf den Wangen
 		for _, side in { -1, 1 } do
@@ -273,10 +316,10 @@ local function face(model, head, style, colors)
 		attach(model, head, "Mouth", Vector3.new(0.16 * s, 0.035 * s, 0.02), CFrame.new(0, -0.25 * s, front), Color3.fromRGB(120, 70, 70))
 	elseif style == "smile" then
 		-- breites, starres Lächeln
-		local lips = Color3.fromRGB(128, 66, 66)
-		attach(model, head, "Mouth", Vector3.new(0.4 * s, 0.035 * s, 0.02), CFrame.new(0, -0.26 * s, front), lips)
+		local lips = Color3.fromRGB(150, 40, 46)
+		attach(model, head, "Mouth", Vector3.new(0.4 * s, 0.04 * s, 0.02), CFrame.new(0, -0.26 * s, front), lips)
 		for _, side in { -1, 1 } do
-			attach(model, head, "MouthCorner", Vector3.new(0.12 * s, 0.035 * s, 0.02), CFrame.new(side * 0.24 * s, -0.235 * s, front) * CFrame.Angles(0, 0, math.rad(side * 28)), lips)
+			attach(model, head, "MouthCorner", Vector3.new(0.1 * s, 0.035 * s, 0.02), CFrame.new(side * 0.225 * s, -0.24 * s, front - 0.001) * CFrame.Angles(0, 0, math.rad(side * 22)), lips)
 		end
 	else
 		-- runder, ungepflegter Bart um Kinn und Wangen (Ellipsoide statt Platten, damit er
@@ -361,8 +404,7 @@ function Wagners.buildMrs(parent)
 		end
 	end
 	-- Kleid bis unter die Knie, weißer Kragen, kleine Kette
-	attach(model, hips, "Skirt", Vector3.new(hips.Size.X + 0.45, 2.5, hips.Size.Z + 0.45), CFrame.new(0, -1.15, 0), colors.torso, Enum.Material.Fabric)
-	attach(model, hips, "SkirtHem", Vector3.new(hips.Size.X + 0.55, 0.15, hips.Size.Z + 0.55), CFrame.new(0, -2.33, 0), Color3.fromRGB(46, 62, 92), Enum.Material.Fabric)
+	longDress(model, hips, "Skirt", colors.torso, Color3.fromRGB(46, 62, 92), 0.4, 1.0)
 	local chest = -torso.Size.Z / 2 - 0.01
 	attach(model, torso, "Collar", Vector3.new(0.9, 0.16, 0.05), CFrame.new(0, torso.Size.Y / 2 - 0.12, chest), Color3.fromRGB(214, 206, 190), Enum.Material.Fabric)
 	attach(model, torso, "Locket", Vector3.new(0.16, 0.22, 0.04), CFrame.new(0, 0.15, chest - 0.01), Color3.fromRGB(150, 122, 60), Enum.Material.Metal)
@@ -449,8 +491,7 @@ function Wagners.buildLucy(parent)
 			attach(model, head, "HairSide", Vector3.new(0.18, size.Y * 1.2, size.Z * 0.5), CFrame.new(side * (size.X / 2 + 0.04), -size.Y * 0.1, 0.1), colors.hair, Enum.Material.Fabric)
 		end
 	end
-	attach(model, hips, "Nightgown", Vector3.new(hips.Size.X + 0.35, 2.9, hips.Size.Z + 0.35), CFrame.new(0, -1.35, 0), colors.torso, Enum.Material.Fabric)
-	attach(model, hips, "NightgownHem", Vector3.new(hips.Size.X + 0.45, 0.12, hips.Size.Z + 0.45), CFrame.new(0, -2.75, 0), Color3.fromRGB(190, 184, 172), Enum.Material.Fabric)
+	longDress(model, hips, "Nightgown", colors.torso, Color3.fromRGB(190, 184, 172), 0.3, 0.8)
 	-- die Puppe in der linken Hand
 	local hand = model.LeftHand
 	attach(model, hand, "DollBody", Vector3.new(0.3, 0.45, 0.22), CFrame.new(0, -0.35, -0.15), Color3.fromRGB(120, 40, 50), Enum.Material.Fabric)
@@ -603,6 +644,7 @@ function Wagners.sit(model, seat)
 			end)
 		end
 		model:SetAttribute("Sitting", true)
+		Wagners.showLowerDress(model, false)
 	end
 	local thigh = model:FindFirstChild("LeftUpperLeg")
 	local thighHalf = thigh and thigh.Size.Z / 2 or 0.5
@@ -629,6 +671,7 @@ function Wagners.stand(model, feet, lookAt)
 		end
 	end
 	model:SetAttribute("Sitting", false)
+	Wagners.showLowerDress(model, true)
 	if feet then
 		Wagners.place(model, feet, lookAt or (feet + model.HumanoidRootPart.CFrame.LookVector))
 	end

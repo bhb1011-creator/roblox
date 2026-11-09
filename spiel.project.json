@@ -26,6 +26,9 @@
         "ForestWalk": {
           "$path": "src/level/server/ForestWalk.lua"
         }
+      },
+      "Spiel": {
+        "$path": "src/spiel/server"
       }
     },
     "StarterPlayer": {
@@ -45,6 +48,9 @@
           "Ambience": {
             "$path": "src/level/client/Ambience.lua"
           }
+        },
+        "Spiel": {
+          "$path": "src/spiel/client"
         }
       }
     },
