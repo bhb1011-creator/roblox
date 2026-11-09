@@ -44,6 +44,20 @@ Fang damit an, dass du die Dateien liest und mir in 5 Sätzen sagst, wo wir steh
 
 ---
 
+## 000. NEU: Realistische Familie (Version K2-2026-11-09f)
+
+- Mrs. Wagner, Mr. Wagner, Lucy und Tommy sind jetzt **KI-Avatare** (Roblox `generate_avatar` über das Studio-MCP),
+  gespeichert als `assets/figuren/*.rbxm`. Rojo legt sie nach `ServerStorage.Wagners` (in `spiel.project.json`
+  und `kapitel2.project.json`). `Wagners.build*` nimmt automatisch diese Figuren, sonst die alten Klotz-Figuren.
+- `Wagners.fromStudio`: Größe angleichen (`FIGURE_HEIGHT`), Gelenke (AnimationConstraint an Knochen) → Motor6D,
+  Rig-Attachments umbenannt (sonst löst der Humanoid Hals/Schultern), Arme aus der T-Haltung nach unten (`relaxArms`),
+  Kerze/Puppe/Bild erst nach dem Einsetzen in die Welt anbringen.
+- `FigurenMeshes.lua`: Modell-IDs aller Körperteile. Falls Rojo beim Live-Sync die MeshId nicht setzen darf,
+  baut `repairMeshes` die Teile per `AssetService:CreateMeshPartAsync` neu.
+- In Studio getestet (per MCP, Edit-Modus): Laden, Größe, Gelenke, Sitzen, Gegenstände in der Hand, Reparatur ohne MeshIds.
+  **Nicht getestet:** echter Rojo-Live-Sync der .rbxm-Dateien und das Spiel im Play-Modus.
+- Sarp ist noch die alte Figur (kommt als Nächstes).
+
 ## 00. NEU am 9. November (Version K2-2026-11-09e)
 
 - **Ganzes Spiel am Stück:** `spiel.project.json` (beim User auf Port 34872). Kapitel 1 → 2 → 3 ohne Neustart.

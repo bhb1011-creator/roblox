@@ -116,10 +116,24 @@ local function replaceJoint(model, partName, jointName)
 	end)
 	if not ok or not part0 then
 		-- neuere Figuren: Gelenk mit zwei Attachments statt C0/C1
+		-- (bei den KI-Figuren hängen die Attachments an Knochen, daher über die Weltlage)
 		ok = pcall(function()
 			local a0, a1 = old.Attachment0, old.Attachment1
-			part0, part1, c0, c1 = a0.Parent, a1.Parent, a0.CFrame, a1.CFrame
+			part0 = a0:FindFirstAncestorWhichIsA("BasePart")
+			part1 = a1:FindFirstAncestorWhichIsA("BasePart")
+			c0 = part0.CFrame:ToObjectSpace(a0.WorldCFrame)
+			c1 = part1.CFrame:ToObjectSpace(a1.WorldCFrame)
 		end)
+	end
+	-- KI-Figuren (AnimationConstraint an Knochen): die Gelenkpunkte umbenennen. Sonst baut
+	-- der Humanoid Hals/Schultern neu und löst unser Gelenk wieder (Part0 = nil), sobald
+	-- die Figur in die Welt kommt.
+	if old:IsA("AnimationConstraint") then
+		for _, point in { old.Attachment0, old.Attachment1 } do
+			if point then
+				point.Name ..= "Fixed"
+			end
+		end
 	end
 	if not ok or not part0 or not part1 then
 		warn("Gelenk konnte nicht ersetzt werden:", partName, jointName)
@@ -357,7 +371,8 @@ local function holdCandle(model)
 	if not canBend then
 		up, bend = 0, 0 -- Arm bleibt hängen, die Kerze trotzdem senkrecht
 	end
-	local upright = CFrame.Angles(-(up + bend), 0, 0)
+	-- KI-Figuren: der Arm wurde vorher nach unten gedreht (relaxArms) – das hier ausgleichen
+	local upright = CFrame.Angles(-(up + bend), 0, 0) * (model:GetAttribute("RightArmRelax") or CFrame.new())
 	local lift = hand.Size.Y / 2
 	attach(model, hand, "CandleHolder", Vector3.new(0.12, 0.6, 0.6), upright * CFrame.new(0, lift + 0.06, -0.05) * CFrame.Angles(0, 0, math.rad(90)), Color3.fromRGB(120, 96, 52), Enum.Material.Metal, Enum.PartType.Cylinder)
 	attach(model, hand, "Candle", Vector3.new(0.9, 0.22, 0.22), upright * CFrame.new(0, lift + 0.57, -0.05) * CFrame.Angles(0, 0, math.rad(90)), Color3.fromRGB(225, 215, 190), Enum.Material.SmoothPlastic, Enum.PartType.Cylinder)
@@ -377,6 +392,10 @@ local function holdCandle(model)
 end
 
 function Wagners.buildMrs(parent)
+	local real = Wagners.fromStudio("MrsWagner", parent) -- echte Figur aus assets/figuren
+	if real then
+		return real
+	end
 	-- ganz normale, freundliche Frau – dass sie besessen ist, sieht man ihr nicht an
 	local colors = {
 		skin = Color3.fromRGB(234, 196, 168),
@@ -421,6 +440,10 @@ function Wagners.buildMrs(parent)
 end
 
 function Wagners.buildMr(parent)
+	local real = Wagners.fromStudio("MrWagner", parent) -- echte Figur aus assets/figuren
+	if real then
+		return real
+	end
 	local colors = {
 		skin = Color3.fromRGB(222, 182, 152),
 		torso = Color3.fromRGB(120, 140, 168), -- sauberes, hellblaues Hemd
@@ -469,6 +492,10 @@ function Wagners.buildMr(parent)
 end
 
 function Wagners.buildLucy(parent)
+	local real = Wagners.fromStudio("Lucy", parent) -- echte Figur aus assets/figuren
+	if real then
+		return real
+	end
 	local colors = {
 		skin = Color3.fromRGB(220, 206, 196),
 		torso = Color3.fromRGB(214, 208, 196),
@@ -503,6 +530,10 @@ end
 -- Tommy (Sohn, ca. 7): gestreifter Schlafanzug, zerzauste Haare, große dunkle Augen.
 -- Hält eine Zeichnung.
 function Wagners.buildTommy(parent)
+	local real = Wagners.fromStudio("Tommy", parent) -- echte Figur aus assets/figuren
+	if real then
+		return real
+	end
 	local colors = {
 		skin = Color3.fromRGB(214, 196, 180),
 		torso = Color3.fromRGB(70, 90, 130),
@@ -547,10 +578,102 @@ local function footOffset(model)
 	return humanoid.HipHeight + model.HumanoidRootPart.Size.Y / 2
 end
 
--- Eigene Figuren aus Studio: Liegt in ServerStorage ein Ordner "Wagners" mit einem Modell
--- dieses Namens ("MrsWagner" oder "MrWagner"), wird eine Kopie davon benutzt statt der
--- selbst gebauten Figur. So kann man in Studio echte Roblox-Avatare (mit Kleidung, Haaren
--- und Gesicht) aussuchen. Skripte darin werden zur Sicherheit entfernt.
+-- Echte Figuren (KI-Avatare aus Roblox Studio): liegen als Modelldateien in
+-- assets/figuren (Rojo legt sie nach ServerStorage.Wagners). Gibt es dort ein Modell mit
+-- diesem Namen ("MrsWagner", "MrWagner", "Lucy", "Tommy"), wird eine Kopie davon benutzt
+-- statt der selbst gebauten Figur. Skripte darin werden zur Sicherheit entfernt.
+local FIGURE_HEIGHT = { MrsWagner = 5.3, MrWagner = 5.9, Lucy = 4.3, Tommy = 3.6 }
+local FIGURE_STEP = { MrsWagner = 0.5, Lucy = 0.5 } -- lange Kleider: Beine schwingen weniger
+
+-- KI-Figuren stehen mit ausgestreckten Armen (T-/A-Haltung). Hier hängen die Arme
+-- locker nach unten, ein wenig vom Körper weg (die Hände stechen nicht ins Kleid).
+local function relaxArms(model)
+	local root = model.HumanoidRootPart
+	for _, side in { "Left", "Right" } do
+		local upper = model:FindFirstChild(side .. "UpperArm")
+		local joint = upper and upper:FindFirstChild(side .. "Shoulder")
+		local hand = model:FindFirstChild(side .. "Hand")
+		if joint and joint:IsA("Motor6D") and hand then
+			local pivot = joint.Part0.CFrame * joint.C0
+			local current = (hand.Position - pivot.Position).Unit
+			local outward = root.CFrame.RightVector * (side == "Right" and 1 or -1)
+			local wanted = (-root.CFrame.UpVector + outward * 0.12).Unit
+			local axis = current:Cross(wanted)
+			if axis.Magnitude > 1e-3 then
+				local angle = math.acos(math.clamp(current:Dot(wanted), -1, 1))
+				local turn = CFrame.fromAxisAngle(axis.Unit, angle)
+				local turned = CFrame.new(pivot.Position) * turn * (pivot - pivot.Position)
+				joint.C0 = joint.Part0.CFrame:ToObjectSpace(turned)
+				-- Drehung merken: Dinge in der Hand (Kerze, Puppe, Bild) gleichen sie aus
+				model:SetAttribute(side .. "ArmRelax", turn:Inverse())
+			end
+		end
+	end
+end
+
+local function holdDoll(model)
+	local hand = model:FindFirstChild("LeftHand")
+	if hand then
+		local relax = model:GetAttribute("LeftArmRelax") or CFrame.new()
+		attach(model, hand, "DollBody", Vector3.new(0.3, 0.45, 0.22), relax * CFrame.new(0, -0.35, -0.15), Color3.fromRGB(120, 40, 50), Enum.Material.Fabric)
+		attach(model, hand, "DollHead", Vector3.new(0.3, 0.3, 0.3), relax * CFrame.new(0, -0.05, -0.15), Color3.fromRGB(220, 214, 200), Enum.Material.SmoothPlastic, Enum.PartType.Ball)
+	end
+end
+
+local function holdDrawing(model)
+	local hand = model:FindFirstChild("RightHand")
+	if hand then
+		local relax = model:GetAttribute("RightArmRelax") or CFrame.new()
+		attach(model, hand, "Drawing", Vector3.new(0.9, 0.7, 0.02), relax * CFrame.new(0, -0.3, -0.2), Color3.fromRGB(214, 206, 186), Enum.Material.SmoothPlastic)
+		attach(model, hand, "DrawingFigure", Vector3.new(0.08, 0.45, 0.01), relax * CFrame.new(0.15, -0.3, -0.215), Color3.fromRGB(16, 14, 12), Enum.Material.SmoothPlastic)
+	end
+end
+
+-- Kam ein Körperteil ohne Form an (Rojo darf MeshId nicht setzen), wird es hier mit der
+-- gesicherten Modell-ID neu erzeugt; Kinder (Knochen, Gelenke, Textur) ziehen mit um.
+-- Passiert einmal pro Figur am Original in ServerStorage.
+local function repairMeshes(source, name)
+	if source:GetAttribute("MeshesChecked") then
+		return
+	end
+	source:SetAttribute("MeshesChecked", true)
+	local ok, ids = pcall(require, script.Parent:FindFirstChild("FigurenMeshes"))
+	ids = ok and ids and ids[name]
+	if not ids then
+		return
+	end
+	local AssetService = game:GetService("AssetService")
+	local fixed = 0
+	for _, old in source:GetChildren() do
+		if old:IsA("MeshPart") and old.MeshId == "" and ids[old.Name] then
+			local made, new = pcall(function()
+				return AssetService:CreateMeshPartAsync("rbxassetid://" .. ids[old.Name], {
+					CollisionFidelity = Enum.CollisionFidelity.Box,
+				})
+			end)
+			if made and new then
+				new.Name = old.Name
+				new.Size = old.Size
+				new.CFrame = old.CFrame
+				new.Color = old.Color
+				new.Transparency = old.Transparency
+				new.Anchored = old.Anchored
+				for _, child in old:GetChildren() do
+					child.Parent = new
+				end
+				new.Parent = source
+				old:Destroy()
+				fixed += 1
+			else
+				warn("Kapitel 2: " .. name .. "." .. old.Name .. " konnte nicht geladen werden:", new)
+			end
+		end
+	end
+	if fixed > 0 then
+		print("Kapitel 2: " .. name .. " – " .. fixed .. " Körperteile neu geladen.")
+	end
+end
+
 function Wagners.fromStudio(name, parent)
 	local found, folder = pcall(function()
 		return game:GetService("ServerStorage"):FindFirstChild("Wagners")
@@ -560,6 +683,7 @@ function Wagners.fromStudio(name, parent)
 	if not (source and source:IsA("Model")) then
 		return nil
 	end
+	repairMeshes(source, name)
 	local model = source:Clone()
 	model.Name = name
 	for _, item in model:GetDescendants() do
@@ -578,31 +702,60 @@ function Wagners.fromStudio(name, parent)
 	pcall(function()
 		humanoid.EvaluateStateMachine = false
 	end)
-	-- Abstand Mitte bis Füße messen, solange die Figur noch so steht wie in Studio
-	local lowest = math.huge
-	for _, part in model:GetDescendants() do
-		if part:IsA("BasePart") and part ~= root and part.Transparency < 1 then
-			lowest = math.min(lowest, part.Position.Y - part.Size.Y / 2)
+	-- aufrecht hinstellen und auf die richtige Größe bringen
+	local function measure()
+		local lowest, highest = math.huge, -math.huge
+		for _, part in model:GetDescendants() do
+			if part:IsA("BasePart") and part ~= root and part.Transparency < 1 then
+				lowest = math.min(lowest, part.Position.Y - part.Size.Y / 2)
+				highest = math.max(highest, part.Position.Y + part.Size.Y / 2)
+			end
 		end
+		return lowest, highest
 	end
-	if lowest < math.huge then
-		model:SetAttribute("FootOffset", root.Position.Y - lowest)
+	model.PrimaryPart = root
+	model:PivotTo(CFrame.new(root.Position))
+	local low, high = measure()
+	local wanted = FIGURE_HEIGHT[name]
+	if wanted and high > low then
+		pcall(function()
+			model:ScaleTo(model:GetScale() * wanted / (high - low))
+		end)
 	end
-	-- Nur die Mitte ist verankert, alles andere hängt an den Gelenken
+	-- Nur die Mitte ist verankert, alles andere hängt an den Gelenken.
+	-- KI-Figuren: Gelenke sind dort AnimationConstraints (an Knochen) – werden zu Motor6D.
 	for _, part in model:GetDescendants() do
 		if part:IsA("BasePart") then
 			part.Anchored = part == root
 			part.CanCollide = false
+			part.CanTouch = false
+		elseif part:IsA("BallSocketConstraint") then
+			part:Destroy()
 		end
 	end
-	model.PrimaryPart = root
 	for _, info in MOVING_JOINTS do
 		replaceJoint(model, info[1], info[2])
 	end
+	relaxArms(model)
+	-- Abstand Mitte bis Füße messen (nach dem Skalieren, mit hängenden Armen)
+	local lowest = measure()
+	if lowest < math.huge then
+		model:SetAttribute("FootOffset", root.Position.Y - lowest)
+	end
+	model:SetAttribute("RealFigure", true)
+	if FIGURE_STEP[name] then
+		model:SetAttribute("StepScale", FIGURE_STEP[name])
+	end
+	-- Erst in die Welt stellen, dann Dinge in die Hand geben: nur dort rechnet Roblox die
+	-- Gelenke sofort um, sonst sitzen Kerze/Puppe/Bild schief neben der Hand.
+	model.Parent = parent
 	if name == "MrsWagner" then
 		holdCandle(model)
+	elseif name == "Lucy" then
+		holdDoll(model)
+	elseif name == "Tommy" then
+		holdDrawing(model)
 	end
-	model.Parent = parent
 	return model
 end
 

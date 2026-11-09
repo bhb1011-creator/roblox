@@ -22,6 +22,11 @@
         }
       }
     },
+    "ServerStorage": {
+      "Wagners": {
+        "$path": "assets/figuren"
+      }
+    },
     "StarterPlayer": {
       "StarterPlayerScripts": {
         "$ignoreUnknownInstances": false,
