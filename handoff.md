@@ -1,6 +1,6 @@
 # Handoff – Horror-Spiel „Guesthouse“ (Roblox)
 
-Stand: 8. November 2026, Branch `claude/optimistic-bardeen-4tmohk`, Version `K2-2026-11-08b`.
+Stand: 9. November 2026, Branch `claude/optimistic-bardeen-4tmohk`, Version `K2-2026-11-09a`.
 Abschnitte 2–8 beschreiben Kapitel 2 (Stand 6. Nov.); **neu: Abschnitt 0 (Kapitel 3 + Audio).**
 Diese Datei ist für einen **neuen Chat** gedacht: erst den Prompt unten kopieren, der Rest ist Nachschlagewerk.
 
@@ -13,6 +13,7 @@ Ich arbeite mit dir an meinem Roblox-Horrorspiel „Guesthouse“ (im Code auch 
 Fears-to-Fathom-Stil, allein oder zu zweit, gebaut mit Rojo). Das Spiel ist auf Englisch.
 Ich bin Anfänger und nutze einen Mac – erkläre bitte alles in einfachem Deutsch, in kurzen Schritten.
 
+Das Projekt liegt bei mir in `~/Documents/roblox-neu` (GitHub: bhb1011-creator/roblox).
 Lies zuerst `handoff.md` im Repo (Stand, Dateien, Regeln, offene Punkte), danach
 `docs/konzept/wagners.md` (Geschichte Kapitel 2).
 
@@ -27,12 +28,17 @@ Regeln:
   Richard stand lange auf ihrer Seite – das kommt erst im DLC).
 - Ich teste selbst: in `~/Documents/roblox-neu` `git pull`, dann
   `~/Downloads/rojo serve kapitel2.project.json --port 34872`, in Studio „Connect“ und „Play“.
+  (Nur `rojo serve` ohne Datei startet die Lobby – das ist falsch.)
 - Sei ehrlich: Du kannst Studio nicht starten – sag klar, was ungetestet ist.
   Arbeite gründlich und sag, wenn etwas fertig ist.
 
-Stand: Kapitel 1, 2 und 3 sind gebaut (Kapitel 3: Ritual, Flucht vor dem Biest durch den Wald,
-Brücke, Sarps Hütte, Notruf 911, Halluzinations-Jumpscares, Polizei holt einen ab, ENDE).
-Gerade kümmern wir uns um die Sounds für Kapitel 3 (siehe Abschnitt „Audio“ in handoff.md).
+Stand: Version `K2-2026-11-09a`. Kapitel 1, 2 und 3 sind gebaut (Kapitel 3: Ritual, Flucht vor
+dem Biest durch den Wald, Brücke, Sarps Hütte, Notruf 911, Halluzinations-Jumpscares, Polizei
+holt einen ab, ENDE). Zuletzt: mehr Nebel bei der Verfolgung, Familie dreht beim Ritual die Köpfe
+nicht mehr, umgefallener Stuhl in der Hütte repariert, Teststart steht auf `""` (Anfang Kapitel 2).
+Letzter großer Schritt bis Ende Dezember: Audio. Ich kann erst ab 24. November wieder Sounds
+hochladen; bis dahin sollen viele kurze Sounds zu wenigen Sammeldateien zusammengefasst werden
+(im Spiel per `Sound.PlaybackRegion`), siehe Abschnitt „Audio“ in handoff.md.
 Fang damit an, dass du die Dateien liest und mir in 5 Sätzen sagst, wo wir stehen.
 ```
 
@@ -45,7 +51,13 @@ Fang damit an, dass du die Dateien liest und mir in 5 Sätzen sagst, wo wir steh
 - Regeln: keine Screenshots/Dateien schicken; `Config.BUILD` bei jeder Änderung hochzählen;
   Sounds sind jetzt dran (die alte Regel „Audio ganz am Ende“ ist erledigt).
 - Kapitel 2 ist fertig und geht nahtlos in Kapitel 3 über.
-- `Config.TEST_START_KAPITEL2 = "kapitel3"` (weitere: `""`, `"nachVerstecken"`, `"tuer1"`, `"huette"` = direkt bei der Hütte).
+- `Config.TEST_START_KAPITEL2 = ""` (Anfang Kapitel 2) (weitere: `""`, `"nachVerstecken"`, `"tuer1"`, `"huette"` = direkt bei der Hütte).
+
+### Änderungen 9. November (K2-2026-11-09a)
+- Verfolgung: dichtere Atmosphäre (`brighten(true, "chase")`), zwei Nebel-Emitter ziehen mit dem Spieler mit, mehr Bodennebel am Weg (`ForestDressing.lua`).
+- Ritual: Familie dreht die Köpfe nicht mehr (kein `rig.stare` mehr gesetzt), Köpfe bleiben gesenkt.
+- Hütte: umgekippter Stuhl neu gebaut (lag schief halb im Boden), liegt jetzt flach auf der Lehne.
+- Ab 24. November kann der User wieder Sounds hochladen; Sammeldateien bis dahin vorbereiten.
 
 ### Kapitel 3 – Ablauf
 1. Karte „KAPITEL 3“, Ritual im Ritualraum (Familie flüstert im Chor, Kamerafahrt, Familie schaut auf einen Punkt, nicht in die Kamera).
