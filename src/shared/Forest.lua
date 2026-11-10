@@ -17,8 +17,85 @@ local function randomBase(position, rng)
 	return CFrame.new(position) * CFrame.Angles(0, rng:NextNumber(0, math.pi * 2), 0)
 end
 
+-- Echte Tannen (MeshParts): liegen als Vorlagen in ReplicatedStorage.Natur.Tannen
+-- (assets/natur/Tannen.model.json, erzeugt von tools/make_tree_models.py). Gibt es den
+-- Ordner nicht (z. B. in einem Projekt, das ihn nicht einbindet) oder fehlen den Vorlagen
+-- die Formen, werden wie bisher Tannen aus Klötzen gebaut.
+local meshTemplates -- nil = noch nicht gesucht, false = keine da
+local function findMeshTemplates()
+	if meshTemplates ~= nil then
+		return meshTemplates
+	end
+	meshTemplates = false
+	local natur = game:GetService("ReplicatedStorage"):FindFirstChild("Natur")
+	local folder = natur and natur:FindFirstChild("Tannen")
+	if not folder then
+		return false
+	end
+	local list = {}
+	for _, model in folder:GetChildren() do
+		local usable = model:IsA("Model")
+		local top = 0
+		if usable then
+			for _, part in model:GetChildren() do
+				if part:IsA("MeshPart") then
+					if part.MeshId == "" then
+						usable = false -- (Rojo konnte die Form nicht setzen: einmal Disconnect/Connect)
+					end
+					-- höchster Punkt über dem Fuß (die Vorlage steht mit dem Fuß auf y = 0)
+					local half = part.Size / 2
+					local up = part.CFrame.UpVector * half.Y
+					local right = part.CFrame.RightVector * half.X
+					local look = part.CFrame.LookVector * half.Z
+					top = math.max(top, part.Position.Y + math.abs(up.Y) + math.abs(right.Y) + math.abs(look.Y))
+				end
+			end
+		end
+		if usable and top > 1 then
+			model.WorldPivot = CFrame.new()
+			table.insert(list, { model = model, height = top })
+		end
+	end
+	if #list == 0 then
+		warn("Forest: Tannen-Vorlagen gefunden, aber ohne Form – es werden Klotz-Tannen gebaut.")
+		return false
+	end
+	table.sort(list, function(a, b)
+		return a.model.Name < b.model.Name
+	end)
+	meshTemplates = list
+	return list
+end
+
+-- Stellt eine echte Tanne auf. collide = unsichtbarer Stamm zum Dagegenlaufen.
+local function buildMeshPine(parent, position, height, rng, name, collide)
+	local templates = findMeshTemplates()
+	if not templates then
+		return false
+	end
+	local template = templates[rng:NextInteger(1, #templates)]
+	local tree = template.model:Clone()
+	tree.Name = name
+	tree:ScaleTo(height / template.height)
+	local base = randomBase(position, rng) * CFrame.Angles(rng:NextNumber(-0.03, 0.03), 0, rng:NextNumber(-0.03, 0.03))
+	tree:PivotTo(base * CFrame.new(0, -0.4, 0)) -- ein Stück in den Boden, damit kein Spalt bleibt
+	if collide then
+		Parts.column(
+			{ Name = "TrunkCollider", Transparency = 1, CastShadow = false, CanQuery = false, Parent = tree },
+			12,
+			math.max(1.4, height * 0.035),
+			CFrame.new(position)
+		)
+	end
+	tree.Parent = parent
+	return true
+end
+
 -- Detaillierte Tanne: zweiteiliger Stamm, dichte Etagen aus hängenden Ästen bis weit nach unten
 local function buildPine(parent, position, height, rng)
+	if buildMeshPine(parent, position, height, rng, "Pine", true) then
+		return
+	end
 	local tree = Instance.new("Model")
 	tree.Name = "Pine"
 	local base = randomBase(position, rng)
@@ -70,6 +147,9 @@ end
 
 -- Einfache Tanne für weit entfernte Stellen (spart Bauteile, im Nebel kaum zu unterscheiden)
 local function buildSimplePine(parent, position, height, rng)
+	if buildMeshPine(parent, position, height, rng, "FarPine", false) then
+		return
+	end
 	local tree = Instance.new("Model")
 	tree.Name = "FarPine"
 	local base = randomBase(position, rng)

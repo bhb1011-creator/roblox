@@ -101,7 +101,7 @@ local exitButton = create("TextButton", {
 	BackgroundColor3 = Color3.fromRGB(25, 20, 20),
 	BackgroundTransparency = 0.2,
 	Font = Enum.Font.GothamBold,
-	Text = "Aussteigen [Leertaste]",
+	Text = "Get out [Space]",
 	TextSize = 22,
 	TextColor3 = Color3.fromRGB(240, 225, 205),
 	Visible = false,
@@ -172,7 +172,7 @@ local function createWindow(name, title, subtitle)
 		Size = UDim2.fromOffset(160, 42),
 		BackgroundColor3 = Color3.fromRGB(150, 45, 40),
 		Font = Enum.Font.GothamBold,
-		Text = "Schließen",
+		Text = "Close",
 		TextSize = 20,
 		TextColor3 = Color3.new(1, 1, 1),
 		ZIndex = 21,
@@ -239,17 +239,17 @@ local function addCard(list, order, title, description, buttonText, buttonColor,
 end
 
 -- Kiosk: Snacks, die im Spiel helfen (Kauf mit Münzen kommt später)
-local shopWindow, shopList = createWindow("ShopWindow", "🛒 KIOSK", "Snacks, die dir in der Nacht helfen")
+local shopWindow, shopList = createWindow("ShopWindow", "🛒 KIOSK", "Snacks that help you through the night")
 for index, snack in Config.SNACKS do
-	addCard(shopList, index, snack.title, snack.description, "🪙 " .. snack.price .. " · bald", Color3.fromRGB(80, 75, 70), nil)
+	addCard(shopList, index, snack.title, snack.description, "🪙 " .. snack.price .. " · soon", Color3.fromRGB(80, 75, 70), nil)
 end
 
 -- Kasse: Robux-Produkte (Wiederbelebungen, Rebirths)
-local cashierWindow, cashierList, cashierInfo = createWindow("CashierWindow", "💰 KASSE", "")
+local cashierWindow, cashierList, cashierInfo = createWindow("CashierWindow", "💰 CHECKOUT", "")
 for index, product in Config.PRODUCTS do
 	addCard(cashierList, index, product.title, product.description, "R$ " .. product.robux, Color3.fromRGB(40, 140, 70), function()
 		if product.id == 0 then
-			showToast("Dieses Produkt ist noch nicht eingerichtet.", 3)
+			showToast("This product is not set up yet.", 3)
 			return
 		end
 		MarketplaceService:PromptProductPurchase(player, product.id)
@@ -257,7 +257,7 @@ for index, product in Config.PRODUCTS do
 end
 local function updateCashierInfo()
 	cashierInfo.Text = string.format(
-		"Deine Wiederbelebungen: %d   ·   Rebirths: %d",
+		"Your revives: %d   ·   Rebirths: %d",
 		player:GetAttribute("Revives") or 0,
 		player:GetAttribute("Rebirths") or 0
 	)
@@ -409,5 +409,5 @@ RunService.RenderStepped:Connect(function()
 end)
 
 task.delay(2, function()
-	showToast("Willkommen. Steig in ein Auto, wenn du bereit bist…", 5)
+	showToast("Welcome. Get into a car when you are ready…", 5)
 end)

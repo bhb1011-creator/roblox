@@ -316,10 +316,10 @@ local function buildNoticeBoard(parent, cframe)
 
 	local gui = Parts.surfaceGui(cork, Enum.NormalId.Front)
 	local notes = {
-		{ "VERMISST", "Zuletzt hier am Parkplatz gesehen.", 0.02, 0.04, -4 },
-		{ "VERMISST", "Seit 3 Tagen.\nSein Auto steht noch hier.", 0.27, 0.08, 3 },
-		{ "WER HAT IHN GESEHEN?", "Ging abends allein in den Wald.", 0.52, 0.03, -2 },
-		{ "VERMISST", "Belohnung für Hinweise!", 0.77, 0.07, 5 },
+		{ "MISSING", "Last seen here at the parking lot.", 0.02, 0.04, -4 },
+		{ "MISSING", "For 3 days.\nHis car is still here.", 0.27, 0.08, 3 },
+		{ "HAVE YOU SEEN HIM?", "Went into the forest alone at dusk.", 0.52, 0.03, -2 },
+		{ "MISSING", "Reward for information!", 0.77, 0.07, 5 },
 	}
 	for _, note in notes do
 		local paper = Instance.new("Frame")
@@ -352,7 +352,7 @@ local function buildNoticeBoard(parent, cframe)
 	warning.BorderSizePixel = 0
 	warning.Parent = gui
 	Parts.text(warning, {
-		Text = "ACHTUNG: Nach Einbruch der Dunkelheit\nnicht in den Wald gehen!",
+		Text = "WARNING: Do not enter the forest\nafter dark!",
 		Font = Enum.Font.SpecialElite,
 		TextColor3 = Color3.fromRGB(40, 35, 30),
 		Size = UDim2.fromScale(0.9, 0.8),
@@ -394,7 +394,7 @@ local function buildInfoBoard(parent)
 		LayoutOrder = 2,
 	})
 	Parts.text(gui, {
-		Text = "Steig in ein Auto – allein oder zu zweit.\nÜberlebe die Nacht.",
+		Text = "Get into a car – alone or with a friend.\nSurvive the night.",
 		Font = Enum.Font.SpecialElite,
 		TextColor3 = Color3.fromRGB(180, 170, 155),
 		Size = UDim2.fromScale(0.85, 0.24),

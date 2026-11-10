@@ -187,7 +187,7 @@ function Car.build(parent, homeCFrame, color, seatCount, name, title, plate)
 	end
 
 	local prompt = Instance.new("ProximityPrompt")
-	prompt.ActionText = "Einsteigen"
+	prompt.ActionText = "Get in"
 	prompt.ObjectText = title
 	prompt.MaxActivationDistance = 12
 	prompt.RequiresLineOfSight = false

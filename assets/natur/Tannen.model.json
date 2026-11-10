@@ -1,0 +1,1077 @@
+{
+ "ClassName": "Folder",
+ "Children": [
+  {
+   "Name": "Tanne1",
+   "ClassName": "Model",
+   "Children": [
+    {
+     "Name": "Trunk",
+     "ClassName": "MeshPart",
+     "Properties": {
+      "MeshId": "rbxassetid://107431480752613",
+      "Size": {
+       "Vector3": [
+        7.839,
+        7.853,
+        23.789
+       ]
+      },
+      "InitialSize": {
+       "Vector3": [
+        7.839,
+        7.853,
+        23.789
+       ]
+      },
+      "CFrame": {
+       "CFrame": {
+        "position": [
+         0.0,
+         11.895,
+         0.0
+        ],
+        "orientation": [
+         [
+          0.413,
+          0.911,
+          0.0
+         ],
+         [
+          0.0,
+          0.0,
+          1.0
+         ],
+         [
+          0.911,
+          -0.413,
+          0.0
+         ]
+        ]
+       }
+      },
+      "Anchored": true,
+      "CanCollide": false,
+      "CanTouch": false,
+      "CanQuery": false,
+      "DoubleSided": true,
+      "CastShadow": true
+     },
+     "Children": [
+      {
+       "Name": "SurfaceAppearance",
+       "ClassName": "SurfaceAppearance",
+       "Properties": {
+        "ColorMap": "rbxassetid://139378529098819",
+        "NormalMap": "rbxassetid://103170239355186",
+        "AlphaMode": "Overlay"
+       }
+      }
+     ]
+    },
+    {
+     "Name": "Needles",
+     "ClassName": "MeshPart",
+     "Properties": {
+      "MeshId": "rbxassetid://90116814867758",
+      "Size": {
+       "Vector3": [
+        8.725,
+        8.676,
+        22.109
+       ]
+      },
+      "InitialSize": {
+       "Vector3": [
+        8.725,
+        8.676,
+        22.109
+       ]
+      },
+      "CFrame": {
+       "CFrame": {
+        "position": [
+         -0.211,
+         13.441,
+         0.225
+        ],
+        "orientation": [
+         [
+          0.413,
+          0.911,
+          0.0
+         ],
+         [
+          0.0,
+          0.0,
+          1.0
+         ],
+         [
+          0.911,
+          -0.413,
+          0.0
+         ]
+        ]
+       }
+      },
+      "Anchored": true,
+      "CanCollide": false,
+      "CanTouch": false,
+      "CanQuery": false,
+      "DoubleSided": true,
+      "CastShadow": false
+     },
+     "Children": [
+      {
+       "Name": "SurfaceAppearance",
+       "ClassName": "SurfaceAppearance",
+       "Properties": {
+        "ColorMap": "rbxassetid://122385008811017",
+        "NormalMap": "rbxassetid://76300230289957",
+        "AlphaMode": "Transparency"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "Name": "Tanne2",
+   "ClassName": "Model",
+   "Children": [
+    {
+     "Name": "Trunk",
+     "ClassName": "MeshPart",
+     "Properties": {
+      "MeshId": "rbxassetid://74030110324292",
+      "Size": {
+       "Vector3": [
+        5.758,
+        5.739,
+        23.789
+       ]
+      },
+      "InitialSize": {
+       "Vector3": [
+        5.758,
+        5.739,
+        23.789
+       ]
+      },
+      "CFrame": {
+       "CFrame": {
+        "position": [
+         0.0,
+         11.895,
+         0.0
+        ],
+        "orientation": [
+         [
+          0.413,
+          0.911,
+          0.0
+         ],
+         [
+          0.0,
+          0.0,
+          1.0
+         ],
+         [
+          0.911,
+          -0.413,
+          0.0
+         ]
+        ]
+       }
+      },
+      "Anchored": true,
+      "CanCollide": false,
+      "CanTouch": false,
+      "CanQuery": false,
+      "DoubleSided": true,
+      "CastShadow": true
+     },
+     "Children": [
+      {
+       "Name": "SurfaceAppearance",
+       "ClassName": "SurfaceAppearance",
+       "Properties": {
+        "ColorMap": "rbxassetid://139378529098819",
+        "NormalMap": "rbxassetid://103170239355186",
+        "AlphaMode": "Overlay"
+       }
+      }
+     ]
+    },
+    {
+     "Name": "Needles",
+     "ClassName": "MeshPart",
+     "Properties": {
+      "MeshId": "rbxassetid://135974560430452",
+      "Size": {
+       "Vector3": [
+        8.666,
+        8.693,
+        22.921
+       ]
+      },
+      "InitialSize": {
+       "Vector3": [
+        8.666,
+        8.693,
+        22.921
+       ]
+      },
+      "CFrame": {
+       "CFrame": {
+        "position": [
+         0.234,
+         13.035,
+         -0.255
+        ],
+        "orientation": [
+         [
+          0.413,
+          0.911,
+          0.0
+         ],
+         [
+          0.0,
+          0.0,
+          1.0
+         ],
+         [
+          0.911,
+          -0.413,
+          0.0
+         ]
+        ]
+       }
+      },
+      "Anchored": true,
+      "CanCollide": false,
+      "CanTouch": false,
+      "CanQuery": false,
+      "DoubleSided": true,
+      "CastShadow": false
+     },
+     "Children": [
+      {
+       "Name": "SurfaceAppearance",
+       "ClassName": "SurfaceAppearance",
+       "Properties": {
+        "ColorMap": "rbxassetid://122385008811017",
+        "NormalMap": "rbxassetid://76300230289957",
+        "AlphaMode": "Transparency"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "Name": "Tanne3",
+   "ClassName": "Model",
+   "Children": [
+    {
+     "Name": "Trunk",
+     "ClassName": "MeshPart",
+     "Properties": {
+      "MeshId": "rbxassetid://87765311815033",
+      "Size": {
+       "Vector3": [
+        5.539,
+        3.588,
+        23.789
+       ]
+      },
+      "InitialSize": {
+       "Vector3": [
+        5.539,
+        3.588,
+        23.789
+       ]
+      },
+      "CFrame": {
+       "CFrame": {
+        "position": [
+         0.0,
+         11.895,
+         0.0
+        ],
+        "orientation": [
+         [
+          0.911,
+          -0.413,
+          0.0
+         ],
+         [
+          0.0,
+          0.0,
+          1.0
+         ],
+         [
+          -0.413,
+          -0.911,
+          0.0
+         ]
+        ]
+       }
+      },
+      "Anchored": true,
+      "CanCollide": false,
+      "CanTouch": false,
+      "CanQuery": false,
+      "DoubleSided": true,
+      "CastShadow": true
+     },
+     "Children": [
+      {
+       "Name": "SurfaceAppearance",
+       "ClassName": "SurfaceAppearance",
+       "Properties": {
+        "ColorMap": "rbxassetid://78447927211856",
+        "NormalMap": "rbxassetid://115307559967937",
+        "AlphaMode": "Overlay"
+       }
+      }
+     ]
+    },
+    {
+     "Name": "Needles",
+     "ClassName": "MeshPart",
+     "Properties": {
+      "MeshId": "rbxassetid://98416655622270",
+      "Size": {
+       "Vector3": [
+        8.925,
+        9.114,
+        22.918
+       ]
+      },
+      "InitialSize": {
+       "Vector3": [
+        8.925,
+        9.114,
+        22.918
+       ]
+      },
+      "CFrame": {
+       "CFrame": {
+        "position": [
+         -0.696,
+         13.037,
+         -0.142
+        ],
+        "orientation": [
+         [
+          0.911,
+          -0.413,
+          0.0
+         ],
+         [
+          0.0,
+          0.0,
+          1.0
+         ],
+         [
+          -0.413,
+          -0.911,
+          0.0
+         ]
+        ]
+       }
+      },
+      "Anchored": true,
+      "CanCollide": false,
+      "CanTouch": false,
+      "CanQuery": false,
+      "DoubleSided": true,
+      "CastShadow": false
+     },
+     "Children": [
+      {
+       "Name": "SurfaceAppearance",
+       "ClassName": "SurfaceAppearance",
+       "Properties": {
+        "ColorMap": "rbxassetid://122385008811017",
+        "NormalMap": "rbxassetid://76300230289957",
+        "AlphaMode": "Transparency"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "Name": "Tanne4",
+   "ClassName": "Model",
+   "Children": [
+    {
+     "Name": "Trunk",
+     "ClassName": "MeshPart",
+     "Properties": {
+      "MeshId": "rbxassetid://116882934598454",
+      "Size": {
+       "Vector3": [
+        9.294,
+        9.43,
+        26.021
+       ]
+      },
+      "InitialSize": {
+       "Vector3": [
+        8.49,
+        8.615,
+        23.771
+       ]
+      },
+      "CFrame": {
+       "CFrame": {
+        "position": [
+         0.0,
+         13.011,
+         0.0
+        ],
+        "orientation": [
+         [
+          0.413,
+          0.911,
+          0.0
+         ],
+         [
+          0.0,
+          0.0,
+          1.0
+         ],
+         [
+          0.911,
+          -0.413,
+          0.0
+         ]
+        ]
+       }
+      },
+      "Anchored": true,
+      "CanCollide": false,
+      "CanTouch": false,
+      "CanQuery": false,
+      "DoubleSided": true,
+      "CastShadow": true
+     },
+     "Children": [
+      {
+       "Name": "SurfaceAppearance",
+       "ClassName": "SurfaceAppearance",
+       "Properties": {
+        "ColorMap": "rbxassetid://84377568721955",
+        "NormalMap": "rbxassetid://103405406141678",
+        "AlphaMode": "Overlay"
+       }
+      }
+     ]
+    },
+    {
+     "Name": "Needles",
+     "ClassName": "MeshPart",
+     "Properties": {
+      "MeshId": "rbxassetid://98796039687733",
+      "Size": {
+       "Vector3": [
+        10.621,
+        10.141,
+        25.624
+       ]
+      },
+      "InitialSize": {
+       "Vector3": [
+        9.703,
+        9.264,
+        23.408
+       ]
+      },
+      "CFrame": {
+       "CFrame": {
+        "position": [
+         0.118,
+         13.97,
+         0.092
+        ],
+        "orientation": [
+         [
+          0.413,
+          0.911,
+          0.0
+         ],
+         [
+          0.0,
+          0.0,
+          1.0
+         ],
+         [
+          0.911,
+          -0.413,
+          0.0
+         ]
+        ]
+       }
+      },
+      "Anchored": true,
+      "CanCollide": false,
+      "CanTouch": false,
+      "CanQuery": false,
+      "DoubleSided": true,
+      "CastShadow": false
+     },
+     "Children": [
+      {
+       "Name": "SurfaceAppearance",
+       "ClassName": "SurfaceAppearance",
+       "Properties": {
+        "ColorMap": "rbxassetid://122385008811017",
+        "NormalMap": "rbxassetid://76300230289957",
+        "AlphaMode": "Transparency"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "Name": "Tanne5",
+   "ClassName": "Model",
+   "Children": [
+    {
+     "Name": "Trunk",
+     "ClassName": "MeshPart",
+     "Properties": {
+      "MeshId": "rbxassetid://76178437725298",
+      "Size": {
+       "Vector3": [
+        6.096,
+        6.585,
+        25.434
+       ]
+      },
+      "InitialSize": {
+       "Vector3": [
+        5.701,
+        6.16,
+        23.789
+       ]
+      },
+      "CFrame": {
+       "CFrame": {
+        "position": [
+         0.0,
+         12.717,
+         0.0
+        ],
+        "orientation": [
+         [
+          0.911,
+          -0.413,
+          0.0
+         ],
+         [
+          0.0,
+          0.0,
+          1.0
+         ],
+         [
+          -0.413,
+          -0.911,
+          0.0
+         ]
+        ]
+       }
+      },
+      "Anchored": true,
+      "CanCollide": false,
+      "CanTouch": false,
+      "CanQuery": false,
+      "DoubleSided": true,
+      "CastShadow": true
+     },
+     "Children": [
+      {
+       "Name": "SurfaceAppearance",
+       "ClassName": "SurfaceAppearance",
+       "Properties": {
+        "ColorMap": "rbxassetid://93374260049097",
+        "NormalMap": "rbxassetid://76864255573638",
+        "AlphaMode": "Overlay"
+       }
+      }
+     ]
+    },
+    {
+     "Name": "Needles",
+     "ClassName": "MeshPart",
+     "Properties": {
+      "MeshId": "rbxassetid://74592415499646",
+      "Size": {
+       "Vector3": [
+        7.861,
+        7.898,
+        25.303
+       ]
+      },
+      "InitialSize": {
+       "Vector3": [
+        7.352,
+        7.388,
+        23.667
+       ]
+      },
+      "CFrame": {
+       "CFrame": {
+        "position": [
+         -0.072,
+         13.538,
+         0.352
+        ],
+        "orientation": [
+         [
+          0.911,
+          -0.413,
+          0.0
+         ],
+         [
+          0.0,
+          0.0,
+          1.0
+         ],
+         [
+          -0.413,
+          -0.911,
+          0.0
+         ]
+        ]
+       }
+      },
+      "Anchored": true,
+      "CanCollide": false,
+      "CanTouch": false,
+      "CanQuery": false,
+      "DoubleSided": true,
+      "CastShadow": false
+     },
+     "Children": [
+      {
+       "Name": "SurfaceAppearance",
+       "ClassName": "SurfaceAppearance",
+       "Properties": {
+        "ColorMap": "rbxassetid://122385008811017",
+        "NormalMap": "rbxassetid://76300230289957",
+        "AlphaMode": "Transparency"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "Name": "Tanne6",
+   "ClassName": "Model",
+   "Children": [
+    {
+     "Name": "Trunk",
+     "ClassName": "MeshPart",
+     "Properties": {
+      "MeshId": "rbxassetid://110402428240877",
+      "Size": {
+       "Vector3": [
+        6.265,
+        6.195,
+        26.027
+       ]
+      },
+      "InitialSize": {
+       "Vector3": [
+        5.723,
+        5.659,
+        23.776
+       ]
+      },
+      "CFrame": {
+       "CFrame": {
+        "position": [
+         0.0,
+         13.013,
+         0.0
+        ],
+        "orientation": [
+         [
+          0.413,
+          0.911,
+          0.0
+         ],
+         [
+          0.0,
+          0.0,
+          1.0
+         ],
+         [
+          0.911,
+          -0.413,
+          0.0
+         ]
+        ]
+       }
+      },
+      "Anchored": true,
+      "CanCollide": false,
+      "CanTouch": false,
+      "CanQuery": false,
+      "DoubleSided": true,
+      "CastShadow": true
+     },
+     "Children": [
+      {
+       "Name": "SurfaceAppearance",
+       "ClassName": "SurfaceAppearance",
+       "Properties": {
+        "ColorMap": "rbxassetid://84377568721955",
+        "NormalMap": "rbxassetid://103405406141678",
+        "AlphaMode": "Overlay"
+       }
+      }
+     ]
+    },
+    {
+     "Name": "Needles",
+     "ClassName": "MeshPart",
+     "Properties": {
+      "MeshId": "rbxassetid://84353089448531",
+      "Size": {
+       "Vector3": [
+        8.335,
+        8.934,
+        25.687
+       ]
+      },
+      "InitialSize": {
+       "Vector3": [
+        7.614,
+        8.162,
+        23.466
+       ]
+      },
+      "CFrame": {
+       "CFrame": {
+        "position": [
+         0.0,
+         13.945,
+         -0.414
+        ],
+        "orientation": [
+         [
+          0.413,
+          0.911,
+          0.0
+         ],
+         [
+          0.0,
+          0.0,
+          1.0
+         ],
+         [
+          0.911,
+          -0.413,
+          0.0
+         ]
+        ]
+       }
+      },
+      "Anchored": true,
+      "CanCollide": false,
+      "CanTouch": false,
+      "CanQuery": false,
+      "DoubleSided": true,
+      "CastShadow": false
+     },
+     "Children": [
+      {
+       "Name": "SurfaceAppearance",
+       "ClassName": "SurfaceAppearance",
+       "Properties": {
+        "ColorMap": "rbxassetid://122385008811017",
+        "NormalMap": "rbxassetid://76300230289957",
+        "AlphaMode": "Transparency"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "Name": "Tanne7",
+   "ClassName": "Model",
+   "Children": [
+    {
+     "Name": "Trunk",
+     "ClassName": "MeshPart",
+     "Properties": {
+      "MeshId": "rbxassetid://81200861466286",
+      "Size": {
+       "Vector3": [
+        4.648,
+        4.663,
+        26.041
+       ]
+      },
+      "InitialSize": {
+       "Vector3": [
+        4.246,
+        4.26,
+        23.789
+       ]
+      },
+      "CFrame": {
+       "CFrame": {
+        "position": [
+         0.0,
+         13.02,
+         0.0
+        ],
+        "orientation": [
+         [
+          0.413,
+          0.911,
+          0.0
+         ],
+         [
+          0.0,
+          0.0,
+          1.0
+         ],
+         [
+          0.911,
+          -0.413,
+          0.0
+         ]
+        ]
+       }
+      },
+      "Anchored": true,
+      "CanCollide": false,
+      "CanTouch": false,
+      "CanQuery": false,
+      "DoubleSided": true,
+      "CastShadow": true
+     },
+     "Children": [
+      {
+       "Name": "SurfaceAppearance",
+       "ClassName": "SurfaceAppearance",
+       "Properties": {
+        "ColorMap": "rbxassetid://84377568721955",
+        "NormalMap": "rbxassetid://103405406141678",
+        "AlphaMode": "Overlay"
+       }
+      }
+     ]
+    },
+    {
+     "Name": "Needles",
+     "ClassName": "MeshPart",
+     "Properties": {
+      "MeshId": "rbxassetid://107129739355437",
+      "Size": {
+       "Vector3": [
+        6.505,
+        6.406,
+        26.309
+       ]
+      },
+      "InitialSize": {
+       "Vector3": [
+        5.943,
+        5.852,
+        24.034
+       ]
+      },
+      "CFrame": {
+       "CFrame": {
+        "position": [
+         -0.07,
+         13.66,
+         0.05
+        ],
+        "orientation": [
+         [
+          0.413,
+          0.911,
+          0.0
+         ],
+         [
+          0.0,
+          0.0,
+          1.0
+         ],
+         [
+          0.911,
+          -0.413,
+          0.0
+         ]
+        ]
+       }
+      },
+      "Anchored": true,
+      "CanCollide": false,
+      "CanTouch": false,
+      "CanQuery": false,
+      "DoubleSided": true,
+      "CastShadow": false
+     },
+     "Children": [
+      {
+       "Name": "SurfaceAppearance",
+       "ClassName": "SurfaceAppearance",
+       "Properties": {
+        "ColorMap": "rbxassetid://122385008811017",
+        "NormalMap": "rbxassetid://76300230289957",
+        "AlphaMode": "Transparency"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "Name": "Tanne8",
+   "ClassName": "Model",
+   "Children": [
+    {
+     "Name": "Trunk",
+     "ClassName": "MeshPart",
+     "Properties": {
+      "MeshId": "rbxassetid://127163432661708",
+      "Size": {
+       "Vector3": [
+        1.784,
+        1.705,
+        22.996
+       ]
+      },
+      "InitialSize": {
+       "Vector3": [
+        1.447,
+        1.383,
+        18.652
+       ]
+      },
+      "CFrame": {
+       "CFrame": {
+        "position": [
+         0.0,
+         11.498,
+         0.0
+        ],
+        "orientation": [
+         [
+          -0.911,
+          0.413,
+          0.0
+         ],
+         [
+          0.0,
+          0.0,
+          1.0
+         ],
+         [
+          0.413,
+          0.911,
+          0.0
+         ]
+        ]
+       }
+      },
+      "Anchored": true,
+      "CanCollide": false,
+      "CanTouch": false,
+      "CanQuery": false,
+      "DoubleSided": true,
+      "CastShadow": true
+     },
+     "Children": [
+      {
+       "Name": "SurfaceAppearance",
+       "ClassName": "SurfaceAppearance",
+       "Properties": {
+        "ColorMap": "rbxassetid://93102187834720",
+        "NormalMap": "rbxassetid://77118385805433",
+        "AlphaMode": "Overlay"
+       }
+      }
+     ]
+    },
+    {
+     "Name": "Needles",
+     "ClassName": "MeshPart",
+     "Properties": {
+      "MeshId": "rbxassetid://138559907629675",
+      "Size": {
+       "Vector3": [
+        8.675,
+        8.801,
+        21.046
+       ]
+      },
+      "InitialSize": {
+       "Vector3": [
+        7.036,
+        7.138,
+        17.07
+       ]
+      },
+      "CFrame": {
+       "CFrame": {
+        "position": [
+         0.121,
+         13.082,
+         0.201
+        ],
+        "orientation": [
+         [
+          -0.911,
+          0.413,
+          0.0
+         ],
+         [
+          0.0,
+          0.0,
+          1.0
+         ],
+         [
+          0.413,
+          0.911,
+          0.0
+         ]
+        ]
+       }
+      },
+      "Anchored": true,
+      "CanCollide": false,
+      "CanTouch": false,
+      "CanQuery": false,
+      "DoubleSided": true,
+      "CastShadow": false
+     },
+     "Children": [
+      {
+       "Name": "SurfaceAppearance",
+       "ClassName": "SurfaceAppearance",
+       "Properties": {
+        "ColorMap": "rbxassetid://122385008811017",
+        "NormalMap": "rbxassetid://76300230289957",
+        "AlphaMode": "Transparency"
+       }
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

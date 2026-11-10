@@ -2,7 +2,7 @@
 local Config = {}
 
 Config.GAME_TITLE = "Die letzte Nacht" -- Platzhalter-Titel, später ersetzen
-Config.GAME_SUBTITLE = "Basierend auf wahren Begebenheiten"
+Config.GAME_SUBTITLE = "Based on true events"
 
 -- PlaceId des Horror-Levels. Solange 0, fahren die Autos nur eine Proberunde.
 Config.GAME_PLACE_ID = 0
@@ -17,8 +17,8 @@ Config.COUNTDOWN_SECONDS = 10
 Config.FADE_DELAY = 7
 
 Config.MODES = {
-	Solo = { title = "ALLEIN", capacity = 1 },
-	Duo = { title = "ZU ZWEIT", capacity = 2 },
+	Solo = { title = "SOLO", capacity = 1 },
+	Duo = { title = "DUO", capacity = 2 },
 }
 
 -- Die vier Autos auf dem Parkplatz (Position = Mitte der Parkbucht)
@@ -36,16 +36,16 @@ Config.CARS = {
 Config.PRODUCTS = {
 	{
 		id = 0,
-		title = "Wiederbelebung",
-		description = "Nach dem Tod sofort an Ort und Stelle weiterspielen.",
+		title = "Revive",
+		description = "Keep playing right where you died.",
 		field = "Revives",
 		amount = 1,
 		robux = 25,
 	},
 	{
 		id = 0,
-		title = "3× Wiederbelebung",
-		description = "Drei Wiederbelebungen zum Sparpreis.",
+		title = "3× Revive",
+		description = "Three revives at a discount.",
 		field = "Revives",
 		amount = 3,
 		robux = 60,
@@ -53,7 +53,7 @@ Config.PRODUCTS = {
 	{
 		id = 0,
 		title = "Rebirth",
-		description = "Starte neu mit einem dauerhaften Bonus.",
+		description = "Start over with a permanent bonus.",
 		field = "Rebirths",
 		amount = 1,
 		robux = 99,
@@ -62,12 +62,12 @@ Config.PRODUCTS = {
 
 -- Snacks im Kiosk, die im Spiel helfen. Gekauft wird später mit Münzen aus dem Spiel.
 Config.SNACKS = {
-	{ title = "Energieriegel", description = "Kurz schneller laufen.", price = 25, color = Color3.fromRGB(200, 60, 40) },
-	{ title = "Kaffee", description = "Länger sprinten, ohne müde zu werden.", price = 30, color = Color3.fromRGB(110, 70, 40) },
-	{ title = "Schokolade", description = "Gibt ein bisschen Leben zurück.", price = 20, color = Color3.fromRGB(90, 50, 30) },
-	{ title = "Energy-Drink", description = "Hört Geräusche früher.", price = 35, color = Color3.fromRGB(60, 160, 60) },
-	{ title = "Batterien", description = "Die Taschenlampe hält länger.", price = 40, color = Color3.fromRGB(220, 180, 40) },
-	{ title = "Chips", description = "Einfach lecker. Hilft gegen Hunger.", price = 15, color = Color3.fromRGB(230, 200, 60) },
+	{ title = "Energy bar", description = "Run faster for a short time.", price = 25, color = Color3.fromRGB(200, 60, 40) },
+	{ title = "Coffee", description = "Sprint longer without getting tired.", price = 30, color = Color3.fromRGB(110, 70, 40) },
+	{ title = "Chocolate", description = "Restores a little health.", price = 20, color = Color3.fromRGB(90, 50, 30) },
+	{ title = "Energy drink", description = "Hear sounds earlier.", price = 35, color = Color3.fromRGB(60, 160, 60) },
+	{ title = "Batteries", description = "The flashlight lasts longer.", price = 40, color = Color3.fromRGB(220, 180, 40) },
+	{ title = "Chips", description = "Simply tasty. Helps against hunger.", price = 15, color = Color3.fromRGB(230, 200, 60) },
 }
 
 -- Sounds für Level 1. Die Dateien liegen im Ordner assets/audio. Nach dem Hochladen bei
@@ -214,7 +214,7 @@ Config.TEST_START_KAPITEL2 = ""
 Config.TEST_AUTOSTART = ""
 -- Versionsnummer: steht beim Laden auf dem Bildschirm und im Output. So sieht man sofort,
 -- ob in Studio wirklich der neueste Stand läuft (nach "git pull").
-Config.BUILD = "K2-2026-11-10h"
+Config.BUILD = "K2-2026-11-10i"
 Config.VOICES = {
 	-- Sarp: etwas tiefer, langsam, ruhig – mit Bass, weniger Höhen und dunklem Hall
 	sarp = {

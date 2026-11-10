@@ -44,14 +44,14 @@ local function updateLabels(car)
 
 	local status
 	if car.state == "Departing" then
-		status = "🚗 Fährt los…"
+		status = "🚗 Leaving…"
 	elseif car.state == "Countdown" then
-		status = string.format("Start in %d…", car.timeLeft)
+		status = string.format("Starting in %d…", car.timeLeft)
 	elseif count == 0 then
-		status = "Einsteigen zum Starten"
+		status = "Get in to start"
 	else
 		local missing = car.capacity - count
-		status = missing == 1 and "Warte auf 1 Spieler…" or string.format("Warte auf %d Spieler…", missing)
+		status = missing == 1 and "Waiting for 1 player…" or string.format("Waiting for %d players…", missing)
 	end
 	car.labels.status.Text = status
 end
@@ -117,7 +117,7 @@ local function sendOff(car, riders)
 		return
 	end
 
-	local message = "Das Level ist noch in Arbeit – bald geht die Fahrt richtig los!"
+	local message = "The level is still in the works – the drive will start for real soon!"
 	if Config.GAME_PLACE_ID ~= 0 then
 		local options = Instance.new("TeleportOptions")
 		options.ShouldReserveServer = true
@@ -140,7 +140,7 @@ local function sendOff(car, riders)
 		else
 			warn("Teleport fehlgeschlagen:", err)
 		end
-		message = "Die Fahrt hat nicht geklappt – versuch es nochmal."
+		message = "The drive didn't work – please try again."
 	end
 
 	for _, player in passengers do

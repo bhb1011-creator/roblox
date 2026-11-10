@@ -1,6 +1,6 @@
 # Handoff – Horror-Spiel „Guesthouse“ (Roblox)
 
-Stand: 10. November 2026, Branch `claude/optimistic-bardeen-4tmohk`, Version `K2-2026-11-10h`.
+Stand: 10. November 2026, Branch `claude/optimistic-bardeen-4tmohk`, Version `K2-2026-11-10i`.
 Ganz oben stehen die neuesten Abschnitte (0000 = 10. Nov., 000 = realistische Familie, 00 = 9. Nov., 0 = Kapitel 3 + Audio);
 Abschnitte 2–8 beschreiben Kapitel 2 (Stand 6. Nov.).
 Diese Datei ist für einen **neuen Chat** gedacht: erst den Prompt unten kopieren, der Rest ist Nachschlagewerk.
@@ -33,7 +33,7 @@ Regeln:
 - Sei ehrlich: sag klar, was ungetestet ist.
   Arbeite gründlich und sag, wenn etwas fertig ist.
 
-Stand: Version `K2-2026-11-10h`. Kapitel 1, 2 und 3 sind gebaut und laufen am Stück (`spiel.project.json`).
+Stand: Version `K2-2026-11-10i`. Kapitel 1, 2 und 3 sind gebaut und laufen am Stück (`spiel.project.json`).
 Alle Figuren sind realistische KI-Figuren: Familie Wagner (`assets/figuren`), Sarp in allen drei Stufen
 (Fremder, Monster im Haus, Biest; `assets/sarp`) und feste Spielerfiguren (`assets/spieler`; in der Lobby
 wird man beim Einsteigen ins Auto zur Figur). Im Testmenü (Taste O) gibt es eine „Charakterliste“.
@@ -47,14 +47,32 @@ Fang damit an, dass du die Dateien liest und mir in 5 Sätzen sagst, wo wir steh
 
 ---
 
+## 0000000. NEU 10. November (Version K2-2026-11-10i): Grafik-Probe Lobby (echte Tannen) + Lobby auf Englisch
+
+- **Echte Tannen in der Lobby:** 8 Tannen-Modelle (MeshParts mit SurfaceAppearance) aus dem kostenlosen Creator-Store-Paket
+  „Ponderosa Pine Tree Pack“ von Letaij (Asset 130515502281374). Datei: `assets/natur/Tannen.model.json`, erzeugt von
+  `tools/make_tree_models.py` (dort stehen Asset-Nummern und Maße). Rojo → `ReplicatedStorage.Natur.Tannen`
+  (**nur in `default.project.json`** eingebunden).
+- `src/shared/Forest.lua`: `buildPine`/`buildSimplePine` nehmen die echten Tannen, wenn `ReplicatedStorage.Natur.Tannen` da ist
+  (`buildMeshPine`), sonst die alten Klotz-Tannen. Kapitel 1–3 sind unverändert, solange ihre Projektdateien `Natur` nicht
+  einbinden. Zum Umstellen: `"Natur": { "$path": "assets/natur" }` unter `ReplicatedStorage` in `spiel.project.json` /
+  `kapitel2.project.json` / `level.project.json` eintragen (noch nicht gemacht, nicht getestet).
+- Wald der Lobby: 13.688 → 3.425 Teile. In Studio geprüft (gebaute Datei, Play): Tannen stehen, keine Fehler.
+  **Nicht gemessen:** Bildrate (FPS), vor allem auf Handys – die Nadeln sind durchsichtige Texturen.
+- **Was nicht geht:** `SurfaceAppearance.ColorMap` lässt sich im laufenden Spiel nicht per Skript setzen – solche Modelle
+  müssen als Datei (model.json/rbxm) über Rojo kommen. Die KI-Erzeugung (`generate_mesh`) taugt nicht für Bäume
+  (Ergebnis: Comic-Klotzbaum); für Bäume den Creator Store nehmen.
+- **Lobby-Texte Englisch:** Schilder, Kiosk/Kasse (jetzt „CHECKOUT“), Bestenliste („LEADERBOARD“), Auto-Anzeigen, Shop-Texte
+  in `Config.lua` (`SOLO`/`DUO`, Revive, Snacks). `Config.GAME_TITLE` ist weiter „Die letzte Nacht“.
+- Studio-Hinweis: Ist das Studio-Fenster minimiert, liefert `screen_capture` nur ein schwarzes Bild.
+
 ## 000000. NEU 10. November (Version K2-2026-11-10h): Spieltexte auf Englisch
 
 - Alle Texte, die Spieler sehen (Hinweise, Aufgaben, Knöpfe, Tür-/Gegenstands-Beschriftungen, Kapitelkarten,
   Game Over, Inventar, Quick-Time-Events), sind jetzt Englisch – Kapitel 1, 2 und 3. **Neue Texte bitte gleich
   auf Englisch schreiben.** Untertitel stehen in englischen Anführungszeichen (“ ”).
 - **Absichtlich Deutsch geblieben:** Testmenü (Taste O), Audio-Prüfung (Taste J), Meldungen im Output, interne
-  Namen (Räume, Verstecke `name = "Schrank"` usw. – das sind Schlüssel im Code), die Lobby (`src/lobby`, Shop-Texte in
-  `Config.lua`) und der Spieltitel `Config.GAME_TITLE = "Die letzte Nacht"` (steht auch auf der ENDE-Karte in Kapitel 3).
+  Namen (Räume, Verstecke `name = "Schrank"` usw. – das sind Schlüssel im Code) und der Spieltitel `Config.GAME_TITLE = "Die letzte Nacht"` (steht auch auf der ENDE-Karte in Kapitel 3).
 - In Studio geprüft: Texte in Kapitel 1 (Fahrt, Auswahl) und Kapitel 3 (Hütte). **Nicht geprüft:** jeder einzelne
   Hinweis in Kapitel 2 im Spiel, und ob „SPACE“ in den runden Quick-Time-Knopf passt (vorher „LEER“).
 

@@ -182,7 +182,7 @@ local function buildShop(parent)
 
 	local openSign = block("OpenSign", Vector3.new(3, 1.2, 0.1), CFrame.new(-8, 7, frontZ + 0.3), Color3.fromRGB(40, 10, 10), Enum.Material.SmoothPlastic, { CanCollide = false })
 	Parts.text(Parts.surfaceGui(openSign, Enum.NormalId.Front, true), {
-		Text = "OFFEN",
+		Text = "OPEN",
 		Font = Enum.Font.Arcade,
 		TextColor3 = Color3.fromRGB(255, 60, 60),
 	})
@@ -250,8 +250,8 @@ local function buildShop(parent)
 
 	shop.Parent = parent
 	createNpc(shop, base * CFrame.new(-8, 0.4, 6.2), {
-		name = "Verkäufer",
-		action = "Snacks kaufen",
+		name = "Shopkeeper",
+		action = "Buy snacks",
 		tag = "ShopPrompt",
 		skin = Color3.fromRGB(205, 160, 125),
 		shirt = Color3.fromRGB(45, 70, 50),
@@ -286,14 +286,14 @@ local function buildBooth(parent)
 	Parts.light("PointLight", lamp, { Range = 10, Brightness = 0.9, Color = COLORS.neonWarm })
 
 	local nameplate = block("Nameplate", Vector3.new(4, 1, 0.2), CFrame.new(1, H - 1.1, frontZ - 0.4), Color3.fromRGB(230, 225, 210), Enum.Material.Metal)
-	Parts.text(Parts.surfaceGui(nameplate, Enum.NormalId.Front), { Text = "KASSE", TextColor3 = Color3.fromRGB(40, 40, 40) })
+	Parts.text(Parts.surfaceGui(nameplate, Enum.NormalId.Front), { Text = "CHECKOUT", TextColor3 = Color3.fromRGB(40, 40, 40) })
 	local outsideLamp = block("OutsideLamp", Vector3.new(1, 0.4, 0.6), CFrame.new(-4, H - 0.6, frontZ - 0.6), COLORS.neonWarm, Enum.Material.Neon)
 	Parts.light("SpotLight", outsideLamp, { Face = Enum.NormalId.Bottom, Range = 14, Angle = 100, Brightness = 1.2, Color = COLORS.neonWarm })
 
 	booth.Parent = parent
 	createNpc(booth, Layout.BOOTH * CFrame.new(1, 0.4, frontZ + 3.2), {
 		name = "Kassierer",
-		action = "Kasse öffnen",
+		action = "Open checkout",
 		tag = "CashierPrompt",
 		distance = 12,
 		skin = Color3.fromRGB(150, 105, 80),
@@ -338,7 +338,7 @@ local function buildLeaderboard(parent)
 	local gui = Parts.surfaceGui(board, Enum.NormalId.Front)
 	Parts.text(gui, {
 		Name = "Title",
-		Text = "🏆 BESTENLISTE",
+		Text = "🏆 LEADERBOARD",
 		Font = Enum.Font.Creepster,
 		TextColor3 = Color3.fromRGB(255, 200, 100),
 		Size = UDim2.fromScale(0.9, 0.14),
@@ -346,13 +346,13 @@ local function buildLeaderboard(parent)
 	})
 	Parts.text(gui, {
 		Name = "Subtitle",
-		Text = "Wer hat die Nacht überlebt?",
+		Text = "Who survived the night?",
 		Font = Enum.Font.SpecialElite,
 		TextColor3 = Color3.fromRGB(200, 190, 175),
 		Size = UDim2.fromScale(0.9, 0.07),
 		Position = UDim2.fromScale(0.05, 0.17),
 	})
-	local columns = { { "#", 0.04, 0.1 }, { "SPIELER", 0.16, 0.5 }, { "ÜBERLEBT", 0.68, 0.28 } }
+	local columns = { { "#", 0.04, 0.1 }, { "PLAYER", 0.16, 0.5 }, { "SURVIVED", 0.68, 0.28 } }
 	local function row(index, values, y, background, color, font)
 		local frame = Instance.new("Frame")
 		frame.Name = "Row" .. index
@@ -374,7 +374,7 @@ local function buildLeaderboard(parent)
 			})
 		end
 	end
-	row(0, { "#", "SPIELER", "ÜBERLEBT" }, 0.27, Color3.fromRGB(120, 30, 30), Color3.fromRGB(255, 230, 200), Enum.Font.GothamBold)
+	row(0, { "#", "PLAYER", "SURVIVED" }, 0.27, Color3.fromRGB(120, 30, 30), Color3.fromRGB(255, 230, 200), Enum.Font.GothamBold)
 	for rank = 1, 9 do
 		local shade = rank % 2 == 0 and Color3.fromRGB(40, 38, 40) or Color3.fromRGB(32, 30, 32)
 		local color = rank == 1 and Color3.fromRGB(255, 210, 90)

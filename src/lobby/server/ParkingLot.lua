@@ -325,7 +325,7 @@ local function buildParkingSign(parent)
 		Parent = parent,
 	})
 	Parts.text(Parts.surfaceGui(plate, Enum.NormalId.Front), {
-		Text = "Waldparkplatz",
+		Text = "Forest Parking",
 		TextColor3 = Color3.fromRGB(30, 30, 30),
 		Size = UDim2.fromScale(0.9, 0.8),
 		Position = UDim2.fromScale(0.05, 0.1),

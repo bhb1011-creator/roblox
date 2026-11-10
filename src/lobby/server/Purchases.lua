@@ -31,7 +31,7 @@ function Purchases.init(notifyRemote)
 		local player = Players:GetPlayerByUserId(receipt.PlayerId)
 		if player then
 			player:SetAttribute(product.field, newValue)
-			notifyRemote:FireClient(player, "Danke für deinen Kauf: " .. product.title .. "!")
+			notifyRemote:FireClient(player, "Thanks for your purchase: " .. product.title .. "!")
 		end
 		return Enum.ProductPurchaseDecision.PurchaseGranted
 	end

@@ -183,11 +183,11 @@ function Road.build(parent)
 		local position = point + right * side * (WIDTH / 2 + 3.5)
 		return CFrame.lookAt(position, position - direction)
 	end
-	buildSign(road, roadsideCFrame(3, 1), "⚠\nWILDWECHSEL", Color3.fromRGB(235, 235, 230), Color3.fromRGB(30, 30, 30))
+	buildSign(road, roadsideCFrame(3, 1), "⚠\nDEER CROSSING", Color3.fromRGB(235, 235, 230), Color3.fromRGB(30, 30, 30))
 	buildSign(
 		road,
 		roadsideCFrame(7, -1),
-		"DURCHFAHRT AUF\nEIGENE GEFAHR",
+		"PASS AT YOUR\nOWN RISK",
 		Color3.fromRGB(235, 235, 230),
 		Color3.fromRGB(30, 30, 30)
 	)
