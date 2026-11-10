@@ -463,12 +463,45 @@ function Night.run(ctx)
 			return true
 		end
 		local position = Wagners.ground(sarp)
+		-- Gelenke für den Gang: Hüfte und Knie schwingen, die langen Arme pendeln schlaff mit
 		local hips = {}
-		for _, name in { "LeftUpperLeg", "RightUpperLeg" } do
-			local part = sarp:FindFirstChild(name)
-			local joint = part and part:FindFirstChildOfClass("Motor6D")
-			if joint then
-				table.insert(hips, { joint = joint, base = joint.C0 })
+		local gait = {}
+		for _, info in {
+			{ "LeftUpperLeg", "LeftHip", "hip", 0 },
+			{ "RightUpperLeg", "RightHip", "hip", math.pi },
+			{ "LeftLowerLeg", "LeftKnee", "knee", 0 },
+			{ "RightLowerLeg", "RightKnee", "knee", math.pi },
+			{ "LeftUpperArm", "LeftShoulder", "arm", math.pi },
+			{ "RightUpperArm", "RightShoulder", "arm", 0 },
+			{ "LeftLowerArm", "LeftElbow", "elbow", math.pi },
+			{ "RightLowerArm", "RightElbow", "elbow", 0 },
+		} do
+			local part = sarp:FindFirstChild(info[1])
+			local joint = part and (part:FindFirstChild(info[2]) or part:FindFirstChildOfClass("Motor6D"))
+			if joint and joint:IsA("Motor6D") then
+				local entry = { joint = joint, base = joint.C0, kind = info[3], offset = info[4] }
+				table.insert(hips, entry)
+				table.insert(gait, entry)
+			end
+		end
+		local phase, lastFrame = 0, nil
+		local function stepPose(dt, pace)
+			phase += pace * dt / 3.2 * math.pi * 2 -- 3,2 Studs pro Doppelschritt
+			for _, item in gait do
+				local p = phase + item.offset
+				local base = item.base
+				pcall(function()
+					if item.kind == "hip" then
+						item.joint.C0 = base * CFrame.Angles(math.sin(p) * 0.36, 0, 0)
+					elseif item.kind == "knee" then
+						item.joint.C0 = base * CFrame.Angles(-math.max(0, math.cos(p)) * 0.6, 0, 0)
+					elseif item.kind == "arm" then
+						-- um die Körperachse am Schultergelenk (die Arme sind aus der T-Haltung gedreht)
+						item.joint.C0 = CFrame.new(base.Position) * CFrame.Angles(math.sin(p) * 0.22, 0, 0) * base.Rotation
+					else
+						item.joint.C0 = CFrame.new(base.Position) * CFrame.Angles(0.12 + math.max(0, math.sin(p)) * 0.18, 0, 0) * base.Rotation
+					end
+				end)
 			end
 		end
 		local nextStep = 0
@@ -508,11 +541,9 @@ function Night.run(ctx)
 					local a = math.min((os.clock() - start) * speed / distance, 1)
 					position = from:Lerp(target, a)
 					Wagners.place(sarp, position, position + direction)
-					for index, hip in hips do
-						pcall(function()
-							hip.joint.C0 = hip.base * CFrame.Angles(math.sin(os.clock() * 5 + index * math.pi) * 0.3, 0, 0)
-						end)
-					end
+					local now = os.clock()
+					stepPose(math.min(now - (lastFrame or now), 0.1), speed)
+					lastFrame = now
 					if os.clock() >= nextStep then
 						nextStep = os.clock() + 0.7
 						-- sehr laut und weit zu hören: man merkt, wenn er näher kommt

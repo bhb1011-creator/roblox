@@ -33,7 +33,7 @@ local dialogueEvent = cutscene:WaitForChild("DialogueEvent")
 local dialogueChoice = cutscene:WaitForChild("DialogueChoice")
 
 local SIT_ANIMATION = "rbxassetid://2506281703"
-local WALK_ANIMATION = "rbxassetid://507777826"
+local WALK_ANIMATION = "rbxassetid://913402848" -- bewegt auch die Arme (sonst bleiben sie bei der KI-Figur abgespreizt)
 local IDLE_ANIMATION = "rbxassetid://507766388"
 local LOOK_SIDE = math.rad(110)
 local LOOK_UP, LOOK_DOWN = math.rad(40), math.rad(55)
@@ -250,7 +250,10 @@ if strangerTemplate then
 	Speech.setEmitter("sarp", head) -- Sarps Aufnahmen kommen aus seiner Richtung
 	local neck = head and head:FindFirstChild("Neck")
 	if neck and neck:IsA("Motor6D") then
-		strangerNeck = { motor = neck, base = neck.C0 }
+		strangerNeck = { object = neck, property = "C0", base = neck.C0 }
+	elseif neck and neck:IsA("AnimationConstraint") and neck.Attachment0 then
+		-- KI-Figur: Kopf über den Halsanker drehen (die Animation läuft trotzdem weiter)
+		strangerNeck = { object = neck.Attachment0, property = "CFrame", base = neck.Attachment0.CFrame }
 	end
 end
 
@@ -615,7 +618,7 @@ local function updateStranger(t, bt, deltaTime, carPosition, driveS)
 		pose[key] += (target - pose[key]) * math.min(deltaTime * 3, 1)
 	end
 	if strangerNeck then
-		strangerNeck.motor.C0 = strangerNeck.base * CFrame.Angles(0, 0, math.rad(28) * pose.tilt)
+		strangerNeck.object[strangerNeck.property] = strangerNeck.base * CFrame.Angles(0, 0, math.rad(28) * pose.tilt)
 	end
 	local function step(interval)
 		sarpStepTimer += deltaTime

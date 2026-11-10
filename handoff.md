@@ -44,7 +44,17 @@ Fang damit an, dass du die Dateien liest und mir in 5 Sätzen sagst, wo wir steh
 
 ---
 
-## 0000. NEU 10. November (Version K2-2026-11-10e)
+## 0000. NEU 10. November (Version K2-2026-11-10f)
+
+- **Animationen für die KI-Figuren geprüft und angepasst:**
+  - Spielerfiguren: normale Roblox-Animationen (Animate-Skript) laufen, Arme hängen beim Stehen, schwingen beim Laufen.
+  - Sarp1 (Kapitel 1): Gehanimation jetzt `913402848` (die alte `507777826` bewegt die Arme nicht, sie blieben
+    abgespreizt). Kopf-Neigen am Autofenster geht jetzt auch bei der KI-Figur (über den Halsanker, `Cutscene.client.lua`).
+  - Sarp2 (Haus, `Night.lua` → `sarpWalk`, auch für die Patrouille in `Escape.lua`): Gang mit Hüfte, Knien, pendelnden
+    Armen und Ellbogen, Schritt passt zum Tempo (3,2 Studs pro Doppelschritt).
+  - Biest: `Beast.pose` passt zu den neuen Gelenken (in Studio gemessen und angeschaut).
+
+### Version K2-2026-11-10e
 
 - **Sarp als KI-Figuren** (`assets/sarp`, Rojo → `ReplicatedStorage.Sarp`): `Sarp1` (der Fremde, Kapitel 1, `Stranger.lua`,
   behält Roblox-Gelenke für die Zwischensequenz-Animationen), `Sarp2` (das Monster im Haus, `SarpStage2.lua`, Motor6D,
