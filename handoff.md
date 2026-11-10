@@ -1,7 +1,8 @@
 # Handoff – Horror-Spiel „Guesthouse“ (Roblox)
 
-Stand: 9. November 2026, Branch `claude/optimistic-bardeen-4tmohk`, Version `K2-2026-11-09a`.
-Abschnitte 2–8 beschreiben Kapitel 2 (Stand 6. Nov.); **neu: Abschnitt 0 (Kapitel 3 + Audio).**
+Stand: 10. November 2026, Branch `claude/optimistic-bardeen-4tmohk`, Version `K2-2026-11-10f`.
+Ganz oben stehen die neuesten Abschnitte (0000 = 10. Nov., 000 = realistische Familie, 00 = 9. Nov., 0 = Kapitel 3 + Audio);
+Abschnitte 2–8 beschreiben Kapitel 2 (Stand 6. Nov.).
 Diese Datei ist für einen **neuen Chat** gedacht: erst den Prompt unten kopieren, der Rest ist Nachschlagewerk.
 
 ---
@@ -27,18 +28,20 @@ Regeln:
 - Keine DLC-Hintergrundgeschichte erzählen (Sarp wurde von der Familie erschaffen,
   Richard stand lange auf ihrer Seite – das kommt erst im DLC).
 - Ich teste selbst: in `~/Documents/roblox-neu` `git pull`, dann
-  `~/Downloads/rojo serve kapitel2.project.json --port 34872`, in Studio „Connect“ und „Play“.
+  `~/Downloads/rojo serve spiel.project.json --port 34872`, in Studio „Connect“ und „Play“.
   (Nur `rojo serve` ohne Datei startet die Lobby – das ist falsch.)
-- Sei ehrlich: Du kannst Studio nicht starten – sag klar, was ungetestet ist.
+- Sei ehrlich: sag klar, was ungetestet ist.
   Arbeite gründlich und sag, wenn etwas fertig ist.
 
-Stand: Version `K2-2026-11-09a`. Kapitel 1, 2 und 3 sind gebaut (Kapitel 3: Ritual, Flucht vor
-dem Biest durch den Wald, Brücke, Sarps Hütte, Notruf 911, Halluzinations-Jumpscares, Polizei
-holt einen ab, ENDE). Zuletzt: mehr Nebel bei der Verfolgung, Familie dreht beim Ritual die Köpfe
-nicht mehr, umgefallener Stuhl in der Hütte repariert, Teststart steht auf `""` (Anfang Kapitel 2).
-Letzter großer Schritt bis Ende Dezember: Audio. Ich kann erst ab 24. November wieder Sounds
-hochladen; bis dahin sollen viele kurze Sounds zu wenigen Sammeldateien zusammengefasst werden
-(im Spiel per `Sound.PlaybackRegion`), siehe Abschnitt „Audio“ in handoff.md.
+Stand: Version `K2-2026-11-10f`. Kapitel 1, 2 und 3 sind gebaut und laufen am Stück (`spiel.project.json`).
+Alle Figuren sind realistische KI-Figuren: Familie Wagner (`assets/figuren`), Sarp in allen drei Stufen
+(Fremder, Monster im Haus, Biest; `assets/sarp`) und feste Spielerfiguren (`assets/spieler`; in der Lobby
+wird man beim Einsteigen ins Auto zur Figur). Im Testmenü (Taste O) gibt es eine „Charakterliste“.
+Familie: Mund und Kopf bewegen sich beim Sprechen, natürlicher Blick, weiche Laufwege, detaillierte Kerze.
+Animationen aller Figuren in Studio geprüft (10f). Offen: im echten Spielablauf testen (Kapitel-1-Szene mit Sarp,
+Jagd im Haus, Biest-Jagd in Kapitel 3, Lobby, Duo). Danach Audio (ab 24. November kann ich wieder Sounds
+hochladen; bis dahin viele kurze Sounds zu Sammeldateien zusammenfassen, im Spiel per `Sound.PlaybackRegion`).
+Roblox Studio ist per MCP verbunden – du kannst Studio direkt steuern und testen.
 Fang damit an, dass du die Dateien liest und mir in 5 Sätzen sagst, wo wir stehen.
 ```
 
