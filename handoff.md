@@ -44,7 +44,7 @@ Fang damit an, dass du die Dateien liest und mir in 5 Sätzen sagst, wo wir steh
 
 ---
 
-## 0000. NEU 10. November (Version K2-2026-11-10d)
+## 0000. NEU 10. November (Version K2-2026-11-10e)
 
 - **Sarp als KI-Figuren** (`assets/sarp`, Rojo → `ReplicatedStorage.Sarp`): `Sarp1` (der Fremde, Kapitel 1, `Stranger.lua`,
   behält Roblox-Gelenke für die Zwischensequenz-Animationen), `Sarp2` (das Monster im Haus, `SarpStage2.lua`, Motor6D,
@@ -63,7 +63,7 @@ Fang damit an, dass du die Dateien liest und mir in 5 Sätzen sagst, wo wir steh
 
 ### Version K2-2026-11-10c
 
-- **Feste Spielfiguren** statt eigenem Avatar: `assets/spieler/Spieler1.rbxm` (Fahrer: junger Mann, olivgrüne Jacke) und
+- **Feste Spielfiguren** statt eigenem Avatar: `assets/spieler/Spieler1.rbxm` (Fahrer: junger Mann, dunkelblaue Jeansjacke – seit 10e, vorher olivgrün wie Sarp) und
   `Spieler2.rbxm` (Beifahrerin: junge Frau, grauer Hoodie), KI-erzeugt, 5,6 bzw. 5,3 Studs. Rojo → `ReplicatedStorage.Spieler`
   (spiel, kapitel2, level). `src/shared/PlayerFigure.lua`: `load(player)` tauscht kurz `StarterPlayer.StarterCharacter`
   und ruft `LoadCharacter` (benutzt in `ForestWalk.spawnWalker`, `Figuren.lua`); `template(player)` für die Auto-Puppen in
