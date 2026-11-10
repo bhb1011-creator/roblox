@@ -44,7 +44,19 @@ Fang damit an, dass du die Dateien liest und mir in 5 Sätzen sagst, wo wir steh
 
 ---
 
-## 0000. NEU 10. November (Version K2-2026-11-10a)
+## 0000. NEU 10. November (Version K2-2026-11-10c)
+
+- **Feste Spielfiguren** statt eigenem Avatar: `assets/spieler/Spieler1.rbxm` (Fahrer: junger Mann, olivgrüne Jacke) und
+  `Spieler2.rbxm` (Beifahrerin: junge Frau, grauer Hoodie), KI-erzeugt, 5,6 bzw. 5,3 Studs. Rojo → `ReplicatedStorage.Spieler`
+  (spiel, kapitel2, level). `src/shared/PlayerFigure.lua`: `load(player)` tauscht kurz `StarterPlayer.StarterCharacter`
+  und ruft `LoadCharacter` (benutzt in `ForestWalk.spawnWalker`, `Figuren.lua`); `template(player)` für die Auto-Puppen in
+  Kapitel 1 (`Main.server.lua` buildPuppet). Zuordnung: Attribut `Figur` (Beifahrer = 2, sonst nach Reihenfolge).
+  Fehlt der Ordner → eigener Avatar wie früher.
+- In Studio getestet: Figur lädt als Spielfigur, läuft mit Laufanimation (Beine schwingen, normales Tempo).
+  Nicht getestet: im echten Spielablauf (Ich-Sicht, Auto-Puppe in Kapitel 1, Duo).
+- Originale liegen in der neuen Studio-Baseplate unter ServerStorage.KI_Spieler_Originale (nur in dieser Sitzung, nicht gespeichert).
+
+### Version K2-2026-11-10a
 
 - **Blick natürlicher** (`Scene.lua` updateNecks): Ziel wird von der Körpermitte aus gemessen, Oberkörper (Waist)
   dreht 35 % mit (max. 35°), Kopf den Rest (max. 60°), Neigung max. 25°, ruhigeres Nachziehen. Bei „puppet“ (Kapitel 3)

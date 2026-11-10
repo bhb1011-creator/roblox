@@ -5,6 +5,9 @@
     "ReplicatedStorage": {
       "Shared": {
         "$path": "src/shared"
+      },
+      "Spieler": {
+        "$path": "assets/spieler"
       }
     },
     "ServerScriptService": {

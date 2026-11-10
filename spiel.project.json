@@ -11,6 +11,9 @@
       },
       "Wagners": {
         "$path": "assets/figuren"
+      },
+      "Spieler": {
+        "$path": "assets/spieler"
       }
     },
     "ServerScriptService": {
