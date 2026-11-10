@@ -230,7 +230,15 @@ local function figureCamera()
 	if not folder then
 		return
 	end
-	local order = { "MrsWagner", "Lucy", "MrWagner", "Tommy" }
+	-- Charakterliste: Reihenfolge kommt vom Server (Attribut "Order")
+	if ReplicatedStorage:GetAttribute("StartChoice") == "charaktere" then
+		local waitUntil = os.clock() + 30
+		while folder:GetAttribute("Order") == nil and os.clock() < waitUntil do
+			task.wait(0.2)
+		end
+	end
+	local listed = folder:GetAttribute("Order")
+	local order = listed and string.split(listed, ",") or { "MrsWagner", "Lucy", "MrWagner", "Tommy" }
 	local index, close, free = 1, true, false
 	local switchAt = os.clock() + 5
 	local camera = workspace.CurrentCamera
@@ -263,22 +271,27 @@ local function figureCamera()
 		end
 		local model = folder:FindFirstChild(order[index])
 		local head = model and model:FindFirstChild("Head")
-		local root = model and model:FindFirstChild("HumanoidRootPart")
+		local root = model and (model:FindFirstChild("HumanoidRootPart") or model.PrimaryPart)
 		if not (head and root) then
 			return
 		end
 		camera.CameraType = Enum.CameraType.Scriptable
-		local front = root.CFrame.LookVector
+		local front = root.CFrame.LookVector * Vector3.new(1, 0, 1)
+		front = front.Magnitude > 0.01 and front.Unit or Vector3.new(0, 0, -1)
+		-- große Figuren (das Biest) aus mehr Abstand
+		local _, size = model:GetBoundingBox()
+		local scale = math.max(1, size.Y / 6)
 		if close then
-			camera.CFrame = CFrame.lookAt(head.Position + front * 3 + Vector3.new(0.6, 0.15, 0), head.Position)
+			camera.CFrame = CFrame.lookAt(head.Position + front * 3 * scale + Vector3.new(0.6, 0.15, 0), head.Position)
 		else
-			local middle = root.Position - Vector3.new(0, 0.6, 0)
-			camera.CFrame = CFrame.lookAt(middle + front * 7 + Vector3.new(2, 0.8, 0), middle)
+			local middle = model:GetPivot().Position + Vector3.new(0, size.Y * 0.45, 0)
+			camera.CFrame = CFrame.lookAt(middle + front * 7 * scale + Vector3.new(2, 0.8, 0), middle)
 		end
 	end)
 end
 local function maybeFigures()
-	if ReplicatedStorage:GetAttribute("StartChoice") == "figuren" then
+	local choice = ReplicatedStorage:GetAttribute("StartChoice")
+	if choice == "figuren" or choice == "charaktere" then
 		task.spawn(figureCamera)
 	end
 end

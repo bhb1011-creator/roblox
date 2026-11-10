@@ -16,7 +16,51 @@ local JEANS = Color3.fromRGB(38, 42, 54)
 local BONE = Color3.fromRGB(206, 198, 180)
 local GLOW = Color3.fromRGB(200, 40, 24)
 
+-- Echte KI-Figur (assets/sarp/Sarp2.rbxm, „das Monster im Haus“): Gelenke werden zu
+-- Motor6D wie bei den Wagners; dazu Fliegen, rotes Glühen und der verdrehte Hals
+local function buildReal(parent)
+	local ok, RealFigure = pcall(require, game:GetService("ReplicatedStorage").Shared.RealFigure)
+	local source = ok and RealFigure.source("Sarp2")
+	if not source then
+		return nil
+	end
+	local model = RealFigure.prepare(source, { height = 6.9 })
+	model.Name = "Sarp"
+	local head = model:FindFirstChild("Head")
+	if head then
+		pcall(function()
+			local flies = Instance.new("ParticleEmitter")
+			flies.Name = "Flies"
+			flies.Color = ColorSequence.new(Color3.fromRGB(10, 10, 10))
+			flies.Size = NumberSequence.new(0.08)
+			flies.Rate = 18
+			flies.Lifetime = NumberRange.new(1, 2)
+			flies.Speed = NumberRange.new(1, 3)
+			flies.SpreadAngle = Vector2.new(180, 180)
+			flies.LightEmission = 0
+			flies.Parent = head
+		end)
+		local light = Instance.new("PointLight")
+		light.Name = "SarpGlow"
+		light.Color = GLOW
+		light.Range = 6
+		light.Brightness = 0.6
+		light.Parent = head
+		local neck = head:FindFirstChild("Neck")
+		if neck and neck:IsA("Motor6D") then
+			neck.C0 *= CFrame.Angles(0, math.rad(18), math.rad(34))
+			model:SetAttribute("NeckBase", true)
+		end
+	end
+	model.Parent = parent
+	return model
+end
+
 function SarpStage2.build(parent)
+	local real = buildReal(parent)
+	if real then
+		return real
+	end
 	local colors = { skin = SKIN, torso = JACKET, arms = JACKET, legs = JEANS, shoes = Color3.fromRGB(40, 30, 22), hands = SKIN }
 	local model = Wagners.newBody("Sarp", colors, { HeightScale = 1.28, WidthScale = 0.8, DepthScale = 0.78, HeadScale = 0.95 })
 	if not model then

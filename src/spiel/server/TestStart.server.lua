@@ -26,6 +26,8 @@ local function choose(id)
 	end
 	if id == "figuren" then
 		task.spawn(require(script.Parent:WaitForChild("Figuren")).run)
+	elseif id == "charaktere" then
+		task.spawn(require(script.Parent:WaitForChild("Figuren")).runList)
 	elseif id ~= "kapitel1" then
 		Config.TEST_START_KAPITEL2 = id
 	end

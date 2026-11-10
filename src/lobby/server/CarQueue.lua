@@ -5,6 +5,7 @@ local RunService = game:GetService("RunService")
 local TeleportService = game:GetService("TeleportService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
+local PlayerFigure = require(ReplicatedStorage.Shared.PlayerFigure)
 local Car = require(script.Parent.Car)
 local Layout = require(script.Parent.Layout)
 local Road = require(script.Parent.Road)
@@ -230,9 +231,23 @@ local function setupCar(index, carConfig, parent)
 		if not humanoid or humanoid.Health <= 0 or humanoid.SeatPart then
 			return
 		end
-		for _, info in car.seats do
+		for index, info in car.seats do
 			if not info.seat.Occupant then
-				info.seat:Sit(humanoid)
+				-- Beim Einsteigen wird man zur festen Spielfigur (Fahrer = 1, Beifahrer = 2).
+				-- Gibt es keine (ReplicatedStorage.Spieler fehlt), bleibt der eigene Avatar.
+				if ReplicatedStorage:FindFirstChild("Spieler") then
+					player:SetAttribute("Figur", index == 1 and 1 or 2)
+					player:SetAttribute("Umsteigen", true)
+					PlayerFigure.load(player)
+					player:SetAttribute("Umsteigen", nil)
+					local newHumanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+					if newHumanoid and not info.seat.Occupant then
+						player.Character:PivotTo(info.seat.CFrame + Vector3.new(0, 3, 0))
+						info.seat:Sit(newHumanoid)
+					end
+				else
+					info.seat:Sit(humanoid)
+				end
 				return
 			end
 		end
@@ -248,10 +263,17 @@ local function setupCar(index, carConfig, parent)
 				-- Beim Aussteigen neben das Auto setzen, damit niemand in der Kabine feststeckt
 				local character = lastOccupant and lastOccupant.Parent
 				lastOccupant = nil
-				if character and character.Parent and car.state ~= "Departing" then
+				local player = character and Players:GetPlayerFromCharacter(character)
+				if character and character.Parent and car.state ~= "Departing" and not (player and player:GetAttribute("Umsteigen")) then
 					local exitCFrame = car.model:GetPivot() * info.exitOffset
 					task.defer(function()
-						if character.Parent then
+						-- beim Aussteigen wieder der eigene Avatar
+						if player and player.Parent and player:GetAttribute("Figur") then
+							player:SetAttribute("Figur", nil)
+							player:LoadCharacter()
+							character = player.Character
+						end
+						if character and character.Parent then
 							character:PivotTo(exitCFrame)
 						end
 					end)

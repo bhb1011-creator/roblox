@@ -22,7 +22,63 @@ Beast.HEAD = Vector3.new(0, 14.6, -0.9)
 
 -- Baut das Biest in Ruhehaltung (Füße bei y = 0, Blick nach -Z). Gibt das Model und die
 -- Gelenke zurück: joints[name] = { motor = Motor6D, base = C0 in Ruhe }.
+-- Echte KI-Figur (assets/sarp/Biest.rbxm): riesig gemacht, Gelenke als Motor6D unter den
+-- Namen, die Beast.pose benutzt. Eine unsichtbare Wurzel "Root" 0,5 über den Füßen (wie beim
+-- gebauten Biest), damit Kapitel 3 es genauso hinstellen kann. Maul über FaceControls.
+local function buildReal(parent)
+	local ok, RealFigure = pcall(require, script.Parent.RealFigure)
+	local source = ok and RealFigure.source("Biest")
+	if not source then
+		return nil
+	end
+	local model, joints = RealFigure.prepare(source, { height = 15.5, anchor = false })
+	model.Name = "Beast"
+	local hrp = model.HumanoidRootPart
+	local feet = model.WorldPivot
+	local root = Instance.new("Part")
+	root.Name = "Root"
+	root.Size = Vector3.new(1, 1, 1)
+	root.Transparency = 1
+	root.Anchored = true
+	root.CanCollide = false
+	root.CanQuery = false
+	root.CanTouch = false
+	root.CFrame = feet * CFrame.new(0, 0.5, 0)
+	root.Parent = model
+	local link = Instance.new("Motor6D")
+	link.Name = "BeastRoot"
+	link.Part0 = root
+	link.Part1 = hrp
+	link.C0 = root.CFrame:ToObjectSpace(hrp.CFrame)
+	link.Parent = root
+	model.PrimaryPart = root
+	model.WorldPivot = feet
+	local head = model:FindFirstChild("Head")
+	if head then
+		Beast.HEAD = feet:PointToObjectSpace(head.Position)
+		local glow = Instance.new("PointLight")
+		glow.Name = "BeastGlow"
+		glow.Color = GLOW
+		glow.Range = 14
+		glow.Brightness = 2
+		glow.Parent = head
+		joints.Face = head:FindFirstChildOfClass("FaceControls")
+	end
+	for _, part in model:GetDescendants() do
+		if part:IsA("BasePart") then
+			part.CanQuery = false
+			part.CastShadow = false
+		end
+	end
+	model.Parent = parent
+	return model, joints
+end
+
 function Beast.build(parent)
+	local real, realJoints = buildReal(parent)
+	if real then
+		return real, realJoints
+	end
 	local model = Instance.new("Model")
 	model.Name = "Beast"
 	local joints = {}
@@ -239,6 +295,11 @@ function Beast.pose(joints, phase, amount, jaw, twitch)
 	set("Spine", CFrame.Angles(math.abs(swing) * 0.1 + 0.15 * amount, 0, 0))
 	set("Neck", CFrame.Angles(0, 0, twitch or 0))
 	local open = (jaw or 0) * 0.9
+	if joints.Face then
+		pcall(function()
+			joints.Face.JawDrop = math.clamp(jaw or 0, 0, 1)
+		end)
+	end
 	set("MouthLeft", CFrame.Angles(0, open, 0))
 	set("MouthRight", CFrame.Angles(0, -open, 0))
 end

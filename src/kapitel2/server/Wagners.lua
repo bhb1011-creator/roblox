@@ -749,13 +749,18 @@ function Wagners.fromStudio(name, parent)
 	end
 	-- Erst in die Welt stellen, dann Dinge in die Hand geben: nur dort rechnet Roblox die
 	-- Gelenke sofort um, sonst sitzen Kerze/Puppe/Bild schief neben der Hand.
-	model.Parent = parent
+	-- (liegt das Ziel nicht in der Welt, kurz in die Welt und danach umziehen)
+	local inWorld = parent and parent:IsDescendantOf(workspace)
+	model.Parent = inWorld and parent or workspace
 	if name == "MrsWagner" then
 		holdCandle(model)
 	elseif name == "Lucy" then
 		holdDoll(model)
 	elseif name == "Tommy" then
 		holdDrawing(model)
+	end
+	if not inWorld then
+		model.Parent = parent
 	end
 	return model
 end

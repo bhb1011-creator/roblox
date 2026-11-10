@@ -9,4 +9,5 @@ return {
 	{ id = "kapitel3", title = "Kapitel 3 – Ritual", info = "Ritualraum, Quick-Time-Events, Flucht durch den Wald" },
 	{ id = "huette", title = "Kapitel 3 – Sarps Hütte", info = "Hinter der Brücke: Hütte, Telefon, Ende" },
 	{ id = "figuren", title = "Figuren ansehen", info = "Familie Wagner hell beleuchtet, Mrs. Wagner und Lucy laufen" },
+	{ id = "charaktere", title = "Charakterliste", info = "Alle Figuren mit Namen: Familie, Spieler, Sarp, Monster, Biest" },
 }

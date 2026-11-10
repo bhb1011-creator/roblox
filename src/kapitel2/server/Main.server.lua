@@ -15,7 +15,7 @@ local function startChoice()
 	end
 	return ReplicatedStorage:GetAttribute("StartChoice")
 end
-if ReplicatedStorage:GetAttribute("FullGame") and startChoice() == "figuren" then
+if ReplicatedStorage:GetAttribute("FullGame") and (startChoice() == "figuren" or startChoice() == "charaktere") then
 	return -- (Testmenü: nur die Figuren ansehen, siehe src/spiel/server/Figuren.lua)
 end
 if ReplicatedStorage:GetAttribute("FullGame") and startChoice() == "kapitel1" then

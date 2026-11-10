@@ -38,7 +38,27 @@ local function attach(model, bodyPart, name, size, offset, color, material, shap
 	return part
 end
 
+-- Echte KI-Figur (assets/sarp/Sarp1.rbxm): behält ihre Roblox-Gelenke, damit die Lauf- und
+-- Stehanimationen der Zwischensequenz (Cutscene.client.lua) auf ihr laufen
+local function buildReal(parent)
+	local ok, RealFigure = pcall(require, game:GetService("ReplicatedStorage").Shared.RealFigure)
+	local source = ok and RealFigure.source("Sarp1")
+	if not source then
+		return nil
+	end
+	local model = RealFigure.prepare(source, { height = 5.9, keepRig = true, anchor = false })
+	model.Name = "Stranger"
+	local humanoid = model:FindFirstChildOfClass("Humanoid")
+	humanoid.WalkSpeed = 5
+	model.Parent = parent
+	return model
+end
+
 function Stranger.build(parent)
+	local real = buildReal(parent)
+	if real then
+		return real
+	end
 	local description = Instance.new("HumanoidDescription")
 	description.HeadColor = SKIN
 	description.TorsoColor = JACKET

@@ -14,6 +14,9 @@
       },
       "Spieler": {
         "$path": "assets/spieler"
+      },
+      "Sarp": {
+        "$path": "assets/sarp"
       }
     },
     "ServerScriptService": {

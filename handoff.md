@@ -44,7 +44,24 @@ Fang damit an, dass du die Dateien liest und mir in 5 Sätzen sagst, wo wir steh
 
 ---
 
-## 0000. NEU 10. November (Version K2-2026-11-10c)
+## 0000. NEU 10. November (Version K2-2026-11-10d)
+
+- **Sarp als KI-Figuren** (`assets/sarp`, Rojo → `ReplicatedStorage.Sarp`): `Sarp1` (der Fremde, Kapitel 1, `Stranger.lua`,
+  behält Roblox-Gelenke für die Zwischensequenz-Animationen), `Sarp2` (das Monster im Haus, `SarpStage2.lua`, Motor6D,
+  Fliegen, Glühen, verdrehter Hals), `Biest` (Kapitel 3/Kapitel 1, `Beast.lua`: 15,5 Studs, Gelenke unter den alten Namen,
+  unsichtbare `Root` 0,5 über den Füßen, `Beast.HEAD` wird gesetzt, Maul über FaceControls). Gemeinsames Vorbereiten:
+  `src/shared/RealFigure.lua`. Fehlt eine Datei → alte gebaute Figur.
+- **Charakterliste** (Testmenü, `charaktere`): alle 9 Figuren mit Namensschild, Kamera fährt durch (`Figuren.runList`).
+- **Lobby:** beim Einsteigen ins Auto wird man zur Spielerfigur (Fahrersitz = 1, sonst 2), beim Aussteigen wieder eigener
+  Avatar (`CarQueue.lua`, `default.project.json` hat jetzt `ReplicatedStorage.Spieler`).
+- **Wichtig:** Kommen neue .rbxm-Figuren dazu, während Rojo verbunden ist, fehlt ihnen die Form (MeshId) – einmal
+  Disconnect/Connect, dann ist alles da.
+- `Wagners.fromStudio`: Gegenstände in der Hand werden immer in der Welt angebracht (sonst sitzen sie schief).
+- Kleid beim Laufen geprüft (Mrs. Wagner, Lucy): nichts sticht durch.
+- In Studio getestet: Sarp2 und Biest mit echtem Code (Größe, Gelenke, Laufpose), Charakterliste im Play-Modus.
+  Nicht getestet: Sarp1 in der echten Kapitel-1-Zwischensequenz, Biest-Jagd in Kapitel 3, Lobby-Einsteigen.
+
+### Version K2-2026-11-10c
 
 - **Feste Spielfiguren** statt eigenem Avatar: `assets/spieler/Spieler1.rbxm` (Fahrer: junger Mann, olivgrüne Jacke) und
   `Spieler2.rbxm` (Beifahrerin: junge Frau, grauer Hoodie), KI-erzeugt, 5,6 bzw. 5,3 Studs. Rojo → `ReplicatedStorage.Spieler`
