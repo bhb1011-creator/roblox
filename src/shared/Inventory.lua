@@ -7,11 +7,11 @@ local Inventory = {}
 
 -- Name des Teils an der Spielfigur -> Anzeige
 local ITEMS = {
-	{ child = "PlayerCandle", icon = "🕯️", name = "Kerze", light = true },
-	{ child = "PlayerAxe", icon = "🪓", name = "Axt" },
-	{ child = "Carried_chemicals", icon = "🧪", name = "Chemikalien" },
-	{ child = "Carried_powder", icon = "💥", name = "Schießpulver" },
-	{ child = "Carried_key", icon = "🔑", name = "Schlüssel" },
+	{ child = "PlayerCandle", icon = "🕯️", name = "Candle", light = true },
+	{ child = "PlayerAxe", icon = "🪓", name = "Axe" },
+	{ child = "Carried_chemicals", icon = "🧪", name = "Chemicals" },
+	{ child = "Carried_powder", icon = "💥", name = "Gunpowder" },
+	{ child = "Carried_key", icon = "🔑", name = "Key" },
 	-- (das Handy-Licht ist ein eigenes Teil im Workspace, siehe unten)
 }
 local SLOT = 64
@@ -94,22 +94,22 @@ function Inventory.start()
 				local slot = slotFor(item, order)
 				local name = item.name
 				if item.child == "PlayerCandle" and player:GetAttribute("CandleMode") == "red" then
-					name = "Rote Kerze"
+					name = "Red candle"
 				end
 				slot.Label.Text = name
 				local off = item.light and player:GetAttribute("LightOff") == true
 				slot.Icon.TextTransparency = off and 0.6 or 0
-				slot.Label.Text = off and (name .. " (aus)") or name
+				slot.Label.Text = off and (name .. " (off)") or name
 			end
 		end
 		-- Handy: das Licht-Teil "PhoneLight" folgt der Kamera (Kapitel 1 und 2)
 		local phone = workspace:FindFirstChild("PhoneLight")
 		local spot = phone and phone:FindFirstChildOfClass("SpotLight")
-		if spot and not (seen["Kerze"] and not spot.Enabled) then
-			seen["Handy"] = true
-			local slot = slotFor({ icon = "📱", name = "Handy" }, 0)
+		if spot and not (seen["Candle"] and not spot.Enabled) then
+			seen["Phone"] = true
+			local slot = slotFor({ icon = "📱", name = "Phone" }, 0)
 			slot.Icon.TextTransparency = spot.Enabled and 0 or 0.6
-			slot.Label.Text = spot.Enabled and "Handy" or "Handy (aus)"
+			slot.Label.Text = spot.Enabled and "Phone" or "Phone (off)"
 		end
 		for name, slot in slots do
 			if not seen[name] then

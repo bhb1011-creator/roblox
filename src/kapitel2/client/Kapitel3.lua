@@ -470,7 +470,7 @@ local function buildGui()
 		Size = UDim2.fromOffset(130, 130),
 		BackgroundColor3 = Color3.fromRGB(120, 18, 14),
 		BackgroundTransparency = 0.1,
-		Text = UserInputService.TouchEnabled and "TIPP" or "E",
+		Text = UserInputService.TouchEnabled and "TAP" or "E",
 		Font = Enum.Font.GothamBlack,
 		TextSize = UserInputService.TouchEnabled and 40 or 72,
 		TextColor3 = Color3.new(1, 1, 1),
@@ -525,7 +525,7 @@ local function buildGui()
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		Position = UDim2.fromScale(0.5, 0.5),
 		Size = UDim2.fromScale(1, 1),
-		Text = UserInputService.TouchEnabled and "TIPP" or "LEER",
+		Text = UserInputService.TouchEnabled and "TAP" or "SPACE",
 		TextSize = 24,
 		Font = Enum.Font.GothamBlack,
 		TextColor3 = Color3.new(1, 1, 1),
@@ -1283,22 +1283,22 @@ local function startQte(kind, dir, window, onDone, onTap, lenient)
 	timeFill.Size = UDim2.fromScale(1, 1)
 	TweenService:Create(timeFill, TweenInfo.new(window, Enum.EasingStyle.Linear), { Size = UDim2.fromScale(0, 1) }):Play()
 	if kind == "dodge" then
-		qteTitle.Text = "AUSWEICHEN!"
+		qteTitle.Text = "DODGE!"
 		local touch = UserInputService.TouchEnabled
 		dodgeButton.Text = dir < 0 and (touch and "◀" or "◀  A") or (touch and "▶" or "D  ▶")
 		dodgeButton.Position = UDim2.fromScale(dir < 0 and 0.3 or 0.7, 0.48)
 		dodgeButton.Visible = true
-		qteSub.Text = dir < 0 and "nach links" or "nach rechts"
+		qteSub.Text = dir < 0 and "left" or "right"
 	elseif kind == "struggle" then
 		qte.need = Data.QTE.struggle.taps
 		qte.count = 0
-		qteTitle.Text = "REISS DICH LOS!"
-		qteSub.Text = UserInputService.TouchEnabled and "einmal tippen" or "E drücken"
+		qteTitle.Text = "BREAK FREE!"
+		qteSub.Text = UserInputService.TouchEnabled and "tap once" or "press E"
 		struggleFill.Size = UDim2.fromScale(0, 1)
 		struggleButton.Visible = true
 	elseif kind == "timing" then
-		qteTitle.Text = "JETZT – IM RICHTIGEN MOMENT!"
-		qteSub.Text = UserInputService.TouchEnabled and "tippen, wenn der Kreis passt" or "Leertaste, wenn der Kreis passt"
+		qteTitle.Text = "NOW – AT THE RIGHT MOMENT!"
+		qteSub.Text = UserInputService.TouchEnabled and "tap when the circle fits" or "Space when the circle fits"
 		timingButton.Visible = true
 		timingRing.Size = UDim2.fromOffset(340, 340)
 		-- schrumpft bis weit unter den Zielkreis (110): wer zu spät drückt, verfehlt
@@ -1328,7 +1328,7 @@ function handlers.card(message)
 	setBlack(0, 0.35)
 	task.delay(1.2, function()
 		play("chapterHit", { Volume = 1.6 })
-		showCard("KAPITEL 3", message.title or "", true, 1.8)
+		showCard("CHAPTER 3", message.title or "", true, 1.8)
 	end)
 	task.delay(6.2, function()
 		showCard(nil, nil, false, 1.4)
@@ -1628,7 +1628,7 @@ function handlers.qte(message)
 			if S.misses > Data.MAX_MISSES then
 				S.dead = true -- (der Server schickt gleich "killed")
 			else
-				showBigHint("Noch ein Fehler – und er hat dich.", 2.2, Color3.fromRGB(235, 225, 210))
+				showBigHint("One more mistake – and he has you.", 2.2, Color3.fromRGB(235, 225, 210))
 			end
 		end
 	end
@@ -2026,7 +2026,7 @@ function handlers.partnerKilled()
 	qteFrame.Visible = false
 	setBlack(0, 0.6)
 	task.delay(0.7, function()
-		showCard("", "Er hat deinen Partner erwischt …", true, 1)
+		showCard("", "He got your partner …", true, 1)
 	end)
 end
 
@@ -2756,9 +2756,9 @@ local function updateObstacles(C, now, playerS, root)
 	ui.prompt.Visible = prompt ~= nil
 	if prompt then
 		local touch = UserInputService.TouchEnabled
-		ui.keyBox.Text = prompt.armed and "✓" or (prompt.kind == "jump" and (touch and "TIPP" or "LEER") or (touch and "TIPP" or "C"))
+		ui.keyBox.Text = prompt.armed and "✓" or (prompt.kind == "jump" and (touch and "TAP" or "SPACE") or (touch and "TAP" or "C"))
 		ui.keyBox.BackgroundColor3 = prompt.armed and Color3.fromRGB(120, 230, 120) or Color3.fromRGB(255, 210, 60)
-		ui.word.Text = prompt.kind == "jump" and "SPRINGEN!" or "DUCKEN!"
+		ui.word.Text = prompt.kind == "jump" and "JUMP!" or "DUCK!"
 		local left = math.clamp((prompt.s - playerS) / Data.PROMPT_DISTANCE, 0, 1)
 		ui.bar.Size = UDim2.fromScale(left, 1)
 		ui.bar.BackgroundColor3 = Color3.fromRGB(255, 210, 60):Lerp(Color3.fromRGB(230, 50, 30), 1 - left)
@@ -2768,7 +2768,7 @@ local function updateObstacles(C, now, playerS, root)
 	-- Hinweis-Knopf (Handy)
 	ui.action.Visible = prompt ~= nil and UserInputService.TouchEnabled
 	if prompt then
-		ui.action.Text = prompt.kind == "jump" and "SPRINGEN" or "DUCKEN"
+		ui.action.Text = prompt.kind == "jump" and "JUMP" or "DUCK"
 	end
 	C.prompt = prompt
 	-- Geschwindigkeit (die vom Server wird hier überschrieben, solange man rennt)
@@ -2933,7 +2933,7 @@ function handlers.run(message)
 		loop("chaseMusic", 0.6)
 		loop("runBreath", 0.8)
 		hold(mine, 1.0)
-		showBigHint("LAUF!", 2.4)
+		showBigHint("RUN!", 2.4)
 		-- er klettert aus der Luke
 		local rig = C.rig
 		if rig then
@@ -3185,7 +3185,7 @@ function handlers.transform()
 		local e = eye()
 		camera.CFrame = CFrame.lookAt(e, e + unit(flat(forward)) * 10)
 		stopCutscene()
-		showBigHint("LAUF!", 2)
+		showBigHint("RUN!", 2)
 		loop("chaseMusic", 0.9)
 		C.chasing = true
 	end)
@@ -3264,7 +3264,7 @@ handlers["end"] = function()
 		end
 		brighten(false)
 		hold(mine, 3)
-		showCard("", "Fortsetzung folgt …", true, 2)
+		showCard("", "To be continued …", true, 2)
 	end)
 end
 
@@ -3496,7 +3496,7 @@ local function buildPhoneUi()
 		Font = Enum.Font.GothamMedium,
 		TextSize = 18,
 		TextColor3 = Color3.fromRGB(220, 210, 190),
-		Text = UserInputService.TouchEnabled and "Tippe die Tasten am Telefon an" or "Klicke die Tasten am Telefon an",
+		Text = UserInputService.TouchEnabled and "Tap the keys on the phone" or "Click the keys on the phone",
 		AutoLocalize = false,
 		Parent = panel,
 	})
@@ -3519,7 +3519,7 @@ local function buildPhoneUi()
 		Font = Enum.Font.GothamBold,
 		TextSize = 16,
 		TextColor3 = Color3.new(1, 1, 1),
-		Text = UserInputService.TouchEnabled and "Auflegen" or "Auflegen (Q)",
+		Text = UserInputService.TouchEnabled and "Auflegen" or "Hang up (Q)",
 		AutoLocalize = false,
 		Parent = panel,
 	})
@@ -3618,7 +3618,7 @@ local function pressKey(key)
 	if #D.digits >= #Data.PHONE_NUMBER then
 		D.busy = true
 		if D.digits == Data.PHONE_NUMBER then
-			showDigits(D.digits, D.digits:gsub(".", "%0 "):sub(1, -2) .. "  – es klingelt …")
+			showDigits(D.digits, D.digits:gsub(".", "%0 "):sub(1, -2) .. "  – ringing …")
 			local remote = remoteNamed("K3Phone")
 			if remote then
 				remote:FireServer(D.digits)
@@ -3630,7 +3630,7 @@ local function pressKey(key)
 			end)
 		else
 			play("phoneWrong", { Volume = 1 }, H.phone)
-			showDigits(D.digits, "Kein Anschluss …")
+			showDigits(D.digits, "No connection …")
 			task.delay(1.4, function()
 				if hutState == H and H.dialing == D then
 					D.digits = ""
@@ -4040,7 +4040,7 @@ function handlers.scares()
 	end
 end
 
--- Ausruhen: schwarz, "Etwas später …", Blaulicht, Klopfen, draußen fährt das Auto weg, ENDE
+-- Ausruhen: schwarz, "A little later …", Blaulicht, Klopfen, draußen fährt das Auto weg, ENDE
 function handlers.rest()
 	token += 1
 	local mine = token
@@ -4062,7 +4062,7 @@ function handlers.rest()
 		stopLoop("fireCrackle", 2)
 		stopLoop("cabinAmbience", 2)
 		at(Data.END_LATER)
-		showCard("", "Etwas später …", true, 1.2)
+		showCard("", "A little later …", true, 1.2)
 		-- das Auto steht schon da (man sieht es erst, wenn es hell wird)
 		local car = buildPoliceCar(localFolder or workspace)
 		if H.carStop then
@@ -4135,7 +4135,7 @@ function handlers.rest()
 			hold(mine, 0)
 		end
 		at(Data.END_TITLE)
-		showCard("Die letzte Nacht", "ENDE", true, 2.2)
+		showCard("Die letzte Nacht", "THE END", true, 2.2)
 		-- bleibt so (schwarz, ENDE)
 		stopCutscene(true)
 	end)

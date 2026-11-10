@@ -42,9 +42,9 @@ local FAMILY_FIRST, FAMILY_PAUSE_MIN, FAMILY_PAUSE_MAX = 45, 40, 65 -- seltener
 local CATCH_DISTANCE = 3.2
 local ITEM_COPIES = 3 -- so oft liegt jede Sorte im Haus (an verschiedenen Plätzen)
 
-local LABELS = { chemicals = "Chemikalien", powder = "Schießpulver" }
-local WHERE = { chemicals = "z. B. oben im Flur", powder = "z. B. unten im Flur" } -- kurz, passt in die Liste
-local WITH_ARTICLE = { chemicals = "die Chemikalien", powder = "das Schießpulver" }
+local LABELS = { chemicals = "Chemicals", powder = "Gunpowder" }
+local WHERE = { chemicals = "e.g. upstairs hallway", powder = "e.g. downstairs hallway" } -- kurz, passt in die Liste
+local WITH_ARTICLE = { chemicals = "the chemicals", powder = "the gunpowder" }
 
 -- Das Regal vor dem Geheimgang zur Seite schieben (instant = sofort, für den Teststart)
 function Escape.moveShelf(instant)
@@ -180,7 +180,7 @@ function Escape.run(kit)
 			return
 		end
 		if spot.occupant and spot.occupant ~= player then
-			hint("Da ist schon jemand.", 2, player)
+			hint("Someone is already in there.", 2, player)
 			return
 		end
 		hidden[player] = spot
@@ -219,7 +219,7 @@ function Escape.run(kit)
 		part.CFrame = spot.prompt
 		part.Parent = holder
 		local prompt = Instance.new("ProximityPrompt")
-		prompt.ObjectText = spot.label or ({ Tisch = "Unter den Tisch", Vorhang = "Hinter den Vorhang" })[spot.name] or spot.name
+		prompt.ObjectText = spot.label or ({ Tisch = "Under the table", Vorhang = "Behind the curtain" })[spot.name] or spot.name
 		prompt.ActionText = "Verstecken"
 		prompt.HoldDuration = 0.3
 		prompt.MaxActivationDistance = 6
@@ -427,10 +427,10 @@ function Escape.run(kit)
 		local list = {}
 		for _, kind in { "chemicals", "powder" } do
 			local item = items[kind]
-			local state = item and (item.placed and "am Pult" or (carriedBy[kind] and ("trägt " .. carriedBy[kind].DisplayName) or WHERE[kind])) or "gesucht"
+			local state = item and (item.placed and "at the desk" or (carriedBy[kind] and ("carried by " .. carriedBy[kind].DisplayName) or WHERE[kind])) or "missing"
 			table.insert(list, { text = LABELS[kind] .. " – " .. state, done = item ~= nil and item.placed == true })
 		end
-		event:FireAllClients({ type = "objectives", title = "Für den Safe", items = list })
+		event:FireAllClients({ type = "objectives", title = "For the safe", items = list })
 	end
 
 	------------------------------------------------------------------ Sarp: Rundgang, bemerken, verfolgen
@@ -489,7 +489,7 @@ function Escape.run(kit)
 	end
 	local searchHideSpot -- (weiter unten)
 	local function chase(player)
-		event:FireClient(player, { type = "chased", text = "Er hat dich bemerkt – lauf! (Sicher bist du nur in Großmutters Zimmer)" })
+		event:FireClient(player, { type = "chased", text = "He noticed you – run! (You are only safe in Grandmother's room)" })
 		kit.whisper(Script.SARP_WHISPERS[math.random(1, #Script.SARP_WHISPERS)])
 		local lostSince
 		local giveUp = os.clock() + 25
@@ -772,12 +772,12 @@ function Escape.run(kit)
 					return
 				end
 				giveKey(player)
-				event:FireAllClients({ type = "objectives", title = "Raus hier", items = { { text = "Schlüssel – trägt " .. player.DisplayName, done = true }, { text = "Den roten Kerzen folgen", done = false } } })
+				event:FireAllClients({ type = "objectives", title = "Get out", items = { { text = "Key – carried by " .. player.DisplayName, done = true }, { text = "Follow the red candles", done = false } } })
 				task.spawn(function()
 					line("takeKey")
 					line("sneakHint")
 				end)
-				hint("C: Schleichen – dann hört er dich nicht. Er sieht dich nur, wenn er ganz nah ist.", 8)
+				hint("C: sneak – then he can't hear you. He only sees you when he is very close.", 8)
 			end)
 			keyPrompt.Enabled = true
 		end
@@ -798,14 +798,14 @@ function Escape.run(kit)
 		end)
 		if givenTo then
 			giveKey(givenTo)
-			event:FireAllClients({ type = "objectives", title = "Raus hier", items = { { text = "Schlüssel – trägt " .. givenTo.DisplayName, done = true }, { text = "Das Regal aufschließen", done = false } } })
-			hint("Das Regal vor dir: mit dem Schlüssel aufschließen (E).", 6)
+			event:FireAllClients({ type = "objectives", title = "Get out", items = { { text = "Key – carried by " .. givenTo.DisplayName, done = true }, { text = "Unlock the shelf", done = false } } })
+			hint("The shelf in front of you: unlock it with the key (E).", 6)
 		else
-			event:FireAllClients({ type = "objectives", title = "Raus hier", items = { { text = "Schlüssel aus dem Safe nehmen", done = false } } })
+			event:FireAllClients({ type = "objectives", title = "Get out", items = { { text = "Take the key from the safe", done = false } } })
 			task.spawn(function()
 				line("afterSearch")
 				if not keyHolder then
-					hint("Nimm den Schlüssel aus dem Safe.", 5)
+					hint("Take the key from the safe.", 5)
 				end
 			end)
 		end
@@ -816,8 +816,8 @@ function Escape.run(kit)
 		local doorOpened = false
 		if secretDoor then
 			doorPrompt = Instance.new("ProximityPrompt")
-			doorPrompt.ObjectText = "Alte Tür"
-			doorPrompt.ActionText = "Öffnen"
+			doorPrompt.ObjectText = "Old door"
+			doorPrompt.ActionText = "Open"
 			doorPrompt.HoldDuration = 1
 			doorPrompt.MaxActivationDistance = 7
 			doorPrompt.RequiresLineOfSight = false
@@ -844,8 +844,8 @@ function Escape.run(kit)
 		end
 		if shelfPart then
 			local prompt = Instance.new("ProximityPrompt")
-			prompt.ObjectText = "Regal"
-			prompt.ActionText = "Aufschließen"
+			prompt.ObjectText = "Shelf"
+			prompt.ActionText = "Unlock"
 			prompt.HoldDuration = 0.8
 			prompt.MaxActivationDistance = 8
 			prompt.RequiresLineOfSight = false
@@ -855,7 +855,7 @@ function Escape.run(kit)
 					return
 				end
 				if player ~= keyHolder then
-					hint("Hinter dem Regal ist ein Schlüsselloch. " .. (keyHolder and (keyHolder.DisplayName .. " hat den Schlüssel.") or "Der Schlüssel liegt im Safe."), 4, player)
+					hint("There is a keyhole behind the shelf. " .. (keyHolder and (keyHolder.DisplayName .. " has the key.") or "The key is in the safe."), 4, player)
 					lineAsync("shelfLocked")
 					return
 				end
@@ -863,7 +863,7 @@ function Escape.run(kit)
 				prompt.Enabled = false
 				sfx("doorCreak", shelfPart.Position, { volume = 1, speed = 0.5 })
 				Escape.moveShelf(false)
-				event:FireAllClients({ type = "objectives", title = "Raus hier", items = { { text = "Die Tür hinter dem Regal öffnen", done = false } } })
+				event:FireAllClients({ type = "objectives", title = "Get out", items = { { text = "Open the door behind the shelf", done = false } } })
 				lineAsync("shelfOpen")
 				if doorPrompt then
 					doorPrompt.Enabled = true
@@ -991,7 +991,7 @@ function Escape.run(kit)
 				end
 				-- zu zweit trägt jeder nur eins (man soll sich aufteilen)
 				if #Players:GetPlayers() >= 2 and #carrying(player) >= 1 then
-					hint("Du trägst schon etwas. Das muss dein Partner tragen.", 3, player)
+					hint("You are already carrying something. Your partner has to carry this.", 3, player)
 					return
 				end
 				-- dieses nehmen, die anderen verschwinden
@@ -1007,13 +1007,13 @@ function Escape.run(kit)
 				hookRespawn(player)
 				sfx("doorCreak", spot.at, { volume = 0.3, speed = 1.8 })
 				lineAsync(kind == "chemicals" and "gotChemicals" or "gotPowder")
-				hint(player.DisplayName .. " hat " .. WITH_ARTICLE[kind] .. ". Zurück zum Pult in Großmutters Zimmer.", 5)
+				hint(player.DisplayName .. " has " .. WITH_ARTICLE[kind] .. ". Back to the desk in Grandmother's room.", 5)
 				showObjectives()
 			end)
 		end
 	end
 	showObjectives()
-	hint("Chemikalien: direkt vor der Tür im Flur. Schießpulver: unten im Flur auf der Kommode. Beides leuchtet golden.", 9)
+	hint("Chemicals: right outside the door in the hallway. Gunpowder: downstairs in the hallway on the dresser. Both glow golden.", 9)
 	-- wer das Spiel verlässt, lässt seine Sachen fallen (sie liegen dann wieder am Fundort)
 	local leavingConnection = Players.PlayerRemoving:Connect(function(player)
 		for _, kind in carrying(player) do
@@ -1029,7 +1029,7 @@ function Escape.run(kit)
 
 	-- Sarp läuft ab jetzt durchs ganze Haus (Hauptgefahr)
 	task.spawn(sarpPatrol, SEARCH_ROUTE)
-	hint("Sarp ist im Haus. Licht aus (F) und Schleichen (C) machen dich unauffälliger.", 7)
+	hint("Sarp is in the house. Light off (F) and sneaking (C) make you harder to notice.", 7)
 
 	-- Die Familie: taucht außer Sicht auf, kommt auf einen zu und packt einen.
 	-- Dann Quick-Time-Event: schnell tippen, um sich loszureißen (sonst Schaden).
@@ -1130,7 +1130,7 @@ function Escape.run(kit)
 						local grabbedAt = targetFeet
 						local freed = grab(nearest.player, member)
 						if freed then
-							event:FireClient(nearest.player, { type = "hint", text = "Losgerissen! Lauf – er hat es gehört!", seconds = 3 })
+							event:FireClient(nearest.player, { type = "hint", text = "You broke free! Run – he heard it!", seconds = 3 })
 						else
 							event:FireClient(nearest.player, { type = "hurt" })
 							if ctx.loseHeart then
@@ -1186,7 +1186,7 @@ function Escape.run(kit)
 	safePart.Parent = holder
 	local safePrompt = Instance.new("ProximityPrompt")
 	safePrompt.ObjectText = "Safe"
-	safePrompt.ActionText = "Ladung anbringen"
+	safePrompt.ActionText = "Attach charge"
 	safePrompt.HoldDuration = 0.8
 	safePrompt.MaxActivationDistance = 7
 	safePrompt.RequiresLineOfSight = false
@@ -1200,7 +1200,7 @@ function Escape.run(kit)
 		if bombStep == "collect" then
 			local mine = carrying(player)
 			if #mine == 0 then
-				hint("Bring Chemikalien und Schießpulver hierher.", 3, player)
+				hint("Bring the chemicals and the gunpowder here.", 3, player)
 				return
 			end
 			for _, kind in mine do
@@ -1220,7 +1220,7 @@ function Escape.run(kit)
 				pultPrompt.ActionText = "Zusammenbauen"
 				pultPrompt.HoldDuration = 2
 				lineAsync("bothPlaced")
-				hint("Halte E am Pult gedrückt: zusammenbauen.", 5)
+				hint("Hold E at the desk: assemble.", 5)
 			else
 				lineAsync("firstPlaced")
 			end
@@ -1242,10 +1242,10 @@ function Escape.run(kit)
 			end
 			chargeModel = buildWorldModel("charge", middle, itemFolder)
 			bombStep = "take"
-			pultPrompt.ActionText = "Ladung nehmen"
+			pultPrompt.ActionText = "Take charge"
 			pultPrompt.HoldDuration = 0.4
 			pultPrompt.Enabled = true
-			event:FireAllClients({ type = "objectives", title = "Für den Safe", items = { { text = "Ladung an den Safe bringen", done = false } } })
+			event:FireAllClients({ type = "objectives", title = "For the safe", items = { { text = "Bring the charge to the safe", done = false } } })
 			lineAsync("built")
 		elseif bombStep == "take" then
 			bombStep = "attach"
@@ -1254,7 +1254,7 @@ function Escape.run(kit)
 			attachToHand(player, "Carried_charge", BUILDERS.charge)
 			pultPrompt.Enabled = false
 			safePrompt.Enabled = true
-			hint("Bring die Ladung zum Safe.", 4)
+			hint("Bring the charge to the safe.", 4)
 		end
 	end)
 
@@ -1262,7 +1262,7 @@ function Escape.run(kit)
 	safePrompt.Triggered:Connect(function(player)
 		if bombStep == "attach" then
 			if player ~= chargeHolder then
-				hint((chargeHolder and chargeHolder.DisplayName or "Jemand") .. " hat die Ladung.", 3, player)
+				hint((chargeHolder and chargeHolder.DisplayName or "Someone") .. " has the charge.", 3, player)
 				return
 			end
 			dropFromHand(player, "Carried_charge")
@@ -1270,7 +1270,7 @@ function Escape.run(kit)
 			chargeModel:PivotTo(room.safeFront * CFrame.new(0, -0.6, 0.15))
 			bombStep = "richardLeaving"
 			safePrompt.Enabled = false
-			safePrompt.ActionText = "Lunte anzünden"
+			safePrompt.ActionText = "Light the fuse"
 			safePrompt.HoldDuration = 1
 			-- Richard geht vorher raus; erst dann kann man die Lunte anzünden
 			task.spawn(function()
@@ -1282,12 +1282,12 @@ function Escape.run(kit)
 				end
 				bombStep = "light"
 				safePrompt.Enabled = true
-				event:FireAllClients({ type = "objectives", title = "Für den Safe", items = { { text = "Lunte mit der Kerze anzünden", done = false } } })
-				hint("Richard ist weg. Zünde die Lunte mit deiner Kerze an.", 5)
+				event:FireAllClients({ type = "objectives", title = "For the safe", items = { { text = "Light the fuse with the candle", done = false } } })
+				hint("Richard is gone. Light the fuse with your candle.", 5)
 			end)
 		elseif bombStep == "light" then
 			if player:GetAttribute("LightOff") then
-				hint("Du brauchst Licht: mach deine Kerze an (F).", 3, player)
+				hint("You need light: turn on your candle (F).", 3, player)
 				return
 			end
 			bombStep = "lit"
@@ -1321,7 +1321,7 @@ function Escape.run(kit)
 		sparks.Parent = fuseTip
 	end)
 	sfx("fuse", room.safeFront.Position, { volume = 1.4, maxDistance = 40 })
-	hint("Versteck dich! Schrank, hinter dem Bett oder in der Truhe!", FUSE_TIME)
+	hint("Hide! Wardrobe, behind the bed or in the chest!", FUSE_TIME)
 	event:FireAllClients({ type = "objectives", clear = true })
 	lineAsync("lit")
 	for t = FUSE_TIME, 1, -1 do
@@ -1407,7 +1407,7 @@ function Escape.run(kit)
 	keyLight.Color = Color3.fromRGB(255, 210, 140)
 	keyLight.Parent = keyModel.PrimaryPart
 	local keyPrompt = Instance.new("ProximityPrompt")
-	keyPrompt.ObjectText = "Schlüssel"
+	keyPrompt.ObjectText = "Key"
 	keyPrompt.ActionText = "Nehmen"
 	keyPrompt.HoldDuration = 0.4
 	keyPrompt.MaxActivationDistance = 7
@@ -1421,7 +1421,7 @@ function Escape.run(kit)
 	sfx("sarpRoar", point(48, 66, Mansion.FLOORS.E + 4), { volume = 3, maxDistance = 500 })
 	event:FireAllClients({ type = "dim", level = 0.4, duration = 1 })
 	task.spawn(line, "heHeard")
-	hint("Versteck dich! Er kommt!", 5)
+	hint("Hide! He's coming!", 5)
 	task.wait(1.5)
 	local function sarpSays(list)
 		kit.whisper(list[math.random(1, #list)])

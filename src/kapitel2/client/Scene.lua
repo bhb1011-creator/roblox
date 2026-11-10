@@ -146,7 +146,7 @@ function Kapitel2.run()
 		Position = UDim2.fromScale(0.5, 0.42),
 		Size = UDim2.new(0.8, 0, 0, 40),
 		Font = Enum.Font.SpecialElite,
-		Text = "KAPITEL 2",
+		Text = "CHAPTER 2",
 		TextSize = 28,
 		TextColor3 = Color3.fromRGB(220, 205, 185),
 	})
@@ -155,7 +155,7 @@ function Kapitel2.run()
 		Position = UDim2.fromScale(0.5, 0.5),
 		Size = UDim2.new(0.8, 0, 0, 60),
 		Font = Enum.Font.SpecialElite,
-		Text = "Die Wagners",
+		Text = "The Wagners",
 		TextSize = 48,
 		TextColor3 = Color3.fromRGB(240, 230, 215),
 	})
@@ -164,7 +164,7 @@ function Kapitel2.run()
 		Position = UDim2.fromScale(0.5, 0.5),
 		Size = UDim2.new(0.8, 0, 0, 90),
 		Font = Enum.Font.SpecialElite,
-		Text = "Lädt …",
+		Text = "Loading …",
 		TextWrapped = true,
 		TextSize = 22,
 		TextColor3 = Color3.fromRGB(170, 165, 155),
@@ -257,7 +257,7 @@ function Kapitel2.run()
 		Size = UDim2.fromOffset(260, 26),
 		BackgroundTransparency = 1,
 		Font = Enum.Font.SpecialElite,
-		Text = "– du schleichst –",
+		Text = "– sneaking –",
 		TextSize = 18,
 		TextColor3 = Color3.fromRGB(200, 190, 175),
 		TextStrokeTransparency = 0.6,
@@ -298,7 +298,7 @@ function Kapitel2.run()
 		Position = UDim2.new(0.5, 0, 0, 62),
 		Size = UDim2.fromOffset(220, 70),
 		BackgroundColor3 = Color3.fromRGB(150, 30, 26),
-		Text = "TIPPEN!",
+		Text = "TAP!",
 		Font = Enum.Font.SpecialElite,
 		TextSize = 30,
 		TextColor3 = Color3.new(1, 1, 1),
@@ -329,7 +329,7 @@ function Kapitel2.run()
 		Size = UDim2.fromOffset(240, 54),
 		BackgroundColor3 = Color3.fromRGB(30, 26, 22),
 		BackgroundTransparency = 0.25,
-		Text = UserInputService.TouchEnabled and "Rauskommen" or "[E]  Rauskommen",
+		Text = UserInputService.TouchEnabled and "Rauskommen" or "[E]  Come out",
 		Font = Enum.Font.SpecialElite,
 		TextSize = 20,
 		TextColor3 = Color3.fromRGB(240, 220, 180),
@@ -369,7 +369,7 @@ function Kapitel2.run()
 	player:GetAttributeChangedSignal("Hearts"):Connect(showHearts)
 	showHearts()
 
-	-- Game Over: schwarz, "Du wurdest getötet", Knopf "Nochmal versuchen"
+	-- Game Over: schwarz, "Du wurdest getötet", Knopf "Try again"
 	local gameOverFrame = create("Frame", {
 		Name = "GameOver",
 		Size = UDim2.fromScale(1, 1),
@@ -400,7 +400,7 @@ function Kapitel2.run()
 		Size = UDim2.new(0.9, 0, 0, 40),
 		BackgroundTransparency = 1,
 		Font = Enum.Font.SpecialElite,
-		Text = "Du wurdest getötet.",
+		Text = "You were killed.",
 		TextSize = 28,
 		TextColor3 = Color3.fromRGB(220, 205, 190),
 		TextTransparency = 1,
@@ -413,7 +413,7 @@ function Kapitel2.run()
 		Position = UDim2.fromScale(0.5, 0.64),
 		Size = UDim2.fromOffset(260, 60),
 		BackgroundColor3 = Color3.fromRGB(60, 14, 12),
-		Text = "Nochmal versuchen",
+		Text = "Try again",
 		Font = Enum.Font.SpecialElite,
 		TextSize = 24,
 		TextColor3 = Color3.fromRGB(240, 220, 200),
@@ -831,7 +831,7 @@ function Kapitel2.run()
 	-- Der Server legt diesen Ordner an, sobald er mit dem Bauen beginnt
 	local remotes = ReplicatedStorage:WaitForChild("Kapitel2", 60)
 	if not remotes then
-		loadingLabel.Text = "Der Server startet nicht – bitte im Output nach roten Fehlern schauen."
+		loadingLabel.Text = "The server is not starting – please check the Output for red errors."
 		remotes = ReplicatedStorage:WaitForChild("Kapitel2")
 	end
 	-- Was der Server gerade macht (oder welcher Fehler passiert ist)
@@ -850,14 +850,14 @@ function Kapitel2.run()
 	local lightEvent = remotes:WaitForChild("Light", 10)
 	local function toggleLight()
 		if player:GetAttribute("CandleMode") == "none" then
-			hint("Du hast kein Licht mehr.", 2)
+			hint("You have no light left.", 2)
 			return
 		end
 		lightOff = not lightOff
 		if lightEvent then
 			lightEvent:FireServer(not lightOff)
 		end
-		hint(lightOff and "Licht aus." or "Licht an.", 1.5)
+		hint(lightOff and "Light off." or "Light on.", 1.5)
 	end
 	-- Schleichen: Taste C (am Handy: Knopf). Nur bei der Flucht erlaubt.
 	local sneakEvent = remotes:WaitForChild("Sneak", 10)
@@ -877,7 +877,7 @@ function Kapitel2.run()
 			return
 		end
 		setSneak(not sneaking)
-		hint(sneaking and "Du schleichst (leise)." or "Du gehst normal (er kann dich hören).", 2)
+		hint(sneaking and "You are sneaking (quiet)." or "You are walking normally (he can hear you).", 2)
 	end
 	player:GetAttributeChangedSignal("Sneaking"):Connect(function()
 		-- der Server setzt es nach dem Neuspawnen zurück
@@ -923,7 +923,7 @@ function Kapitel2.run()
 	qteButton.Activated:Connect(qteTap)
 	local function startQte(message)
 		qte = { need = message.taps or 10, count = 0, deadline = os.clock() + (message.seconds or 4) }
-		qteTitle.Text = (message.name and message.name ~= "" and (message.name .. " hat dich gepackt!") or "Du wurdest gepackt!") .. "  Schnell tippen (E / Leertaste)!"
+		qteTitle.Text = (message.name and message.name ~= "" and (message.name .. " grabbed you!") or "You've been grabbed!") .. "  Tap fast (E / Space)!"
 		qteBar.Size = UDim2.fromScale(0, 1)
 		qteFrame.Visible = true
 		shakeUntil = os.clock() + (message.seconds or 4)
@@ -965,7 +965,7 @@ function Kapitel2.run()
 			Size = UDim2.fromOffset(70, 70),
 			BackgroundColor3 = Color3.fromRGB(30, 26, 22),
 			BackgroundTransparency = 0.3,
-			Text = "Licht",
+			Text = "Light",
 			TextColor3 = Color3.fromRGB(240, 220, 180),
 			Font = Enum.Font.SpecialElite,
 			TextSize = 18,
@@ -982,7 +982,7 @@ function Kapitel2.run()
 			Size = UDim2.fromOffset(70, 70),
 			BackgroundColor3 = Color3.fromRGB(30, 26, 22),
 			BackgroundTransparency = 0.3,
-			Text = "Schleichen",
+			Text = "Sneak",
 			TextColor3 = Color3.fromRGB(240, 220, 180),
 			Font = Enum.Font.SpecialElite,
 			TextSize = 13,
@@ -1017,7 +1017,7 @@ function Kapitel2.run()
 		end)
 		task.delay(7.5, function()
 			if not finished and not remotes:GetAttribute("TestStart") then
-				hint("Klopf an die Tür.", 6)
+				hint("Knock on the door.", 6)
 			end
 		end)
 	end
@@ -1037,7 +1037,7 @@ function Kapitel2.run()
 			Speech.say(message.speaker, message.name, message.text, message.duration, message.voice)
 		elseif kind == "choice" then
 			local chooser = message.chooser and Players:GetPlayerByUserId(message.chooser)
-			Choices.show(message.options, message.chooser == player.UserId, chooser and chooser.DisplayName or "Wer geklopft hat", message.timeout, function(index)
+			Choices.show(message.options, message.chooser == player.UserId, chooser and chooser.DisplayName or "The one who knocked", message.timeout, function(index)
 				choiceEvent:FireServer(index)
 			end)
 		elseif kind == "chosen" then
@@ -1057,12 +1057,12 @@ function Kapitel2.run()
 		elseif kind == "inside" then
 			houseInside = true
 		elseif kind == "explore" then
-			hint("Sieh dich im Haus um. Euer Zimmer ist oben – zweite Tür links.", 7)
+			hint("Look around the house. Your room is upstairs – second door on the left.", 7)
 		elseif kind == "sleep" then
 			-- alle liegen im Bett: einschlafen, dann mitten in der Nacht
 			setFade(0, 4)
 			task.delay(4.5, function()
-				chapter.Text = "Mitten in der Nacht …"
+				chapter.Text = "In the middle of the night …"
 				chapterTitle.Text = "03:17"
 				showText(chapter, true, 1.5)
 				showText(chapterTitle, true, 2)
@@ -1084,7 +1084,7 @@ function Kapitel2.run()
 			ownCandleOff = true
 			hiddenNow = true
 			leaveButton.Visible = true
-			hint("Versteckt. Sei ganz still … (E oder Leertaste: rauskommen)", 5)
+			hint("Hidden. Stay very quiet … (E or Space: come out)", 5)
 		elseif kind == "unhidden" then
 			ownCandleOff = false
 			hiddenNow = false
@@ -1114,7 +1114,7 @@ function Kapitel2.run()
 			TweenService:Create(scareFlash, TweenInfo.new(0.7), { BackgroundTransparency = 1 }):Play()
 			shakeUntil = os.clock() + 0.6
 		elseif kind == "chased" then
-			hint(message.text or "Er hat dich gesehen – lauf! (F: Licht aus)", 4)
+			hint(message.text or "He saw you – run! (F: light off)", 4)
 		elseif kind == "objectives" then
 			showObjectives(message)
 		elseif kind == "qte" then
@@ -1126,7 +1126,7 @@ function Kapitel2.run()
 			heartsLabel.TextSize = 46
 			TweenService:Create(heartsLabel, TweenInfo.new(0.6), { TextSize = 34 }):Play()
 			if (message.hearts or 0) > 0 then
-				hint(message.hearts == 1 and "Nur noch ein Herz …" or ("Noch " .. message.hearts .. " Herzen."), 3)
+				hint(message.hearts == 1 and "Only one heart left …" or (message.hearts .. " hearts left."), 3)
 			end
 		elseif kind == "gameOver" then
 			qte = nil
@@ -1147,10 +1147,10 @@ function Kapitel2.run()
 			end)
 		elseif kind == "redCandle" then
 			lightOff = false
-			hint("Rotes Licht – mehr hast du nicht mehr. (F: an/aus)", 5)
+			hint("Red light – that's all you have left. (F: on/off)", 5)
 		elseif kind == "candleLost" then
 			lightOff = true
-			hint("Deine Kerze ist weg.", 4)
+			hint("Your candle is gone.", 4)
 		elseif kind == "explosion" then
 			-- weißer Blitz, das Bild wackelt stark, kurz dumpf
 			local flash = create("Frame", {
@@ -1171,16 +1171,16 @@ function Kapitel2.run()
 				shakeStrength = nil
 			end)
 		elseif kind == "lost" then
-			hint("Er hat dich verloren …", 3)
+			hint("He lost you …", 3)
 		elseif kind == "caught" then
 			hiddenNow = false
 			leaveButton.Visible = false
 			setFade(0, 0.1)
-			chapter.Text = "Er hat dich gefunden …"
+			chapter.Text = "He found you …"
 			chapterTitle.Text = ""
 			showText(chapter, true, 0.8)
 		elseif kind == "retry" and player:GetAttribute("GameOver") and not message.restart then
-			-- (Game Over bleibt stehen, bis man "Nochmal versuchen" drückt)
+			-- (Game Over bleibt stehen, bis man "Try again" drückt)
 		elseif kind == "retry" and gameOverFrame.Visible then
 			gameOverFrame.Visible = false
 			retryButton.Visible = false
@@ -1209,8 +1209,8 @@ function Kapitel2.run()
 			finished = true
 			dimTarget = 0.6
 			task.delay(1, function()
-				chapter.Text = message.title or "Die Wagners sind weg."
-				chapterTitle.Text = message.subtitle or "Du bist allein im Haus. Mit ihm."
+				chapter.Text = message.title or "The Wagners are gone."
+				chapterTitle.Text = message.subtitle or "You are alone in the house. With him."
 				showText(chapter, true, 1.5)
 				showText(chapterTitle, true, 2)
 			end)
@@ -1220,8 +1220,8 @@ function Kapitel2.run()
 				showText(chapterTitle, false, 1)
 			end)
 			task.delay(11.5, function()
-				chapter.Text = "ENDE VON KAPITEL 2 (TEIL 1)"
-				chapterTitle.Text = "Fortsetzung folgt …"
+				chapter.Text = "END OF CHAPTER 2 (PART 1)"
+				chapterTitle.Text = "To be continued …"
 				showText(chapter, true, 1.5)
 				showText(chapterTitle, true, 2)
 			end)
@@ -1229,8 +1229,8 @@ function Kapitel2.run()
 			finished = true
 			setFade(0, 3)
 			task.delay(3.5, function()
-				chapter.Text = "ENDE DES ANFANGS VON KAPITEL 2"
-				chapterTitle.Text = "Fortsetzung folgt …"
+				chapter.Text = "END OF THE BEGINNING OF CHAPTER 2"
+				chapterTitle.Text = "To be continued …"
 				showText(chapter, true, 1.5)
 				showText(chapterTitle, true, 2)
 			end)
@@ -1246,7 +1246,7 @@ function Kapitel2.run()
 	end)
 	if remotes:GetAttribute("Explore") then
 		task.delay(8, function()
-			hint("Sieh dich im Haus um.", 6)
+			hint("Look around the house.", 6)
 		end)
 	end
 	-- falls die Startnachricht verloren geht: sobald die Spielfigur da ist

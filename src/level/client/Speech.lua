@@ -274,7 +274,7 @@ function Speech.say(speaker, name, text, duration, voiceName)
 		textLabel.Text = text
 		textLabel.TextColor3 = Color3.fromRGB(200, 195, 185)
 	else
-		textLabel.Text = "„" .. text .. "“"
+		textLabel.Text = "“" .. text .. "”"
 		textLabel.TextColor3 = Color3.fromRGB(245, 240, 230)
 	end
 	show(true, 0.3)

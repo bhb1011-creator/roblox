@@ -32,7 +32,7 @@ local ForestDressing = require(script.Parent.ForestDressing)
 
 local Kapitel3 = {}
 
-Kapitel3.TITLE = "Das Ritual" -- Untertitel der Kapitelkarte (hier ändern)
+Kapitel3.TITLE = "The Ritual" -- Untertitel der Kapitelkarte (hier ändern)
 
 local M = Enum.Material
 
@@ -798,7 +798,7 @@ function Kapitel3.run(kit)
 			endOutside = hut.endOutside,
 			door = hut.door,
 		})
-		event:FireAllClients({ type = "objectives", title = "Weg hier", items = { { text = "Dem Weg folgen", done = false } } })
+		event:FireAllClients({ type = "objectives", title = "Get out of here", items = { { text = "Follow the path", done = false } } })
 
 		local state = { called = false, calling = false, scared = {}, resting = false }
 		local function prompt(parent, action, object, hold)
@@ -812,10 +812,10 @@ function Kapitel3.run(kit)
 			return p
 		end
 		-- das Telefon: der Client zeigt es groß, man klickt die Tasten an
-		local phonePrompt = prompt(hut.phone, "Telefonieren", "Altes Telefon")
+		local phonePrompt = prompt(hut.phone, "Make a call", "Old phone")
 		phonePrompt.Triggered:Connect(function(player)
 			if state.called or state.calling then
-				event:FireClient(player, { type = "hint", text = "Die Polizei ist schon unterwegs.", seconds = 3 })
+				event:FireClient(player, { type = "hint", text = "The police are already on their way.", seconds = 3 })
 				return
 			end
 			event:FireClient(player, { type = "k3", step = "phone" })
@@ -839,8 +839,8 @@ function Kapitel3.run(kit)
 				state.called = true
 				state.calling = false
 				phonePrompt.Enabled = true
-				event:FireAllClients({ type = "objectives", title = "Sarps Hütte", items = { { text = "Die Polizei rufen", done = true }, { text = "Irgendetwas stimmt nicht … (Spiegel, Foto am Bett)", done = false }, { text = "Auf die Polizei warten: ausruhen (Bett)", done = false } } })
-				event:FireAllClients({ type = "hint", text = "Die Polizei ist unterwegs. Ruh dich aus … (Bett hinter dem Vorhang)", seconds = 5 })
+				event:FireAllClients({ type = "objectives", title = "Sarp's cabin", items = { { text = "Call the police", done = true }, { text = "Something is wrong … (mirror, photo by the bed)", done = false }, { text = "Wait for the police: rest (bed)", done = false } } })
+				event:FireAllClients({ type = "hint", text = "The police are on their way. Get some rest … (bed behind the curtain)", seconds = 5 })
 				event:FireAllClients({ type = "k3", step = "scares" })
 			end)
 		end)
@@ -851,29 +851,29 @@ function Kapitel3.run(kit)
 			end
 		end)
 		-- das Bett: erst nach dem Anruf und erst, wenn man mindestens einen Schreck hatte
-		local bedPrompt = prompt(hut.bed, "Ausruhen", "Bett", 0.6)
+		local bedPrompt = prompt(hut.bed, "Rest", "Bed", 0.6)
 		bedPrompt.Triggered:Connect(function(player)
 			if state.resting then
 				return
 			end
 			if not state.called then
-				event:FireClient(player, { type = "hint", text = state.calling and "Erst das Telefonat …" or "Erst die Polizei anrufen.", seconds = 3 })
+				event:FireClient(player, { type = "hint", text = state.calling and "Finish the call first …" or "Call the police first.", seconds = 3 })
 				return
 			end
 			if not state.scared[player] then
-				event:FireClient(player, { type = "hint", text = "Ich kann jetzt nicht schlafen … Der Spiegel … das Foto neben dem Bett … irgendetwas stimmt hier nicht.", seconds = 5 })
+				event:FireClient(player, { type = "hint", text = "I can't sleep now … The mirror … the photo next to the bed … something is wrong here.", seconds = 5 })
 				return
 			end
 			state.resting = true
 		end)
 
 		-- die Haustür: auf- und zumachen
-		local doorPrompt = prompt(hut.doorPrompt, "Tür schließen", "Tür")
+		local doorPrompt = prompt(hut.doorPrompt, "Close door", "Door")
 		doorPrompt.MaxActivationDistance = 8
 		doorPrompt.Triggered:Connect(function()
 			local open = not hut.doorOpen
 			hut.setDoor(open)
-			doorPrompt.ActionText = open and "Tür schließen" or "Tür öffnen"
+			doorPrompt.ActionText = open and "Close door" or "Open door"
 			event:FireAllClients({ type = "k3", step = "door", open = open, position = hut.door })
 		end)
 
@@ -893,7 +893,7 @@ function Kapitel3.run(kit)
 							if not (state.called or state.calling) then
 								say("player", Script.KAPITEL3.hutPhone)
 								if not (state.called or state.calling) then
-									event:FireAllClients({ type = "objectives", title = "Sarps Hütte", items = { { text = "Die Polizei rufen (Telefon)", done = false } } })
+									event:FireAllClients({ type = "objectives", title = "Sarp's cabin", items = { { text = "Call the police (phone)", done = false } } })
 								end
 							end
 						end)

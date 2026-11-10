@@ -81,7 +81,7 @@ function Choices.show(options, canChoose, chooserName, timeout, pick)
 		active = false
 		pick(index)
 	end or nil
-	info.Text = canChoose and "Wähle deine Antwort (1 / 2)" or (chooserName .. " antwortet …")
+	info.Text = canChoose and "Choose your answer (1 / 2)" or (chooserName .. " is answering …")
 	for index, button in buttons do
 		button.Visible = options[index] ~= nil
 		button.Text = string.format("%d   %s", index, options[index] or "")
@@ -97,7 +97,7 @@ function Choices.show(options, canChoose, chooserName, timeout, pick)
 		while holder.Visible and closeToken == token do
 			local left = math.ceil(deadline - os.clock())
 			if left <= 10 and left >= 0 then
-				info.Text = (canChoose and "Wähle deine Antwort (1 / 2)" or (chooserName .. " antwortet …")) .. "   " .. left
+				info.Text = (canChoose and "Choose your answer (1 / 2)" or (chooserName .. " is answering …")) .. "   " .. left
 			end
 			task.wait(0.25)
 		end

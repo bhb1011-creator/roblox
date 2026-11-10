@@ -93,7 +93,7 @@ local chapter = label({
 	Position = UDim2.fromScale(0.5, 0.42),
 	Size = UDim2.new(0.8, 0, 0, 40),
 	Font = Enum.Font.SpecialElite,
-	Text = "KAPITEL 1",
+	Text = "CHAPTER 1",
 	TextSize = 28,
 	TextColor3 = Color3.fromRGB(220, 205, 185),
 })
@@ -102,7 +102,7 @@ local chapterTitle = label({
 	Position = UDim2.fromScale(0.5, 0.5),
 	Size = UDim2.new(0.8, 0, 0, 60),
 	Font = Enum.Font.SpecialElite,
-	Text = "Die Fahrt",
+	Text = "The Drive",
 	TextSize = 48,
 	TextColor3 = Color3.fromRGB(240, 230, 215),
 })
@@ -519,7 +519,7 @@ dialogueEvent.OnClientEvent:Connect(function(message)
 		handleAction(message.action)
 	elseif message.type == "choice" then
 		local chooser = message.chooser and Players:GetPlayerByUserId(message.chooser)
-		Choices.show(message.options, message.chooser == player.UserId, chooser and chooser.DisplayName or "Der Fahrer", message.timeout, function(index)
+		Choices.show(message.options, message.chooser == player.UserId, chooser and chooser.DisplayName or "The driver", message.timeout, function(index)
 			dialogueChoice:FireServer(index)
 		end)
 	elseif message.type == "chosen" then
@@ -916,7 +916,7 @@ renderConnection = RunService.RenderStepped:Connect(function(deltaTime)
 		if entry.radioOff then
 			radioOff = true
 			if radioText then
-				radioText.Text = "FM --.-   ~~ KEIN EMPFANG ~~"
+				radioText.Text = "FM --.-   ~~ NO SIGNAL ~~"
 			end
 		end
 	end
@@ -953,7 +953,7 @@ renderConnection = RunService.RenderStepped:Connect(function(deltaTime)
 		end
 		if bt >= walkSetup then
 			once("followSetup", function()
-				setupWalk("Folge Sarp und bleib in seiner Nähe.   Shift = rennen")
+				setupWalk("Follow Sarp and stay close to him.   Shift = run")
 			end)
 		end
 		-- falls die Spielfigur ausbleibt, nicht ewig schwarz lassen
@@ -963,14 +963,14 @@ renderConnection = RunService.RenderStepped:Connect(function(deltaTime)
 			end)
 		end
 	end
-	-- Schluss: schwarz, "Fortsetzung folgt …"
+	-- Schluss: schwarz, "To be continued …"
 	if cutscene:GetAttribute("Finished") then
 		once("finish", function()
 			finished = true
 			TweenService:Create(fade, TweenInfo.new(3), { BackgroundTransparency = 0 }):Play()
 			task.delay(3.5, function()
-				chapter.Text = "ENDE VON KAPITEL 1"
-				chapterTitle.Text = FULL_GAME and "Weiter zu Kapitel 2 …" or "Fortsetzung folgt …"
+				chapter.Text = "END OF CHAPTER 1"
+				chapterTitle.Text = FULL_GAME and "Continuing to Chapter 2 …" or "To be continued …"
 				showText(chapter, true, 1.5)
 				showText(chapterTitle, true, 2)
 			end)

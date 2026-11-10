@@ -1,6 +1,6 @@
 # Handoff – Horror-Spiel „Guesthouse“ (Roblox)
 
-Stand: 10. November 2026, Branch `claude/optimistic-bardeen-4tmohk`, Version `K2-2026-11-10g`.
+Stand: 10. November 2026, Branch `claude/optimistic-bardeen-4tmohk`, Version `K2-2026-11-10h`.
 Ganz oben stehen die neuesten Abschnitte (0000 = 10. Nov., 000 = realistische Familie, 00 = 9. Nov., 0 = Kapitel 3 + Audio);
 Abschnitte 2–8 beschreiben Kapitel 2 (Stand 6. Nov.).
 Diese Datei ist für einen **neuen Chat** gedacht: erst den Prompt unten kopieren, der Rest ist Nachschlagewerk.
@@ -33,7 +33,7 @@ Regeln:
 - Sei ehrlich: sag klar, was ungetestet ist.
   Arbeite gründlich und sag, wenn etwas fertig ist.
 
-Stand: Version `K2-2026-11-10g`. Kapitel 1, 2 und 3 sind gebaut und laufen am Stück (`spiel.project.json`).
+Stand: Version `K2-2026-11-10h`. Kapitel 1, 2 und 3 sind gebaut und laufen am Stück (`spiel.project.json`).
 Alle Figuren sind realistische KI-Figuren: Familie Wagner (`assets/figuren`), Sarp in allen drei Stufen
 (Fremder, Monster im Haus, Biest; `assets/sarp`) und feste Spielerfiguren (`assets/spieler`; in der Lobby
 wird man beim Einsteigen ins Auto zur Figur). Im Testmenü (Taste O) gibt es eine „Charakterliste“.
@@ -47,6 +47,17 @@ Fang damit an, dass du die Dateien liest und mir in 5 Sätzen sagst, wo wir steh
 
 ---
 
+## 000000. NEU 10. November (Version K2-2026-11-10h): Spieltexte auf Englisch
+
+- Alle Texte, die Spieler sehen (Hinweise, Aufgaben, Knöpfe, Tür-/Gegenstands-Beschriftungen, Kapitelkarten,
+  Game Over, Inventar, Quick-Time-Events), sind jetzt Englisch – Kapitel 1, 2 und 3. **Neue Texte bitte gleich
+  auf Englisch schreiben.** Untertitel stehen in englischen Anführungszeichen (“ ”).
+- **Absichtlich Deutsch geblieben:** Testmenü (Taste O), Audio-Prüfung (Taste J), Meldungen im Output, interne
+  Namen (Räume, Verstecke `name = "Schrank"` usw. – das sind Schlüssel im Code), die Lobby (`src/lobby`, Shop-Texte in
+  `Config.lua`) und der Spieltitel `Config.GAME_TITLE = "Die letzte Nacht"` (steht auch auf der ENDE-Karte in Kapitel 3).
+- In Studio geprüft: Texte in Kapitel 1 (Fahrt, Auswahl) und Kapitel 3 (Hütte). **Nicht geprüft:** jeder einzelne
+  Hinweis in Kapitel 2 im Spiel, und ob „SPACE“ in den runden Quick-Time-Knopf passt (vorher „LEER“).
+
 ## 00000. NEU 10. November (Version K2-2026-11-10g): Prüfung in Studio, Leistung Kapitel 3
 
 - Claude hat jetzt Zugriff auf Roblox Studio (MCP) und hat alle drei Kapitel im laufenden Spiel angesehen.
@@ -58,8 +69,6 @@ Fang damit an, dass du die Dateien liest und mir in 5 Sätzen sagst, wo wir steh
   (`Gen_Spieler1_Rest_aus_Workspace`). Der Studio-Ort muss dafür gespeichert werden.
 - **Offen (gefunden, nicht behoben):**
   - Sprachaufnahmen `erzaehler_21`, `erzaehler_22`, `sarp_07_my_name` laden nicht („Asset is not approved“).
-  - Alle Hinweise, Aufgaben, Knöpfe und Tür-Beschriftungen sind Deutsch (~150 Texte), gesprochen wird Englisch.
-    Der User muss entscheiden, ob übersetzt werden soll.
   - Meldung `rbxassetid://203785492 … Asset type does not match` beim Start: kommt weder im Code noch im Ort vor
     (vermutlich Studio/Plugin, nicht das Spiel).
   - Grafik: Die Welt besteht nur aus Klötzen (keine MeshParts außer den Figuren). Plan: Möbel/Bäume/Auto als

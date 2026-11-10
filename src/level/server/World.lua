@@ -525,7 +525,7 @@ local function buildLayby(parent, segments)
 		Parent = layby,
 	})
 	Parts.text(Parts.surfaceGui(board, Enum.NormalId.Front), {
-		Text = "WALDLEHRPFAD\nWege nach Einbruch der\nDunkelheit nicht betreten.",
+		Text = "FOREST NATURE TRAIL\nDo not enter the paths\nafter dark.",
 		Font = Enum.Font.SpecialElite,
 		TextColor3 = Color3.fromRGB(220, 205, 180),
 		Size = UDim2.fromScale(0.9, 0.85),

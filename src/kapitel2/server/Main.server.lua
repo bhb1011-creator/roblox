@@ -99,6 +99,6 @@ if not ok then
 		end
 	end
 	warn("Kapitel 2: kaputtes Modul → " .. broken)
-	remotes:SetAttribute("Status", "Fehler beim Start in Modul\n" .. broken)
+	remotes:SetAttribute("Status", "Startup error in module\n" .. broken)
 	remotes.Parent = ReplicatedStorage
 end

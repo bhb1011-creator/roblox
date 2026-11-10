@@ -1312,7 +1312,7 @@ local function buildFurniture()
 	-- Schrank zum Verstecken (Nordwand)
 	do
 		local inside = Furniture.hideWardrobe(b, at(30, 39.8, O, "S"))
-		table.insert(escape.hideSpots, { name = "Schrank", label = "Schrank", kind = "stand", place = origin * inside, exit = origin * at(30, 42, O, "S"), prompt = origin * CFrame.new(L(30, 41.5, O + 3.5)), search = Mansion.point(30, 42.4, O) })
+		table.insert(escape.hideSpots, { name = "Schrank", label = "Wardrobe", kind = "stand", place = origin * inside, exit = origin * at(30, 42, O, "S"), prompt = origin * CFrame.new(L(30, 41.5, O + 3.5)), search = Mansion.point(30, 42.4, O) })
 	end
 	-- umgekipptes Bett an der Südwand: dahinter kann man sich auf den Boden legen
 	do
@@ -1325,7 +1325,7 @@ local function buildFurniture()
 		end
 		box("TippedBedSheet", Vector3.new(3.4, 1.8, 0.06), frame * CFrame.new(0.4, -0.5, 0.21) * CFrame.Angles(math.rad(4), 0, 0), Color3.fromRGB(190, 182, 168), M.Fabric)
 		local spot = L(22.5, 58.75, O + 0.55)
-		table.insert(escape.hideSpots, { name = "Bett", label = "Hinter das Bett", kind = "lie", place = origin * CFrame.lookAt(spot, spot + Vector3.new(0, 5, 0), L(30, 58.75, O) - L(22.5, 58.75, O)), exit = origin * at(22.5, 55.9, O, "N"), prompt = origin * CFrame.new(L(22.5, 56.4, O + 2.5)), search = Mansion.point(22.5, 55.5, O) })
+		table.insert(escape.hideSpots, { name = "Bett", label = "Behind the bed", kind = "lie", place = origin * CFrame.lookAt(spot, spot + Vector3.new(0, 5, 0), L(30, 58.75, O) - L(22.5, 58.75, O)), exit = origin * at(22.5, 55.9, O, "N"), prompt = origin * CFrame.new(L(22.5, 56.4, O + 2.5)), search = Mansion.point(22.5, 55.5, O) })
 	end
 	-- Truhe an der Ostwand: man legt sich hinein
 	do
@@ -1345,7 +1345,7 @@ local function buildFurniture()
 		end
 		box("ChestLock", Vector3.new(0.4, 0.4, 0.12), frame * CFrame.new(0, h - 0.2, -d / 2 - 0.11), Color3.fromRGB(150, 140, 110), M.Metal)
 		local spot = L(40.55, 56, O + 0.55)
-		table.insert(escape.hideSpots, { name = "Truhe", label = "In die Truhe", kind = "lie", place = origin * CFrame.lookAt(spot, spot + Vector3.new(0, 5, 0), L(40.55, 62, O) - L(40.55, 56, O)), exit = origin * at(38.6, 56, O, "W"), prompt = origin * CFrame.new(L(38.9, 56, O + 1.5)), search = Mansion.point(38.3, 56, O) })
+		table.insert(escape.hideSpots, { name = "Truhe", label = "Into the chest", kind = "lie", place = origin * CFrame.lookAt(spot, spot + Vector3.new(0, 5, 0), L(40.55, 62, O) - L(40.55, 56, O)), exit = origin * at(38.6, 56, O, "W"), prompt = origin * CFrame.new(L(38.9, 56, O + 1.5)), search = Mansion.point(38.3, 56, O) })
 	end
 	-- Richard steht neben dem Pult; neu anfangen (nach dem Erwischtwerden) östlich davon
 	escape.richard = Mansion.point(27.8, 46.6, O)
@@ -1412,7 +1412,7 @@ local function buildFurniture()
 		local inside = Furniture.hideWardrobe(b, frame)
 		table.insert(escape.houseHideSpots, {
 			name = label,
-			label = "Schrank",
+			label = "Wardrobe",
 			kind = "stand",
 			place = origin * inside,
 			exit = origin * frame * CFrame.new(0, 0, -2.2),

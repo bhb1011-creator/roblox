@@ -144,7 +144,7 @@ function Night.run(ctx)
 		if flurDoor and flurDoor.angle == 0 then
 			task.spawn(ctx.moveDoor, flurDoor, flurDoor.openAngle, 0.8)
 		end
-		event:FireAllClients({ type = "hint", text = "Folge Mrs. Wagner nach unten.", seconds = 6 })
+		event:FireAllClients({ type = "hint", text = "Follow Mrs. Wagner downstairs.", seconds = 6 })
 		local arrived = false
 		task.spawn(function()
 			ctx.walkPath(mrs, {
@@ -196,7 +196,7 @@ function Night.run(ctx)
 				end
 				if os.clock() > nextHint then
 					nextHint = os.clock() + 15
-					event:FireAllClients({ type = "hint", text = "Ins Esszimmer – durch Flur und Küche.", seconds = 4 })
+					event:FireAllClients({ type = "hint", text = "To the dining room – through the hallway and the kitchen.", seconds = 4 })
 				end
 			end
 		end
@@ -348,7 +348,7 @@ function Night.run(ctx)
 	local caught = {} -- Spieler -> true
 	local hidePhase = false
 	local promptsOn = false -- Versteck-Knöpfe gerade an (setPrompts)
-	local LABELS = { Schrank = "Schrank", Tisch = "Unter den Tisch", Vorhang = "Hinter den Vorhang" }
+	local LABELS = { Schrank = "Wardrobe", Tisch = "Under the table", Vorhang = "Behind the curtain" }
 
 	local function leaveSpot(player, toExit)
 		local spot = hidden[player]
@@ -379,7 +379,7 @@ function Night.run(ctx)
 			return
 		end
 		if spot.occupant and spot.occupant ~= player then
-			event:FireClient(player, { type = "hint", text = "Da ist schon jemand.", seconds = 2 })
+			event:FireClient(player, { type = "hint", text = "Someone is already in there.", seconds = 2 })
 			return
 		end
 		hidden[player] = spot
@@ -612,11 +612,11 @@ function Night.run(ctx)
 	local function hideRound(round)
 		hidePhase = true
 		setPrompts(true)
-		event:FireAllClients({ type = "hint", text = round == 1 and "Versteck dich! Schnell!" or "Versteck dich – er kommt wieder!", seconds = 5 })
+		event:FireAllClients({ type = "hint", text = round == 1 and "Hide! Quick!" or "Hide – he's coming back!", seconds = 5 })
 		event:FireAllClients({ type = "dim", level = 0.6, duration = 2 })
 		for t = HIDE_TIME, 1, -1 do
 			if t == 12 or t == 5 then
-				event:FireAllClients({ type = "hint", text = "Noch " .. t .. " Sekunden …", seconds = 2 })
+				event:FireAllClients({ type = "hint", text = t .. " seconds left …", seconds = 2 })
 			end
 			if t == 8 then
 				sfx("heavyKnock", ctx.frontDoor.position, { count = 2, interval = 0.5, volume = 1.8, maxDistance = 300 })
@@ -793,7 +793,7 @@ function Night.run(ctx)
 	end
 	if not atDoorOne then
 		task.wait(2)
-		event:FireAllClients({ type = "hint", text = "Er ist weg … fürs Erste.", seconds = 4 })
+		event:FireAllClients({ type = "hint", text = "He's gone … for now.", seconds = 4 })
 		task.wait(3)
 	end
 
@@ -870,7 +870,7 @@ function Night.run(ctx)
 	end
 	if axePart then
 		local prompt = Instance.new("ProximityPrompt")
-		prompt.ObjectText = "Axt"
+		prompt.ObjectText = "Axe"
 		prompt.ActionText = "Nehmen"
 		prompt.HoldDuration = 0.4
 		prompt.MaxActivationDistance = 7
@@ -884,7 +884,7 @@ function Night.run(ctx)
 			axe.Parent = nil
 			giveAxe(player)
 			sfx("doorCreak", axePart.Position, { volume = 0.4, speed = 1.6 })
-			event:FireAllClients({ type = "hint", text = player.DisplayName .. " hat die Axt. Jetzt nach oben zu Tür 1 – Großmutters Zimmer im langen Flur.", seconds = 7 })
+			event:FireAllClients({ type = "hint", text = player.DisplayName .. " has the axe. Now go upstairs to door 1 – Grandmother's room in the long hallway.", seconds = 7 })
 			pcall(function()
 				-- nach dem Neuspawnen die Axt wieder in die Hand geben
 				player.CharacterAdded:Connect(function()
@@ -907,7 +907,7 @@ function Night.run(ctx)
 		broken = true
 		local origin = Mansion.origin
 		local middle = origin * (doorOne.middle + Vector3.new(0, O + 4, 0))
-		event:FireAllClients({ type = "hint", text = player.DisplayName .. " bricht die Tür auf …", seconds = 4 })
+		event:FireAllClients({ type = "hint", text = player.DisplayName .. " is breaking the door open …", seconds = 4 })
 		for i = 1, 5 do
 			sfx("doorBurst", middle, { volume = 1.2, speed = 1.2 + i * 0.05, maxDistance = 200 })
 			task.wait(0.75)
@@ -936,7 +936,7 @@ function Night.run(ctx)
 		doorOne.locked = false
 		sfx("doorSlam", middle, { volume = 1.4 })
 		ctx.moveDoor(doorOne, doorOne.openAngle, 0.35)
-		event:FireAllClients({ type = "hint", text = "Die Tür ist offen. Geh hinein.", seconds = 5 })
+		event:FireAllClients({ type = "hint", text = "The door is open. Go inside.", seconds = 5 })
 		ctx.remotes:SetAttribute("Phase", "doorOne")
 		-- sobald jemand den Raum hinter Tür 1 betritt: alles schwarz
 		local deadline = os.clock() + 180
@@ -967,14 +967,14 @@ function Night.run(ctx)
 			if player == axeHolder then
 				task.spawn(breakDoor, player)
 			else
-				event:FireClient(player, { type = "hint", text = "Vernagelt. Mit einer Axt könnte man die Bretter aufbrechen.", seconds = 3 })
+				event:FireClient(player, { type = "hint", text = "Boarded up. An axe could break the boards.", seconds = 3 })
 			end
 			return true
 		end
 	end
 
 	if not atDoorOne then
-		event:FireAllClients({ type = "hint", text = "Such die Axt im Keller (Kellertür in der Küche). Sie kann überall dort unten liegen.", seconds = 8 })
+		event:FireAllClients({ type = "hint", text = "Find the axe in the cellar (cellar door in the kitchen). It could be anywhere down there.", seconds = 8 })
 	end
 
 	-- Sarp läuft durchs Erdgeschoss. Sieht er jemanden mit Licht, verfolgt er ihn und macht
@@ -1120,7 +1120,7 @@ function Night.run(ctx)
 	end
 	if sarp and not atDoorOne then
 		Wagners.place(sarp, PATROL[1], PATROL[2])
-		event:FireAllClients({ type = "hint", text = "F: Licht aus/an. Ohne Licht sieht er dich nicht – du ihn aber auch kaum.", seconds = 8 })
+		event:FireAllClients({ type = "hint", text = "F: light off/on. Without light he can't see you – but you can barely see him either.", seconds = 8 })
 		task.spawn(function()
 			local index = 1
 			while not doneWithNight and sarp.Parent do

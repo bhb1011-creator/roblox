@@ -50,7 +50,7 @@ function Kapitel2.start()
 	local remotes = Instance.new("Folder")
 	remotes.Name = "Kapitel2"
 	print("Kapitel 2: Version " .. tostring(Config.BUILD))
-	remotes:SetAttribute("Status", "Das Haus wird gebaut …  (Version " .. tostring(Config.BUILD) .. ")")
+	remotes:SetAttribute("Status", "Building the house …  (Version " .. tostring(Config.BUILD) .. ")")
 	local event = Instance.new("RemoteEvent")
 	event.Name = "SceneEvent"
 	event.Parent = remotes
@@ -115,10 +115,10 @@ function Kapitel2.start()
 	if not ok or not (doorModel and doorModel.PrimaryPart) then
 		local text = tostring(problem or "Haus oder Haustür fehlt")
 		warn("Kapitel 2: FEHLER beim Bauen der Welt – bitte diese Meldung an Claude schicken:\n" .. text)
-		remotes:SetAttribute("Status", "Fehler beim Bauen (siehe Output):\n" .. (text:match("[^\n]+") or text))
+		remotes:SetAttribute("Status", "Build error (see Output):\n" .. (text:match("[^\n]+") or text))
 		return
 	end
-	remotes:SetAttribute("Status", "Die Wagners werden geweckt …  (Version " .. tostring(Config.BUILD) .. ")")
+	remotes:SetAttribute("Status", "Waking the Wagners …  (Version " .. tostring(Config.BUILD) .. ")")
 
 	local origin = Route.houseCFrame()
 	local hingeCF = doorModel.PrimaryPart.CFrame
@@ -587,7 +587,7 @@ function Kapitel2.start()
 			RunService.Heartbeat:Wait()
 		end
 		if door.prompt then
-			door.prompt.ActionText = target > 0 and "Schließen" or "Öffnen"
+			door.prompt.ActionText = target > 0 and "Close" or "Open"
 		end
 		door.moving = false
 	end
@@ -605,8 +605,8 @@ function Kapitel2.start()
 			local leaf = door.model and door.model.PrimaryPart
 			if leaf then
 				local prompt = Instance.new("ProximityPrompt")
-				prompt.ObjectText = "Tür"
-				prompt.ActionText = door.locked and "Öffnen" or (door.angle > 0 and "Schließen" or "Öffnen")
+				prompt.ObjectText = "Door"
+				prompt.ActionText = door.locked and "Open" or (door.angle > 0 and "Close" or "Open")
 				prompt.HoldDuration = 0
 				prompt.MaxActivationDistance = 7
 				prompt.RequiresLineOfSight = false
@@ -649,7 +649,7 @@ function Kapitel2.start()
 		if bed then
 			bed.taken = nil
 			if bed.prompt then
-				bed.prompt.ActionText = "Schlafen gehen"
+				bed.prompt.ActionText = "Go to sleep"
 			end
 		end
 		if root and humanoid then
@@ -685,7 +685,7 @@ function Kapitel2.start()
 			if not lying[player] then
 				for _, other in players do
 					if lying[other] and other ~= player then
-						event:FireClient(player, { type = "hint", text = other.DisplayName .. " liegt schon im Bett.", seconds = 4 })
+						event:FireClient(player, { type = "hint", text = other.DisplayName .. " is already in bed.", seconds = 4 })
 					end
 				end
 				return
@@ -720,12 +720,12 @@ function Kapitel2.start()
 		local center = bed.cframe * Vector3.new(0, 2.85, bed.length / 2 - 2.9)
 		-- Gesicht nach oben, Kopf zum Kissen
 		character:PivotTo(CFrame.lookAt(center, center + Vector3.new(0, 1, 0), headward))
-		event:FireClient(player, { type = "hint", text = "Gute Nacht …", seconds = 3 })
+		event:FireClient(player, { type = "hint", text = "Good night …", seconds = 3 })
 		humanoid.Died:Connect(function()
 			if lying[player] == bed then
 				lying[player] = nil
 				bed.taken = nil
-				bed.prompt.ActionText = "Schlafen gehen"
+				bed.prompt.ActionText = "Go to sleep"
 			end
 		end)
 		checkAllAsleep()
@@ -743,8 +743,8 @@ function Kapitel2.start()
 			anchor.CFrame = bed.cframe * CFrame.new(0, 2.6, 0)
 			anchor.Parent = workspace:FindFirstChild("WagnerHouse", true) or workspace
 			local prompt = Instance.new("ProximityPrompt")
-			prompt.ObjectText = "Bett"
-			prompt.ActionText = "Schlafen gehen"
+			prompt.ObjectText = "Bed"
+			prompt.ActionText = "Go to sleep"
 			prompt.HoldDuration = 0.4
 			prompt.MaxActivationDistance = 7
 			prompt.RequiresLineOfSight = false
@@ -835,7 +835,7 @@ function Kapitel2.start()
 		glide(mr, hall(SPOTS.mrInside), 2.6)
 		task.wait(1.2)
 		setMovement(true)
-		event:FireAllClients({ type = "hint", text = "Geh hinein.", seconds = 4 })
+		event:FireAllClients({ type = "hint", text = "Go inside.", seconds = 4 })
 		local start, reminded, pulled = os.clock(), false, false
 		while true do
 			local allIn = true
@@ -1094,7 +1094,7 @@ function Kapitel2.start()
 			bed.taken = nil
 			lying[player] = nil
 			if bed.prompt then
-				bed.prompt.ActionText = "Schlafen gehen"
+				bed.prompt.ActionText = "Go to sleep"
 			end
 		end
 		if exploring and not asleep then
@@ -1104,7 +1104,7 @@ function Kapitel2.start()
 	-- Klopfen: Hinweis an der Tür (E drücken oder antippen)
 	local prompt = Instance.new("ProximityPrompt")
 	prompt.ActionText = "Klopfen"
-	prompt.ObjectText = "Haustür"
+	prompt.ObjectText = "Front door"
 	prompt.HoldDuration = 0.25
 	prompt.MaxActivationDistance = 8
 	prompt.RequiresLineOfSight = false

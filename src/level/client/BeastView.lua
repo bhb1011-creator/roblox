@@ -60,14 +60,14 @@ function BeastView.init(screenGui, soundFactory, fadeFrame)
 		Position = UDim2.fromScale(0.5, 0.3),
 		Size = UDim2.new(0.8, 0, 0, 60),
 		TextSize = 46,
-		Text = "LAUF!",
+		Text = "RUN!",
 	})
 	deathLabel = label({
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		Position = UDim2.fromScale(0.5, 0.5),
 		Size = UDim2.new(0.8, 0, 0, 70),
 		TextSize = 52,
-		Text = "DU BIST GESTORBEN",
+		Text = "YOU DIED",
 	})
 	flash = Instance.new("Frame")
 	flash.Size = UDim2.fromScale(1, 1)
@@ -105,7 +105,7 @@ function BeastView.init(screenGui, soundFactory, fadeFrame)
 	sprintButton.Font = Enum.Font.SpecialElite
 	sprintButton.TextColor3 = Color3.fromRGB(230, 225, 215)
 	sprintButton.TextSize = 18
-	sprintButton.Text = "RENNEN"
+	sprintButton.Text = "RUN"
 	sprintButton.Visible = false
 	sprintButton.ZIndex = 7
 	sprintButton.Parent = gui
@@ -171,7 +171,7 @@ function BeastView.handle(message)
 			if sounds.roarClose then
 				sounds.roarClose:Play()
 			end
-			warningLabel.Text = "LAUF! (Shift)"
+			warningLabel.Text = "RUN! (Shift)"
 			warningLabel.TextSize = 46
 			warningLabel.TextColor3 = Color3.fromRGB(230, 40, 30)
 			showText(warningLabel, true, 0.2)
