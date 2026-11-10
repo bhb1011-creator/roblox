@@ -20,6 +20,7 @@
 -- (Kapitel3.lua im Client-Ordner). Die Zeiten stehen in Shared/Kapitel3Data.
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerStorage = game:GetService("ServerStorage")
 
 local Data = require(ReplicatedStorage.Shared.Kapitel3Data)
 local Script = require(ReplicatedStorage.Shared.Kapitel2Dialogue)
@@ -634,6 +635,31 @@ Kapitel3.buildForest = buildForest -- (auch zum Testen)
 Kapitel3.buildHall = buildHall
 
 -- Die Brücke stürzt ein (alles fällt in die Schlucht – mit dem Biest)
+-- Leistung: Sobald alle im Ritualsaal (oder hinter der Brücke) stehen, kommt niemand mehr
+-- zum Haus zurück. Die alte Welt (Straße, Wald und Haus aus Kapitel 1 und 2, über 26.000
+-- Teile) wird darum aus der Welt genommen. Sie wird nur weggelegt, nicht gelöscht: Skripte,
+-- die noch Teile daraus kennen, laufen ohne Fehler weiter.
+local oldWorldStored = false
+local function storeOldWorld()
+	if oldWorldStored then
+		return
+	end
+	oldWorldStored = true
+	local old = workspace:FindFirstChild("Level1")
+	if not old then
+		return
+	end
+	local count = #old:GetDescendants()
+	local ok, problem = pcall(function()
+		old.Parent = ServerStorage
+	end)
+	if ok then
+		print("Kapitel 3: alte Welt weggeräumt (" .. count .. " Teile weniger).")
+	else
+		warn("Kapitel 3: alte Welt konnte nicht weggeräumt werden: " .. tostring(problem))
+	end
+end
+
 local function collapseBridge()
 	if not bridge then
 		return
@@ -921,6 +947,7 @@ function Kapitel3.run(kit)
 				humanoid.JumpHeight = 2
 			end
 		end
+		task.delay(1, storeOldWorld)
 		collapseBridge()
 		finale()
 		return
@@ -995,6 +1022,7 @@ function Kapitel3.run(kit)
 	for index, player in Players:GetPlayers() do
 		placePlayer(player, index, #Players:GetPlayers())
 	end
+	task.delay(1, storeOldWorld)
 	task.wait(Data.CARD - 1)
 
 	------------------------------------------------ Die Sequenz (bei Game Over von vorne)

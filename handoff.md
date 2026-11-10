@@ -1,6 +1,6 @@
 # Handoff – Horror-Spiel „Guesthouse“ (Roblox)
 
-Stand: 10. November 2026, Branch `claude/optimistic-bardeen-4tmohk`, Version `K2-2026-11-10f`.
+Stand: 10. November 2026, Branch `claude/optimistic-bardeen-4tmohk`, Version `K2-2026-11-10g`.
 Ganz oben stehen die neuesten Abschnitte (0000 = 10. Nov., 000 = realistische Familie, 00 = 9. Nov., 0 = Kapitel 3 + Audio);
 Abschnitte 2–8 beschreiben Kapitel 2 (Stand 6. Nov.).
 Diese Datei ist für einen **neuen Chat** gedacht: erst den Prompt unten kopieren, der Rest ist Nachschlagewerk.
@@ -33,7 +33,7 @@ Regeln:
 - Sei ehrlich: sag klar, was ungetestet ist.
   Arbeite gründlich und sag, wenn etwas fertig ist.
 
-Stand: Version `K2-2026-11-10f`. Kapitel 1, 2 und 3 sind gebaut und laufen am Stück (`spiel.project.json`).
+Stand: Version `K2-2026-11-10g`. Kapitel 1, 2 und 3 sind gebaut und laufen am Stück (`spiel.project.json`).
 Alle Figuren sind realistische KI-Figuren: Familie Wagner (`assets/figuren`), Sarp in allen drei Stufen
 (Fremder, Monster im Haus, Biest; `assets/sarp`) und feste Spielerfiguren (`assets/spieler`; in der Lobby
 wird man beim Einsteigen ins Auto zur Figur). Im Testmenü (Taste O) gibt es eine „Charakterliste“.
@@ -46,6 +46,24 @@ Fang damit an, dass du die Dateien liest und mir in 5 Sätzen sagst, wo wir steh
 ```
 
 ---
+
+## 00000. NEU 10. November (Version K2-2026-11-10g): Prüfung in Studio, Leistung Kapitel 3
+
+- Claude hat jetzt Zugriff auf Roblox Studio (MCP) und hat alle drei Kapitel im laufenden Spiel angesehen.
+- **Leistung:** Beginnt Kapitel 3, wird die alte Welt (`workspace.Level1`: Straße, Wald, Haus) nach `ServerStorage`
+  gelegt (`storeOldWorld` in `src/kapitel2/server/Kapitel3.lua`). Vorher ~44.000 Teile gleichzeitig, jetzt ~18.000.
+  In Studio getestet mit den Teststarts „kapitel3“ und „huette“ (keine Fehler). **Nicht getestet:** der normale Weg
+  durch die Tür hinter dem Regal und ein Durchlauf zu zweit.
+- Übrige erzeugte Figur aus dem Workspace von Place1 nach `ServerStorage.KI_Spieler_Originale` verschoben
+  (`Gen_Spieler1_Rest_aus_Workspace`). Der Studio-Ort muss dafür gespeichert werden.
+- **Offen (gefunden, nicht behoben):**
+  - Sprachaufnahmen `erzaehler_21`, `erzaehler_22`, `sarp_07_my_name` laden nicht („Asset is not approved“).
+  - Alle Hinweise, Aufgaben, Knöpfe und Tür-Beschriftungen sind Deutsch (~150 Texte), gesprochen wird Englisch.
+    Der User muss entscheiden, ob übersetzt werden soll.
+  - Meldung `rbxassetid://203785492 … Asset type does not match` beim Start: kommt weder im Code noch im Ort vor
+    (vermutlich Studio/Plugin, nicht das Spiel).
+  - Grafik: Die Welt besteht nur aus Klötzen (keine MeshParts außer den Figuren). Plan: Möbel/Bäume/Auto als
+    erzeugte Modelle, eigene Oberflächen – Wohnzimmer als Probe.
 
 ## 0000. NEU 10. November (Version K2-2026-11-10f)
 
