@@ -82,7 +82,7 @@ function Figuren.run()
 
 	-- Spieler vor die Bühne stellen
 	local function spawn(player)
-		player:LoadCharacter()
+		require(game:GetService("ReplicatedStorage").Shared.PlayerFigure).load(player)
 		local character = player.Character
 		local root = character and character:WaitForChild("HumanoidRootPart", 5)
 		if root then

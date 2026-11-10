@@ -7,6 +7,7 @@ local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Route = require(ReplicatedStorage.Shared.LevelRoute)
+local PlayerFigure = require(ReplicatedStorage.Shared.PlayerFigure)
 
 local ForestWalk = {}
 
@@ -36,7 +37,7 @@ end
 -- Spielfigur laden und an `cframe` stellen
 local function spawnWalker(player, cframe)
 	player.CameraMode = Enum.CameraMode.LockFirstPerson
-	player:LoadCharacter()
+	PlayerFigure.load(player) -- feste realistische Spielfigur (falls vorhanden)
 	local character = player.Character
 	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
 	if humanoid then

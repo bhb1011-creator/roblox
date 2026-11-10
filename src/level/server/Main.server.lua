@@ -7,6 +7,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local Route = require(ReplicatedStorage.Shared.LevelRoute)
+local PlayerFigure = require(ReplicatedStorage.Shared.PlayerFigure)
 local CutsceneCar = require(script.Parent.CutsceneCar)
 local DialogueRunner = require(script.Parent.DialogueRunner)
 local Stranger = require(script.Parent.Stranger)
@@ -74,6 +75,16 @@ end
 
 -- Figur des Spielers (sein Avatar) als Puppe für die anderen Clients
 local function buildPuppet(player)
+	-- feste realistische Spielfigur (falls vorhanden), sonst der eigene Avatar
+	local template = PlayerFigure.template(player)
+	if template then
+		local puppet = template:Clone()
+		puppet.Name = tostring(player.UserId)
+		local humanoid = puppet:FindFirstChildOfClass("Humanoid")
+		humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
+		puppet.Parent = puppets
+		return
+	end
 	local ok, description = pcall(function()
 		return Players:GetHumanoidDescriptionFromUserId(math.max(player.UserId, 1))
 	end)
