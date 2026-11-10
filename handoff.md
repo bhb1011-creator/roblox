@@ -44,6 +44,21 @@ Fang damit an, dass du die Dateien liest und mir in 5 Sätzen sagst, wo wir steh
 
 ---
 
+## 0000. NEU 10. November (Version K2-2026-11-10a)
+
+- **Blick natürlicher** (`Scene.lua` updateNecks): Ziel wird von der Körpermitte aus gemessen, Oberkörper (Waist)
+  dreht 35 % mit (max. 35°), Kopf den Rest (max. 60°), Neigung max. 25°, ruhigeres Nachziehen. Bei „puppet“ (Kapitel 3)
+  werden Hals und Taille einmal gerade gestellt.
+- **Richard zeigt zur Treppe** (`actions.point` in `Kapitel2.lua`): Arm auf der Treppenseite, weich gehoben (Tween),
+  wirklich in Treppenrichtung, nach ~4 s wieder runter.
+- **Laufwege** (`walkPath` in `Kapitel2.lua`, gilt für alle Szenen über `ctx.walkPath`): Ecken als Bögen (max. 1,6 Studs),
+  allmähliches Drehen, weiches Anlaufen/Abbremsen, Schritte nach Strecke, Knie beugen sich.
+- **Kerze** neu und detailliert: `src/shared/CandleModel.lua` (Messingteller mit Rand und Fingerring, Tülle, Wachstropfen,
+  Docht mit Glut, Flamme aus Hülle/Kern/blauem Fuß). Benutzt für die Kerze im eigenen Bild (`Scene.lua`), an der Spielerhand
+  (`giveCandle`) und bei Mrs. Wagner (`holdCandle`). Die Flamme im eigenen Bild züngelt.
+- **Nicht in Studio getestet** (Studio war nicht verbunden): alles aus diesem Abschnitt.
+- Handy: kein sichtbares Handy, nur Handylicht (Taste F schaltet Kerze + Handylicht).
+
 ## 000. NEU: Realistische Familie (Version K2-2026-11-09j)
 
 - **09i/09j:** Sprechen sichtbar: `Speech.onSay` (Speech.lua) meldet jeden Satz; `Scene.lua` (updateNecks) lässt den Kopf

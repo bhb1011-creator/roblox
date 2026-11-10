@@ -201,18 +201,26 @@ function Kapitel2.start()
 		end)
 	end
 
-	-- Gehen entlang mehrerer Punkte (Hallen-Koordinaten), Blick in Gehrichtung
+	-- Gehen entlang mehrerer Punkte (Hallen-Koordinaten). Natürlich statt eckig: Ecken werden zu
+	-- weichen Kurven, die Figur dreht sich allmählich in die Laufrichtung, läuft weich an und bremst
+	-- am Ende ab; Schritte passen zum Tempo, die Knie beugen sich beim Vorschwingen.
 	local function walkPath(npc, spots, speed, onStep)
 		if not npc then
 			return
 		end
 		local nextStep = 0
-		local hips = {}
-		for _, name in { "LeftUpperLeg", "RightUpperLeg" } do
-			local part = npc:FindFirstChild(name)
-			local joint = part and part:FindFirstChildOfClass("Motor6D")
-			if joint then
-				table.insert(hips, { joint = joint, base = joint.C0 })
+		local legs = {}
+		for _, side in { "Left", "Right" } do
+			local upper, lower = npc:FindFirstChild(side .. "UpperLeg"), npc:FindFirstChild(side .. "LowerLeg")
+			local hip = upper and (upper:FindFirstChild(side .. "Hip") or upper:FindFirstChildOfClass("Motor6D"))
+			local knee = lower and (lower:FindFirstChild(side .. "Knee") or lower:FindFirstChildOfClass("Motor6D"))
+			if hip and hip:IsA("Motor6D") then
+				table.insert(legs, {
+					hip = hip,
+					hipBase = hip.C0,
+					knee = knee and knee:IsA("Motor6D") and knee or nil,
+					kneeBase = knee and knee:IsA("Motor6D") and knee.C0 or nil,
+				})
 			end
 		end
 		local position = Wagners.ground(npc)
@@ -227,35 +235,82 @@ function Kapitel2.start()
 				table.insert(targets, step)
 			end
 		end
+		local points = { position }
 		for _, target in targets do
-			local distance = (target - position).Magnitude
-			if distance > 0.05 then
-				local direction = (target - position).Unit
-				local from = position
-				local start = os.clock()
-				while true do
-					local a = math.min((os.clock() - start) * speed / distance, 1)
-					position = from:Lerp(target, a)
-					Wagners.place(npc, position, position + direction)
-					if onStep and os.clock() >= nextStep then
-						nextStep = os.clock() + 0.55
-						onStep(position)
-					end
-					for index, hip in hips do
-						pcall(function()
-							hip.joint.C0 = hip.base * CFrame.Angles(math.sin(os.clock() * 7 + index * math.pi) * 0.35 * (npc:GetAttribute("StepScale") or 1), 0, 0)
-						end)
-					end
-					if a >= 1 then
-						break
-					end
-					RunService.Heartbeat:Wait()
-				end
+			if (target - points[#points]).Magnitude > 0.05 then
+				table.insert(points, target)
 			end
 		end
-		for _, hip in hips do
+		if #points < 2 then
+			return
+		end
+		-- Ecken abrunden (kleiner Bogen, höchstens 1,6 Studs vor/nach der Ecke)
+		local path = { points[1] }
+		for index = 2, #points - 1 do
+			local a, b, c = points[index - 1], points[index], points[index + 1]
+			local radius = math.min(1.6, (b - a).Magnitude * 0.45, (c - b).Magnitude * 0.45)
+			local p0 = b + (a - b).Unit * radius
+			local p2 = b + (c - b).Unit * radius
+			for k = 0, 6 do
+				local u = k / 6
+				table.insert(path, p0 * (1 - u) ^ 2 + b * (2 * (1 - u) * u) + p2 * u ^ 2)
+			end
+		end
+		table.insert(path, points[#points])
+		local lengths, total = { 0 }, 0
+		for index = 2, #path do
+			total += (path[index] - path[index - 1]).Magnitude
+			lengths[index] = total
+		end
+		local root = npc:FindFirstChild("HumanoidRootPart")
+		local look = root and root.CFrame.LookVector * Vector3.new(1, 0, 1) or Vector3.new(0, 0, -1)
+		look = look.Magnitude > 0.01 and look.Unit or Vector3.new(0, 0, -1)
+		local stepScale = npc:GetAttribute("StepScale") or 1
+		local stride = 2.2 -- Studs pro Doppelschritt
+		local travelled, elapsed, phase, segment = 0, 0, 0, 2
+		while travelled < total do
+			local dt = RunService.Heartbeat:Wait()
+			elapsed += dt
+			-- weich anlaufen und vor dem Ziel abbremsen
+			local pace = speed * math.clamp(math.min(0.3 + elapsed / 0.4, 0.3 + (total - travelled) / 1.2), 0.3, 1)
+			travelled = math.min(travelled + pace * dt, total)
+			while segment < #path and lengths[segment] < travelled do
+				segment += 1
+			end
+			local a, b = path[segment - 1], path[segment]
+			local span = lengths[segment] - lengths[segment - 1]
+			local u = span > 0 and (travelled - lengths[segment - 1]) / span or 1
+			position = a:Lerp(b, u)
+			local heading = (b - a) * Vector3.new(1, 0, 1)
+			if heading.Magnitude > 0.01 then
+				look = look:Lerp(heading.Unit, math.min(dt * 7, 1))
+				look = look.Magnitude > 0.01 and look.Unit or heading.Unit
+			end
+			Wagners.place(npc, position, position + look)
+			if onStep and os.clock() >= nextStep then
+				nextStep = os.clock() + 0.55
+				onStep(position)
+			end
+			phase += pace * dt / stride * math.pi * 2
+			local strength = (pace / speed) * stepScale
+			for index, leg in legs do
+				local swing = math.sin(phase + (index - 1) * math.pi) * 0.38 * strength
+				pcall(function()
+					leg.hip.C0 = leg.hipBase * CFrame.Angles(swing, 0, 0)
+					if leg.knee then
+						-- Knie beugt sich, während das Bein nach vorn schwingt
+						local bend = math.max(0, math.cos(phase + (index - 1) * math.pi)) * 0.55 * strength
+						leg.knee.C0 = leg.kneeBase * CFrame.Angles(-bend, 0, 0)
+					end
+				end)
+			end
+		end
+		for _, leg in legs do
 			pcall(function()
-				hip.joint.C0 = hip.base
+				leg.hip.C0 = leg.hipBase
+				if leg.knee then
+					leg.knee.C0 = leg.kneeBase
+				end
 			end)
 		end
 	end
@@ -314,31 +369,10 @@ function Kapitel2.start()
 		end
 		local model = Instance.new("Model")
 		model.Name = "PlayerCandle"
-		local base = CFrame.new(hand.Position) * root.CFrame.Rotation * CFrame.new(0, -0.2, -0.35)
-		local function piece(name, shape, size, cframe, color, material)
-			local part = Instance.new("Part")
-			part.Name = name
-			part.Shape = shape
-			part.Size = size
-			part.CFrame = cframe
-			part.Color = color
-			part.Material = material
-			part.CanCollide = false
-			part.CanQuery = false
-			part.CanTouch = false
-			part.Massless = true
-			part.CastShadow = false
-			part.Parent = model
-			local weld = Instance.new("WeldConstraint")
-			weld.Part0 = hand
-			weld.Part1 = part
-			weld.Parent = part
-			return part
-		end
-		local upright = CFrame.Angles(0, 0, math.rad(90)) -- Zylinder stehen in Roblox auf der Seite
-		piece("CandleHolder", Enum.PartType.Cylinder, Vector3.new(0.12, 0.6, 0.6), base * upright, Color3.fromRGB(120, 96, 52), Enum.Material.Metal)
-		piece("Candle", Enum.PartType.Cylinder, Vector3.new(0.8, 0.22, 0.22), base * CFrame.new(0, 0.46, 0) * upright, red and Color3.fromRGB(110, 24, 22) or Color3.fromRGB(225, 215, 190), Enum.Material.SmoothPlastic)
-		local flame = piece("CandleFlame", Enum.PartType.Ball, Vector3.new(0.16, 0.16, 0.16), base * CFrame.new(0, 0.95, 0), red and Color3.fromRGB(255, 50, 36) or Color3.fromRGB(255, 170, 70), Enum.Material.Neon)
+		local base = CFrame.new(hand.Position) * root.CFrame.Rotation * CFrame.new(0, -0.25, -0.35)
+		-- detaillierte Kerze im Messinghalter (ReplicatedStorage.Shared.CandleModel)
+		local CandleModel = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("CandleModel"))
+		local flame = CandleModel.build(model, base, 1.15, { red = red, weldTo = hand }).flame
 		local light = Instance.new("PointLight")
 		light.Name = "CandleLight"
 		light.Range = red and 15 or 22
@@ -874,20 +908,48 @@ function Kapitel2.start()
 			giveCandle(player)
 		end
 	end
+	-- Mr. Wagner zeigt zur Treppe: Arm auf der Seite, wo die Treppe ist, weich gehoben und
+	-- wirklich in ihre Richtung (nicht starr zur Seite), nach ein paar Sekunden wieder runter.
 	function actions.point()
-		local arm = mr and mr:FindFirstChild("RightUpperArm")
-		local shoulder = arm and arm:FindFirstChild("RightShoulder")
-		if shoulder then
-			local base = shoulder.C0
-			pcall(function()
-				shoulder.C0 = base * CFrame.Angles(math.rad(-15), 0, math.rad(105))
-			end)
-			task.delay(5, function()
-				pcall(function()
-					shoulder.C0 = base
-				end)
-			end)
+		if not mr then
+			return
 		end
+		local root = mr:FindFirstChild("HumanoidRootPart")
+		local target = mr:GetAttribute("LookAt")
+		if not (root and typeof(target) == "Vector3") then
+			return
+		end
+		local side = root.CFrame:PointToObjectSpace(target).X >= 0 and "Right" or "Left"
+		local arm = mr:FindFirstChild(side .. "UpperArm")
+		local shoulder = arm and arm:FindFirstChild(side .. "Shoulder")
+		local hand = mr:FindFirstChild(side .. "Hand")
+		if not (shoulder and shoulder:IsA("Motor6D") and hand) then
+			return
+		end
+		local base = shoulder.C0
+		local ok, raised = pcall(function()
+			local pivot = shoulder.Part0.CFrame * shoulder.C0
+			local current = (hand.Position - pivot.Position).Unit
+			-- etwas tiefer als genau auf die Treppe: sieht entspannter aus
+			local wanted = ((target - pivot.Position).Unit + Vector3.new(0, -0.25, 0)).Unit
+			local axis = current:Cross(wanted)
+			if axis.Magnitude < 1e-3 then
+				return base
+			end
+			local angle = math.acos(math.clamp(current:Dot(wanted), -1, 1))
+			local turned = CFrame.new(pivot.Position) * CFrame.fromAxisAngle(axis.Unit, angle) * (pivot - pivot.Position)
+			return shoulder.Part0.CFrame:ToObjectSpace(turned)
+		end)
+		if not ok then
+			return
+		end
+		local TweenService = game:GetService("TweenService")
+		TweenService:Create(shoulder, TweenInfo.new(0.6, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), { C0 = raised }):Play()
+		task.delay(3.8, function()
+			if shoulder.Parent then
+				TweenService:Create(shoulder, TweenInfo.new(0.8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), { C0 = base }):Play()
+			end
+		end)
 	end
 	-- Ende des Gesprächs: Jetzt darf man sich frei im Haus umsehen
 	function actions.finish()

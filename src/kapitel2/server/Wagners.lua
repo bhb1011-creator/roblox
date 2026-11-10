@@ -374,10 +374,9 @@ local function holdCandle(model)
 	-- KI-Figuren: der Arm wurde vorher nach unten gedreht (relaxArms) – das hier ausgleichen
 	local upright = CFrame.Angles(-(up + bend), 0, 0) * (model:GetAttribute("RightArmRelax") or CFrame.new())
 	local lift = hand.Size.Y / 2
-	attach(model, hand, "CandleHolder", Vector3.new(0.12, 0.6, 0.6), upright * CFrame.new(0, lift + 0.06, -0.05) * CFrame.Angles(0, 0, math.rad(90)), Color3.fromRGB(120, 96, 52), Enum.Material.Metal, Enum.PartType.Cylinder)
-	attach(model, hand, "Candle", Vector3.new(0.9, 0.22, 0.22), upright * CFrame.new(0, lift + 0.57, -0.05) * CFrame.Angles(0, 0, math.rad(90)), Color3.fromRGB(225, 215, 190), Enum.Material.SmoothPlastic, Enum.PartType.Cylinder)
-	local flame = attach(model, hand, "CandleFlame", Vector3.new(0.15, 0.15, 0.15), upright * CFrame.new(0, lift + 1.1, -0.05), Color3.fromRGB(255, 170, 70), Enum.Material.Neon, Enum.PartType.Ball)
-	flame.CastShadow = false
+	-- detaillierte Kerze im Messinghalter (ReplicatedStorage.Shared.CandleModel), an der Hand fest
+	local CandleModel = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("CandleModel"))
+	local flame = CandleModel.build(model, hand.CFrame * upright * CFrame.new(0, lift, -0.05), 1.25, { weldTo = hand }).flame
 	local light = Instance.new("PointLight")
 	light.Name = "CandleLight"
 	light.Range = 9

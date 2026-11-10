@@ -13,6 +13,7 @@ local UserInputService = game:GetService("UserInputService")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
 local Route = require(Shared:WaitForChild("LevelRoute"))
+local CandleModel = require(Shared:WaitForChild("CandleModel"))
 local Speech = require(script.Parent:WaitForChild("Speech"))
 local Choices = require(script.Parent:WaitForChild("Choices"))
 local Ambience = require(script.Parent:WaitForChild("Ambience"))
@@ -476,29 +477,16 @@ function Kapitel2.run()
 	local ownCandleOff = false -- im Versteck ist die eigene Kerze aus
 	local lightOff = false -- Taste F: Kerze und Handylicht aus (dann sieht Sarp einen nicht)
 	local held = create("Model", { Name = "HeldCandle" })
-	local heldParts = {}
-	local function heldPiece(name, shape, size, color, material, offset)
-		local part = create("Part", {
-			Name = name,
-			Shape = shape,
-			Size = size,
-			Color = color,
-			Material = material,
-			Anchored = true,
-			CanCollide = false,
-			CanQuery = false,
-			CanTouch = false,
-			CastShadow = false,
-			Parent = held,
-		})
-		table.insert(heldParts, { part = part, offset = offset })
-		return part
-	end
-	local upright = CFrame.Angles(0, 0, math.rad(90))
-	heldPiece("CandleHolder", Enum.PartType.Cylinder, Vector3.new(0.08, 0.42, 0.42), Color3.fromRGB(120, 96, 52), Enum.Material.Metal, upright)
-	local heldWax = heldPiece("Candle", Enum.PartType.Cylinder, Vector3.new(0.55, 0.15, 0.15), Color3.fromRGB(225, 215, 190), Enum.Material.SmoothPlastic, CFrame.new(0, 0.31, 0) * upright)
+	-- detaillierte Kerze im Messinghalter (CandleModel.lua), Größe passend zum Bild
+	local heldInfo = CandleModel.build(held, CFrame.new(), 0.8)
+	local heldParts = heldInfo.parts
 	local heldRed = false
-	local heldFlame = heldPiece("CandleFlame", Enum.PartType.Ball, Vector3.new(0.1, 0.1, 0.1), Color3.fromRGB(255, 170, 70), Enum.Material.Neon, CFrame.new(0, 0.65, 0))
+	local heldFlame = heldInfo.flame
+	local heldFlameSize = heldFlame.Size
+	local heldFlameBase = {}
+	for _, part in heldInfo.flameParts do
+		heldFlameBase[part] = part.Transparency
+	end
 	local heldLight = create("PointLight", {
 		Name = "OwnCandleLight",
 		Range = 26,
@@ -580,11 +568,15 @@ function Kapitel2.run()
 			heldRed = red
 			heldLight.Color = red and Color3.fromRGB(255, 40, 30) or Color3.fromRGB(255, 180, 110)
 			heldLight.Range = red and 16 or 26
-			heldFlame.Color = red and Color3.fromRGB(255, 50, 36) or Color3.fromRGB(255, 170, 70)
-			heldWax.Color = red and Color3.fromRGB(110, 24, 22) or Color3.fromRGB(225, 215, 190)
+			CandleModel.recolor(heldInfo, red)
 		end
 		heldLight.Brightness = off and 0 or (red and 1.7 or 2.4) * flicker * math.max(candleDim, 0.35)
-		heldFlame.Transparency = off and 1 or 1 - math.clamp(candleDim * 1.2, 0, 1)
+		local fade = 1 - math.clamp(candleDim * 1.2, 0, 1)
+		for part, baseTransparency in heldFlameBase do
+			part.Transparency = off and 1 or math.max(baseTransparency, fade)
+		end
+		-- Flamme züngelt: wird im Takt des Flackerns etwas länger und kürzer
+		heldFlame.Size = heldFlameSize * Vector3.new(1, 0.85 + (flicker - 0.85) * 0.9, 1)
 	end
 
 	------------------------------------------------------------------ Kerzen
@@ -658,14 +650,31 @@ function Kapitel2.run()
 			if joint and torso then
 				local info = necks[model]
 				if not info then
+					local waist = torso:FindFirstChild("Waist")
 					info = { joint = joint, base = joint.C0, yaw = 0, pitch = 0 }
+					if waist and waist:IsA("Motor6D") then
+						info.waist, info.waistBase = waist, waist.C0
+					end
 					necks[model] = info
 				end
 				local look = model:GetAttribute("Look")
 				if look == "puppet" then
-					-- Kapitel 3 (Kapitel3.lua) bewegt den Kopf selbst
+					-- Kapitel 3 (Kapitel3.lua) bewegt den Kopf selbst: einmal gerade hinstellen
+					if not info.puppet then
+						info.puppet = true
+						pcall(function()
+							info.joint.C0 = info.base
+							if info.waist then
+								info.waist.C0 = info.waistBase
+							end
+						end)
+					end
 					continue
 				end
+				info.puppet = nil
+				-- Wohin schauen: gemessen an der Körpermitte (nicht am Oberkörper, der sich mitdreht).
+				-- Wie ein Mensch: der Oberkörper dreht ein Stück mit, der Kopf den Rest, nie zu weit.
+				local root = model:FindFirstChild("HumanoidRootPart") or torso
 				local yaw, pitch = 0, 0
 				local target
 				if look == "player" then
@@ -674,15 +683,24 @@ function Kapitel2.run()
 					target = model:GetAttribute("LookAt")
 				end
 				if target then
-					local relative = torso.CFrame:Inverse() * target - Vector3.new(0, torso.Size.Y / 2 + head.Size.Y / 2, 0)
-					yaw = math.clamp(math.atan2(-relative.X, -relative.Z), math.rad(-75), math.rad(75))
-					pitch = math.clamp(math.atan2(relative.Y, Vector2.new(relative.X, relative.Z).Magnitude), math.rad(-40), math.rad(40))
+					local eye = (head.CFrame * CFrame.new(0, head.Size.Y * 0.1, 0)).Position
+					local relative = root.CFrame:VectorToObjectSpace(target - eye)
+					yaw = math.clamp(math.atan2(-relative.X, -relative.Z), math.rad(-100), math.rad(100))
+					pitch = math.clamp(math.atan2(relative.Y, Vector2.new(relative.X, relative.Z).Magnitude), math.rad(-25), math.rad(25))
 				elseif look == "down" then
-					pitch = math.rad(-28)
+					pitch = math.rad(-24)
 				end
-				local blend = math.min(deltaTime * 4, 1)
+				-- weich nachziehen (langsamer als früher, wirkt ruhiger)
+				local blend = math.min(deltaTime * 2.5, 1)
 				info.yaw += (yaw - info.yaw) * blend
 				info.pitch += (pitch - info.pitch) * blend
+				local waistYaw = info.waist and math.clamp(info.yaw * 0.35, math.rad(-35), math.rad(35)) or 0
+				local neckYaw = math.clamp(info.yaw - waistYaw, math.rad(-60), math.rad(60))
+				if info.waist then
+					pcall(function()
+						info.waist.C0 = info.waistBase * CFrame.Angles(0, waistYaw, 0)
+					end)
+				end
 				-- beim Sprechen: kleines Nicken und Neigen im Rhythmus der Silben
 				local speaker = SPEAKER_OF[model.Name]
 				local amount, t, seed = talkAmount(speaker)
@@ -693,7 +711,7 @@ function Kapitel2.run()
 					tilt = math.sin(t * 1.3 + seed * 3) * 0.035 * amount
 				end
 				pcall(function()
-					info.joint.C0 = info.base * CFrame.Angles(info.pitch + nod, info.yaw + turn, tilt)
+					info.joint.C0 = info.base * CFrame.Angles(info.pitch + nod, neckYaw + turn, tilt)
 				end)
 				local face = faceOf(head)
 				if face then
@@ -1289,7 +1307,15 @@ function Kapitel2.run()
 				light.Brightness = info.base * flicker * candleDim
 				local flame = light.Parent
 				if flame.Name == "CandleFlame" then
-					flame.Transparency = 1 - math.clamp(candleDim * 1.2, 0, 1)
+					local fade = 1 - math.clamp(candleDim * 1.2, 0, 1)
+					flame.Transparency = math.max(flame:GetAttribute("BaseTransparency") or 0, fade)
+					local holder = flame.Parent
+					for _, name in { "CandleFlameCore", "CandleFlameBase" } do
+						local extra = holder and holder:FindFirstChild(name)
+						if extra then
+							extra.Transparency = math.max(extra:GetAttribute("BaseTransparency") or 0, fade)
+						end
+					end
 				end
 			else
 				candles[light] = nil
