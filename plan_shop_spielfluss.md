@@ -42,7 +42,7 @@ User sagte „im Spiel nur Herzen“ → Vorschlag: Revive nur im Game-Over-Bild
   - Gamepass „2× Coins“ für immer: ca. 149 R$
   - Gamepass „3× Coins“ für immer: ca. 299 R$ (ersetzt 2×, nicht stapeln)
   - optional Entwicklerprodukt „Coin Boost 30 min, 2×“: ca. 25 R$
-- Optional Münzpakete für Robux (100 / 500 / 1500 Münzen).
+- **Münzpakete für Robux** (Wunsch des Users, fest eingeplant): z. B. 100 / 500 / 1500 Münzen.
 - Münzen werden im DataStore gespeichert (gleiches Universum → Lobby und Spiel teilen die Daten).
 
 ---
@@ -93,6 +93,17 @@ ein `Highlight` (nur beim Käufer, auf dem Client). Vorschlag: Reichweite 60 Stu
   - **Survivor** (zerrissene, schmutzige Kleidung) – gratis, wenn man das Spiel einmal durchgespielt hat
   - **Golden Flashlight** – gratis, wenn man alle Sammelstücke gefunden hat
   - **Ohne-Tod-Abzeichen / Titel in der Lobby** („Untouched“) – gratis, Kapitel ohne Herz-Verlust
+
+### Skins für die Story-Figuren (Wunsch des Users, 11. November)
+
+Alle mit **Münzen** kaufbar (in der Lobby). Wer zu wenig Münzen hat, kann **Münzen extra mit Robux kaufen**
+(Münzpakete, siehe §2). **Wie die Skins aussehen, sagt der User noch** – bis dahin nicht bauen, nur Platz vorsehen.
+
+- **Sarp:** 2 zusätzliche Skins.
+- **Familie Wagner:** für **jedes** Familienmitglied 1 zusätzlicher Skin.
+- **Spielfigur:** 1 zusätzlicher Skin (zusätzlich zu den Ideen oben).
+- Ausgewählte Skins sieht man in der Story (Sarp/Familie so, wie der Käufer sie gewählt hat; im Duo: offene
+  Frage, wessen Auswahl gilt – Vorschlag: jeder sieht seine eigene Auswahl).
 
 ---
 
