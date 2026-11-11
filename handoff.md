@@ -1,6 +1,6 @@
 # Handoff – Horror-Spiel „Guesthouse“ (Roblox)
 
-Stand: 10. November 2026, Branch `claude/optimistic-bardeen-4tmohk`, Version `K2-2026-11-11g`.
+Stand: 11. November 2026, Branch `claude/optimistic-bardeen-4tmohk`, Version `K2-2026-11-11j`.
 Ganz oben stehen die neuesten Abschnitte (0000 = 10. Nov., 000 = realistische Familie, 00 = 9. Nov., 0 = Kapitel 3 + Audio);
 Abschnitte 2–8 beschreiben Kapitel 2 (Stand 6. Nov.).
 Diese Datei ist für einen **neuen Chat** gedacht: erst den Prompt unten kopieren, der Rest ist Nachschlagewerk.
@@ -44,6 +44,34 @@ hochladen; bis dahin viele kurze Sounds zu Sammeldateien zusammenfassen, im Spie
 Roblox Studio ist per MCP verbunden – du kannst Studio direkt steuern und testen.
 Fang damit an, dass du die Dateien liest und mir in 5 Sätzen sagst, wo wir stehen.
 ```
+
+---
+
+## 000000000. NEU 11. November (Version K2-2026-11-11j): VIP-Shop und Showroom in der Lobby
+
+- **Skins (11h):** goldener Smoking (`GoldSuit` mit `tuxedo`) für Richard, Tommy und die Spieler, Perlenkette
+  (`jewelry`) für Mrs. Wagner und Lucy, silberner Smoking, Gilded Horror verfeinert (Krone, Schulterpanzer,
+  Medaillon, Kette, Rubin-Gürtel), Shadow Sarp ganz schwarz (auch Kopf). Anzug-Teile messen die Körperform mit
+  Strahlen → Figur muss beim `Skins.apply` im workspace stehen.
+- **Ein Modell für beide Spieler:** mit Anzug-Skin nutzt `PlayerFigure.template` immer Spieler1.
+- **Lobby (`default.project.json`):** jetzt mit `Wagners`, `Sarp`, `Shop.Kleidung`.
+  - `Showroom.lua`: Pavillon auf der Ostseite (x 45–73, z −10–48), Familie im Golden Pack, Spieler-Anzüge,
+    4 Sarp-Skins, Sportwagen auf Drehscheibe, 12 Kleidungsstücke, 2 Shop-Terminals, „View in shop“ an jedem Stück.
+    Drehen nur beim Client (Tag `ShowroomSpin`).
+  - `ShopService.lua` + `PlayerData.lua`: Münzen, Besitz, Snacks, getragene Skins (DataStore, Attribute `Coins`,
+    `ShopData`, `PlayerSkin`). Ohne DataStore in Studio: 5000 Test-Münzen (nicht gespeichert).
+  - `Purchases.lua`: ProcessReceipt für Kasse UND Shop-Produkte. **Alle Robux-IDs sind noch 0** → Robux-Knöpfe
+    sagen „Robux purchases open soon!“. IDs im Creator Hub anlegen und in `ShopCatalog.lua` eintragen.
+  - `Shop.client.lua`: VIP-Shop-Menü (Featured, Skins, Clothing, Snacks, Passes, Coins), 3D-Vorschau, Kaufen mit
+    Münzen, Anziehen. Öffnen: Knopf unten links, Terminals, Kiosk-Verkäufer (Snacks), `VipShop:SetAttribute("Open", ...)`.
+  - Beim Einsteigen ins Auto wird der getragene Anzug angezogen (`CarQueue.lua`).
+- **Getestet in Studio** (lokale Datei, Lobby-Skripte von GitHub geladen): Showroom baut fehlerfrei (894 Teile,
+  ~1 s), Menü und Vorschau sichtbar, Kaufen/Anziehen/Ablehnungen geprüft, Anzug am Spieler geprüft.
+  **Nicht getestet:** echte Robux-Käufe, DataStore im veröffentlichten Spiel, Duo, Handy/kleine Bildschirme.
+- **Bekannt:** Richard und Sarp2 erscheinen in Studio-Play grau (Texture Pack lädt nicht, Upload-Zeitüberschreitungen);
+  in Vorschaufenstern nutzt der Shop darum `ShopCatalog.FIGURE_TEXTURES`.
+- **Noch offen aus dem Plan:** Gratis-Automat, Tagesangebot/Wochenend-Angebote, Abzeichen-Anzeige, Kleidung anziehen,
+  Snacks im Spiel benutzen, Münzen fürs Durchspielen (Spiel-Ort), Tod/Revive, Abfahrt-Ablauf.
 
 ---
 
