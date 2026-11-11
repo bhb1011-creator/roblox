@@ -142,10 +142,33 @@ ein `Highlight` (nur beim Käufer, auf dem Client). Vorschlag: Reichweite 60 Stu
 ### 5a. Ideen für Sarp-Skins (User wählt noch aus)
 
 - **Gewählt: Shadow Sarp** – fast ganz schwarz wie ein Schatten, glühende Augen, dunkler Rauch steigt auf.
-  Einzeln kaufbar für **5000 Münzen oder 599 R$**. **Offene Frage:** Ist Shadow Sarp auch einer der 3 Skins im
-  Sarp VIP Pack (499 R$)? Dann wäre das Pack günstiger als der Skin allein – evtl. so gewollt (Pack-Rabatt).
+  **Separat** (nicht im Sarp VIP Pack): **399 R$ oder 3500 Münzen**.
 - Die anderen 2 Sarp-Skins: Aussehen noch offen (Ideen: Hunter, Frost, Scarecrow, Blood Moon, Bone).
 - Keine Story-Hintergründe aus dem DLC verraten.
+
+### 5c. Starter Pack (nur einmal kaufbar)
+
+- Inhalt (Vorschlag): 3× Energy Bar, 2× Coffee, 1× Mint Gum, 500 Münzen, 1 Beanie.
+- Normalpreis 99 R$; **beim ersten Spielen rabattiert auf 50 R$** (Angebot erscheint beim ersten Besuch in der Lobby).
+
+### 5d. Gratis-Automat (nur einmal)
+
+- Beim ersten Besuch steht in der Lobby ein **Automat**: einmal ziehen = **ein gratis Accessoire/Kleidungsstück**.
+  Danach verschwindet er für diesen Spieler für immer (im DataStore gespeichert).
+- Enthält **alle** Kleidungsstücke und Accessoires, aber mit unterschiedlicher Chance (am Automaten angezeigt):
+  - Häufig (60 %): Schal, Beanie, Basecap, Lederhandschuhe
+  - Selten (30 %): Sonnenbrille, Wanderschuhe, Stirnlampe, Rucksack
+  - Sehr selten (9 %): Gelbe Regenjacke, Holzfällerhemd + Weste
+  - Legendär (1 %): Lederjacke, Daunenjacke
+- Gratis = keine Lootbox-Probleme (die Regeln gelten für bezahlte Zufallsdinge).
+
+### 5e. „Owned“ und Angebote
+
+- Alles, was man besitzt, zeigt im Shop **„OWNED“** (bzw. „EQUIPPED“ im Style-Modus); Gamepässe werden nicht
+  nochmal angeboten.
+- **Münz-Angebote:** jeden Tag ein „Daily Deal“ – ein Kleidungsstück/Accessoire 30 % billiger (wechselt täglich).
+- **Robux-Angebote:** z. B. Wochenend-Angebot „1500 Münzen + Coin Boost“ für 249 statt 299 R$; zeitlich begrenzte
+  Sarp-Skins (z. B. Blood Moon an Halloween) für später.
 
 ### 5b. Style-Modus im Shop
 
