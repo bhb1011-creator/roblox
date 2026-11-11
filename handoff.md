@@ -1,6 +1,6 @@
 # Handoff – Horror-Spiel „Guesthouse“ (Roblox)
 
-Stand: 10. November 2026, Branch `claude/optimistic-bardeen-4tmohk`, Version `K2-2026-11-11b`.
+Stand: 10. November 2026, Branch `claude/optimistic-bardeen-4tmohk`, Version `K2-2026-11-11c`.
 Ganz oben stehen die neuesten Abschnitte (0000 = 10. Nov., 000 = realistische Familie, 00 = 9. Nov., 0 = Kapitel 3 + Audio);
 Abschnitte 2–8 beschreiben Kapitel 2 (Stand 6. Nov.).
 Diese Datei ist für einen **neuen Chat** gedacht: erst den Prompt unten kopieren, der Rest ist Nachschlagewerk.
@@ -33,7 +33,7 @@ Regeln:
 - Sei ehrlich: sag klar, was ungetestet ist.
   Arbeite gründlich und sag, wenn etwas fertig ist.
 
-Stand: Version `K2-2026-11-11b`. Kapitel 1, 2 und 3 sind gebaut und laufen am Stück (`spiel.project.json`).
+Stand: Version `K2-2026-11-11c`. Kapitel 1, 2 und 3 sind gebaut und laufen am Stück (`spiel.project.json`).
 Alle Figuren sind realistische KI-Figuren: Familie Wagner (`assets/figuren`), Sarp in allen drei Stufen
 (Fremder, Monster im Haus, Biest; `assets/sarp`) und feste Spielerfiguren (`assets/spieler`; in der Lobby
 wird man beim Einsteigen ins Auto zur Figur). Im Testmenü (Taste O) gibt es eine „Charakterliste“.
@@ -59,6 +59,11 @@ Fang damit an, dass du die Dateien liest und mir in 5 Sätzen sagst, wo wir steh
   **Nach dieser Änderung ist Kapitel 1 nicht neu gemessen** (Studio drosselt auf 15 FPS, wenn das Fenster nicht vorne ist).
 - **11b:** Lobby noch dichter: `LOBBY_EXTRA = 1,5` in `Forest.lua` (Tannen rund um den Parkplatz und an der Zufahrt:
   190→513 und 130→351 statt 342/234). Nicht in Studio getestet (weder Aussehen noch Bildrate).
+- **11c (Lobby):** Dichter Waldring direkt hinter dem Zaun (`ring` in `Forest.build`, 468 echte Tannen 28–44 Studs + 260 Büsche):
+  man sieht nicht mehr in die Ferne. **Berge:** `Environment.buildMountains` stellt 26 Berge in zwei Reihen (950–1650 Studs)
+  rund um den Parkplatz – Vorlage `assets/natur/Berg.model.json` (kostenloses Creator-Store-Modell „Meshes/Mountain“,
+  Asset 3121332379, MeshPart mit Textur). Schild „GRILLPLATZ“ → „CAMPFIRE“. In Studio angesehen (sieht gut aus);
+  Bildrate nicht gemessen (Studio drosselt im Hintergrund auf 15 FPS).
 - Teile: Kapitel 1 22.838 → ~13.000, Kapitel 3 18.147 → ~13.000.
 - Messen: in Studio beim Spielen **Shift+F5** (Bildrate) – unter 60 FPS am Straßenrand in Kapitel 1 → `Forest.MESH_DENSITY`
   in `src/shared/Forest.lua` senken (z. B. 1,4).

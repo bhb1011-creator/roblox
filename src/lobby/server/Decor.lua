@@ -272,7 +272,7 @@ function Decor.build(parent)
 	buildSteppingStones(decor, { point(-16, 14), point(-32, 16), point(-36, 32), point(-45, 44.5) }, rng)
 	buildSteppingStones(decor, { point(16, 14), point(32, 16), point(38, 32), point(39, 55) }, rng)
 
-	buildWoodSign(decor, CFrame.lookAt(point(-9, -12), point(-9, -30)), "GRILLPLATZ")
+	buildWoodSign(decor, CFrame.lookAt(point(-9, -12), point(-9, -30)), "CAMPFIRE")
 end
 
 return Decor

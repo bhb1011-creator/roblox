@@ -320,6 +320,18 @@ function Forest.build(parent, isClear, roadDistance)
 	end
 	scatter(math.round(190 * Forest.treeFactor() * LOBBY_EXTRA), nearLot, 6, nil, pineWithUndergrowth)
 	scatter(math.round(130 * Forest.treeFactor() * LOBBY_EXTRA), roadArea, 5, nearRoad, pineWithUndergrowth)
+	-- Dichter Waldring direkt hinter dem Zaun: vom Parkplatz aus sieht man nicht mehr in die
+	-- Ferne, nur noch Wald – und darüber die Berge (Environment.buildMountains).
+	local function ring(x, z)
+		local lotDistance = math.max(math.abs(x) - 80, math.abs(z) - 70, 0)
+		return lotDistance > 2 and lotDistance < 45
+	end
+	scatter(math.round(260 * Forest.treeFactor()), { -130, 130, -120, 120 }, 3, ring, function(position)
+		buildPine(forest, position, rng:NextNumber(28, 44), rng)
+	end)
+	scatter(260, { -130, 130, -120, 120 }, 1, ring, function(position)
+		buildBush(forest, position, rng)
+	end)
 	-- weit weg: einfache Bäume (durchsichtige Nadeln wären bei so vielen Bäumen im Blick zu teuer)
 	scatter(math.round(320 * Forest.treeFactor()), everywhere, 8, farAway, function(position)
 		buildBlockPine(forest, position, rng:NextNumber(30, 50), rng)

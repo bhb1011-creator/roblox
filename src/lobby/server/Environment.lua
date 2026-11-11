@@ -107,4 +107,37 @@ function Environment.buildTerrain(roadSegments, roadWidth)
 	end
 end
 
+-- Berge in der Ferne: ein Gebirge rund um den Parkplatz, das über den Wald ragt.
+-- Vorlage: ReplicatedStorage.Natur.Berg (assets/natur/Berg.model.json, kostenloses
+-- Creator-Store-Modell "Meshes/Mountain", Asset 3121332379). Fehlt sie, gibt es keine Berge.
+function Environment.buildMountains(parent)
+	local natur = ReplicatedStorage:FindFirstChild("Natur")
+	local template = natur and natur:FindFirstChild("Berg")
+	if not (template and template:IsA("MeshPart")) or template.MeshId == "" then
+		warn("Lobby: keine Berg-Vorlage (ReplicatedStorage.Natur.Berg) – ohne Berge.")
+		return
+	end
+	local folder = Instance.new("Folder")
+	folder.Name = "Mountains"
+	local rng = Random.new(4242)
+	local ratio = template.Size.Y / template.Size.X -- Höhe zu Breite der Vorlage
+	local COUNT = 26
+	for index = 1, COUNT do
+		-- zwei Reihen: vorne kleinere Berge, dahinter die großen Gipfel
+		local back = index % 2 == 0
+		local angle = (index / COUNT) * math.pi * 2 + rng:NextNumber(-0.08, 0.08)
+		local distance = back and rng:NextNumber(1350, 1650) or rng:NextNumber(950, 1150)
+		local width = back and rng:NextNumber(1300, 1800) or rng:NextNumber(800, 1150)
+		local depth = width * rng:NextNumber(0.7, 1.1)
+		local height = width * ratio * rng:NextNumber(0.9, 1.25)
+		local mountain = template:Clone()
+		mountain.Name = "Mountain"
+		mountain.Size = Vector3.new(width, height, depth)
+		local center = Vector3.new(math.cos(angle) * distance, height / 2 - 40, math.sin(angle) * distance)
+		mountain.CFrame = CFrame.new(center) * CFrame.Angles(0, rng:NextNumber(0, math.pi * 2), 0)
+		mountain.Parent = folder
+	end
+	folder.Parent = parent
+end
+
 return Environment
