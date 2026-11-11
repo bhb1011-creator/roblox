@@ -6,6 +6,8 @@ local TeleportService = game:GetService("TeleportService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local PlayerFigure = require(ReplicatedStorage.Shared.PlayerFigure)
+local ShopCatalog = require(ReplicatedStorage.Shared.ShopCatalog)
+local Skins = require(ReplicatedStorage.Shared.Skins)
 local Car = require(script.Parent.Car)
 local Layout = require(script.Parent.Layout)
 local Road = require(script.Parent.Road)
@@ -240,6 +242,12 @@ local function setupCar(index, carConfig, parent)
 					player:SetAttribute("Umsteigen", true)
 					PlayerFigure.load(player)
 					player:SetAttribute("Umsteigen", nil)
+					-- getragenen Anzug-Skin anziehen (sieht der Mitspieler)
+					local skinId = player:GetAttribute("PlayerSkin")
+					if skinId and player.Character then
+						local skin = ShopCatalog.find(skinId)
+						Skins.apply(player.Character, skinId, skin and skin.options)
+					end
 					local newHumanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
 					if newHumanoid and not info.seat.Occupant then
 						player.Character:PivotTo(info.seat.CFrame + Vector3.new(0, 3, 0))

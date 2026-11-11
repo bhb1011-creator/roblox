@@ -14,6 +14,8 @@ local CarQueue = require(script.Parent.CarQueue)
 local LobbyBuilder = require(script.Parent.LobbyBuilder)
 local PlayerData = require(script.Parent.PlayerData)
 local Purchases = require(script.Parent.Purchases)
+local ShopService = require(script.Parent.ShopService)
+local Showroom = require(script.Parent.Showroom)
 
 local remotes = Instance.new("Folder")
 remotes.Name = "Remotes"
@@ -28,7 +30,10 @@ Players.PlayerAdded:Connect(PlayerData.load)
 for _, player in Players:GetPlayers() do
 	task.spawn(PlayerData.load, player)
 end
+ShopService.init()
 Purchases.init(notify)
 
 local lobby = LobbyBuilder.build()
 CarQueue.init(lobby.carsFolder, lobby.gate, notify)
+-- VIP-Showroom zuletzt bauen: viele Figuren, die Lobby soll vorher stehen
+task.spawn(Showroom.build, lobby.folder)

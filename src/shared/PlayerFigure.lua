@@ -44,6 +44,10 @@ function PlayerFigure.template(player)
 		return nil
 	end
 	local slot = slotOf(player)
+	-- Mit Anzug-Skin sehen Fahrer und Beifahrerin gleich aus: ein gemeinsames Modell (Spieler1)
+	if player:GetAttribute("PlayerSkin") then
+		slot = 1
+	end
 	local template = folder:FindFirstChild("Spieler" .. slot) or folder:FindFirstChild("Spieler1")
 	if template and template:IsA("Model") and template:FindFirstChildOfClass("Humanoid") and template:FindFirstChild("HumanoidRootPart") then
 		return template

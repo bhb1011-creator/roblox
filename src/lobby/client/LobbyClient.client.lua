@@ -1,5 +1,5 @@
 -- Alles, was nur der Spieler selbst sieht: Aussteigen-Knopf, Abblenden bei der
--- Abfahrt, Hinweise, Shop-Fenster und flackernde Lichter.
+-- Abfahrt, Hinweise, Kassen-Fenster und flackernde Lichter. (Der VIP-Shop: Shop.client.lua)
 
 -- Liegen im selben Studio-Ort auch die Skripte von Level 1, läuft nur das Level
 if game:GetService("StarterPlayer").StarterPlayerScripts:FindFirstChild("Level") then
@@ -238,12 +238,6 @@ local function addCard(list, order, title, description, buttonText, buttonColor,
 	end
 end
 
--- Kiosk: Snacks, die im Spiel helfen (Kauf mit Münzen kommt später)
-local shopWindow, shopList = createWindow("ShopWindow", "🛒 KIOSK", "Snacks that help you through the night")
-for index, snack in Config.SNACKS do
-	addCard(shopList, index, snack.title, snack.description, "🪙 " .. snack.price .. " · soon", Color3.fromRGB(80, 75, 70), nil)
-end
-
 -- Kasse: Robux-Produkte (Wiederbelebungen, Rebirths)
 local cashierWindow, cashierList, cashierInfo = createWindow("CashierWindow", "💰 CHECKOUT", "")
 for index, product in Config.PRODUCTS do
@@ -270,11 +264,8 @@ ProximityPromptService.PromptTriggered:Connect(function(prompt, triggeringPlayer
 	if triggeringPlayer ~= player then
 		return
 	end
-	if CollectionService:HasTag(prompt, "ShopPrompt") then
-		cashierWindow.Visible = false
-		shopWindow.Visible = true
-	elseif CollectionService:HasTag(prompt, "CashierPrompt") then
-		shopWindow.Visible = false
+	-- Kiosk (ShopPrompt) öffnet jetzt den VIP-Shop (Shop.client.lua)
+	if CollectionService:HasTag(prompt, "CashierPrompt") then
 		cashierWindow.Visible = true
 	end
 end)

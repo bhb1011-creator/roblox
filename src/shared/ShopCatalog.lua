@@ -35,48 +35,59 @@ ShopCatalog.CLOTHING = {
 
 -- Verbrauchsgegenstände (höchstens 3 pro Runde), Münzen ODER Robux
 ShopCatalog.ITEMS = {
-	{ id = "EnergyBar", title = "Energy Bar", description = "Run 20% faster for 20 seconds.", coins = 40, robux = 10 },
-	{ id = "Coffee", title = "Coffee", description = "Endless sprint for 60 seconds.", coins = 50, robux = 10 },
-	{ id = "MintGum", title = "Mint Gum", description = "Quiet steps for 60 seconds.", coins = 60, robux = 15 },
-	{ id = "GummyBears", title = "Gummy Bears", description = "An arrow shows the way for 20 seconds.", coins = 200, robux = 40 },
-	{ id = "XRayGlasses", title = "X-Ray Glasses", description = "See Sarp and every enemy through walls for 30 seconds.", coins = 400, robux = 75 },
+	{ id = "EnergyBar", title = "Energy Bar", description = "Run 20% faster for 20 seconds.", coins = 40, robux = 10, productId = 0, icon = "🍫" },
+	{ id = "Coffee", title = "Coffee", description = "Endless sprint for 60 seconds.", coins = 50, robux = 10, productId = 0, icon = "☕" },
+	{ id = "MintGum", title = "Mint Gum", description = "Quiet steps for 60 seconds.", coins = 60, robux = 15, productId = 0, icon = "🌿" },
+	{ id = "GummyBears", title = "Gummy Bears", description = "An arrow shows the way for 20 seconds.", coins = 200, robux = 40, productId = 0, icon = "🧸" },
+	{ id = "XRayGlasses", title = "X-Ray Glasses", description = "See Sarp and every enemy through walls for 30 seconds.", coins = 400, robux = 75, productId = 0, icon = "🕶️" },
 }
 
 -- Gamepässe (einmal kaufen, für immer)
 ShopCatalog.GAMEPASSES = {
-	{ id = "ThreeHearts", title = "3 Hearts", description = "Always start with 3 hearts instead of 2.", robux = 249, passId = 0 },
-	{ id = "DoubleCoins", title = "2x Coins", description = "Earn double coins forever.", robux = 149, passId = 0 },
-	{ id = "StrongFlashlight", title = "Strong Flashlight", description = "A much brighter, wider flashlight.", robux = 149, passId = 0 },
-	{ id = "Supervision", title = "Supervision", description = "Items you can pick up glow through walls.", robux = 499, passId = 0 },
-	{ id = "VipCar", title = "VIP Car", description = "Your own paint, radio and horn in the lobby car.", robux = 199, passId = 0 },
+	{ id = "ThreeHearts", title = "3 Hearts", description = "Always start with 3 hearts instead of 2.", robux = 249, passId = 0, icon = "❤️" },
+	{ id = "DoubleCoins", title = "2x Coins", description = "Earn double coins forever.", robux = 149, passId = 0, icon = "🪙" },
+	{ id = "StrongFlashlight", title = "Strong Flashlight", description = "A much brighter, wider flashlight.", robux = 149, passId = 0, icon = "🔦" },
+	{ id = "Supervision", title = "Supervision", description = "Items you can pick up glow through walls.", robux = 499, passId = 0, icon = "👁️" },
+	{ id = "VipCar", title = "VIP Car", description = "Your own paint, radio and horn in the lobby car.", robux = 199, passId = 0, icon = "🚗" },
 }
 
 -- Münzpakete und Boost (Entwicklerprodukte)
 ShopCatalog.COIN_PACKS = {
-	{ coins = 200, robux = 49, productId = 0 },
-	{ coins = 500, robux = 99, productId = 0 },
-	{ coins = 1500, robux = 249, productId = 0 },
-	{ coins = 5000, robux = 749, productId = 0 },
+	{ id = "Coins200", coins = 200, robux = 49, productId = 0 },
+	{ id = "Coins500", coins = 500, robux = 99, productId = 0 },
+	{ id = "Coins1500", coins = 1500, robux = 249, productId = 0, tag = "POPULAR" },
+	{ id = "Coins5000", coins = 5000, robux = 749, productId = 0, tag = "BEST VALUE" },
 }
-ShopCatalog.COIN_BOOST = { title = "Coin Boost", description = "Double coins for a while.", robux = 50, productId = 0 }
+ShopCatalog.COIN_BOOST = { id = "CoinBoost", title = "Coin Boost", description = "Double coins for a while.", robux = 50, productId = 0 }
 
--- Skins (Rezepte in Skins.lua)
+-- Skins (Rezepte in Skins.lua). `slot` = wer ihn trägt (Player: Fahrer UND Beifahrerin mit einem
+-- gemeinsamen Modell, Spieler1). `preview` = Figur für Vorschau und Showroom.
+local PLAYER_PREVIEW = { folder = "Spieler", name = "Spieler1", height = 5.9 }
+local SARP_PREVIEW = { folder = "Sarp", name = "Sarp2", height = 6.9 }
 ShopCatalog.SKINS = {
-	{ id = "SilverSuit", title = "Silver Suit", figures = "Player", coins = 2500, robux = 249 },
-	{ id = "GoldSuit", title = "Golden Suit", figures = "Everyone", pack = "GoldenPack" },
-	{ id = "GildedHorror", title = "Gilded Horror", figures = "Sarp", pack = "SarpVip" },
-	{ id = "CrimsonCount", title = "Crimson Count", figures = "Sarp", pack = "SarpVip" },
-	{ id = "ObsidianKing", title = "Obsidian King", figures = "Sarp", pack = "SarpVip" },
-	{ id = "ShadowSarp", title = "Shadow Sarp", figures = "Sarp", coins = 3500, robux = 399 },
+	{ id = "SilverSuit", title = "Silver Suit", description = "A silver tuxedo for driver and passenger.", slot = "Player", coins = 2500, robux = 249, productId = 0, rarity = "Epic", preview = PLAYER_PREVIEW },
+	{ id = "GoldSuit", title = "Golden Suit", description = "Golden tuxedos for you and the whole Wagner family.", slot = "Player", pack = "GoldenPack", rarity = "Legendary", preview = PLAYER_PREVIEW, options = { tuxedo = true } },
+	{ id = "GildedHorror", title = "Gilded Horror", description = "Antique gold, a crown of thorns and a burning ruby.", slot = "Sarp", pack = "SarpVip", rarity = "Legendary", preview = SARP_PREVIEW },
+	{ id = "CrimsonCount", title = "Crimson Count", description = "Blood-red velvet, golden epaulettes and a long cape.", slot = "Sarp", pack = "SarpVip", rarity = "Legendary", preview = SARP_PREVIEW },
+	{ id = "ObsidianKing", title = "Obsidian King", description = "A body of black glass under a tall golden crown.", slot = "Sarp", pack = "SarpVip", rarity = "Legendary", preview = SARP_PREVIEW },
+	{ id = "ShadowSarp", title = "Shadow Sarp", description = "Pitch black and smoking, like a living shadow.", slot = "Sarp", coins = 3500, robux = 399, productId = 0, rarity = "Epic", preview = SARP_PREVIEW },
 }
 
-ShopCatalog.SPORTS_CAR = { title = "Sports Car", coins = 3000, robux = 399 }
+-- Golden Pack: so sieht die Familie aus (Showroom und Vorschau)
+ShopCatalog.FAMILY_GOLD = {
+	{ folder = "Wagners", name = "MrWagner", height = 5.9, options = { tuxedo = true }, title = "Richard" },
+	{ folder = "Wagners", name = "MrsWagner", height = 5.3, options = { jewelry = true }, title = "Mrs. Wagner" },
+	{ folder = "Wagners", name = "Lucy", height = 4.3, options = { jewelry = true, barefoot = true }, title = "Lucy" },
+	{ folder = "Wagners", name = "Tommy", height = 3.6, options = { tuxedo = true }, title = "Tommy" },
+}
+
+ShopCatalog.SPORTS_CAR = { id = "SportsCar", title = "Sports Car", description = "Low, wide and black with gold. Drive to the guesthouse in style.", coins = 3000, robux = 399, productId = 0, rarity = "Legendary" }
 
 -- Packs (nur Robux, besonders präsentiert)
 ShopCatalog.PACKS = {
-	{ id = "GoldenPack", title = "Golden Pack", description = "Golden suits for everyone, gold badge and the sports car.", robux = 999, badge = "Gold" },
-	{ id = "SarpVip", title = "Sarp VIP Pack", description = "Three luxury Sarp skins, VIP badge and the sports car.", robux = 499, badge = "SarpVip" },
-	{ id = "Everything", title = "Everything Bundle", description = "Golden Pack and Sarp VIP Pack together.", robux = 1249 },
+	{ id = "GoldenPack", title = "Golden Pack", description = "Golden suits for everyone, gold badge and the sports car.", robux = 999, badge = "Gold", productId = 0, grants = { "GoldSuit", "SportsCar" } },
+	{ id = "SarpVip", title = "Sarp VIP Pack", description = "Three luxury Sarp skins, VIP badge and the sports car.", robux = 499, badge = "SarpVip", productId = 0, grants = { "GildedHorror", "CrimsonCount", "ObsidianKing", "SportsCar" } },
+	{ id = "Everything", title = "Everything Bundle", description = "Golden Pack and Sarp VIP Pack together.", robux = 1249, productId = 0, grants = { "GoldSuit", "GildedHorror", "CrimsonCount", "ObsidianKing", "SportsCar" }, tag = "SAVE 249 R$" },
 }
 
 ShopCatalog.STARTER_PACK = {
@@ -84,6 +95,23 @@ ShopCatalog.STARTER_PACK = {
 	description = "3 Energy Bars, 2 Coffee, 1 Mint Gum, 500 coins and a Beanie.",
 	robux = 99,
 	firstTimeRobux = 50,
+	productId = 0,
+	firstTimeProductId = 0,
 }
+
+-- Suchen: ShopCatalog.find(id) -> Eintrag, Art ("Skin", "Clothing", "Item", "Pass", "Pack", "Car")
+function ShopCatalog.find(id)
+	for kind, list in { Skin = ShopCatalog.SKINS, Clothing = ShopCatalog.CLOTHING, Item = ShopCatalog.ITEMS, Pass = ShopCatalog.GAMEPASSES, Pack = ShopCatalog.PACKS, CoinPack = ShopCatalog.COIN_PACKS } do
+		for _, entry in list do
+			if entry.id == id then
+				return entry, kind
+			end
+		end
+	end
+	if id == ShopCatalog.SPORTS_CAR.id then
+		return ShopCatalog.SPORTS_CAR, "Car"
+	end
+	return nil
+end
 
 return ShopCatalog

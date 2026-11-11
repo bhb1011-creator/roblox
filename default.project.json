@@ -11,6 +11,18 @@
       },
       "Natur": {
         "$path": "assets/natur"
+      },
+      "Wagners": {
+        "$path": "assets/figuren"
+      },
+      "Sarp": {
+        "$path": "assets/sarp"
+      },
+      "Shop": {
+        "$className": "Folder",
+        "Kleidung": {
+          "$path": "assets/shop/Kleidung"
+        }
       }
     },
     "ServerScriptService": {
