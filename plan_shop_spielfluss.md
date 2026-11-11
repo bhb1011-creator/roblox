@@ -10,7 +10,7 @@ die Kasse soll sie per `MarketplaceService:GetProductInfo` holen statt fest im C
 
 - **Herzen auf 2 senken** (jetzt `MAX_HEARTS = 3` in `src/kapitel2/server/Kapitel2.lua`). Gilt in **allen Kapiteln**
   (bisher gibt es Herzen nur in Kapitel 2).
-- **Gamepass „3 Hearts“**: wer ihn hat, hat immer 3 Herzen statt 2. Kaufbar in der Lobby. Vorschlag: 149 R$.
+- **Gamepass „3 Hearts“**: wer ihn hat, hat immer 3 Herzen statt 2. Kaufbar in der Lobby. 249 R$.
 - **Alle Herzen weg = Game Over.** Dann zwei Möglichkeiten:
   1. **Zurück in die Lobby** und von vorne starten (kostenlos).
   2. **Revive für 30 R$**: weiterspielen genau dort, wo man gestorben ist, mit vollen Herzen.
@@ -30,19 +30,22 @@ User sagte „im Spiel nur Herzen“ → Vorschlag: Revive nur im Game-Over-Bild
 
 ---
 
-## 2. Münzen
+## 2. Münzen (Entscheidung des Users, 11. November)
 
-- Man **verdient Münzen langsam** durch Spielen, oder kauft einen **Münz-Multiplikator** mit Robux.
-- Vorschlag Verdienst:
-  - Kapitel 1 geschafft: 30 · Kapitel 2: 80 · Kapitel 3: 120
-  - Kapitel ohne Herz-Verlust: +50 %
-  - versteckte Sammelstücke in den Kapiteln (Fotos, Zeitungsausschnitte, Tagebuchseiten): je 10
-  - täglicher Bonus beim ersten Spiel des Tages: 20
-- **Münz-Multiplikator (Robux):**
-  - Gamepass „2× Coins“ für immer: ca. 149 R$
-  - Gamepass „3× Coins“ für immer: ca. 299 R$ (ersetzt 2×, nicht stapeln)
-  - optional Entwicklerprodukt „Coin Boost 30 min, 2×“: ca. 25 R$
-- **Münzpakete für Robux** (Wunsch des Users, fest eingeplant): z. B. 100 / 500 / 1500 Münzen.
+- Münzen gibt es **nur, wenn man das ganze Spiel schafft: 150 Münzen**. Keine Münzen pro Kapitel.
+- **Münz-Boni** (z. B. ohne Herz-Verlust, Sammelstücke, täglicher Bonus) kommen **später** dazu – noch offen.
+- **Gamepass „2× Coins“**: 149 R$ (für immer doppelte Münzen). „3× Coins“ ist gestrichen.
+- **Coin Boost**: 50 R$ (Entwicklerprodukt) für doppelte Münzen auf Zeit. **Offene Frage:** wie lange
+  (Vorschlag: 1 Stunde oder die nächste geschaffte Runde).
+- **Münzpakete für Robux** (Entwicklerprodukte):
+
+| Paket | Robux |
+|---|---|
+| 200 Münzen | 49 |
+| 500 Münzen | 99 |
+| 1500 Münzen | 249 |
+| 5000 Münzen | 749 |
+
 - Münzen werden im DataStore gespeichert (gleiches Universum → Lobby und Spiel teilen die Daten).
 
 ---
@@ -73,11 +76,11 @@ und die Liste in §6.
 
 | Gamepass | Wirkung | Vorschlag |
 |---|---|---|
-| **3 Hearts** | immer 3 statt 2 Herzen | 149 R$ |
-| **Supervision** | Gegenstände zum Einsammeln leuchten durch Wände (Umriss), an/aus schaltbar | 199 R$ |
-| **2× Coins** (Wunsch des Users: auf jeden Fall) / optional **3× Coins** | Münz-Multiplikator | 149 / 299 R$ |
+| **3 Hearts** | immer 3 statt 2 Herzen | 249 R$ |
+| **Supervision** | Gegenstände zum Einsammeln leuchten durch Wände (Umriss), an/aus schaltbar | 499 R$ |
+| **2× Coins** | doppelte Münzen für immer | 149 R$ |
 | **Strong Flashlight** (Wunsch des Users) | Handy-Taschenlampe dauerhaft deutlich heller und weiter (z. B. Reichweite 44 → 70, breiterer Kegel) | 149 R$ |
-| **VIP Car** | eigene Lackfarbe, eigener Radiosender, Hupe im Lobby-Auto | 99 R$ |
+| **VIP Car** | eigene Lackfarbe, eigener Radiosender, Hupe im Lobby-Auto | 199 R$ |
 | **Flashlight Skins** | Farbe/Lichtkegel der Taschenlampe (nur Aussehen) | 49–99 R$ |
 
 **Supervision** genauer: Sammelbare Gegenstände (Kerze, Chemikalien, Pulver, Schlüssel, Sammelstücke …) bekommen
