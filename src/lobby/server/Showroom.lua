@@ -79,15 +79,17 @@ local function plaque(parent, position, width, title, subtitle, accent)
 end
 
 local function downlight(parent, position, target, range, brightness, shadows)
-	local lamp = Parts.new("Part", { Name = "Downlight", Size = Vector3.new(0.8, 0.15, 0.8), CFrame = CFrame.lookAt(position, target) * CFrame.Angles(math.rad(90), 0, 0), Color = Color3.fromRGB(255, 240, 210), Material = Enum.Material.Neon, CanCollide = false, Parent = parent })
+	-- flache Deckenleuchte; das Licht fällt schräg auf das Ziel
+	local lamp = Parts.new("Part", { Name = "Downlight", Size = Vector3.new(0.9, 0.08, 0.9), CFrame = CFrame.new(position), Color = Color3.fromRGB(255, 244, 225), Material = Enum.Material.Neon, CanCollide = false, Parent = parent })
+	local aim = Parts.new("Part", { Name = "DownlightAim", Size = Vector3.new(0.2, 0.2, 0.2), CFrame = CFrame.lookAt(position - Vector3.new(0, 0.2, 0), target), Transparency = 1, CanCollide = false, Parent = parent })
 	local light = Instance.new("SpotLight")
-	light.Face = Enum.NormalId.Bottom
-	light.Angle = 60
+	light.Face = Enum.NormalId.Front
+	light.Angle = 70
 	light.Range = range
 	light.Brightness = brightness
 	light.Color = Color3.fromRGB(255, 236, 205)
 	light.Shadows = shadows or false
-	light.Parent = lamp
+	light.Parent = aim
 	return lamp
 end
 
@@ -127,22 +129,22 @@ local function buildPavilion(folder)
 		Parts.column({ Name = "ColumnBase", Color = DARK, Parent = folder }, 0.5, 1.4, CFrame.new(MIN_X + 0.6, FLOOR_Y, z))
 	end
 	-- Schild vorne am Dach
-	local fascia = Parts.new("Part", { Name = "Fascia", Size = Vector3.new(0.5, 2.4, length + 2), CFrame = CFrame.new(MIN_X - 1.75, ROOF_Y + 0.3, CENTER_Z), Color = DARK, Parent = folder })
-	Parts.new("Part", { Name = "FasciaTrim", Size = Vector3.new(0.55, 0.15, length + 2), CFrame = CFrame.new(MIN_X - 1.75, ROOF_Y - 0.85, CENTER_Z), Color = GOLD, Material = Enum.Material.Neon, CanCollide = false, Parent = folder })
+	local fascia = Parts.new("Part", { Name = "Fascia", Size = Vector3.new(0.5, 2.4, length + 2), CFrame = CFrame.new(MIN_X - 2.35, ROOF_Y + 0.3, CENTER_Z), Color = DARK, Parent = folder })
+	Parts.new("Part", { Name = "FasciaTrim", Size = Vector3.new(0.55, 0.15, length + 2), CFrame = CFrame.new(MIN_X - 2.35, ROOF_Y - 0.85, CENTER_Z), Color = GOLD, Material = Enum.Material.Neon, CanCollide = false, Parent = folder })
 	local gui = Parts.surfaceGui(fascia, Enum.NormalId.Left, true)
 	gui.PixelsPerStud = 30
 	Parts.text(gui, { Text = "★  VIP SHOWROOM  ★", Font = Enum.Font.GothamBlack, TextColor3 = GOLD, Size = UDim2.fromScale(0.9, 0.86), Position = UDim2.fromScale(0.05, 0.07) })
 
 	-- Licht: Spots auf die Figuren und auf das Auto
 	for z = MIN_Z + 4, MAX_Z - 4, 7 do
-		downlight(folder, Vector3.new(64, ROOF_Y - 0.2, z), Vector3.new(68.5, FLOOR_Y, z), 20, 1.6, false)
+		downlight(folder, Vector3.new(63, ROOF_Y - 0.1, z), Vector3.new(68.5, FLOOR_Y + 3, z), 22, 2.4, false)
 	end
 	downlight(folder, Vector3.new(55, ROOF_Y - 0.2, CENTER_Z - 5), Vector3.new(55, FLOOR_Y, CENTER_Z - 3), 22, 1.4, true)
 	downlight(folder, Vector3.new(55, ROOF_Y - 0.2, CENTER_Z + 5), Vector3.new(55, FLOOR_Y, CENTER_Z + 3), 22, 1.4, false)
 	local fill = Parts.new("Part", { Name = "Fill", Size = Vector3.new(1, 1, 1), CFrame = CFrame.new(52, ROOF_Y - 2, CENTER_Z), Transparency = 1, CanCollide = false, Parent = folder })
 	local pointLight = Instance.new("PointLight")
-	pointLight.Range = 28
-	pointLight.Brightness = 0.6
+	pointLight.Range = 40
+	pointLight.Brightness = 1.2
 	pointLight.Color = Color3.fromRGB(255, 225, 185)
 	pointLight.Parent = fill
 end
@@ -209,7 +211,7 @@ local function buildCar(folder)
 	local spin = Instance.new("Model")
 	spin.Name = "Turntable"
 	Parts.column({ Name = "Disc", Color = Color3.fromRGB(30, 30, 34), Material = Enum.Material.Metal, Parent = spin }, 0.3, 17, CFrame.new(center))
-	Parts.column({ Name = "DiscRing", Color = GOLD, Material = Enum.Material.Neon, CanCollide = false, Parent = spin }, 0.05, 17.3, CFrame.new(center + Vector3.new(0, 0.27, 0)))
+	Parts.column({ Name = "DiscRing", Color = GOLD, Material = Enum.Material.Neon, CanCollide = false, Parent = spin }, 0.12, 17.3, CFrame.new(center + Vector3.new(0, 0.08, 0)))
 	SportsCar.build(spin, CFrame.new(center + Vector3.new(0, 0.3, 0)) * CFrame.Angles(0, math.rad(-35), 0))
 	spin:SetAttribute("SpinCenter", center)
 	spin:SetAttribute("SpinSpeed", 0.25)

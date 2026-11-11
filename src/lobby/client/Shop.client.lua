@@ -134,7 +134,7 @@ for _, pass in ShopCatalog.GAMEPASSES do
 	add({ id = pass.id, kind = "Pass", tab = "Passes", title = pass.title, description = pass.description, robux = pass.robux, passId = pass.passId, rarity = "Epic", icon = pass.icon, once = true })
 end
 for _, pack in ShopCatalog.COIN_PACKS do
-	add({ id = pack.id, kind = "CoinPack", tab = "Coins", title = money(pack.coins) .. " Coins", description = "Spend coins on skins, clothing and snacks.", robux = pack.robux, productId = pack.productId, rarity = pack.coins >= 1500 and "Legendary" or "Rare", icon = "🪙", tag = pack.tag })
+	add({ id = pack.id, kind = "CoinPack", tab = "Coins", title = money(pack.coins) .. " Coins", description = "Spend coins on skins, clothing and snacks.", robux = pack.robux, productId = pack.productId, rarity = pack.coins >= 1500 and "Legendary" or "Rare", icon = "💰", tag = pack.tag })
 end
 local boost = ShopCatalog.COIN_BOOST
 add({ id = boost.id, kind = "Boost", tab = "Coins", title = boost.title, description = boost.description, robux = boost.robux, productId = boost.productId, rarity = "Epic", icon = "⚡" })
@@ -145,7 +145,7 @@ local TABS = {
 	{ id = "Clothing", title = "Clothing", icon = "🧥" },
 	{ id = "Snacks", title = "Snacks", icon = "🍫" },
 	{ id = "Passes", title = "Passes", icon = "🎟️" },
-	{ id = "Coins", title = "Coins", icon = "🪙" },
+	{ id = "Coins", title = "Coins", icon = "💰" },
 }
 
 local function inTab(entry, tab)
@@ -289,7 +289,7 @@ local hudCoins = label({
 	BackgroundTransparency = 1,
 	Font = Enum.Font.GothamBold,
 	TextSize = 20,
-	Text = "🪙 0",
+	Text = "● 0",
 	TextColor3 = C.gold,
 	Parent = hud,
 })
@@ -356,7 +356,7 @@ local coinPill = create("TextButton", {
 	BackgroundColor3 = C.panel2,
 	AutoButtonColor = true,
 	Font = Enum.Font.GothamBold,
-	Text = "🪙 0   +",
+	Text = "● 0   +",
 	TextSize = 18,
 	TextColor3 = C.gold,
 	ZIndex = 12,
@@ -484,10 +484,10 @@ local function priceLine(entry)
 		return (entry.slot and state.equipped[entry.slot] == entry.id) and "EQUIPPED" or "OWNED", C.owned
 	end
 	if entry.kind == "Item" and (state.items[entry.id] or 0) > 0 then
-		return "🪙 " .. money(entry.coins) .. "  ·  x" .. state.items[entry.id], C.gold
+		return "● " .. money(entry.coins) .. "  ·  x" .. state.items[entry.id], C.gold
 	end
 	if entry.coins then
-		return "🪙 " .. money(entry.coins), C.gold
+		return "● " .. money(entry.coins), C.gold
 	end
 	if entry.pack then
 		local pack = byId[entry.pack]
@@ -718,7 +718,7 @@ local function renderButtons(entry)
 	end
 	if entry.coins then
 		local afford = state.coins >= entry.coins
-		actionButton("BUY  🪙 " .. money(entry.coins), afford and C.coins or Color3.fromRGB(70, 62, 50), 1, function()
+		actionButton("BUY  ● " .. money(entry.coins), afford and C.coins or Color3.fromRGB(70, 62, 50), 1, function()
 			if state.coins < entry.coins then
 				say("Not enough coins: you need " .. money(entry.coins - state.coins) .. " more.", Color3.fromRGB(240, 120, 110))
 				return
@@ -798,6 +798,18 @@ end
 hudButton.Activated:Connect(function()
 	setOpen(true, "Featured")
 end)
+-- Andere Skripte können den Shop öffnen: VipShop:SetAttribute("Open", "Snacks") (Tab oder Artikel-ID)
+gui:GetAttributeChangedSignal("Open"):Connect(function()
+	local target = gui:GetAttribute("Open")
+	if type(target) == "string" and target ~= "" then
+		gui:SetAttribute("Open", nil)
+		if byId[target] then
+			setOpen(true, nil, target)
+		else
+			setOpen(true, target)
+		end
+	end
+end)
 closeButton.Activated:Connect(function()
 	setOpen(false)
 end)
@@ -824,8 +836,8 @@ end)
 -- Daten geändert (Kauf, Anziehen): alles neu anzeigen
 local function onDataChanged()
 	readData()
-	hudCoins.Text = "🪙 " .. money(state.coins)
-	coinPill.Text = "🪙 " .. money(state.coins) .. "   +"
+	hudCoins.Text = "● " .. money(state.coins)
+	coinPill.Text = "● " .. money(state.coins) .. "   +"
 	testNote.Visible = player:GetAttribute("TestCoins") == true
 	if open then
 		for _, card in cards do

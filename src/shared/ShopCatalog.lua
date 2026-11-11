@@ -45,7 +45,7 @@ ShopCatalog.ITEMS = {
 -- Gamepässe (einmal kaufen, für immer)
 ShopCatalog.GAMEPASSES = {
 	{ id = "ThreeHearts", title = "3 Hearts", description = "Always start with 3 hearts instead of 2.", robux = 249, passId = 0, icon = "❤️" },
-	{ id = "DoubleCoins", title = "2x Coins", description = "Earn double coins forever.", robux = 149, passId = 0, icon = "🪙" },
+	{ id = "DoubleCoins", title = "2x Coins", description = "Earn double coins forever.", robux = 149, passId = 0, icon = "💰" },
 	{ id = "StrongFlashlight", title = "Strong Flashlight", description = "A much brighter, wider flashlight.", robux = 149, passId = 0, icon = "🔦" },
 	{ id = "Supervision", title = "Supervision", description = "Items you can pick up glow through walls.", robux = 499, passId = 0, icon = "👁️" },
 	{ id = "VipCar", title = "VIP Car", description = "Your own paint, radio and horn in the lobby car.", robux = 199, passId = 0, icon = "🚗" },
