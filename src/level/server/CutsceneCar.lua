@@ -723,13 +723,16 @@ function CutsceneCar.build(parent)
 		part("RoofButton", Vector3.new(0.1, 0.03, 0.08), CFrame.new(-0.15 + i * 0.13 - 0.06, GLASS_TOP - 0.22, ROOF_FRONT + 0.45), Color3.fromRGB(40, 40, 44))
 	end
 	local mapLight = part("MapLight", Vector3.new(0.5, 0.04, 0.2), CFrame.new(0, GLASS_TOP - 0.22, ROOF_FRONT + 0.72), WARM, M.Neon)
-	Parts.light("SpotLight", mapLight, { Face = Enum.NormalId.Bottom, Range = 7, Angle = 90, Brightness = 0.8, Color = WARM })
+	Parts.light("SpotLight", mapLight, { Face = Enum.NormalId.Bottom, Range = 7, Angle = 100, Brightness = 1, Color = WARM, Shadows = true })
 	-- Deckenleuchte in der Mitte und Leselampen hinten (aus)
 	part("DomeFrame", Vector3.new(1.05, 0.05, 0.65), CFrame.new(0, GLASS_TOP - 0.06, 2.4), Color3.fromRGB(150, 146, 140))
 	local dome = part("DomeLight", Vector3.new(0.9, 0.08, 0.5), CFrame.new(0, GLASS_TOP - 0.08, 2.4), WARM, M.Neon)
-	Parts.light("PointLight", dome, { Range = 9, Brightness = 1.1, Color = Color3.fromRGB(255, 215, 160) })
+	-- Innenlicht ist an: warmes Licht mit Schatten (Sitze und Lenkrad werfen Schatten,
+	-- und es scheint nicht durch Dach und Türen nach draußen)
+	Parts.light("PointLight", dome, { Range = 10, Brightness = 1.4, Color = Color3.fromRGB(255, 215, 160), Shadows = true })
 	for _, side in { -1, 1 } do
-		part("RearReadingLight", Vector3.new(0.3, 0.04, 0.2), CFrame.new(side * 1.6, GLASS_TOP - 0.07, 4.6), Color3.fromRGB(200, 196, 186))
+		local reading = part("RearReadingLight", Vector3.new(0.3, 0.04, 0.2), CFrame.new(side * 1.6, GLASS_TOP - 0.07, 4.6), WARM, M.Neon)
+		Parts.light("SpotLight", reading, { Face = Enum.NormalId.Bottom, Range = 6, Angle = 80, Brightness = 0.5, Color = WARM, Shadows = true })
 	end
 
 	------------------------------------------------------------------ Rückspiegel und Duftbaum

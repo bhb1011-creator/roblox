@@ -314,7 +314,8 @@ local function buildStreetLamps(parent, segments)
 				Material = Enum.Material.Neon,
 				Parent = folder,
 			})
-			Parts.light("SpotLight", lens, { Face = Enum.NormalId.Bottom, Range = 48, Angle = 120, Brightness = 2.4, Color = sodium })
+			-- Schatten an: sonst scheint das Laternenlicht durch das Autodach in den Innenraum
+			Parts.light("SpotLight", lens, { Face = Enum.NormalId.Bottom, Range = 48, Angle = 120, Brightness = 2.4, Color = sodium, Shadows = true })
 			-- jede fünfte Laterne flackert ab und zu
 			if count % 5 == 0 then
 				CollectionService:AddTag(lens, "FlickerLamp")
