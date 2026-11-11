@@ -97,10 +97,12 @@ local function figure(templateFolder, templateName, position, skinId, skinOption
 	end
 	local model = RealFigure.prepare(template, { anchor = true, height = HEIGHTS[templateName] })
 	model.Name = templateName .. (skinId and ("_" .. skinId) or "")
+	model:PivotTo(CFrame.new(position) * CFrame.Angles(0, math.pi, 0))
+	-- erst in den workspace, dann den Skin: Anzug & Co. messen die echte Körperform mit Strahlen
+	model.Parent = folder
 	if skinId then
 		Skins.apply(model, skinId, skinOptions)
 	end
-	model:PivotTo(CFrame.new(position) * CFrame.Angles(0, math.pi, 0))
 	-- genau auf das Podest stellen: tiefsten sichtbaren Punkt messen und anheben
 	local lowest = math.huge
 	for _, part in model:GetDescendants() do
@@ -114,7 +116,6 @@ local function figure(templateFolder, templateName, position, skinId, skinOption
 	if lowest < math.huge then
 		model:PivotTo(model:GetPivot() + Vector3.new(0, position.Y - lowest, 0))
 	end
-	model.Parent = folder
 	return model
 end
 
@@ -152,27 +153,25 @@ local function figureRow(z, entries, spacing)
 end
 
 ------------------------------------------------------------------ Reihe 1: Spieler
-sectionTitle(48, "PLAYER SKINS", "Silver Suit: 2,500 coins or 249 R$   ·   Golden Suit: Golden Pack")
+sectionTitle(48, "PLAYER SKINS", "Driver and passenger share one skin model   ·   Silver Suit: 2,500 coins or 249 R$   ·   Golden Suit: Golden Pack")
 figureRow(48, {
 	{ "Spieler", "Spieler1", nil, "DRIVER" },
-	{ "Spieler", "Spieler1", "SilverSuit", "SILVER SUIT", { tie = true } },
-	{ "Spieler", "Spieler1", "GoldSuit", "GOLDEN SUIT", { tie = true } },
 	{ "Spieler", "Spieler2", nil, "PASSENGER" },
-	{ "Spieler", "Spieler2", "SilverSuit", "SILVER SUIT" },
-	{ "Spieler", "Spieler2", "GoldSuit", "GOLDEN SUIT" },
+	{ "Spieler", "Spieler1", "SilverSuit", "SILVER SUIT" },
+	{ "Spieler", "Spieler1", "GoldSuit", "GOLDEN SUIT", { tuxedo = true } },
 }, 16)
 
 ------------------------------------------------------------------ Reihe 2: Familie Wagner (nur der goldene Anzug)
 sectionTitle(14, "THE WAGNER FAMILY", "Only skin: the Golden Suit (Golden Pack, 999 R$)")
 figureRow(14, {
 	{ "Wagners", "MrWagner", nil, "MR. WAGNER" },
-	{ "Wagners", "MrWagner", "GoldSuit", "GOLDEN SUIT", { tie = true } },
+	{ "Wagners", "MrWagner", "GoldSuit", "GOLDEN SUIT", { tuxedo = true } },
 	{ "Wagners", "MrsWagner", nil, "MRS. WAGNER" },
-	{ "Wagners", "MrsWagner", "GoldSuit", "GOLDEN SUIT" },
+	{ "Wagners", "MrsWagner", "GoldSuit", "GOLDEN SUIT", { jewelry = true } },
 	{ "Wagners", "Lucy", nil, "LUCY" },
-	{ "Wagners", "Lucy", "GoldSuit", "GOLDEN SUIT", { barefoot = true } },
+	{ "Wagners", "Lucy", "GoldSuit", "GOLDEN SUIT", { barefoot = true, jewelry = true } },
 	{ "Wagners", "Tommy", nil, "TOMMY" },
-	{ "Wagners", "Tommy", "GoldSuit", "GOLDEN SUIT", { barefoot = true } },
+	{ "Wagners", "Tommy", "GoldSuit", "GOLDEN SUIT", { tuxedo = true } },
 }, 14)
 
 ------------------------------------------------------------------ Reihe 3: Sarp
@@ -232,4 +231,5 @@ for _, item in folder:GetDescendants() do
 		count += 1
 	end
 end
+folder:SetAttribute("Ready", true)
 print(string.format("Showcase: fertig (%d Teile, Auto: %s)", count, car and car.Name or "fehlt"))

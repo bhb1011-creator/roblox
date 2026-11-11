@@ -37,6 +37,13 @@
       "$properties": {
         "StreamingEnabled": false
       }
+    },
+    "StarterPlayer": {
+      "StarterPlayerScripts": {
+        "Showcase": {
+          "$path": "src/showcase/client"
+        }
+      }
     }
   }
 }
