@@ -204,12 +204,13 @@ local function buildDeadTree(parent, position, rng)
 	tree.Parent = parent
 end
 
-local function buildBush(parent, position, rng)
+local function buildBush(parent, position, rng, scale)
+	scale = scale or 1
 	local bush = Instance.new("Model")
 	bush.Name = "Bush"
 	local color = LEAVES[rng:NextInteger(1, #LEAVES)]
 	for _ = 1, rng:NextInteger(2, 4) do
-		local size = rng:NextNumber(2.5, 5)
+		local size = rng:NextNumber(2.5, 5) * scale
 		Parts.new("Part", {
 			Name = "Leaves",
 			Shape = Enum.PartType.Ball,
@@ -331,6 +332,15 @@ function Forest.build(parent, isClear, roadDistance)
 	end)
 	scatter(260, { -130, 130, -120, 120 }, 1, ring, function(position)
 		buildBush(forest, position, rng)
+	end)
+	-- Große, einfache Büsche weiter draußen: füllen die Lücken zwischen den Stämmen, damit man
+	-- unter den Ästen nicht in die Ferne sieht (undurchsichtig, kosten kaum Leistung)
+	local function outerBand(x, z)
+		local lotDistance = math.max(math.abs(x) - 80, math.abs(z) - 70, 0)
+		return lotDistance > 15 and lotDistance < 90
+	end
+	scatter(420, { -175, 175, -165, 165 }, 1, outerBand, function(position)
+		buildBush(forest, position, rng, rng:NextNumber(1.4, 2.2))
 	end)
 	-- weit weg: einfache Bäume (durchsichtige Nadeln wären bei so vielen Bäumen im Blick zu teuer)
 	scatter(math.round(320 * Forest.treeFactor()), everywhere, 8, farAway, function(position)
