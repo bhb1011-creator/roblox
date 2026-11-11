@@ -108,7 +108,7 @@ end
 local PACK_PREVIEW = {
 	GoldenPack = { kind = "family" },
 	SarpVip = { kind = "skin", skin = "GildedHorror" },
-	Everything = { kind = "skin", skin = "ObsidianKing" },
+	Everything = { kind = "skin", skin = "CrimsonCount" },
 }
 
 local starter = ShopCatalog.STARTER_PACK
@@ -177,11 +177,6 @@ local function buildFigure(spec, skinId, options)
 	model:PivotTo(buildArea)
 	model.Parent = workspace
 	Skins.apply(model, skinId, options)
-	for _, item in model:GetDescendants() do
-		if item:IsA("ParticleEmitter") or item:IsA("Light") then
-			item:Destroy() -- in der Vorschau unsichtbar, kostet nur
-		end
-	end
 	model.Parent = nil
 	return model
 end
@@ -232,7 +227,30 @@ local function buildPreview(preview)
 		warn("Shop-Vorschau fehlgeschlagen:", model)
 		model = nil
 	end
+	if model then
+		fitForViewport(model)
+	end
 	previewCache[key] = model or false
+	return model
+end
+
+-- Vorschaufenster (ViewportFrame) zeigen keine SurfaceAppearance (Köpfe wären grau) und Glas
+-- sieht silbern aus: Farbtextur direkt an die MeshPart, Glas wird glatter Kunststoff.
+local function fitForViewport(model)
+	for _, item in model:GetDescendants() do
+		if item:IsA("ParticleEmitter") or item:IsA("Light") then
+			item:Destroy() -- in der Vorschau unsichtbar, kostet nur
+		elseif item:IsA("SurfaceAppearance") then
+			local part = item.Parent
+			if part and part:IsA("MeshPart") then
+				part.TextureID = item.ColorMap
+			end
+			item:Destroy()
+		elseif item:IsA("BasePart") and item.Material == Enum.Material.Glass then
+			item.Material = Enum.Material.SmoothPlastic
+			item.Reflectance = 0.15
+		end
+	end
 	return model
 end
 
@@ -370,7 +388,7 @@ local closeButton = create("TextButton", {
 	BackgroundColor3 = C.red,
 	AutoButtonColor = true,
 	Font = Enum.Font.GothamBlack,
-	Text = "✕",
+	Text = "X",
 	TextSize = 20,
 	TextColor3 = C.text,
 	Modal = true, -- Maus frei, solange der Shop offen ist (Ego-Perspektive)
