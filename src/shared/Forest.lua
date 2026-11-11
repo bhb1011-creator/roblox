@@ -276,6 +276,10 @@ Forest.builders = {
 
 -- isClear(x, z, margin) sagt, ob an einer Stelle Platz ist (nicht auf Parkplatz oder Straße).
 -- roadDistance(x, z) liefert den Abstand zur Straße.
+-- Lobby: der Wald rund um den Parkplatz noch dichter (nur echte Tannen in der Nähe;
+-- die weit entfernten bleiben einfache Bäume, siehe unten)
+local LOBBY_EXTRA = 1.5
+
 function Forest.build(parent, isClear, roadDistance)
 	local forest = Instance.new("Folder")
 	forest.Name = "Forest"
@@ -314,8 +318,8 @@ function Forest.build(parent, isClear, roadDistance)
 			buildBush(forest, position + Vector3.new(rng:NextNumber(-4, 4), 0, rng:NextNumber(-4, 4)), rng)
 		end
 	end
-	scatter(math.round(190 * Forest.treeFactor()), nearLot, 6, nil, pineWithUndergrowth)
-	scatter(math.round(130 * Forest.treeFactor()), roadArea, 5, nearRoad, pineWithUndergrowth)
+	scatter(math.round(190 * Forest.treeFactor() * LOBBY_EXTRA), nearLot, 6, nil, pineWithUndergrowth)
+	scatter(math.round(130 * Forest.treeFactor() * LOBBY_EXTRA), roadArea, 5, nearRoad, pineWithUndergrowth)
 	-- weit weg: einfache Bäume (durchsichtige Nadeln wären bei so vielen Bäumen im Blick zu teuer)
 	scatter(math.round(320 * Forest.treeFactor()), everywhere, 8, farAway, function(position)
 		buildBlockPine(forest, position, rng:NextNumber(30, 50), rng)
