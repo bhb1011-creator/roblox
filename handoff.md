@@ -425,6 +425,11 @@ Was im neuen Chat ohne den Mock noch geht:
 
 ## 8. Nächste Schritte
 
+- **Kapitel 1 bleibt vorerst so, wie es ist** (Entscheidung des Users, 11. November, Stand `K2-2026-11-11f`: dichter Wald,
+  neuer Auto-Innenraum, Laternen mit Schatten, Innenlicht). Nicht weiter daran bauen, außer der User meldet Fehler aus
+  seinem Test oder wünscht ausdrücklich etwas Neues. Testen: `rojo serve spiel.project.json` (NICHT nur `rojo serve` –
+  das startet die Lobby), dann Testmenü Taste 1.
+
 - **Später: Grafik-Auswahl „Hoch / Niedrig“** (Wunsch des Users, 11. November). Spieler wählen im Menü: Hoch = dichter Wald
   mit echten Tannen wie jetzt, Niedrig = weniger Tannen (nur auf diesem Gerät ausblenden, z. B. per
   `LocalTransparencyModifier`) für schwache Handys. Die Bäume baut der Server – die Auswahl muss also auf dem Client wirken.
