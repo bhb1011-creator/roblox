@@ -571,11 +571,17 @@ local function buildForest(parent)
 	end
 
 	-- Große Tannen haben Äste bis ~11 Studs Radius: so weit weg, dass nichts in die Fahrbahn ragt
-	scatter(math.round(300 * Forest.treeFactor()), WIDTH / 2 + 17, 55, 4, function(position)
+	-- Wie in der Lobby: dichter Ring echter Tannen an der Straße …
+	scatter(math.round(380 * Forest.treeFactor()), WIDTH / 2 + 17, 55, 3, function(position)
 		builders.pine(forest, position, rng:NextNumber(30, 52), rng)
 	end, 12)
+	-- … dahinter große, einfache Büsche zwischen den Stämmen, damit man nicht durch den
+	-- Wald in die Leere sieht (undurchsichtige Kugeln kosten kaum Leistung)
+	scatter(520, 26, 75, 1, function(position)
+		builders.bush(forest, position, rng, rng:NextNumber(1.4, 2.2))
+	end, 8)
 	-- weit weg (55–170): einfache Bäume, sonst wird es auf der Grafikkarte zu teuer (gemessen)
-	scatter(math.round(480 * Forest.treeFactor()), 55, 170, 4, function(position)
+	scatter(math.round(620 * Forest.treeFactor()), 52, 170, 3, function(position)
 		builders.blockPine(forest, position, rng:NextNumber(32, 54), rng)
 	end, 9)
 	scatter(30, 16, 70, 4, function(position)
@@ -620,6 +626,10 @@ local function buildForest(parent)
 	end)
 	nearPath(130, 6.5, 22, 1, 3, function(position)
 		builders.bush(forest, position, rng)
+	end)
+	-- große Büsche etwas weiter weg vom Waldweg: der Wald wirkt dicht und endlos
+	nearPath(180, 18, 60, 1, 10, function(position)
+		builders.bush(forest, position, rng, rng:NextNumber(1.4, 2.0))
 	end)
 	nearPath(30, 6, 30, 2, 3, function(position)
 		builders.rock(forest, position, rng)

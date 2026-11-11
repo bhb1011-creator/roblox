@@ -1,6 +1,6 @@
 # Handoff – Horror-Spiel „Guesthouse“ (Roblox)
 
-Stand: 10. November 2026, Branch `claude/optimistic-bardeen-4tmohk`, Version `K2-2026-11-11d`.
+Stand: 10. November 2026, Branch `claude/optimistic-bardeen-4tmohk`, Version `K2-2026-11-11e`.
 Ganz oben stehen die neuesten Abschnitte (0000 = 10. Nov., 000 = realistische Familie, 00 = 9. Nov., 0 = Kapitel 3 + Audio);
 Abschnitte 2–8 beschreiben Kapitel 2 (Stand 6. Nov.).
 Diese Datei ist für einen **neuen Chat** gedacht: erst den Prompt unten kopieren, der Rest ist Nachschlagewerk.
@@ -33,7 +33,7 @@ Regeln:
 - Sei ehrlich: sag klar, was ungetestet ist.
   Arbeite gründlich und sag, wenn etwas fertig ist.
 
-Stand: Version `K2-2026-11-11d`. Kapitel 1, 2 und 3 sind gebaut und laufen am Stück (`spiel.project.json`).
+Stand: Version `K2-2026-11-11e`. Kapitel 1, 2 und 3 sind gebaut und laufen am Stück (`spiel.project.json`).
 Alle Figuren sind realistische KI-Figuren: Familie Wagner (`assets/figuren`), Sarp in allen drei Stufen
 (Fremder, Monster im Haus, Biest; `assets/sarp`) und feste Spielerfiguren (`assets/spieler`; in der Lobby
 wird man beim Einsteigen ins Auto zur Figur). Im Testmenü (Taste O) gibt es eine „Charakterliste“.
@@ -66,6 +66,16 @@ Fang damit an, dass du die Dateien liest und mir in 5 Sätzen sagst, wo wir steh
   Bildrate nicht gemessen (Studio drosselt im Hintergrund auf 15 FPS).
 - **11d (Lobby):** 420 große einfache Büsche (`buildBush(..., scale)` 1,4–2,2) im Band 15–90 Studs hinter dem Zaun:
   man sieht unter den Ästen nicht mehr durch. In Studio angesehen.
+- **11e (Kapitel 1 + Auto):** Wald an der Straße wie in der Lobby: echte Tannen 300→380 (×1,8), dahinter 520 große
+  Büsche (26–75 Studs) und 180 große Büsche am Waldweg, ferne Blocktannen 480→620 (×1,8). Keine Berge in Kapitel 1
+  (der Nachtnebel verschluckt alles ab ~300 Studs, man würde sie nicht sehen). **Auto innen neu** (`CutsceneCar.lua`,
+  außen gleich): Leder-/Stoffsitze mit Wangen, Nähten und runden Kopfstützen, Armaturenbrett mit Lederauflage,
+  Holzleiste, Ambientelicht, Chrom-Lüftungsdüsen, Tacho mit echter Skala (Nadel dreht sich jetzt um die Uhrmitte),
+  Infodisplay, Touchscreen-Radio, Klimabedienung, Lenkrad mit 32 Segmenten, Tasten und Airbag, Lenkstockhebel,
+  Zündschlüssel, Türverkleidungen (Holz, Lautsprecher, Fensterschalter, Fächer mit Flasche/Karte), Dachkonsole,
+  Sonnenblenden, Haltegriffe, Hutablage, Kaffeebecher, Parkschein, Duftbaum. Lenkrad sitzt etwas tiefer (3,92), damit
+  man den Tacho darüber sieht. Radio heißt jetzt „PINE RADIO“. Fahrerblick in Studio angesehen (Testbau);
+  Beifahrer-/Rückbank-Ansicht und Wald nicht angesehen, Bildrate nicht gemessen.
 - Teile: Kapitel 1 22.838 → ~13.000, Kapitel 3 18.147 → ~13.000.
 - Messen: in Studio beim Spielen **Shift+F5** (Bildrate) – unter 60 FPS am Straßenrand in Kapitel 1 → `Forest.MESH_DENSITY`
   in `src/shared/Forest.lua` senken (z. B. 1,4).
