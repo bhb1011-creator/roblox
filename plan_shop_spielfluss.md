@@ -141,8 +141,18 @@ ein `Highlight` (nur beim Käufer, auf dem Client). Vorschlag: Reichweite 60 Stu
 
 ### 5a. Ideen für Sarp-Skins (User wählt noch aus)
 
-Siehe Antwort im Chat vom 11. November; ausgewählte Skins hier eintragen. Keine Story-Hintergründe aus dem DLC
-verraten.
+- **Gewählt: Shadow Sarp** – fast ganz schwarz wie ein Schatten, glühende Augen, dunkler Rauch steigt auf.
+  Einzeln kaufbar für **5000 Münzen oder 599 R$**. **Offene Frage:** Ist Shadow Sarp auch einer der 3 Skins im
+  Sarp VIP Pack (499 R$)? Dann wäre das Pack günstiger als der Skin allein – evtl. so gewollt (Pack-Rabatt).
+- Die anderen 2 Sarp-Skins: Aussehen noch offen (Ideen: Hunter, Frost, Scarecrow, Blood Moon, Bone).
+- Keine Story-Hintergründe aus dem DLC verraten.
+
+### 5b. Style-Modus im Shop
+
+- Im Shop gibt es einen **Style-Modus** (Umkleide): Man sieht seine Figur groß, dreht sie, sieht, was man gerade
+  anhat, und kann Kleidung/Anzüge/Accessoires an- und ausziehen.
+- Vorschlag: Dinge, die man noch nicht hat, kann man dort **anprobieren** (Vorschau), bevor man kauft.
+- Auch Sarp/Familie/Sportwagen in der Vorschau zeigen (für die Packs).
 
 ---
 
