@@ -117,8 +117,13 @@ ein `Highlight` (nur beim Käufer, auf dem Client). Vorschlag: Reichweite 60 Stu
 
 ### Spielfigur
 
-- **Silberner Anzug**: **2500 Münzen** oder **249 R$** (erster Skin des Spielers).
-- **Goldener Anzug**: im Golden Pack.
+- **Silberner Anzug**: **2500 Münzen** oder **249 R$** (erster Skin des Spielers), als silberner Smoking.
+- **Goldener Anzug**: im Golden Pack, als goldener Smoking (Hemd, Fliege, Revers, schwarze Hose).
+- **Ein Modell für beide Plätze (User, 11. November):** Mit Anzug-Skin sehen Fahrer und Beifahrerin
+  gleich aus (Modell Spieler1), weil man sich selbst nicht sieht. Ohne Skin bleiben die zwei Figuren.
+- **Familie im Golden Pack:** Richard und Tommy im goldenen Smoking, Mrs. Wagner und Lucy im Goldkleid
+  mit Perlenkette. Alle sollen reich aussehen.
+- **In die Lobby erst, wenn der User die Ausstellung abgenommen hat.**
 - **Kleidung und Accessoires für Münzen** (sehen deutlich besser aus als das normale Outfit; Preise von Claude
   vorgeschlagen, User kann ändern):
 
