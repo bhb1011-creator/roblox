@@ -571,11 +571,12 @@ local function buildForest(parent)
 	end
 
 	-- Große Tannen haben Äste bis ~11 Studs Radius: so weit weg, dass nichts in die Fahrbahn ragt
-	scatter(300, WIDTH / 2 + 17, 55, 4, function(position)
+	scatter(math.round(300 * Forest.treeFactor()), WIDTH / 2 + 17, 55, 4, function(position)
 		builders.pine(forest, position, rng:NextNumber(30, 52), rng)
 	end, 12)
-	scatter(480, 55, 170, 4, function(position)
-		builders.simplePine(forest, position, rng:NextNumber(32, 54), rng)
+	-- weit weg (55–170): einfache Bäume, sonst wird es auf der Grafikkarte zu teuer (gemessen)
+	scatter(math.round(480 * Forest.treeFactor()), 55, 170, 4, function(position)
+		builders.blockPine(forest, position, rng:NextNumber(32, 54), rng)
 	end, 9)
 	scatter(30, 16, 70, 4, function(position)
 		builders.deadTree(forest, position, rng)
@@ -611,10 +612,10 @@ local function buildForest(parent)
 			end
 		end
 	end
-	nearPath(110, 15, 60, 4, 12, function(position)
+	nearPath(math.round(110 * Forest.treeFactor()), 15, 60, 4, 12, function(position)
 		builders.pine(forest, position, rng:NextNumber(30, 50), rng)
 	end)
-	nearPath(170, 12, 70, 4, 9, function(position)
+	nearPath(math.round(170 * Forest.treeFactor()), 12, 70, 4, 9, function(position)
 		builders.simplePine(forest, position, rng:NextNumber(30, 50), rng)
 	end)
 	nearPath(130, 6.5, 22, 1, 3, function(position)

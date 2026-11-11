@@ -67,6 +67,13 @@ local function findMeshTemplates()
 	return list
 end
 
+-- Gibt es echte Tannen? Dann darf der Wald dichter werden: eine echte Tanne hat nur 2 Teile
+-- (eine Klotz-Tanne 7 bis 33). Orte, die Bäume streuen, multiplizieren ihre Anzahl damit.
+Forest.MESH_DENSITY = 1.8
+function Forest.treeFactor()
+	return findMeshTemplates() and Forest.MESH_DENSITY or 1
+end
+
 -- Stellt eine echte Tanne auf. collide = unsichtbarer Stamm zum Dagegenlaufen.
 local function buildMeshPine(parent, position, height, rng, name, collide)
 	local templates = findMeshTemplates()
@@ -146,10 +153,10 @@ local function buildPine(parent, position, height, rng)
 end
 
 -- Einfache Tanne für weit entfernte Stellen (spart Bauteile, im Nebel kaum zu unterscheiden)
-local function buildSimplePine(parent, position, height, rng)
-	if buildMeshPine(parent, position, height, rng, "FarPine", false) then
-		return
-	end
+-- Einfache Klotz-Tanne (4 undurchsichtige Teile): für sehr weit entfernte Bäume, die man
+-- nur im Nebel sieht. Durchsichtige Nadeln kosten auf der Grafikkarte viel, wenn hunderte
+-- Bäume gleichzeitig im Bild sind (Kapitel 1: neben der Straße offener Blick).
+local function buildBlockPine(parent, position, height, rng)
 	local tree = Instance.new("Model")
 	tree.Name = "FarPine"
 	local base = randomBase(position, rng)
@@ -166,6 +173,13 @@ local function buildSimplePine(parent, position, height, rng)
 		}, height * 0.26, diameter, base * CFrame.new(0, height * (0.15 + tier * 0.26), 0))
 	end
 	tree.Parent = parent
+end
+
+local function buildSimplePine(parent, position, height, rng)
+	if buildMeshPine(parent, position, height, rng, "FarPine", false) then
+		return
+	end
+	buildBlockPine(parent, position, height, rng)
 end
 
 -- Toter Baum: kahler Stamm mit ein paar krummen Ästen
@@ -252,6 +266,7 @@ end
 Forest.builders = {
 	pine = buildPine,
 	simplePine = buildSimplePine,
+	blockPine = buildBlockPine,
 	deadTree = buildDeadTree,
 	bush = buildBush,
 	rock = buildRock,
@@ -299,10 +314,11 @@ function Forest.build(parent, isClear, roadDistance)
 			buildBush(forest, position + Vector3.new(rng:NextNumber(-4, 4), 0, rng:NextNumber(-4, 4)), rng)
 		end
 	end
-	scatter(190, nearLot, 6, nil, pineWithUndergrowth)
-	scatter(130, roadArea, 5, nearRoad, pineWithUndergrowth)
-	scatter(320, everywhere, 8, farAway, function(position)
-		buildSimplePine(forest, position, rng:NextNumber(30, 50), rng)
+	scatter(math.round(190 * Forest.treeFactor()), nearLot, 6, nil, pineWithUndergrowth)
+	scatter(math.round(130 * Forest.treeFactor()), roadArea, 5, nearRoad, pineWithUndergrowth)
+	-- weit weg: einfache Bäume (durchsichtige Nadeln wären bei so vielen Bäumen im Blick zu teuer)
+	scatter(math.round(320 * Forest.treeFactor()), everywhere, 8, farAway, function(position)
+		buildBlockPine(forest, position, rng:NextNumber(30, 50), rng)
 	end)
 	scatter(26, nearLot, 6, nil, function(position)
 		buildDeadTree(forest, position, rng)

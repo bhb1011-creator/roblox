@@ -17,6 +17,9 @@
       },
       "Sarp": {
         "$path": "assets/sarp"
+      },
+      "Natur": {
+        "$path": "assets/natur"
       }
     },
     "ServerScriptService": {

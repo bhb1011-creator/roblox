@@ -493,8 +493,8 @@ local function buildForest()
 			if rng:NextNumber() < 0.6 and clear(bush, 12.8) then
 				Forest.builders.bush(folder, bush, rng)
 			end
-			for row = 1, 3 do
-				local far = center + right * side * (16 + row * rng:NextNumber(7, 12)) + direction * rng:NextNumber(-4, 4)
+			for row = 1, math.round(3 * Forest.treeFactor()) do
+				local far = center + right * side * (16 + row * rng:NextNumber(5, 9)) + direction * rng:NextNumber(-4, 4)
 				if clear(far, 14) then
 					Forest.builders.simplePine(folder, far, rng:NextNumber(32, 52), rng)
 					count += 1
@@ -529,7 +529,7 @@ local function buildForest()
 		warn("Kapitel 3: Sarps Hütte konnte nicht gebaut werden: " .. tostring(hutResult))
 	end
 	task.wait()
-	for _ = 1, 260 do
+	for _ = 1, math.round(260 * Forest.treeFactor()) do
 		local p = Vector3.new(rng:NextNumber(-150, 150), 0, rng:NextNumber(-90, 30))
 		local world = roadFrame * p
 		local _, distance = Data.progress(points, world)

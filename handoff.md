@@ -1,6 +1,6 @@
 # Handoff – Horror-Spiel „Guesthouse“ (Roblox)
 
-Stand: 10. November 2026, Branch `claude/optimistic-bardeen-4tmohk`, Version `K2-2026-11-10i`.
+Stand: 10. November 2026, Branch `claude/optimistic-bardeen-4tmohk`, Version `K2-2026-11-11a`.
 Ganz oben stehen die neuesten Abschnitte (0000 = 10. Nov., 000 = realistische Familie, 00 = 9. Nov., 0 = Kapitel 3 + Audio);
 Abschnitte 2–8 beschreiben Kapitel 2 (Stand 6. Nov.).
 Diese Datei ist für einen **neuen Chat** gedacht: erst den Prompt unten kopieren, der Rest ist Nachschlagewerk.
@@ -33,7 +33,7 @@ Regeln:
 - Sei ehrlich: sag klar, was ungetestet ist.
   Arbeite gründlich und sag, wenn etwas fertig ist.
 
-Stand: Version `K2-2026-11-10i`. Kapitel 1, 2 und 3 sind gebaut und laufen am Stück (`spiel.project.json`).
+Stand: Version `K2-2026-11-11a`. Kapitel 1, 2 und 3 sind gebaut und laufen am Stück (`spiel.project.json`).
 Alle Figuren sind realistische KI-Figuren: Familie Wagner (`assets/figuren`), Sarp in allen drei Stufen
 (Fremder, Monster im Haus, Biest; `assets/sarp`) und feste Spielerfiguren (`assets/spieler`; in der Lobby
 wird man beim Einsteigen ins Auto zur Figur). Im Testmenü (Taste O) gibt es eine „Charakterliste“.
@@ -46,6 +46,20 @@ Fang damit an, dass du die Dateien liest und mir in 5 Sätzen sagst, wo wir steh
 ```
 
 ---
+
+## 00000000. NEU 11. November (Version K2-2026-11-11a): Echte Tannen in allen Kapiteln, dichterer Wald
+
+- `ReplicatedStorage.Natur` jetzt in **allen** Projektdateien (`spiel`, `kapitel2`, `level`, `default`) → echte Tannen überall.
+- **Dichter:** `Forest.treeFactor()` = 1,8, wenn echte Tannen da sind (sonst 1). Kapitel 1 (Straße + Waldweg), Kapitel 3
+  (Fluchtweg: 5 statt 3 Baumreihen, enger; Hütte: 468 statt 260 Bäume) und die Lobby streuen damit mehr Bäume.
+- **Leistung:** Durchsichtige Nadeln kosten Grafikkarte, wenn hunderte Bäume im offenen Blick sind. Gemessen in Studio
+  (Mac, Grafikzeit pro Bild): Kapitel 3 alt 14,2/11,2 ms → neu 13,6/14,2 ms, 60 FPS (ok). Kapitel 1 mit überall echten
+  Tannen: 41 FPS (alt 60) – darum stehen **weit entfernte Bäume** (Kapitel 1: 55–170 Studs von der Straße, Lobby: der
+  Außenbereich) als einfache Klotz-Tannen (`Forest.builders.blockPine`, undurchsichtig, im Nebel kaum zu sehen).
+  **Nach dieser Änderung ist Kapitel 1 nicht neu gemessen** (Studio drosselt auf 15 FPS, wenn das Fenster nicht vorne ist).
+- Teile: Kapitel 1 22.838 → ~13.000, Kapitel 3 18.147 → ~13.000.
+- Messen: in Studio beim Spielen **Shift+F5** (Bildrate) – unter 60 FPS am Straßenrand in Kapitel 1 → `Forest.MESH_DENSITY`
+  in `src/shared/Forest.lua` senken (z. B. 1,4).
 
 ## 0000000. NEU 10. November (Version K2-2026-11-10i): Grafik-Probe Lobby (echte Tannen) + Lobby auf Englisch
 
