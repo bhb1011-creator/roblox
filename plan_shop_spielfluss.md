@@ -143,7 +143,11 @@ ein `Highlight` (nur beim Käufer, auf dem Client). Vorschlag: Reichweite 60 Stu
 
 - **Gewählt: Shadow Sarp** – fast ganz schwarz wie ein Schatten, glühende Augen, dunkler Rauch steigt auf.
   **Separat** (nicht im Sarp VIP Pack): **399 R$ oder 3500 Münzen**.
-- Die anderen 2 Sarp-Skins: Aussehen noch offen (Ideen: Hunter, Frost, Scarecrow, Blood Moon, Bone).
+- **Sarp VIP Pack (luxuriös, aber gruselig – gebaut als Entwurf am 11.11.):** „Gilded Horror“ (altes Gold, Dornenkrone
+  mit Rubinen, schwere Goldkette, rotes Glimmen), „Crimson Count“ (blutroter Samtmantel, goldene Knöpfe und
+  Epauletten, langer Umhang), „Obsidian King“ (Körper aus schwarzem Glas, hohe Goldkrone, Goldschultern, violette Aura).
+  Kann der User noch ändern. Ideen fürs Internet-Recherche: Gold-Akzente/Goldüberzug + leere/rote Augen (z. B.
+  „Golden Boy“-Skins, „Luxury Halloween Monsters“).
 - Keine Story-Hintergründe aus dem DLC verraten.
 
 ### 5c. Starter Pack (nur einmal kaufbar)

@@ -1,0 +1,42 @@
+{
+  "name": "Showcase",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "Shared": {
+        "$path": "src/shared"
+      },
+      "Wagners": {
+        "$path": "assets/figuren"
+      },
+      "Spieler": {
+        "$path": "assets/spieler"
+      },
+      "Sarp": {
+        "$path": "assets/sarp"
+      },
+      "Shop": {
+        "Kleidung": {
+          "$path": "assets/shop/Kleidung"
+        },
+        "$className": "Folder"
+      }
+    },
+    "ServerScriptService": {
+      "$ignoreUnknownInstances": false,
+      "Showcase": {
+        "$path": "src/showcase/server"
+      }
+    },
+    "Lighting": {
+      "$properties": {
+        "Technology": "Future"
+      }
+    },
+    "Workspace": {
+      "$properties": {
+        "StreamingEnabled": false
+      }
+    }
+  }
+}
