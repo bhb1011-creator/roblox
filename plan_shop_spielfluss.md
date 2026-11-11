@@ -47,22 +47,25 @@ User sagte „im Spiel nur Herzen“ → Vorschlag: Revive nur im Game-Over-Bild
 
 ---
 
-## 3. Snacks (Lobby-Kiosk, für Münzen ODER Robux)
+## 3. Snacks und Items (Lobby-Kiosk, für Münzen ODER Robux) – Auswahl des Users
 
-Regeln: Man nimmt **höchstens 3 Snacks pro Runde** mit (Inventar). Wirkung nur, wo die Mechanik existiert.
-Kauf nur in der Lobby. Der jetzige Snack „Chips“ (bringt nichts) wird ersetzt.
+Der User hat entschieden (11. November): **nur diese Items erstmal**. Man nimmt höchstens 3 pro Runde mit
+(Inventar). Kauf nur in der Lobby. Die alten Kiosk-Snacks in `Config.SNACKS` (Chocolate, Energy drink,
+Batteries, Chips) fallen weg.
 
-| Snack | Wirkung | Münzen | Robux |
+| Item | Wirkung | Münzen | Robux |
 |---|---|---|---|
 | **Energy Bar** | 20 s lang 20 % schneller rennen | 40 | 10 |
-| **Coffee** | 60 s lang Ausdauer beim Sprinten unendlich (Wald-Jagd Kapitel 1/3) | 50 | 10 |
+| **Coffee** | 60 s lang Ausdauer beim Sprinten unendlich | 50 | 10 |
 | **Mint Gum** | 60 s lang leise Schritte: Sarp hört dich nur halb so weit | 60 | 15 |
-| **Calm Tea** | im Versteck ruhiger Atem: Sarp findet dich **einmal** nicht im Versteck | 80 | 20 |
-| **Glucose Tablets** | nächstes Quick-Time-Event: doppelt so viel Zeit | 50 | 10 |
-| **Energy Drink** | 45 s lang Warnung (Herzschlag + Pfeil), wenn Sarp/Biest in der Nähe ist | 60 | 15 |
-| **Gummy Bears** | 20 s lang zeigt ein Pfeil den Weg zum nächsten Ziel | 70 | 15 |
-| **Batteries** | Handy-Taschenlampe ein ganzes Kapitel heller und weiter | 40 | 10 |
-| **Crisp Packet** | werfen: knistert laut, Sarp läuft zum Geräusch (Ablenkung) | 60 | 15 |
+| **Gummy Bears** (teuer, Wunsch des Users) | 20 s lang zeigt ein Pfeil den Weg zum nächsten Ziel | 200 | 40 |
+| **X-Ray Glasses** (teuer, Wunsch des Users) | 30 s lang sieht man **Sarp und alle anderen Feinde** (Familie, Biest …) durch Wände (roter Umriss, nur beim Benutzer) | 400 | 75 |
+
+Jedes Item ist **einmal benutzbar** (Verbrauchsgegenstand). Die Brille ist etwas anderes als der
+**Supervision-Pass** (§4): Supervision zeigt dauerhaft **Gegenstände**, die Brille zeigt kurz **Feinde**.
+
+Ideen, die der User (noch) nicht gewählt hat: Calm Tea, Glucose Tablets, Energy Drink, Batteries, Crisp Packet
+und die Liste in §6.
 
 ---
 
