@@ -88,28 +88,61 @@ ein `Highlight` (nur beim Käufer, auf dem Client). Vorschlag: Reichweite 60 Stu
 
 ---
 
-## 5. Skins für die Spielfigur in der Story
+## 5. Skins, Packs, Abzeichen, Sportwagen (Entscheidung des Users, 11. November)
 
-- Freischalten mit Münzen (dauert lange) oder durch Erfolge; ausgewählt in der Lobby, sichtbar in allen Kapiteln.
-- Ideen:
-  - **Rain Jacket** (gelbe Regenjacke) – 500 Münzen
-  - **Camping Outfit** (Fleece, Rucksack) – 800 Münzen
-  - **Night Hiker** (Stirnlampe, dunkle Jacke) – 1200 Münzen
-  - **Winter Coat** – 1500 Münzen
-  - **Survivor** (zerrissene, schmutzige Kleidung) – gratis, wenn man das Spiel einmal durchgespielt hat
-  - **Golden Flashlight** – gratis, wenn man alle Sammelstücke gefunden hat
-  - **Ohne-Tod-Abzeichen / Titel in der Lobby** („Untouched“) – gratis, Kapitel ohne Herz-Verlust
+### Packs (nur Robux, im Shop besonders schön präsentiert)
 
-### Skins für die Story-Figuren (Wunsch des Users, 11. November)
+| Pack | Inhalt | Robux |
+|---|---|---|
+| **Golden Pack** | **Goldener Anzug für alle** Figuren (Spieler, Familie Wagner, Sarp – offene Frage, ob Sarp auch) + **Gold-Abzeichen** + **Sportwagen** | 999 |
+| **Sarp VIP Pack** | **3 Skins für Sarp** + **Sarp-VIP-Abzeichen** + **Sportwagen** | 499 |
+| **Everything Bundle** | Golden Pack + Sarp VIP Pack (+ Sportwagen) | 1249 |
 
-Alle mit **Münzen** kaufbar (in der Lobby). Wer zu wenig Münzen hat, kann **Münzen extra mit Robux kaufen**
-(Münzpakete, siehe §2). **Wie die Skins aussehen, sagt der User noch** – bis dahin nicht bauen, nur Platz vorsehen.
+- Die **Familie Wagner** hat nur diesen einen Extra-Skin (golden, im Golden Pack). Familien-Skins kann man **nicht
+  einzeln** kaufen. Sonst sieht die Familie normal aus.
+- **Sarp-Skins** gibt es nur im Sarp VIP Pack (3 Stück). Aussehen: User entscheidet noch; Vorschläge für den
+  dritten Skin siehe Chat/§5a.
 
-- **Sarp:** 2 zusätzliche Skins.
-- **Familie Wagner:** für **jedes** Familienmitglied 1 zusätzlicher Skin.
-- **Spielfigur:** 1 zusätzlicher Skin (zusätzlich zu den Ideen oben).
-- Ausgewählte Skins sieht man in der Story (Sarp/Familie so, wie der Käufer sie gewählt hat; im Duo: offene
-  Frage, wessen Auswahl gilt – Vorschlag: jeder sieht seine eigene Auswahl).
+### Abzeichen (statt besonderer Name)
+
+- Nur mit Robux erhältlich (über die Packs). Gold-Abzeichen (Golden Pack), Sarp-VIP-Abzeichen (Sarp VIP Pack).
+- **Offen: wie anzeigen.** Ideen: Namensschild über dem Kopf in der Lobby (BillboardGui mit Symbol), Symbol vor
+  dem Namen im Chat (TextChatService-Tag), auf der Bestenliste in der Lobby, Profil-Karte beim Anklicken.
+- Hinweis: Das sind eigene Spiel-Abzeichen, nicht die Roblox-„Badges“ (die sind gratis Erfolge).
+
+### Sportwagen (Lobby-Auto)
+
+- Gratis dazu bei **Golden Pack** oder **Sarp VIP Pack**.
+- Einzeln: **3000 Münzen** oder **399 R$**.
+
+### Spielfigur
+
+- **Silberner Anzug**: **2500 Münzen** oder **249 R$** (erster Skin des Spielers).
+- **Goldener Anzug**: im Golden Pack.
+- **Kleidung und Accessoires für Münzen** (sehen deutlich besser aus als das normale Outfit; Preise von Claude
+  vorgeschlagen, User kann ändern):
+
+| Teil | Münzen |
+|---|---|
+| Beanie (Mütze) | 300 |
+| Basecap | 300 |
+| Schal | 250 |
+| Sonnenbrille / Brille (nur Aussehen) | 350 |
+| Lederhandschuhe | 400 |
+| Wanderschuhe | 450 |
+| Rucksack | 600 |
+| Gelbe Regenjacke | 900 |
+| Lederjacke | 1200 |
+| Daunenjacke (Winter) | 1200 |
+| Holzfällerhemd + Weste (Camping) | 1000 |
+| Stirnlampe (nur Aussehen) | 500 |
+
+- Gratis-Belohnungen (Idee, noch nicht entschieden): „Survivor“-Look fürs Durchspielen.
+
+### 5a. Ideen für Sarp-Skins (User wählt noch aus)
+
+Siehe Antwort im Chat vom 11. November; ausgewählte Skins hier eintragen. Keine Story-Hintergründe aus dem DLC
+verraten.
 
 ---
 
