@@ -430,6 +430,12 @@ Was im neuen Chat ohne den Mock noch geht:
   seinem Test oder wünscht ausdrücklich etwas Neues. Testen: `rojo serve spiel.project.json` (NICHT nur `rojo serve` –
   das startet die Lobby), dann Testmenü Taste 1.
 
+- **ALS NÄCHSTES: Shop, Tod, Münzen, Abfahrt** – alle Wünsche des Users (11. November) stehen genau in
+  `plan_shop_spielfluss.md`: 2 Herzen (Gamepass 3 Hearts), Game Over → Lobby oder Revive 30 R$ (auch für den Freund
+  bezahlen, Fenster beim Freund), im Spiel nur Herzen kaufbar, Münzen + 2×-Münzpass, Snacks (Münzen oder Robux),
+  Supervision-Pass, starke Taschenlampe, Skins, Abfahrt 3 s / 20 s mit schwarzem Bildschirm und Cancel, Parkplatz
+  sperren (offene Frage), Lobby-Auto mit Innenraum aus Kapitel 1. Noch nichts davon gebaut.
+
 - **Später: Grafik-Auswahl „Hoch / Niedrig“** (Wunsch des Users, 11. November). Spieler wählen im Menü: Hoch = dichter Wald
   mit echten Tannen wie jetzt, Niedrig = weniger Tannen (nur auf diesem Gerät ausblenden, z. B. per
   `LocalTransparencyModifier`) für schwache Handys. Die Bäume baut der Server – die Auswahl muss also auf dem Client wirken.
