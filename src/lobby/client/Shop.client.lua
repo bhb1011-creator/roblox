@@ -164,6 +164,26 @@ end
 ------------------------------------------------------------------ 3D-Vorschau
 -- Modelle werden einmal gebaut und zwischengespeichert. Figuren brauchen kurz den workspace
 -- (der Skin misst die Körperform mit Strahlen), dann kommen sie in die Vorschau.
+-- Vorschaufenster (ViewportFrame) zeigen keine SurfaceAppearance (Köpfe wären grau) und Glas
+-- sieht silbern aus: Farbtextur direkt an die MeshPart, Glas wird glatter Kunststoff.
+local function fitForViewport(model)
+	for _, item in model:GetDescendants() do
+		if item:IsA("ParticleEmitter") or item:IsA("Light") then
+			item:Destroy() -- in der Vorschau unsichtbar, kostet nur
+		elseif item:IsA("SurfaceAppearance") then
+			local part = item.Parent
+			if part and part:IsA("MeshPart") then
+				part.TextureID = item.ColorMap
+			end
+			item:Destroy()
+		elseif item:IsA("BasePart") and item.Material == Enum.Material.Glass then
+			item.Material = Enum.Material.SmoothPlastic
+			item.Reflectance = 0.15
+		end
+	end
+	return model
+end
+
 local previewCache = {}
 local buildArea = CFrame.new(0, 3000, 0)
 
@@ -231,26 +251,6 @@ local function buildPreview(preview)
 		fitForViewport(model)
 	end
 	previewCache[key] = model or false
-	return model
-end
-
--- Vorschaufenster (ViewportFrame) zeigen keine SurfaceAppearance (Köpfe wären grau) und Glas
--- sieht silbern aus: Farbtextur direkt an die MeshPart, Glas wird glatter Kunststoff.
-local function fitForViewport(model)
-	for _, item in model:GetDescendants() do
-		if item:IsA("ParticleEmitter") or item:IsA("Light") then
-			item:Destroy() -- in der Vorschau unsichtbar, kostet nur
-		elseif item:IsA("SurfaceAppearance") then
-			local part = item.Parent
-			if part and part:IsA("MeshPart") then
-				part.TextureID = item.ColorMap
-			end
-			item:Destroy()
-		elseif item:IsA("BasePart") and item.Material == Enum.Material.Glass then
-			item.Material = Enum.Material.SmoothPlastic
-			item.Reflectance = 0.15
-		end
-	end
 	return model
 end
 
