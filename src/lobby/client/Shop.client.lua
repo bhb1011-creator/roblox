@@ -171,11 +171,7 @@ local function fitForViewport(model)
 		if item:IsA("ParticleEmitter") or item:IsA("Light") then
 			item:Destroy() -- in der Vorschau unsichtbar, kostet nur
 		elseif item:IsA("SurfaceAppearance") then
-			local part = item.Parent
-			if part and part:IsA("MeshPart") then
-				part.TextureID = item.ColorMap
-			end
-			item:Destroy()
+			item:Destroy() -- Farbtextur hat buildFigure schon an die MeshPart gesetzt
 		elseif item:IsA("BasePart") and item.Material == Enum.Material.Glass then
 			item.Material = Enum.Material.SmoothPlastic
 			item.Reflectance = 0.15
@@ -194,6 +190,15 @@ local function buildFigure(spec, skinId, options)
 		return nil
 	end
 	local model = RealFigure.prepare(template, { anchor = true, height = spec.height })
+	-- Farbtextur direkt an die Körperteile (für das Vorschaufenster)
+	local texture = ShopCatalog.FIGURE_TEXTURES[spec.name]
+	if texture then
+		for _, part in model:GetDescendants() do
+			if part:IsA("MeshPart") and part:FindFirstChildOfClass("SurfaceAppearance") then
+				part.TextureID = texture
+			end
+		end
+	end
 	model:PivotTo(buildArea)
 	model.Parent = workspace
 	Skins.apply(model, skinId, options)

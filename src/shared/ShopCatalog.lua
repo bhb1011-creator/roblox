@@ -73,6 +73,20 @@ ShopCatalog.SKINS = {
 	{ id = "ShadowSarp", title = "Shadow Sarp", description = "Pitch black and smoking, like a living shadow.", slot = "Sarp", coins = 3500, robux = 399, productId = 0, rarity = "Epic", preview = SARP_PREVIEW },
 }
 
+-- Farbtexturen der KI-Figuren (aus den .rbxm-Dateien gelesen). Vorschaufenster zeigen keine
+-- SurfaceAppearance, und Spielskripte dürfen deren ColorMap nicht lesen – darum stehen sie hier.
+ShopCatalog.FIGURE_TEXTURES = {
+	Spieler1 = "rbxassetid://95079040040670",
+	Spieler2 = "rbxassetid://86513944236056",
+	MrWagner = "rbxassetid://73846587221622",
+	MrsWagner = "rbxassetid://134890354521895",
+	Lucy = "rbxassetid://88450451044392",
+	Tommy = "rbxassetid://109080654245888",
+	Sarp1 = "rbxassetid://134843323285360",
+	Sarp2 = "rbxassetid://122213498786655",
+	Biest = "rbxassetid://134361443688539",
+}
+
 -- Golden Pack: so sieht die Familie aus (Showroom und Vorschau)
 ShopCatalog.FAMILY_GOLD = {
 	{ folder = "Wagners", name = "MrWagner", height = 5.9, options = { tuxedo = true }, title = "Richard" },
