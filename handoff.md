@@ -404,6 +404,10 @@ Was im neuen Chat ohne den Mock noch geht:
 
 ## 8. Nächste Schritte
 
+- **Später: Grafik-Auswahl „Hoch / Niedrig“** (Wunsch des Users, 11. November). Spieler wählen im Menü: Hoch = dichter Wald
+  mit echten Tannen wie jetzt, Niedrig = weniger Tannen (nur auf diesem Gerät ausblenden, z. B. per
+  `LocalTransparencyModifier`) für schwache Handys. Die Bäume baut der Server – die Auswahl muss also auf dem Client wirken.
+
 1. **User-Rückmeldung aus dem Studio-Test abwarten** und Fehler beheben. Besonders prüfen:
    - Laufen NPCs/Sarp mit `PathfindingService` sinnvoll (Türen, Treppen, nicht durch Wände)?
    - Funktioniert `Humanoid.MoveDirection` auf dem Server für „Sarp hört einen“?
