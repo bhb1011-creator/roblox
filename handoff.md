@@ -1,6 +1,6 @@
 # Handoff – Horror-Spiel „Guesthouse“ (Roblox)
 
-Stand: 11. November 2026, Branch `claude/optimistic-bardeen-4tmohk`, Version `K2-2026-11-12d`.
+Stand: 11. November 2026, Branch `claude/optimistic-bardeen-4tmohk`, Version `K2-2026-11-12f`.
 Ganz oben stehen die neuesten Abschnitte (0000 = 10. Nov., 000 = realistische Familie, 00 = 9. Nov., 0 = Kapitel 3 + Audio);
 Abschnitte 2–8 beschreiben Kapitel 2 (Stand 6. Nov.).
 Diese Datei ist für einen **neuen Chat** gedacht: erst den Prompt unten kopieren, der Rest ist Nachschlagewerk.
@@ -44,6 +44,20 @@ hochladen; bis dahin viele kurze Sounds zu Sammeldateien zusammenfassen, im Spie
 Roblox Studio ist per MCP verbunden – du kannst Studio direkt steuern und testen.
 Fang damit an, dass du die Dateien liest und mir in 5 Sätzen sagst, wo wir stehen.
 ```
+
+---
+
+## 00000000000. NEU 12. November (Version K2-2026-11-12f): Menü-Design und große Knöpfe
+
+- `Shop.client.lua` neu gestaltet (Skill `roblox-ui`): warmer Lichtverlauf hinter jedem 3D-Bild (Frame mit UIGradient,
+  durchsichtiges Vorschaufenster darüber – kein Gradient direkt auf dem ViewportFrame, der färbt das Modell), kleines
+  Holzpodest unter den Modellen, gezeichnete Münze (`coinIcon`) statt Emoji/Wort, Preise als „Münze 1,800 or R$ 349“,
+  Abzeichen-Pillen („Save 249 R$“), Meldungen als Leiste unten.
+- **Tippen:** alles Antippbare ist mind. 48 px hoch (`T.touch`): Kauf-Knöpfe, Schließen (48×48), Münz-Box, Reiter (44),
+  Shop-Knopf unten links (150×54).
+- **Kleine Bildschirme:** kein Herunterskalieren mehr; `applyLayout()` ordnet nach der echten Größe an (kompakt unter
+  860×520: schmalere Ränder, 2 Spalten, Knöpfe nebeneinander wenn Platz). Bei Größenänderung wird neu angeordnet.
+- Getestet in Studio bei 1081×402 (wie Handy quer): alles sichtbar, Knöpfe 48 px. Nicht getestet: echtes Handy, Hochformat.
 
 ---
 
