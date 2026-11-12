@@ -396,10 +396,34 @@ local function fittingKey(suit, items)
 	return "fit:" .. tostring(suit) .. ":" .. table.concat(list, ",")
 end
 
+-- ohne Anzug: schlichtes dunkles Outfit (wie eine Schaufensterpuppe), damit Kleidung gut wirkt
+-- und keine Texturflecken der Vorschau stören
+local PLAIN = {
+	UpperTorso = Color3.fromRGB(58, 54, 52), LowerTorso = Color3.fromRGB(40, 40, 46),
+	LeftUpperArm = Color3.fromRGB(58, 54, 52), RightUpperArm = Color3.fromRGB(58, 54, 52),
+	LeftLowerArm = Color3.fromRGB(58, 54, 52), RightLowerArm = Color3.fromRGB(58, 54, 52),
+	LeftUpperLeg = Color3.fromRGB(40, 40, 46), RightUpperLeg = Color3.fromRGB(40, 40, 46),
+	LeftLowerLeg = Color3.fromRGB(40, 40, 46), RightLowerLeg = Color3.fromRGB(40, 40, 46),
+	LeftFoot = Color3.fromRGB(28, 26, 26), RightFoot = Color3.fromRGB(28, 26, 26),
+}
+local function plainOutfit(model)
+	for name, color in PLAIN do
+		local part = model:FindFirstChild(name)
+		if part and part:IsA("MeshPart") then
+			part.TextureID = ""
+			part.Color = color
+			part.Material = Enum.Material.Fabric
+		end
+	end
+end
+
 local function buildFitting(suit, items)
 	local skin = suit and ShopCatalog.find(suit)
-	local spec = skin and skin.preview or { folder = "Spieler", name = player:GetAttribute("Figur") == 2 and "Spieler2" or "Spieler1", height = 5.9 }
+	local spec = skin and skin.preview or { folder = "Spieler", name = "Spieler1", height = 5.9 }
 	local model = buildFigure(spec, suit, skin and skin.options)
+	if model and not suit then
+		plainOutfit(model)
+	end
 	if model then
 		for _, id in items do
 			wear(model, id)
@@ -541,15 +565,16 @@ local root = create("Frame", {
 	Parent = overlay,
 }, { corner(10), hairline(0.75) })
 local scale = create("UIScale", { Parent = root })
+-- an die nutzbare Fläche anpassen (ohne Roblox-Leiste oben)
 local function updateScale()
-	local camera = workspace.CurrentCamera
-	local size = camera and camera.ViewportSize or Vector2.new(1280, 720)
+	local size = gui.AbsoluteSize
+	if size.X < 10 then
+		return
+	end
 	scale.Scale = math.clamp(math.min((size.X - 32) / 1000, (size.Y - 32) / 600), 0.5, 1.2)
 end
 updateScale()
-if workspace.CurrentCamera then
-	workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(updateScale)
-end
+gui:GetPropertyChangedSignal("AbsoluteSize"):Connect(updateScale)
 
 -- Kopfzeile
 local header = create("Frame", { Name = "Header", Size = UDim2.new(1, 0, 0, 70), BackgroundTransparency = 1, ZIndex = 12, Parent = root })
