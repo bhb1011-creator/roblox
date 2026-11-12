@@ -1,6 +1,6 @@
 # Handoff – Horror-Spiel „Guesthouse“ (Roblox)
 
-Stand: 12. November 2026, Branch `claude/optimistic-bardeen-4tmohk`, Version `K2-2026-11-12l`.
+Stand: 12. November 2026, Branch `claude/optimistic-bardeen-4tmohk`, Version `K2-2026-11-12m`.
 Ganz oben stehen die neuesten Abschnitte (0000 = 10. Nov., 000 = realistische Familie, 00 = 9. Nov., 0 = Kapitel 3 + Audio);
 Abschnitte 2–8 beschreiben Kapitel 2 (Stand 6. Nov.).
 Diese Datei ist für einen **neuen Chat** gedacht: erst den Prompt unten kopieren, der Rest ist Nachschlagewerk.
@@ -36,7 +36,7 @@ Regeln:
 - Sei ehrlich: sag klar, was ungetestet ist.
   Arbeite gründlich und sag, wenn etwas fertig ist.
 
-Stand: Version `K2-2026-11-12l`. Kapitel 1, 2 und 3 sind gebaut und laufen am Stück (`spiel.project.json`).
+Stand: Version `K2-2026-11-12m`. Kapitel 1, 2 und 3 sind gebaut und laufen am Stück (`spiel.project.json`).
 Alle Figuren sind realistische KI-Figuren (Familie Wagner, Sarp in drei Stufen, feste Spielerfiguren).
 Gerade in Arbeit: Shop und Spielfluss (Plan: `plan_shop_spielfluss.md`). In der Lobby stehen schon:
 Shop-Hütte (Kleidung auf Bügeln/Regal, Sportwagen daneben, Skins nur im Menü), Kiosk für Snacks,
@@ -51,6 +51,18 @@ Roblox Studio ist per MCP verbunden – du kannst Studio direkt steuern und test
 `/Applications/RobloxStudio.app/Contents/MacOS/RobloxStudio -launchIntentString '{"task":"EditFile","localplacefile":"<Pfad>"}'`).
 Fang damit an, dass du die Dateien liest und mir in 5 Sätzen sagst, wo wir stehen.
 ```
+
+---
+
+## 000000000000000000. NEU 12. November (Version K2-2026-11-12m): Logos und Menü überarbeitet – in Studio geprüft
+
+- Logo-Code liegt jetzt in eigenem Modul `src/shared/ShopLogos.lua` (`ShopLogos.draw(view, id, big)`), Shop ruft es auf.
+- Logos: Funkeln als weicher 4-Zacken-Stern (statt weißem X), Blitz beim Boost als echter Zickzack, Bandenden mit
+  Schwalbenschwanz-Kerbe innerhalb des Abzeichens, Herzen heller mit Herzschlag-Linie darunter, weicherer Schein an
+  Truhe und Taschenlampe. Alle 10 Logos in Studio als Bild geprüft, keine Fehler.
+- Menü: kleines Fenster zeigt jetzt die Beschreibung (Foto niedriger), Kaffeefleck verdeckt nicht mehr den Namen,
+  Reiter-Etiketten kräftiger. Nur in Studio: Attribut `TestOpen` an `VipShop` öffnet den Shop (z. B. "Passes").
+- Geprüft im kleinen Fenster (Studio-Ansicht); großes Fenster/Handy nicht extra geprüft.
 
 ---
 
