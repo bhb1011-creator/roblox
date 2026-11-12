@@ -143,13 +143,30 @@ end
 
 -- Shop: Bundles
 local starter = ShopCatalog.STARTER_PACK
-add({ id = "StarterPack", kind = "Starter", tab = "Bundles", title = starter.title, description = starter.description, robux = starter.robux, firstRobux = starter.firstTimeRobux, productId = starter.productId, firstProductId = starter.firstTimeProductId, preview = { kind = "item", item = "Backpack" }, note = "First purchase only 50 R$", once = true })
+add({ id = "StarterPack", kind = "Starter", tab = "Bundles", title = starter.title, description = starter.description, robux = starter.robux, firstRobux = starter.firstTimeRobux, productId = starter.productId, firstProductId = starter.firstTimeProductId, preview = { kind = "item", item = "Backpack" }, note = "First time only", once = true })
 for _, pack in ShopCatalog.PACKS do
 	local previews = { GoldenPack = { kind = "family" }, SarpVip = { kind = "sarp", skin = "GildedHorror" }, Everything = { kind = "everything" } }
-	add({ id = pack.id, kind = "Pack", tab = "Bundles", title = pack.title, description = pack.description, robux = pack.robux, productId = pack.productId, preview = previews[pack.id], contents = titlesOf(pack.grants), note = pack.tag, once = true })
+	local oldRobux
+	if pack.id == "Everything" then
+		-- so viel kosten die beiden Packs einzeln
+		oldRobux = 0
+		for _, other in ShopCatalog.PACKS do
+			if other.id ~= "Everything" then
+				oldRobux += other.robux
+			end
+		end
+	end
+	add({ id = pack.id, kind = "Pack", tab = "Bundles", title = pack.title, description = pack.description, robux = pack.robux, oldRobux = oldRobux, productId = pack.productId, preview = previews[pack.id], contents = titlesOf(pack.grants), note = pack.tag, once = true })
 end
 for _, outfit in ShopCatalog.OUTFITS do
-	add({ id = outfit.id, kind = "Outfit", tab = "Bundles", title = outfit.title, description = outfit.description, coins = outfit.coins, robux = outfit.robux, productId = outfit.productId, preview = { kind = "fitting" }, tryItems = outfit.items, contents = titlesOf(outfit.items), once = true })
+	-- alter Preis = alle Teile einzeln
+	local oldCoins, oldRobux = 0, 0
+	for _, id in outfit.items do
+		local item = ShopCatalog.find(id)
+		oldCoins += item and item.coins or 0
+		oldRobux += item and item.robux or 0
+	end
+	add({ id = outfit.id, kind = "Outfit", tab = "Bundles", title = outfit.title, description = outfit.description, coins = outfit.coins, robux = outfit.robux, oldCoins = oldCoins, oldRobux = oldRobux, productId = outfit.productId, preview = { kind = "fitting" }, tryItems = outfit.items, contents = titlesOf(outfit.items), note = "Save " .. math.floor((1 - outfit.coins / oldCoins) * 100 + 0.5) .. "%", once = true })
 end
 -- Shop: Anzüge und Skins
 for _, skin in ShopCatalog.SKINS do
@@ -181,6 +198,23 @@ end
 
 local SHOP_TABS = { { "Bundles", "Bundles" }, { "Skins", "Suits & Skins" }, { "Clothing", "Clothing" }, { "Passes", "Passes" }, { "Coins", "Coins" } }
 local KIOSK_TABS = { { "Snacks", "Snacks" }, { "Extras", "Extras" } }
+
+-- aktuelle und alte Preise: coins, robux, oldCoins, oldRobux
+local function prices(entry)
+	local robux, oldRobux = entry.robux, entry.oldRobux
+	if entry.kind == "Starter" and entry.firstRobux and not state.owned.StarterPack then
+		robux, oldRobux = entry.firstRobux, entry.robux
+	end
+	return entry.coins, robux, entry.oldCoins, oldRobux
+end
+
+-- „<s>alt</s> neu“ als RichText; alter Preis blass
+local function struck(old, new)
+	if old and old > new then
+		return '<font transparency="0.45"><s>' .. money(old) .. "</s></font>  " .. money(new)
+	end
+	return money(new)
+end
 
 local function isOwned(entry)
 	if not entry.once then
@@ -659,6 +693,72 @@ local function photo(parent, z)
 	return frame, view
 end
 
+------------------------------------------------------------------ Bewegung (kurz, gezielt; aus bei „weniger Bewegung“)
+local function calm()
+	return GuiService.ReducedMotionEnabled
+end
+
+local function tween(object, time, goal, style, direction)
+	if calm() then
+		for key, value in goal do
+			object[key] = value
+		end
+		return nil
+	end
+	local t = TweenService:Create(object, TweenInfo.new(time, style or Enum.EasingStyle.Quad, direction or Enum.EasingDirection.Out), goal)
+	t:Play()
+	return t
+end
+
+-- Lichtschimmer, der beim Darüberfahren über einen Knopf läuft
+local function addShine(button, z)
+	button.ClipsDescendants = true
+	local shine = create("Frame", { Name = "Shine", Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.new(1, 1, 1), BorderSizePixel = 0, ZIndex = z, Parent = button })
+	local gradient = create("UIGradient", {
+		Rotation = 18,
+		Offset = Vector2.new(-1, 0),
+		Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.42, 1), NumberSequenceKeypoint.new(0.5, 0.72), NumberSequenceKeypoint.new(0.58, 1), NumberSequenceKeypoint.new(1, 1) }),
+		Parent = shine,
+	})
+	return function()
+		if calm() then
+			return
+		end
+		gradient.Offset = Vector2.new(-1, 0)
+		TweenService:Create(gradient, TweenInfo.new(0.55, Enum.EasingStyle.Sine), { Offset = Vector2.new(1, 0) }):Play()
+	end
+end
+
+-- Knopf „lebt“: wächst beim Darüberfahren, gibt beim Drücken nach, federt zurück
+local function alive(button, options)
+	options = options or {}
+	local scale = button:FindFirstChildOfClass("UIScale") or create("UIScale", { Parent = button })
+	local hover = options.hover or 1.04
+	local sweep = options.shine and addShine(button, options.shineZ or 14)
+	local inside = false
+	local function rest()
+		return button:GetAttribute("RestScale") or 1
+	end
+	button.MouseEnter:Connect(function()
+		inside = true
+		tween(scale, 0.12, { Scale = hover })
+		if sweep then
+			sweep()
+		end
+	end)
+	button.MouseLeave:Connect(function()
+		inside = false
+		tween(scale, 0.16, { Scale = rest() })
+	end)
+	button.MouseButton1Down:Connect(function()
+		tween(scale, 0.06, { Scale = 0.94 })
+	end)
+	button.MouseButton1Up:Connect(function()
+		tween(scale, 0.3, { Scale = inside and hover or rest() }, Enum.EasingStyle.Back)
+	end)
+	return scale
+end
+
 local function priceRow(parent, z)
 	return create("Frame", { Name = "PriceRow", BackgroundTransparency = 1, ZIndex = z, Parent = parent }, {
 		create("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, VerticalAlignment = Enum.VerticalAlignment.Center, Padding = UDim.new(0, 6), SortOrder = Enum.SortOrder.LayoutOrder }),
@@ -718,6 +818,12 @@ local vignette = create("Frame", { Name = "Vignette", Size = UDim2.fromScale(1, 
 for _, pos in { UDim2.fromOffset(12, 12), UDim2.new(1, -12, 0, 12), UDim2.new(0, 12, 1, -12), UDim2.new(1, -12, 1, -12) } do
 	nail(root, pos, 12)
 end
+
+local rootScale = create("UIScale", { Parent = root })
+-- warmes Laternenlicht von oben (flackert leicht, solange das Fenster offen ist)
+local lantern = create("Frame", { Name = "LanternGlow", AnchorPoint = Vector2.new(0.5, 0), Position = UDim2.fromScale(0.5, 0), Size = UDim2.new(0.8, 0, 0, 260), BackgroundColor3 = Color3.fromRGB(255, 186, 110), BackgroundTransparency = 0, ZIndex = 11, Parent = root }, {
+	create("UIGradient", { Rotation = 90, Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.8), NumberSequenceKeypoint.new(1, 1) }) }),
+})
 
 -- Kopfzeile: Holzschild mit Namen, rechts Messingschild mit Münzen und Schließen
 local sign = create("Frame", { Name = "Sign", BackgroundColor3 = T.woodLight, Rotation = -1, ZIndex = 12, Parent = root }, {
@@ -921,15 +1027,16 @@ local function fillPrice(row, entry, size, z)
 		text({ Size = UDim2.fromOffset(0, size + 6), AutomaticSize = Enum.AutomaticSize.X, Font = Enum.Font.SpecialElite, TextSize = size, TextColor3 = T.inkGreen, Text = wearing and "wearing it" or "in your bag", ZIndex = z, LayoutOrder = 1, Parent = row })
 		return
 	end
-	if entry.coins then
+	local coins, robux, oldCoins, oldRobux = prices(entry)
+	if coins then
 		coinIcon(row, size - 1, z).LayoutOrder = 1
-		text({ Size = UDim2.fromOffset(0, size + 4), AutomaticSize = Enum.AutomaticSize.X, Font = T.boldFont, TextSize = size, TextColor3 = T.ink, Text = money(entry.coins), ZIndex = z, LayoutOrder = 2, Parent = row })
+		text({ Size = UDim2.fromOffset(0, size + 4), AutomaticSize = Enum.AutomaticSize.X, Font = T.boldFont, TextSize = size, TextColor3 = T.ink, RichText = true, Text = struck(oldCoins, coins), ZIndex = z, LayoutOrder = 2, Parent = row })
 	end
-	if entry.robux then
-		if entry.coins then
+	if robux then
+		if coins then
 			text({ Size = UDim2.fromOffset(0, size + 4), AutomaticSize = Enum.AutomaticSize.X, Font = Enum.Font.SpecialElite, TextSize = size - 1, TextColor3 = T.inkMuted, Text = "or", ZIndex = z, LayoutOrder = 3, Parent = row })
 		end
-		text({ Size = UDim2.fromOffset(0, size + 4), AutomaticSize = Enum.AutomaticSize.X, Font = T.boldFont, TextSize = size, TextColor3 = T.inkGreen, Text = "R$ " .. money(entry.robux), ZIndex = z, LayoutOrder = 4, Parent = row })
+		text({ Size = UDim2.fromOffset(0, size + 4), AutomaticSize = Enum.AutomaticSize.X, Font = T.boldFont, TextSize = size, TextColor3 = T.inkGreen, RichText = true, Text = "R$ " .. struck(oldRobux, robux), ZIndex = z, LayoutOrder = 4, Parent = row })
 	end
 	if not entry.coins and not entry.robux and entry.pack then
 		local pack = byId[entry.pack]
@@ -948,8 +1055,24 @@ local function styleCard(card)
 	card.stroke.Color = active and T.stamp or T.woodDark
 	card.stroke.Thickness = active and 3 or 2
 	card.stroke.Transparency = active and 0 or 0.35
+	card.frame:SetAttribute("RestScale", active and 1.02 or 1)
+	if card.scale.Scale < 1.03 then
+		tween(card.scale, 0.18, { Scale = active and 1.02 or 1 })
+	end
 	fillPrice(card.price, card.entry, layout.compact and 13 or 15, 16)
-	card.stamp.Visible = isOwned(card.entry)
+	local owned = isOwned(card.entry)
+	if owned and card.stampShown == false then
+		-- gerade gekauft: Stempel kommt groß und knallt auf die Karte
+		card.stamp.Visible = true
+		local stampScale = card.stamp:FindFirstChildOfClass("UIScale")
+		stampScale.Scale = 2.2
+		card.stamp.TextTransparency = 1
+		tween(stampScale, 0.35, { Scale = 1 }, Enum.EasingStyle.Back)
+		tween(card.stamp, 0.2, { TextTransparency = 0.12 })
+	else
+		card.stamp.Visible = owned
+	end
+	card.stampShown = owned
 end
 
 local select -- weiter unten
@@ -980,7 +1103,9 @@ local function makeCard(entry, order)
 	price.Size = UDim2.new(1, -24, 0, (layout.compact and 13 or 15) + 6)
 	local stamp = stampLabel(frame, "OWNED", 19)
 	stamp.Visible = false
-	local card = { entry = entry, frame = frame, stroke = stroke, price = price, thumb = view, tilt = tilt, stamp = stamp }
+	create("UIScale", { Parent = stamp })
+	local cardScale = alive(frame, { hover = 1.035 })
+	local card = { entry = entry, frame = frame, stroke = stroke, price = price, thumb = view, tilt = tilt, stamp = stamp, scale = cardScale }
 	frame.MouseEnter:Connect(function()
 		if selected ~= entry then
 			stroke.Color = T.brassDark
@@ -994,6 +1119,10 @@ local function makeCard(entry, order)
 		select(entry)
 	end)
 	styleCard(card)
+	card.stampShown = isOwned(entry) -- erst ab jetzt „knallt“ ein neuer Stempel
+	if not isOwned(entry) then
+		card.stampShown = false
+	end
 	table.insert(thumbQueue, card)
 	return card
 end
@@ -1071,6 +1200,7 @@ local function buildTabs(list)
 			Parent = tabBar,
 		}, { corner(2), create("UIPadding", { PaddingLeft = UDim.new(0, 14), PaddingRight = UDim.new(0, 14) }) })
 		button:SetAttribute("Tilt", (index % 2 == 0) and 1.5 or -1.2)
+		alive(button, { hover = 1.06 })
 		button.Activated:Connect(function()
 			showTab(info_[1])
 			if cards[1] then
@@ -1131,13 +1261,17 @@ local function bigButton(parent, label, style, order, onClick, options)
 		corner(5),
 		create("UIStroke", { Color = look.edge, Thickness = 2, ApplyStrokeMode = Enum.ApplyStrokeMode.Border }),
 		create("UIGradient", { Rotation = 90, Color = ColorSequence.new(Color3.new(1, 1, 1), Color3.new(0.84, 0.82, 0.78)) }),
+	})
+	-- Inhalt in eigenem Rahmen (die Anordnung soll den Lichtschimmer nicht mit verschieben)
+	local content = create("Frame", { Name = "Content", Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, ZIndex = 15, Parent = b }, {
 		create("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, HorizontalAlignment = Enum.HorizontalAlignment.Center, VerticalAlignment = Enum.VerticalAlignment.Center, Padding = UDim.new(0, 8), SortOrder = Enum.SortOrder.LayoutOrder }),
 	})
 	if options.coins then
-		coinIcon(b, 20, 15).LayoutOrder = 1
+		coinIcon(content, 20, 15).LayoutOrder = 1
 	end
-	text({ Size = UDim2.fromOffset(0, 22), AutomaticSize = Enum.AutomaticSize.X, Font = look.font, TextSize = 17, TextColor3 = look.text, Text = label, ZIndex = 15, LayoutOrder = 2, Parent = b })
+	text({ Size = UDim2.fromOffset(0, 22), AutomaticSize = Enum.AutomaticSize.X, Font = look.font, TextSize = 17, TextColor3 = look.text, RichText = true, Text = label, ZIndex = 15, LayoutOrder = 2, Parent = content })
 	if onClick then
+		alive(b, { shine = true, shineZ = 14, hover = 1.03 })
 		local busy = false
 		b.Activated:Connect(function()
 			if busy then
@@ -1231,18 +1365,15 @@ local function renderActions(entry)
 			create("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 10), SortOrder = Enum.SortOrder.LayoutOrder }),
 		})
 	end
-	if entry.coins then
-		local afford = state.coins >= entry.coins
-		bigButton(holder, money(entry.coins), afford and "brass" or "dim", 1, function()
+	local coins, robux, oldCoins, oldRobux = prices(entry)
+	if coins then
+		local afford = state.coins >= coins
+		bigButton(holder, struck(oldCoins, coins), afford and "brass" or "dim", 1, function()
 			buyWithCoins(entry)
 		end, { coins = true, width = sideBySide and 0.5 or nil })
 	end
-	if entry.robux then
-		local label = "R$ " .. money(entry.robux)
-		if entry.kind == "Starter" and entry.firstRobux and not state.owned.StarterPack then
-			label = "R$ " .. entry.firstRobux .. "   (not " .. entry.robux .. ")"
-		end
-		bigButton(holder, label, "felt", 3, function()
+	if robux then
+		bigButton(holder, "R$ " .. struck(oldRobux, robux), "felt", 3, function()
 			promptRobux(entry)
 		end, { width = sideBySide and 0.5 or nil })
 	end
@@ -1332,10 +1463,14 @@ local function setOpen(value, wantedMode, target)
 	elseif cards[1] then
 		select(cards[1].entry)
 	end
-	-- kurz und ruhig einblenden (Abdunklung), außer bei „weniger Bewegung“
-	if not GuiService.ReducedMotionEnabled then
+	-- einblenden: Abdunklung und das Fenster federt auf (außer bei „weniger Bewegung“)
+	if not calm() then
 		overlay.BackgroundTransparency = 1
-		TweenService:Create(overlay, TweenInfo.new(0.16, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { BackgroundTransparency = 0.4 }):Play()
+		rootScale.Scale = 0.9
+		tween(overlay, 0.18, { BackgroundTransparency = 0.4 })
+		tween(rootScale, 0.35, { Scale = 1 }, Enum.EasingStyle.Back)
+	else
+		rootScale.Scale = 1
 	end
 end
 
@@ -1346,6 +1481,25 @@ gui:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
 		showTab(currentTab)
 		if selected then
 			select(selected)
+		end
+	end
+end)
+
+alive(hudButton, { shine = true, shineZ = 2, hover = 1.06 })
+alive(closeButton, { hover = 1.08 })
+alive(coinBox, { hover = 1.04 })
+alive(resetButton, { hover = 1.06 })
+
+-- Laterne flackert (nur solange offen)
+task.spawn(function()
+	local rng = Random.new()
+	while true do
+		task.wait(rng:NextNumber(0.08, 0.35))
+		if open and not calm() then
+			local dip = rng:NextNumber() < 0.1
+			lantern.BackgroundTransparency = dip and rng:NextNumber(0.35, 0.55) or rng:NextNumber(0, 0.12)
+		elseif open then
+			lantern.BackgroundTransparency = 0.05
 		end
 	end
 end)
@@ -1399,10 +1553,30 @@ ProximityPromptService.PromptTriggered:Connect(function(prompt, who)
 end)
 
 -- Daten geändert (Kauf, Anziehen): neu anzeigen
+-- Münzen zählen sichtbar hoch oder runter, das Messingschild hüpft kurz
+local shownCoins
+local coinCounter = Instance.new("NumberValue")
+coinCounter.Changed:Connect(function(value)
+	hudCoins.Text = money(value)
+	coinsLabel.Text = money(value)
+end)
+local coinScale = coinBox:FindFirstChildOfClass("UIScale") or create("UIScale", { Parent = coinBox })
+local function showCoins(amount)
+	if shownCoins == nil or calm() then
+		coinCounter.Value = amount
+		hudCoins.Text = money(amount)
+		coinsLabel.Text = money(amount)
+	elseif shownCoins ~= amount then
+		TweenService:Create(coinCounter, TweenInfo.new(0.7, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Value = amount }):Play()
+		coinScale.Scale = 1.12
+		tween(coinScale, 0.4, { Scale = 1 }, Enum.EasingStyle.Back)
+	end
+	shownCoins = amount
+end
+
 local function onDataChanged()
 	readData()
-	hudCoins.Text = money(state.coins)
-	coinsLabel.Text = money(state.coins)
+	showCoins(state.coins)
 	testNote:SetAttribute("Wanted", player:GetAttribute("TestCoins") == true)
 	testNote.Visible = player:GetAttribute("TestCoins") == true and not layout.compact
 	if open then
