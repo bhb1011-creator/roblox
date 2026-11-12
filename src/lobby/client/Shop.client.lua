@@ -45,10 +45,15 @@ local T = {
 	robux = Color3.fromRGB(64, 128, 90),
 	good = Color3.fromRGB(150, 190, 130),
 	bad = Color3.fromRGB(226, 128, 112),
+	coin = Color3.fromRGB(230, 184, 84),
+	coinEdge = Color3.fromRGB(150, 106, 38),
+	glowTop = Color3.fromRGB(92, 72, 54), -- warmes Licht hinter den 3D-Bildern
+	glowBottom = Color3.fromRGB(30, 26, 23),
 	titleFont = Enum.Font.SpecialElite,
 	bodyFont = Enum.Font.GothamMedium,
 	boldFont = Enum.Font.GothamBold,
-	radius = 6,
+	radius = 8,
+	touch = 48, -- Mindesthöhe für alles, was man antippt
 }
 
 local function create(className, props, children)
@@ -500,7 +505,7 @@ local function previewFor(entry, tried)
 	return model
 end
 
--- Modell in ein Vorschaufenster setzen; gibt eine Funktion zum Drehen zurück
+-- Modell in ein Vorschaufenster setzen, auf ein kleines Holzpodest; gibt eine Funktion zum Drehen zurück
 local function show(viewport, model, yaw)
 	viewport:ClearAllChildren()
 	if not model then
@@ -511,19 +516,75 @@ local function show(viewport, model, yaw)
 	local clone = model:Clone()
 	clone.Parent = world
 	local cf, size = clone:GetBoundingBox()
+	-- Podest unter dem Modell (dunkles Holz mit hellem Rand)
+	local radius = math.clamp(math.max(size.X, size.Z) * 0.62, 0.8, 6)
+	local bottom = cf.Position.Y - size.Y / 2
+	local function disc(height, r, color, material)
+		local part = Instance.new("Part")
+		part.Shape = Enum.PartType.Cylinder
+		part.Size = Vector3.new(height, r * 2, r * 2)
+		part.CFrame = CFrame.new(cf.Position.X, bottom - height / 2, cf.Position.Z) * CFrame.Angles(0, 0, math.rad(90))
+		part.Color = color
+		part.Material = material
+		part.Anchored = true
+		part.Parent = world
+	end
+	disc(radius * 0.12, radius, Color3.fromRGB(58, 42, 32), Enum.Material.Wood)
+	disc(radius * 0.02, radius * 1.03, Color3.fromRGB(150, 112, 60), Enum.Material.Wood)
 	local camera = Instance.new("Camera")
-	camera.FieldOfView = 28
+	camera.FieldOfView = 26
 	camera.Parent = viewport
 	viewport.CurrentCamera = camera
-	local radius = math.max(size.X, size.Y * 1.05, size.Z) * 0.5
-	local distance = radius / math.tan(math.rad(camera.FieldOfView / 2)) * 1.1
-	local focus = cf.Position
+	local reach = math.max(size.X, size.Y * 1.08, size.Z) * 0.5
+	local distance = reach / math.tan(math.rad(camera.FieldOfView / 2)) * 1.12
+	local focus = cf.Position - Vector3.new(0, size.Y * 0.03, 0)
 	local function aim(angle)
-		local offset = Vector3.new(math.sin(angle), 0.12, -math.cos(angle)).Unit * distance
+		local offset = Vector3.new(math.sin(angle), 0.16, -math.cos(angle)).Unit * distance
 		camera.CFrame = CFrame.lookAt(focus + offset, focus)
 	end
 	aim(yaw or math.rad(-18))
 	return aim
+end
+
+------------------------------------------------------------------ Bausteine der Oberfläche
+-- gezeichnete Münze (statt eines Emojis)
+local function coinIcon(parent, size, z)
+	local coin = create("Frame", { Name = "Coin", Size = UDim2.fromOffset(size, size), BackgroundColor3 = T.coin, ZIndex = z, Parent = parent }, {
+		create("UICorner", { CornerRadius = UDim.new(1, 0) }),
+		create("UIStroke", { Color = T.coinEdge, Thickness = math.max(1, size / 10) }),
+	})
+	create("Frame", { AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), Size = UDim2.fromScale(0.52, 0.52), BackgroundTransparency = 1, ZIndex = z, Parent = coin }, {
+		create("UICorner", { CornerRadius = UDim.new(1, 0) }),
+		create("UIStroke", { Color = T.coinEdge, Thickness = 1, Transparency = 0.35 }),
+	})
+	return coin
+end
+
+-- warmer Lichtverlauf hinter einem 3D-Bild; das Vorschaufenster selbst ist durchsichtig
+local function glowBackdrop(parent, z)
+	local back = create("Frame", { Name = "Backdrop", BackgroundColor3 = Color3.new(1, 1, 1), ZIndex = z, Parent = parent }, {
+		corner(T.radius - 2),
+		create("UIGradient", { Rotation = 90, Color = ColorSequence.new(T.glowTop, T.glowBottom) }),
+	})
+	local view = create("ViewportFrame", {
+		Name = "View",
+		Size = UDim2.fromScale(1, 1),
+		BackgroundTransparency = 1,
+		Ambient = Color3.fromRGB(150, 138, 126),
+		LightColor = Color3.fromRGB(255, 232, 205),
+		LightDirection = Vector3.new(-0.6, -1, -0.8),
+		ZIndex = z + 1,
+		Parent = back,
+	})
+	return back, view
+end
+
+-- Zeile „Münze 1,800 · R$ 349“
+local function priceRow(parent, entry, textSize, z)
+	local row = create("Frame", { Name = "PriceRow", Size = UDim2.new(1, 0, 0, textSize + 6), BackgroundTransparency = 1, ZIndex = z, Parent = parent }, {
+		create("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, VerticalAlignment = Enum.VerticalAlignment.Center, Padding = UDim.new(0, 6), SortOrder = Enum.SortOrder.LayoutOrder }),
+	})
+	return row
 end
 
 ------------------------------------------------------------------ Fenster
@@ -537,126 +598,206 @@ local gui = create("ScreenGui", {
 	Parent = player:WaitForChild("PlayerGui"),
 })
 
--- unten links: Münzen und ein ruhiger Shop-Knopf
-local hud = create("Frame", { Name = "Hud", AnchorPoint = Vector2.new(0, 1), Position = UDim2.new(0, 18, 1, -18), Size = UDim2.fromOffset(150, 74), BackgroundTransparency = 1, Parent = gui })
-local hudCoins = text({ Name = "Coins", Size = UDim2.new(1, 0, 0, 24), Font = T.boldFont, TextSize = 16, Text = "0 coins", TextColor3 = T.text, TextStrokeTransparency = 0.6, Parent = hud })
+-- unten links: Münzen und der Shop-Knopf (groß genug zum Tippen)
+local hud = create("Frame", { Name = "Hud", AnchorPoint = Vector2.new(0, 1), Position = UDim2.new(0, 18, 1, -18), Size = UDim2.fromOffset(170, 92), BackgroundTransparency = 1, Parent = gui })
+local hudCoinRow = create("Frame", { Name = "CoinRow", Size = UDim2.new(1, 0, 0, 30), BackgroundTransparency = 1, Parent = hud }, {
+	create("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, VerticalAlignment = Enum.VerticalAlignment.Center, Padding = UDim.new(0, 8), SortOrder = Enum.SortOrder.LayoutOrder }),
+})
+coinIcon(hudCoinRow, 20, 2).LayoutOrder = 1
+local hudCoins = text({ Name = "Coins", Size = UDim2.fromOffset(130, 26), AutomaticSize = Enum.AutomaticSize.X, Font = T.boldFont, TextSize = 18, Text = "0", TextColor3 = T.text, TextStrokeTransparency = 0.55, LayoutOrder = 2, Parent = hudCoinRow })
 local hudButton = create("TextButton", {
 	Name = "OpenShop",
-	Position = UDim2.fromOffset(0, 30),
-	Size = UDim2.fromOffset(120, 40),
+	Position = UDim2.fromOffset(0, 38),
+	Size = UDim2.fromOffset(150, 54),
 	BackgroundColor3 = T.panel,
-	BackgroundTransparency = 0.15,
+	BackgroundTransparency = 0.1,
 	AutoButtonColor = true,
 	Font = T.titleFont,
 	Text = "Shop",
-	TextSize = 22,
+	TextSize = 26,
 	TextColor3 = T.text,
 	Parent = hud,
-}, { corner(), hairline(0.7) })
+}, { corner(), hairline(0.6) })
 
-local overlay = create("Frame", { Name = "Overlay", Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.new(0, 0, 0), BackgroundTransparency = 0.5, Visible = false, ZIndex = 10, Parent = gui })
+local overlay = create("Frame", { Name = "Overlay", Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.new(0, 0, 0), BackgroundTransparency = 0.45, Visible = false, ZIndex = 10, Parent = gui })
 local root = create("Frame", {
 	Name = "Root",
 	AnchorPoint = Vector2.new(0.5, 0.5),
 	Position = UDim2.fromScale(0.5, 0.5),
-	Size = UDim2.fromOffset(1000, 600),
-	BackgroundColor3 = T.panel,
+	Size = UDim2.fromOffset(1040, 640),
+	BackgroundColor3 = Color3.new(1, 1, 1),
 	ZIndex = 11,
 	Parent = overlay,
-}, { corner(10), hairline(0.75) })
-local scale = create("UIScale", { Parent = root })
--- an die nutzbare Fläche anpassen (ohne Roblox-Leiste oben)
-local function updateScale()
-	local size = gui.AbsoluteSize
-	if size.X < 10 then
-		return
-	end
-	scale.Scale = math.clamp(math.min((size.X - 32) / 1000, (size.Y - 32) / 600), 0.5, 1.2)
-end
-updateScale()
-gui:GetPropertyChangedSignal("AbsoluteSize"):Connect(updateScale)
+}, {
+	corner(12),
+	hairline(0.7),
+	create("UIGradient", { Rotation = 90, Color = ColorSequence.new(Color3.fromRGB(36, 30, 26), T.panel) }),
+})
 
--- Kopfzeile
-local header = create("Frame", { Name = "Header", Size = UDim2.new(1, 0, 0, 70), BackgroundTransparency = 1, ZIndex = 12, Parent = root })
-local titleLabel = text({ Name = "Title", Position = UDim2.fromOffset(28, 14), Size = UDim2.fromOffset(400, 30), Font = T.titleFont, TextSize = 30, Text = "Shop", ZIndex = 12, Parent = header })
-local subtitle = text({ Name = "Subtitle", Position = UDim2.fromOffset(29, 44), Size = UDim2.fromOffset(500, 18), TextSize = 14, TextColor3 = T.muted, Text = "", ZIndex = 12, Parent = header })
-local coinsLabel = text({ Name = "Coins", AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, -120, 0, 18), Size = UDim2.fromOffset(240, 22), Font = T.boldFont, TextSize = 18, TextXAlignment = Enum.TextXAlignment.Right, Text = "0 coins", ZIndex = 12, Parent = header })
-local testNote = text({ Name = "TestNote", AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, -120, 0, 42), Size = UDim2.fromOffset(240, 16), TextSize = 12, TextXAlignment = Enum.TextXAlignment.Right, TextColor3 = T.muted, Text = "Studio test coins, not saved", Visible = false, ZIndex = 12, Parent = header })
+-- Kopfzeile: Titel links, Münzen und Schließen rechts
+local titleLabel = text({ Name = "Title", Font = T.titleFont, TextSize = 34, Text = "Shop", ZIndex = 12, Parent = root })
+local subtitle = text({ Name = "Subtitle", TextSize = 14, TextColor3 = T.muted, Text = "", TextTruncate = Enum.TextTruncate.AtEnd, ZIndex = 12, Parent = root })
+local coinBox = create("TextButton", { Name = "CoinBox", AnchorPoint = Vector2.new(1, 0), Size = UDim2.fromOffset(170, T.touch), BackgroundColor3 = T.surface, AutoButtonColor = true, Text = "", ZIndex = 12, Parent = root }, {
+	corner(),
+	hairline(0.82),
+	create("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, HorizontalAlignment = Enum.HorizontalAlignment.Center, VerticalAlignment = Enum.VerticalAlignment.Center, Padding = UDim.new(0, 8), SortOrder = Enum.SortOrder.LayoutOrder }),
+})
+coinIcon(coinBox, 22, 13).LayoutOrder = 1
+local coinsLabel = text({ Name = "Amount", Size = UDim2.fromOffset(0, 24), AutomaticSize = Enum.AutomaticSize.X, Font = T.boldFont, TextSize = 18, Text = "0", ZIndex = 13, LayoutOrder = 2, Parent = coinBox })
+local testNote = text({ Name = "TestNote", AnchorPoint = Vector2.new(1, 0), Size = UDim2.fromOffset(220, 14), TextSize = 11, TextXAlignment = Enum.TextXAlignment.Right, TextColor3 = T.muted, Text = "Studio test coins, not saved", Visible = false, ZIndex = 12, Parent = root })
 local closeButton = create("TextButton", {
 	Name = "Close",
 	AnchorPoint = Vector2.new(1, 0),
-	Position = UDim2.new(1, -24, 0, 18),
-	Size = UDim2.fromOffset(80, 34),
+	Size = UDim2.fromOffset(T.touch, T.touch),
 	BackgroundColor3 = T.surface,
 	AutoButtonColor = true,
 	Font = T.boldFont,
-	Text = "Close",
-	TextSize = 14,
+	Text = "X",
+	TextSize = 20,
 	TextColor3 = T.text,
 	Modal = true, -- Maus frei, solange das Fenster offen ist
 	ZIndex = 12,
-	Parent = header,
-}, { corner(), hairline(0.8) })
+	Parent = root,
+}, { corner(), hairline(0.82) })
 
--- Reiter
-local tabBar = create("Frame", { Name = "Tabs", Position = UDim2.fromOffset(24, 72), Size = UDim2.new(0, 620, 0, 36), BackgroundTransparency = 1, ZIndex = 12, Parent = root }, {
-	create("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 22), SortOrder = Enum.SortOrder.LayoutOrder }),
+-- Reiter (große Tippflächen, Unterstrich zeigt den aktiven)
+local tabBar = create("Frame", { Name = "Tabs", BackgroundTransparency = 1, ZIndex = 12, Parent = root }, {
+	create("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 4), SortOrder = Enum.SortOrder.LayoutOrder }),
 })
-create("Frame", { Name = "Divider", Position = UDim2.fromOffset(24, 108), Size = UDim2.new(1, -48, 0, 1), BackgroundColor3 = T.line, BackgroundTransparency = 0.85, BorderSizePixel = 0, ZIndex = 12, Parent = root })
+local divider = create("Frame", { Name = "Divider", BackgroundColor3 = T.line, BackgroundTransparency = 0.86, BorderSizePixel = 0, ZIndex = 12, Parent = root })
 
--- Karten links
+-- Karten
 local grid = create("ScrollingFrame", {
 	Name = "Grid",
-	Position = UDim2.fromOffset(24, 124),
-	Size = UDim2.fromOffset(612, 452),
 	BackgroundTransparency = 1,
 	BorderSizePixel = 0,
-	ScrollBarThickness = 4,
+	ScrollBarThickness = 6,
 	ScrollBarImageColor3 = T.muted,
-	ScrollBarImageTransparency = 0.4,
+	ScrollBarImageTransparency = 0.5,
 	AutomaticCanvasSize = Enum.AutomaticSize.Y,
 	CanvasSize = UDim2.new(),
+	ScrollingDirection = Enum.ScrollingDirection.Y,
 	ZIndex = 12,
 	Parent = root,
 }, {
-	create("UIGridLayout", { CellSize = UDim2.fromOffset(192, 206), CellPadding = UDim2.fromOffset(12, 12), SortOrder = Enum.SortOrder.LayoutOrder }),
-	create("UIPadding", { PaddingRight = UDim.new(0, 8), PaddingBottom = UDim.new(0, 8) }),
+	create("UIPadding", { PaddingRight = UDim.new(0, 10), PaddingBottom = UDim.new(0, 10), PaddingTop = UDim.new(0, 2), PaddingLeft = UDim.new(0, 2) }),
 })
+local gridLayout = create("UIGridLayout", { CellSize = UDim2.fromOffset(200, 230), CellPadding = UDim2.fromOffset(12, 12), SortOrder = Enum.SortOrder.LayoutOrder, Parent = grid })
 
--- Anprobe / Details rechts
-local detail = create("Frame", { Name = "Detail", Position = UDim2.fromOffset(652, 124), Size = UDim2.fromOffset(324, 452), BackgroundColor3 = T.surface, ZIndex = 12, Parent = root }, { corner(8) })
-local stage = create("ViewportFrame", {
-	Name = "Stage",
-	Position = UDim2.fromOffset(10, 10),
-	Size = UDim2.new(1, -20, 0, 214),
-	BackgroundColor3 = T.well,
-	Ambient = Color3.fromRGB(150, 140, 130),
-	LightColor = Color3.fromRGB(255, 236, 214),
-	LightDirection = Vector3.new(-0.6, -1, -0.8),
-	ZIndex = 13,
-	Parent = detail,
-}, { corner() })
-local stageHint = text({ Name = "Hint", AnchorPoint = Vector2.new(1, 1), Position = UDim2.new(1, -18, 0, 218), Size = UDim2.fromOffset(160, 14), TextSize = 11, TextXAlignment = Enum.TextXAlignment.Right, TextColor3 = T.muted, Text = "Drag to turn", ZIndex = 14, Parent = detail })
-local resetButton = create("TextButton", { Name = "Reset", Position = UDim2.fromOffset(18, 200), Size = UDim2.fromOffset(58, 18), BackgroundTransparency = 1, Font = T.boldFont, Text = "Reset", TextSize = 12, TextColor3 = T.muted, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 14, Visible = false, Parent = detail })
-local kindLabel = text({ Name = "Kind", Position = UDim2.fromOffset(18, 234), Size = UDim2.new(1, -36, 0, 14), Font = T.boldFont, TextSize = 11, TextColor3 = T.muted, Text = "", ZIndex = 13, Parent = detail })
-local nameLabel = text({ Name = "Name", Position = UDim2.fromOffset(18, 250), Size = UDim2.new(1, -36, 0, 28), Font = T.titleFont, TextSize = 24, Text = "", ZIndex = 13, Parent = detail })
-local descLabel = text({ Name = "Description", Position = UDim2.fromOffset(18, 282), Size = UDim2.new(1, -36, 0, 70), TextSize = 13, TextWrapped = true, TextYAlignment = Enum.TextYAlignment.Top, TextColor3 = T.muted, Text = "", ZIndex = 13, Parent = detail })
-local statusLabel = text({ Name = "Status", Position = UDim2.fromOffset(18, 352), Size = UDim2.new(1, -36, 0, 16), Font = T.boldFont, TextSize = 12, TextColor3 = T.good, Text = "", ZIndex = 13, Parent = detail })
-local actions = create("Frame", { Name = "Actions", Position = UDim2.fromOffset(16, 372), Size = UDim2.new(1, -32, 0, 70), BackgroundTransparency = 1, ZIndex = 13, Parent = detail })
+-- Anprobe / Details
+local detail = create("Frame", { Name = "Detail", BackgroundColor3 = T.surface, ZIndex = 12, Parent = root }, { corner(10), hairline(0.88) })
+local stageBack, stage = glowBackdrop(detail, 13)
+stageBack.Name = "Stage"
+local stageHint = text({ Name = "Hint", AnchorPoint = Vector2.new(1, 1), Position = UDim2.new(1, -10, 1, -8), Size = UDim2.fromOffset(120, 14), TextSize = 11, TextXAlignment = Enum.TextXAlignment.Right, TextColor3 = T.muted, Text = "Drag to turn", ZIndex = 15, Parent = stageBack })
+local resetButton = create("TextButton", { Name = "Reset", Position = UDim2.fromOffset(8, 8), Size = UDim2.fromOffset(84, 36), BackgroundColor3 = T.panel, BackgroundTransparency = 0.25, AutoButtonColor = true, Font = T.boldFont, Text = "Reset", TextSize = 14, TextColor3 = T.text, ZIndex = 15, Visible = false, Parent = stageBack }, { corner() })
+local info = create("Frame", { Name = "Info", BackgroundTransparency = 1, ZIndex = 13, Parent = detail }, {
+	create("UIListLayout", { Padding = UDim.new(0, 4), SortOrder = Enum.SortOrder.LayoutOrder }),
+})
+local kindRow = create("Frame", { Name = "KindRow", Size = UDim2.new(1, 0, 0, 16), BackgroundTransparency = 1, LayoutOrder = 1, ZIndex = 13, Parent = info }, {
+	create("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, VerticalAlignment = Enum.VerticalAlignment.Center, Padding = UDim.new(0, 6), SortOrder = Enum.SortOrder.LayoutOrder }),
+})
+local rarityDot = create("Frame", { Name = "Dot", Size = UDim2.fromOffset(8, 8), BackgroundColor3 = T.muted, LayoutOrder = 1, ZIndex = 13, Parent = kindRow }, { create("UICorner", { CornerRadius = UDim.new(1, 0) }) })
+local kindLabel = text({ Name = "Kind", Size = UDim2.fromOffset(0, 16), AutomaticSize = Enum.AutomaticSize.X, Font = T.boldFont, TextSize = 12, TextColor3 = T.muted, Text = "", LayoutOrder = 2, ZIndex = 13, Parent = kindRow })
+local nameLabel = text({ Name = "Name", Size = UDim2.new(1, 0, 0, 30), Font = T.titleFont, TextSize = 26, TextTruncate = Enum.TextTruncate.AtEnd, Text = "", LayoutOrder = 2, ZIndex = 13, Parent = info })
+local descLabel = text({ Name = "Description", Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, TextSize = 14, TextWrapped = true, TextYAlignment = Enum.TextYAlignment.Top, TextColor3 = T.muted, Text = "", LayoutOrder = 3, ZIndex = 13, Parent = info })
+local statusLabel = text({ Name = "Status", Size = UDim2.new(1, 0, 0, 18), Font = T.boldFont, TextSize = 13, TextColor3 = T.good, Text = "", LayoutOrder = 4, ZIndex = 13, Parent = info })
+local actions = create("Frame", { Name = "Actions", AnchorPoint = Vector2.new(0, 1), BackgroundTransparency = 1, ZIndex = 13, Parent = detail })
 
-local messageLabel = text({ Name = "Message", AnchorPoint = Vector2.new(0, 0), Position = UDim2.fromOffset(28, 580), Size = UDim2.fromOffset(600, 16), TextSize = 13, Text = "", TextColor3 = T.muted, ZIndex = 12, Parent = root })
+-- Meldung als kleine Leiste unten in der Mitte
+local message = create("TextLabel", {
+	Name = "Message",
+	AnchorPoint = Vector2.new(0.5, 1),
+	Size = UDim2.fromOffset(0, 32),
+	AutomaticSize = Enum.AutomaticSize.X,
+	BackgroundColor3 = T.panel,
+	Font = T.boldFont,
+	TextSize = 14,
+	Text = "",
+	TextColor3 = T.text,
+	Visible = false,
+	ZIndex = 20,
+	Parent = root,
+}, { corner(16), hairline(0.75), create("UIPadding", { PaddingLeft = UDim.new(0, 16), PaddingRight = UDim.new(0, 16) }) })
 local messageToken = 0
-local function say(message, color)
+local function say(textValue, color)
 	messageToken += 1
 	local token = messageToken
-	messageLabel.Text = message
-	messageLabel.TextColor3 = color or T.text
-	messageLabel.TextTransparency = 0
-	task.delay(4, function()
+	message.Text = textValue
+	message.TextColor3 = color or T.text
+	message.Visible = true
+	task.delay(3.5, function()
 		if token == messageToken then
-			TweenService:Create(messageLabel, TweenInfo.new(0.5), { TextTransparency = 1 }):Play()
+			message.Visible = false
 		end
 	end)
+end
+
+------------------------------------------------------------------ Aufbau je nach Bildschirmgröße
+local layout = { compact = false, cardText = 18 }
+local function applyLayout()
+	local area = gui.AbsoluteSize
+	if area.X < 50 then
+		return
+	end
+	local W = math.min(area.X - 24, 1040)
+	local H = math.min(area.Y - 24, 640)
+	local compact = H < 520 or W < 860
+	layout.compact = compact
+	root.Size = UDim2.fromOffset(W, H)
+	local pad = compact and 12 or 24
+	local headerH = compact and 56 or 76
+	-- Kopfzeile
+	titleLabel.Position = UDim2.fromOffset(pad, compact and 8 or 14)
+	titleLabel.Size = UDim2.fromOffset(300, compact and 30 or 38)
+	titleLabel.TextSize = compact and 26 or 34
+	subtitle.Visible = not compact
+	subtitle.Position = UDim2.fromOffset(pad + 2, 52)
+	subtitle.Size = UDim2.fromOffset(math.max(W - 520, 200), 18)
+	closeButton.Position = UDim2.new(1, -pad, 0, compact and 4 or 14)
+	coinBox.Position = UDim2.new(1, -pad - T.touch - 10, 0, compact and 4 or 14)
+	coinBox.Size = UDim2.fromOffset(compact and 130 or 170, T.touch)
+	testNote.Position = UDim2.new(1, -pad - T.touch - 10, 0, (compact and 4 or 14) + T.touch + 2)
+	testNote.Visible = testNote:GetAttribute("Wanted") == true and not compact
+	-- Reiter
+	tabBar.Position = UDim2.fromOffset(pad - 8, headerH)
+	tabBar.Size = UDim2.new(1, -2 * pad, 0, T.touch - 4)
+	divider.Position = UDim2.fromOffset(pad, headerH + T.touch - 4)
+	divider.Size = UDim2.new(1, -2 * pad, 0, 1)
+	-- Inhalt: Karten links, Anprobe rechts
+	local top = headerH + T.touch + 8
+	local contentH = H - top - pad
+	local detailW = compact and math.floor(W * 0.42) or 344
+	local gridW = W - 2 * pad - detailW - (compact and 10 or 18)
+	grid.Position = UDim2.fromOffset(pad - 2, top)
+	grid.Size = UDim2.fromOffset(gridW + 2, contentH)
+	detail.Position = UDim2.fromOffset(W - pad - detailW, top)
+	detail.Size = UDim2.fromOffset(detailW, contentH)
+	-- Karten-Raster: so viele Spalten, wie gut passen
+	local usable = gridW - 12
+	local columns = usable >= 600 and 3 or usable >= 300 and 2 or 1
+	local gap = compact and 8 or 12
+	local cellW = math.floor((usable - gap * (columns - 1)) / columns)
+	local thumbH = math.floor(cellW * (compact and 0.58 or 0.66))
+	layout.cardText = compact and 15 or 18
+	gridLayout.CellPadding = UDim2.fromOffset(gap, gap)
+	gridLayout.CellSize = UDim2.fromOffset(cellW, thumbH + (compact and 58 or 74))
+	layout.thumbH = thumbH
+	-- Anprobe: Bühne oben, Infos, Knöpfe unten
+	local inner = compact and 8 or 12
+	local stageH = math.floor(math.clamp(contentH * (compact and 0.4 or 0.46), 110, 280))
+	stageBack.Position = UDim2.fromOffset(inner, inner)
+	stageBack.Size = UDim2.new(1, -2 * inner, 0, stageH)
+	-- Knöpfe nebeneinander, wenn breit genug; sonst zwei Reihen
+	local actionsH = (detailW - 2 * inner >= 280) and T.touch or (T.touch * 2 + 8)
+	info.Position = UDim2.fromOffset(inner + 6, inner + stageH + (compact and 6 or 12))
+	info.Size = UDim2.new(1, -2 * inner - 12, 0, contentH - stageH - actionsH - inner * 3)
+	info.ClipsDescendants = true
+	nameLabel.TextSize = compact and 20 or 26
+	nameLabel.Size = UDim2.new(1, 0, 0, compact and 24 or 30)
+	descLabel.TextSize = compact and 12 or 14
+	actions.Position = UDim2.new(0, inner, 1, -inner)
+	actions.Size = UDim2.new(1, -2 * inner, 0, actionsH)
+	message.Position = UDim2.new(0.5, 0, 1, -pad)
 end
 
 ------------------------------------------------------------------ Karten
@@ -668,64 +809,69 @@ local tabButtons = {}
 local turn = math.rad(-18)
 local aimStage
 
-local function priceLine(entry)
-	if isOwned(entry) then
-		if entry.slot and state.equipped[entry.slot] == entry.id then
-			return "Wearing", T.good
+-- Preis einer Karte: Münze + Zahl, dahinter R$; oder „Owned“ / „Wearing“
+local function fillPrice(row, entry, size, z)
+	for _, child in row:GetChildren() do
+		if not child:IsA("UIListLayout") then
+			child:Destroy()
 		end
-		return "Owned", T.good
 	end
-	local parts = {}
+	if isOwned(entry) then
+		local wearing = entry.slot and state.equipped[entry.slot] == entry.id
+		local pill = text({ Size = UDim2.fromOffset(0, size + 6), AutomaticSize = Enum.AutomaticSize.X, Font = T.boldFont, TextSize = size - 2, TextColor3 = T.good, Text = wearing and "Wearing" or "Owned", ZIndex = z, Parent = row })
+		pill.LayoutOrder = 1
+		return
+	end
 	if entry.coins then
-		table.insert(parts, money(entry.coins) .. " coins")
+		coinIcon(row, size - 2, z).LayoutOrder = 1
+		text({ Size = UDim2.fromOffset(0, size + 4), AutomaticSize = Enum.AutomaticSize.X, Font = T.boldFont, TextSize = size, Text = money(entry.coins), ZIndex = z, LayoutOrder = 2, Parent = row })
 	end
 	if entry.robux then
-		table.insert(parts, "R$ " .. money(entry.robux))
+		if entry.coins then
+			text({ Size = UDim2.fromOffset(0, size + 4), AutomaticSize = Enum.AutomaticSize.X, TextSize = size - 2, TextColor3 = T.muted, Text = "or", ZIndex = z, LayoutOrder = 3, Parent = row })
+		end
+		text({ Size = UDim2.fromOffset(0, size + 4), AutomaticSize = Enum.AutomaticSize.X, Font = T.boldFont, TextSize = size, TextColor3 = Color3.fromRGB(150, 210, 165), Text = "R$ " .. money(entry.robux), ZIndex = z, LayoutOrder = 4, Parent = row })
 	end
-	if #parts == 0 and entry.pack then
+	if not entry.coins and not entry.robux and entry.pack then
 		local pack = byId[entry.pack]
-		return "In the " .. (pack and pack.title or "pack"), T.muted
+		text({ Size = UDim2.fromOffset(0, size + 4), AutomaticSize = Enum.AutomaticSize.X, TextSize = size - 2, TextColor3 = T.muted, Text = "In the " .. (pack and pack.title or "bundle"), ZIndex = z, LayoutOrder = 1, Parent = row })
 	end
-	local line = table.concat(parts, "  ·  ")
 	if entry.kind == "Item" and (state.items[entry.id] or 0) > 0 then
-		line ..= "   (" .. state.items[entry.id] .. " in bag)"
+		text({ Size = UDim2.fromOffset(0, size + 4), AutomaticSize = Enum.AutomaticSize.X, TextSize = size - 2, TextColor3 = T.good, Text = "  " .. state.items[entry.id] .. " in bag", ZIndex = z, LayoutOrder = 5, Parent = row })
 	end
-	return line, T.muted
 end
 
 local function styleCard(card)
-	local entry = card.entry
-	local line, color = priceLine(entry)
-	card.price.Text = line
-	card.price.TextColor3 = color
-	local active = selected == entry
-	card.stroke.Transparency = active and 0.25 or 0.88
+	local active = selected == card.entry
+	card.stroke.Color = active and T.accent or T.line
+	card.stroke.Transparency = active and 0 or 0.9
+	card.stroke.Thickness = active and 2 or 1
 	card.frame.BackgroundColor3 = active and T.surfaceHover or T.surface
+	fillPrice(card.price, card.entry, layout.compact and 13 or 15, 15)
 end
 
 local select -- weiter unten
 
 local thumbQueue = {}
 local function makeCard(entry, order)
-	local frame = create("TextButton", { Name = entry.id, BackgroundColor3 = T.surface, AutoButtonColor = false, Text = "", LayoutOrder = order, ZIndex = 13, Parent = grid }, { corner(8) })
-	local stroke = create("UIStroke", { Color = T.line, Thickness = 1, Transparency = 0.88, ApplyStrokeMode = Enum.ApplyStrokeMode.Border, Parent = frame })
-	local thumb = create("ViewportFrame", {
-		Name = "Thumb",
-		Position = UDim2.fromOffset(8, 8),
-		Size = UDim2.new(1, -16, 0, 124),
-		BackgroundColor3 = T.well,
-		Ambient = Color3.fromRGB(160, 150, 140),
-		LightColor = Color3.fromRGB(255, 236, 214),
-		LightDirection = Vector3.new(-0.6, -1, -0.8),
-		ZIndex = 14,
-		Parent = frame,
-	}, { corner() })
+	local frame = create("TextButton", { Name = entry.id, BackgroundColor3 = T.surface, AutoButtonColor = false, Text = "", LayoutOrder = order, ZIndex = 13, Parent = grid }, { corner(10) })
+	local stroke = create("UIStroke", { Color = T.line, Thickness = 1, Transparency = 0.9, ApplyStrokeMode = Enum.ApplyStrokeMode.Border, Parent = frame })
+	local back, view = glowBackdrop(frame, 14)
+	back.Position = UDim2.fromOffset(6, 6)
+	back.Size = UDim2.new(1, -12, 0, layout.thumbH or 130)
 	if entry.note then
-		text({ Name = "Note", Position = UDim2.fromOffset(16, 14), Size = UDim2.new(1, -32, 0, 14), Font = T.boldFont, TextSize = 11, TextColor3 = T.accent, Text = entry.note, ZIndex = 15, Parent = frame })
+		local note = text({ Name = "Note", Position = UDim2.fromOffset(12, 12), Size = UDim2.fromOffset(0, 20), AutomaticSize = Enum.AutomaticSize.X, Font = T.boldFont, TextSize = 11, TextColor3 = T.onAccent, Text = entry.note, ZIndex = 17, Parent = frame })
+		note.BackgroundTransparency = 0
+		note.BackgroundColor3 = T.accent
+		corner(10).Parent = note
+		create("UIPadding", { PaddingLeft = UDim.new(0, 8), PaddingRight = UDim.new(0, 8), Parent = note })
 	end
-	text({ Name = "Title", Position = UDim2.fromOffset(14, 142), Size = UDim2.new(1, -28, 0, 22), Font = T.titleFont, TextSize = 18, TextTruncate = Enum.TextTruncate.AtEnd, Text = entry.title, ZIndex = 14, Parent = frame })
-	local price = text({ Name = "Price", Position = UDim2.fromOffset(14, 168), Size = UDim2.new(1, -28, 0, 26), TextSize = 13, TextWrapped = true, TextYAlignment = Enum.TextYAlignment.Top, Text = "", ZIndex = 14, Parent = frame })
-	local card = { entry = entry, frame = frame, stroke = stroke, price = price, thumb = thumb }
+	local titleY = (layout.thumbH or 130) + 12
+	text({ Name = "Title", Position = UDim2.fromOffset(12, titleY), Size = UDim2.new(1, -24, 0, layout.cardText + 4), Font = T.titleFont, TextSize = layout.cardText, TextTruncate = Enum.TextTruncate.AtEnd, Text = entry.title, ZIndex = 14, Parent = frame })
+	local price = priceRow(frame, entry, layout.compact and 13 or 15, 15)
+	price.Position = UDim2.fromOffset(12, titleY + layout.cardText + 8)
+	price.Size = UDim2.new(1, -24, 0, (layout.compact and 13 or 15) + 6)
+	local card = { entry = entry, frame = frame, stroke = stroke, price = price, thumb = view }
 	frame.MouseEnter:Connect(function()
 		if selected ~= entry then
 			frame.BackgroundColor3 = T.surfaceHover
@@ -794,28 +940,28 @@ local function buildTabs(list)
 		button:Destroy()
 	end
 	table.clear(tabButtons)
-	for index, info in list do
+	for index, info_ in list do
 		local button = create("TextButton", {
-			Name = info[1],
+			Name = info_[1],
 			Size = UDim2.new(0, 0, 1, 0),
 			AutomaticSize = Enum.AutomaticSize.X,
 			BackgroundTransparency = 1,
 			Font = T.boldFont,
-			Text = info[2],
-			TextSize = 15,
+			Text = info_[2],
+			TextSize = layout.compact and 15 or 17,
 			TextColor3 = T.muted,
 			LayoutOrder = index,
 			ZIndex = 13,
 			Parent = tabBar,
-		})
-		create("Frame", { Name = "Underline", AnchorPoint = Vector2.new(0, 1), Position = UDim2.new(0, 0, 1, 0), Size = UDim2.new(1, 0, 0, 2), BackgroundColor3 = T.accent, BorderSizePixel = 0, Visible = false, ZIndex = 14, Parent = button })
+		}, { create("UIPadding", { PaddingLeft = UDim.new(0, 10), PaddingRight = UDim.new(0, 10) }) })
+		create("Frame", { Name = "Underline", AnchorPoint = Vector2.new(0.5, 1), Position = UDim2.new(0.5, 0, 1, 0), Size = UDim2.new(1, -16, 0, 3), BackgroundColor3 = T.accent, BorderSizePixel = 0, Visible = false, ZIndex = 14, Parent = button }, { create("UICorner", { CornerRadius = UDim.new(1, 0) }) })
 		button.Activated:Connect(function()
-			showTab(info[1])
+			showTab(info_[1])
 			if cards[1] then
 				select(cards[1].entry)
 			end
 		end)
-		tabButtons[info[1]] = button
+		tabButtons[info_[1]] = button
 	end
 end
 
@@ -824,12 +970,14 @@ local function refreshStage()
 	if not selected then
 		return
 	end
-	local tried = fitting
 	local entry = selected
-	local model = previewFor(entry, tried)
+	local model = previewFor(entry, fitting)
+	if selected ~= entry then
+		return
+	end
 	aimStage = show(stage, model, turn)
 	local wearing = fitting.suit ~= nil or next(fitting.items) ~= nil
-	resetButton.Visible = entry.preview and entry.preview.kind == "fitting" and wearing
+	resetButton.Visible = entry.preview ~= nil and entry.preview.kind == "fitting" and wearing
 end
 
 -- Auswahl probiert Kleidung und Anzüge sofort an (sammelt sich auf der Figur)
@@ -845,19 +993,28 @@ local function tryOn(entry)
 	end
 end
 
-local function button(parent, label, fill, textColor, order, onClick, width)
+-- großer Knopf (48 hoch); `coins` = Münz-Symbol vor dem Text
+local function bigButton(parent, label, fill, textColor, order, onClick, options)
+	options = options or {}
 	local b = create("TextButton", {
-		Size = UDim2.new(width or 1, width and -5 or 0, 0, 36),
+		Size = UDim2.new(options.width or 1, options.width and -5 or 0, 0, T.touch),
 		BackgroundColor3 = fill,
 		AutoButtonColor = onClick ~= nil,
-		Font = T.boldFont,
-		Text = label,
-		TextSize = 14,
-		TextColor3 = textColor,
+		Text = "",
 		LayoutOrder = order,
 		ZIndex = 14,
 		Parent = parent,
-	}, { corner() })
+	}, {
+		corner(),
+		create("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, HorizontalAlignment = Enum.HorizontalAlignment.Center, VerticalAlignment = Enum.VerticalAlignment.Center, Padding = UDim.new(0, 8), SortOrder = Enum.SortOrder.LayoutOrder }),
+	})
+	if options.outline then
+		hairline(0.6).Parent = b
+	end
+	if options.coins then
+		coinIcon(b, 20, 15).LayoutOrder = 1
+	end
+	text({ Size = UDim2.fromOffset(0, 22), AutomaticSize = Enum.AutomaticSize.X, Font = T.boldFont, TextSize = 16, TextColor3 = textColor, Text = label, ZIndex = 15, LayoutOrder = 2, Parent = b })
 	if onClick then
 		local busy = false
 		b.Activated:Connect(function()
@@ -913,6 +1070,7 @@ end
 local function renderActions(entry)
 	actions:ClearAllChildren()
 	statusLabel.Text = ""
+	statusLabel.TextColor3 = T.good
 	local rows = create("Frame", { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, ZIndex = 13, Parent = actions }, {
 		create("UIListLayout", { Padding = UDim.new(0, 8), SortOrder = Enum.SortOrder.LayoutOrder, VerticalAlignment = Enum.VerticalAlignment.Bottom }),
 	})
@@ -920,9 +1078,9 @@ local function renderActions(entry)
 		if entry.slot then
 			local on = state.equipped[entry.slot] == entry.id
 			statusLabel.Text = on and "You are wearing this." or "You own this."
-			button(rows, on and "Take off" or "Wear", on and T.surfaceHover or T.accent, on and T.text or T.onAccent, 2, function()
+			bigButton(rows, on and "Take off" or "Wear", on and T.surfaceHover or T.accent, on and T.text or T.onAccent, 2, function()
 				equip(entry, not on)
-			end)
+			end, { outline = on })
 		else
 			statusLabel.Text = entry.kind == "Pack" and "You own this bundle." or "You own this."
 		end
@@ -931,12 +1089,10 @@ local function renderActions(entry)
 	if entry.kind == "Item" then
 		statusLabel.Text = "In your bag: " .. (state.items[entry.id] or 0)
 		statusLabel.TextColor3 = T.muted
-	else
-		statusLabel.TextColor3 = T.good
 	end
 	if entry.pack and not entry.coins and not entry.robux then
 		local pack = byId[entry.pack]
-		button(rows, "See the " .. (pack and pack.title or "bundle"), T.accent, T.onAccent, 2, function()
+		bigButton(rows, "See the " .. (pack and pack.title or "bundle"), T.accent, T.onAccent, 2, function()
 			if pack then
 				showTab(pack.tab)
 				select(pack)
@@ -944,26 +1100,29 @@ local function renderActions(entry)
 		end)
 		return
 	end
-	-- zwei Wege zu bezahlen, nebeneinander
-	local pay = create("Frame", { Size = UDim2.new(1, 0, 0, 36), BackgroundTransparency = 1, LayoutOrder = 2, ZIndex = 13, Parent = rows }, {
-		create("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 10), SortOrder = Enum.SortOrder.LayoutOrder }),
-	})
+	-- zwei Wege zu bezahlen: nebeneinander, wenn Platz ist, sonst untereinander
 	local both = entry.coins and entry.robux
+	local sideBySide = both and actions.AbsoluteSize.X >= 280
+	local holder = rows
+	if sideBySide then
+		holder = create("Frame", { Size = UDim2.new(1, 0, 0, T.touch), BackgroundTransparency = 1, LayoutOrder = 2, ZIndex = 13, Parent = rows }, {
+			create("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 10), SortOrder = Enum.SortOrder.LayoutOrder }),
+		})
+	end
 	if entry.coins then
 		local afford = state.coins >= entry.coins
-		button(pay, money(entry.coins) .. " coins", afford and T.accent or T.surfaceHover, afford and T.onAccent or T.muted, 1, function()
+		bigButton(holder, money(entry.coins), afford and T.accent or T.surfaceHover, afford and T.onAccent or T.muted, 1, function()
 			buyWithCoins(entry)
-		end, both and 0.5 or nil)
+		end, { coins = true, width = sideBySide and 0.5 or nil })
 	end
 	if entry.robux then
-		local price = entry.robux
-		local label = "R$ " .. money(price)
+		local label = "R$ " .. money(entry.robux)
 		if entry.kind == "Starter" and entry.firstRobux and not state.owned.StarterPack then
-			label = "R$ " .. entry.firstRobux .. "  (instead of " .. price .. ")"
+			label = "R$ " .. entry.firstRobux .. "   (instead of " .. entry.robux .. ")"
 		end
-		button(pay, label, T.robux, T.text, 2, function()
+		bigButton(holder, label, T.robux, T.text, 3, function()
 			promptRobux(entry)
-		end, both and 0.5 or nil)
+		end, { width = sideBySide and 0.5 or nil })
 	end
 end
 
@@ -975,11 +1134,13 @@ function select(entry)
 	tryOn(entry)
 	local rarity = entry.rarity and ShopCatalog.RARITIES[entry.rarity]
 	local kinds = { Skin = "Suit & skin", Car = "Car", Clothing = "Clothing", Outfit = "Clothing set", Pack = "Bundle", Starter = "Bundle", Pass = "Game pass", CoinPack = "Coins", Boost = "Boost", Item = "Snack", Product = "Extra" }
-	kindLabel.Text = (kinds[entry.kind] or "") .. (rarity and ("  ·  " .. rarity.title:sub(1, 1) .. rarity.title:sub(2):lower()) or "")
+	kindLabel.Text = ((kinds[entry.kind] or "") .. (rarity and ("  ·  " .. rarity.title:sub(1, 1) .. rarity.title:sub(2):lower()) or "")):upper()
+	rarityDot.Visible = rarity ~= nil
+	rarityDot.BackgroundColor3 = rarity and rarity.color:Lerp(T.muted, 0.35) or T.muted
 	nameLabel.Text = entry.title
 	local description = entry.description or ""
 	if entry.contents then
-		description ..= "\n\nIncludes: " .. table.concat(entry.contents, ", ")
+		description ..= "\nIncludes: " .. table.concat(entry.contents, ", ")
 	end
 	descLabel.Text = description
 	stage:ClearAllChildren()
@@ -996,7 +1157,7 @@ end)
 -- Figur mit der Maus (oder dem Finger) drehen
 local dragging = false
 local lastX
-stage.InputBegan:Connect(function(input)
+stageBack.InputBegan:Connect(function(input)
 	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
 		dragging = true
 		lastX = input.Position.X
@@ -1029,6 +1190,7 @@ local function setOpen(value, wantedMode, target)
 		return
 	end
 	readData()
+	applyLayout()
 	if wantedMode and wantedMode ~= mode then
 		mode = wantedMode
 		currentTab = nil
@@ -1040,20 +1202,31 @@ local function setOpen(value, wantedMode, target)
 	table.clear(fitting.items)
 	local entry = target and byId[target]
 	local tabTarget = not entry and target or nil -- auch ein Reiter als Ziel ("Skins")
+	hud.Visible = false
+	overlay.Visible = true
 	showTab(entry and entry.tab or tabTarget or currentTab or (mode == "kiosk" and "Snacks" or "Bundles"))
 	if entry then
 		select(entry)
 	elseif cards[1] then
 		select(cards[1].entry)
 	end
-	hud.Visible = false
-	overlay.Visible = true
 	-- kurz und ruhig einblenden (Abdunklung), außer bei „weniger Bewegung“
 	if not GuiService.ReducedMotionEnabled then
 		overlay.BackgroundTransparency = 1
-		TweenService:Create(overlay, TweenInfo.new(0.16, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { BackgroundTransparency = 0.5 }):Play()
+		TweenService:Create(overlay, TweenInfo.new(0.16, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { BackgroundTransparency = 0.45 }):Play()
 	end
 end
+
+-- Bildschirmgröße ändert sich (Fenster, Drehen des Handys): neu anordnen
+gui:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
+	if open then
+		applyLayout()
+		showTab(currentTab)
+		if selected then
+			select(selected)
+		end
+	end
+end)
 
 hudButton.Activated:Connect(function()
 	setOpen(true, "shop")
@@ -1061,13 +1234,21 @@ end)
 closeButton.Activated:Connect(function()
 	setOpen(false)
 end)
+coinBox.Activated:Connect(function()
+	if mode == "shop" then
+		showTab("Coins")
+		if cards[1] then
+			select(cards[1].entry)
+		end
+	end
+end)
 UserInputService.InputBegan:Connect(function(input, processed)
 	if open and not processed and input.KeyCode == Enum.KeyCode.Escape then
 		setOpen(false)
 	end
 end)
 
--- Andere Skripte (und Tests) können öffnen: VipShop:SetAttribute("Open", "shop" | "kiosk" | Artikel-ID)
+-- Andere Skripte (und Tests) können öffnen: VipShop:SetAttribute("Open", "shop" | "kiosk" | Artikel-ID | Reiter)
 gui:GetAttributeChangedSignal("Open"):Connect(function()
 	local target = gui:GetAttribute("Open")
 	if type(target) == "string" and target ~= "" then
@@ -1076,7 +1257,8 @@ gui:GetAttributeChangedSignal("Open"):Connect(function()
 			setOpen(true, target)
 		else
 			local entry = byId[target]
-			setOpen(true, entry and (entry.tab == "Snacks" or entry.tab == "Extras") and "kiosk" or "shop", target)
+			local kioskTab = target == "Snacks" or target == "Extras"
+			setOpen(true, (kioskTab or (entry and (entry.tab == "Snacks" or entry.tab == "Extras"))) and "kiosk" or "shop", target)
 		end
 	end
 end)
@@ -1097,9 +1279,10 @@ end)
 -- Daten geändert (Kauf, Anziehen): neu anzeigen
 local function onDataChanged()
 	readData()
-	hudCoins.Text = money(state.coins) .. " coins"
-	coinsLabel.Text = money(state.coins) .. " coins"
-	testNote.Visible = player:GetAttribute("TestCoins") == true
+	hudCoins.Text = money(state.coins)
+	coinsLabel.Text = money(state.coins)
+	testNote:SetAttribute("Wanted", player:GetAttribute("TestCoins") == true)
+	testNote.Visible = player:GetAttribute("TestCoins") == true and not layout.compact
 	if open then
 		for _, card in cards do
 			styleCard(card)
