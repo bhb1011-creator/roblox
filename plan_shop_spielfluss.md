@@ -124,6 +124,9 @@ ein `Highlight` (nur beim Käufer, auf dem Client). Vorschlag: Reichweite 60 Stu
 - **Familie im Golden Pack:** Richard und Tommy im goldenen Smoking, Mrs. Wagner und Lucy im Goldkleid
   mit Perlenkette. Alle sollen reich aussehen.
 - **In die Lobby erst, wenn der User die Ausstellung abgenommen hat.**
+- **12. November (User):** Showroom weg, stattdessen normale Shop-Hütte; Kassenhäuschen heißt Kiosk und verkauft die
+  Snacks; Crimson Count und Obsidian King gestrichen; alles mit Münzen ODER Robux; Pakete zum Zusammenkaufen, alles
+  einzeln anprobierbar; Jacken auf Bügeln; Sportwagen neben der Hütte; Shadow Sarp mit roten Augen.
 - **Kleidung und Accessoires für Münzen** (sehen deutlich besser aus als das normale Outfit; Preise von Claude
   vorgeschlagen, User kann ändern):
 

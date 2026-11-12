@@ -1,6 +1,6 @@
 # Handoff – Horror-Spiel „Guesthouse“ (Roblox)
 
-Stand: 11. November 2026, Branch `claude/optimistic-bardeen-4tmohk`, Version `K2-2026-11-11j`.
+Stand: 11. November 2026, Branch `claude/optimistic-bardeen-4tmohk`, Version `K2-2026-11-12b`.
 Ganz oben stehen die neuesten Abschnitte (0000 = 10. Nov., 000 = realistische Familie, 00 = 9. Nov., 0 = Kapitel 3 + Audio);
 Abschnitte 2–8 beschreiben Kapitel 2 (Stand 6. Nov.).
 Diese Datei ist für einen **neuen Chat** gedacht: erst den Prompt unten kopieren, der Rest ist Nachschlagewerk.
@@ -44,6 +44,27 @@ hochladen; bis dahin viele kurze Sounds zu Sammeldateien zusammenfassen, im Spie
 Roblox Studio ist per MCP verbunden – du kannst Studio direkt steuern und testen.
 Fang damit an, dass du die Dateien liest und mir in 5 Sätzen sagst, wo wir stehen.
 ```
+
+---
+
+## 0000000000. NEU 12. November (Version K2-2026-11-12b): Shop-Hütte, Kiosk, ruhiges Menü mit Anprobe
+
+- **Showroom gelöscht.** Stattdessen `ShopHut.lua`: Holzhütte mit Satteldach, Veranda und Schild „SHOP“ auf der Ostseite
+  (Mitte 62/10, Tür nach Westen). Innen: Verkäufer „Tailor“ (Tag `ShopHutPrompt`), Kleiderständer mit den 4 Jacken auf
+  Bügeln, Wandregal mit den 8 Accessoires, Spiegel, Schaufenster mit goldenem Anzug und Shadow Sarp, Gilded Horror in der
+  Ecke. Jedes Stück: „Try on“ (`ShowroomItemPrompt`). Sportwagen daneben auf einer Steinfläche (60/31) mit zwei Spots.
+- **Kiosk:** das frühere Kassenhäuschen heißt „KIOSK“ (`KioskPrompt`), der große Kiosk (`ShopPrompt`) öffnet dasselbe
+  Kiosk-Menü: Snacks (Münzen oder Robux) und Extras (Wiederbelebungen, alte `Config.PRODUCTS`). Altes Kassen-Fenster entfernt.
+- **Katalog:** Crimson Count und Obsidian King aus dem Shop gestrichen (Rezepte bleiben in `Skins.lua`). Sarp VIP Pack =
+  Gilded Horror + Sportwagen + Abzeichen. Kleidung hat jetzt auch Robux-Preise. Neue Kleidungs-Sets (`OUTFITS`): Hiker,
+  Night Walk, Road Trip (günstiger als einzeln, Münzen oder Robux).
+- **Shadow Sarp:** rote, leuchtende Augen (`glowingEyes`, gemessen am Kopf).
+- **Menü neu (`Shop.client.lua`):** warmes Dunkelbraun, Schreibmaschinen-Titel, Reiter statt bunter Seitenleiste, keine
+  Emojis, Karten mit 3D-Bildern, rechts Anprobe an der eigenen Figur (Auswahl probiert sofort an, sammelt sich bis „Reset“,
+  mit der Maus drehbar). Immer zwei Knöpfe: Münzen und Robux. Ohne Anzug trägt die Anprobe-Figur ein schlichtes dunkles
+  Outfit. Snacks/Pässe/Münzen als kleine gebaute 3D-Modelle.
+- **Getestet in Studio (12.11.):** Hütte, Auto, Kiosk, Menü (Shop + Kiosk), Anprobe, Kauf eines Sets mit Münzen, Ablehnungen.
+  **Nicht getestet:** Robux (IDs 0), Duo, Handy; Kleidungs-Anprobe sitzt nur ungefähr (Jacken über dem Körper).
 
 ---
 
