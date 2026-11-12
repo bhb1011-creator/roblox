@@ -759,6 +759,103 @@ local function alive(button, options)
 	return scale
 end
 
+------------------------------------------------------------------ Bundle-Plakate
+-- Jedes Bundle bekommt ein eigenes Plakat: Farben, Titel-Schrift, Spruch und Verzierung.
+-- Die 3D-Figuren stehen im unteren Teil, der Titel groß darüber.
+local POSTERS = {
+	StarterPack = { top = Color3.fromRGB(70, 98, 60), bottom = Color3.fromRGB(20, 30, 20), accent = Color3.fromRGB(240, 226, 176), font = Enum.Font.Bangers, title = "STARTER PACK", tag = "For your very first night", deco = "stripes" },
+	GoldenPack = { top = Color3.fromRGB(130, 96, 32), bottom = Color3.fromRGB(18, 12, 6), accent = Color3.fromRGB(255, 214, 120), font = Enum.Font.Garamond, title = "GOLDEN PACK", tag = "The Wagners dress up", deco = "rays" },
+	SarpVip = { top = Color3.fromRGB(118, 14, 20), bottom = Color3.fromRGB(10, 3, 5), accent = Color3.fromRGB(255, 96, 76), font = Enum.Font.Creepster, title = "SARP VIP", tag = "He wears gold now", deco = "scratches" },
+	Everything = { top = Color3.fromRGB(140, 100, 36), mid = Color3.fromRGB(110, 20, 22), bottom = Color3.fromRGB(12, 6, 6), accent = Color3.fromRGB(255, 206, 128), font = Enum.Font.Garamond, title = "EVERYTHING", tag = "Every last thread", deco = "rays" },
+	HikerSet = { top = Color3.fromRGB(196, 150, 42), bottom = Color3.fromRGB(40, 42, 28), accent = Color3.fromRGB(252, 244, 214), font = Enum.Font.Oswald, title = "HIKER SET", tag = "Rain or worse", deco = "stripes" },
+	NightWalkSet = { top = Color3.fromRGB(34, 46, 92), bottom = Color3.fromRGB(5, 7, 16), accent = Color3.fromRGB(206, 220, 255), font = Enum.Font.Oswald, title = "NIGHT WALK", tag = "Bring a light", deco = "stars" },
+	RoadTripSet = { top = Color3.fromRGB(204, 98, 44), bottom = Color3.fromRGB(44, 16, 14), accent = Color3.fromRGB(255, 230, 186), font = Enum.Font.Oswald, title = "ROAD TRIP", tag = "Don't stop for strangers", deco = "rays" },
+}
+
+local DEFAULT_GLOW = ColorSequence.new(T.glowTop, T.glowBottom)
+
+-- Plakat auf ein „Foto“ legen (oder entfernen, wenn `entry` kein Bundle ist); `big` = Vorschau rechts
+local function decoratePoster(view, entry, big)
+	local back = view.Parent
+	local old = back:FindFirstChild("Poster")
+	if old then
+		old:Destroy()
+	end
+	local gradient = back:FindFirstChildOfClass("UIGradient")
+	local style = entry and POSTERS[entry.id]
+	if not style then
+		gradient.Color = DEFAULT_GLOW
+		view.Position = UDim2.fromScale(0, 0)
+		view.Size = UDim2.fromScale(1, 1)
+		return
+	end
+	back.ClipsDescendants = true
+	gradient.Color = style.mid and ColorSequence.new({ ColorSequenceKeypoint.new(0, style.top), ColorSequenceKeypoint.new(0.5, style.mid), ColorSequenceKeypoint.new(1, style.bottom) }) or ColorSequence.new(style.top, style.bottom)
+	-- Figuren in den unteren Teil, damit der Titel Platz hat
+	view.Position = UDim2.fromScale(0, big and 0.3 or 0.24)
+	view.Size = UDim2.fromScale(1, big and 0.7 or 0.76)
+	local z = view.ZIndex
+	local poster = create("Frame", { Name = "Poster", Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, ZIndex = z - 1, Parent = back })
+	local accent = style.accent
+	if style.deco == "rays" then
+		-- Strahlenkranz hinter den Figuren
+		for i = 0, 8 do
+			create("Frame", { AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.72), Size = UDim2.new(0, big and 26 or 14, 2.4, 0), Rotation = i * 20 - 80, BackgroundColor3 = accent, BackgroundTransparency = 0.86, BorderSizePixel = 0, ZIndex = z - 1, Parent = poster })
+		end
+	elseif style.deco == "scratches" then
+		-- Kratzspuren wie von Krallen
+		for i = 0, 3 do
+			create("Frame", { AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.new(0.74 + i * 0.05, 0, 0.52, 0), Size = UDim2.new(0, big and 4 or 2, 0.9, 0), Rotation = 18, BackgroundColor3 = Color3.fromRGB(10, 2, 3), BackgroundTransparency = 0.25, BorderSizePixel = 0, ZIndex = z - 1, Parent = poster })
+		end
+	elseif style.deco == "stars" then
+		local rng = Random.new(7)
+		for _ = 1, 18 do
+			local size = rng:NextInteger(2, big and 4 or 3)
+			create("Frame", { Position = UDim2.fromScale(rng:NextNumber(0.03, 0.97), rng:NextNumber(0.3, 0.9)), Size = UDim2.fromOffset(size, size), BackgroundColor3 = accent, BackgroundTransparency = rng:NextNumber(0.1, 0.5), BorderSizePixel = 0, ZIndex = z - 1, Parent = poster }, { create("UICorner", { CornerRadius = UDim.new(1, 0) }) })
+		end
+		create("Frame", { AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.82, 0.38), Size = UDim2.fromOffset(big and 34 or 18, big and 34 or 18), BackgroundColor3 = Color3.fromRGB(236, 232, 210), ZIndex = z - 1, Parent = poster }, { create("UICorner", { CornerRadius = UDim.new(1, 0) }) })
+	elseif style.deco == "stripes" then
+		for i = 0, 2 do
+			create("Frame", { Position = UDim2.new(0, 0, 0.27 + i * 0.035, 0), Size = UDim2.new(1, 0, 0, big and 3 or 2), BackgroundColor3 = accent, BackgroundTransparency = 0.55 + i * 0.12, BorderSizePixel = 0, ZIndex = z - 1, Parent = poster })
+		end
+	end
+	-- Innenrahmen wie bei einem gedruckten Plakat
+	create("Frame", { AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), Size = UDim2.new(1, big and -14 or -8, 1, big and -14 or -8), BackgroundTransparency = 1, ZIndex = z + 1, Parent = poster }, {
+		create("UIStroke", { Color = accent, Thickness = big and 2 or 1, Transparency = 0.45 }),
+	})
+	-- großer Titel und Spruch
+	local title = create("TextLabel", {
+		Name = "PosterTitle",
+		AnchorPoint = Vector2.new(0.5, 0),
+		Position = UDim2.new(0.5, 0, 0, big and 12 or 6),
+		Size = UDim2.new(1, big and -30 or -16, 0.17, 0),
+		BackgroundTransparency = 1,
+		Font = style.font,
+		Text = style.title,
+		TextScaled = true,
+		TextColor3 = accent,
+		TextStrokeColor3 = Color3.new(0, 0, 0),
+		TextStrokeTransparency = 0.35,
+		ZIndex = z + 2,
+		Parent = poster,
+	}, { create("UITextSizeConstraint", { MaxTextSize = big and 46 or 26 }) })
+	create("TextLabel", {
+		Name = "PosterTag",
+		AnchorPoint = Vector2.new(0.5, 0),
+		Position = UDim2.new(0.5, 0, 0.17, big and 14 or 6),
+		Size = UDim2.new(1, -24, 0.07, 0),
+		BackgroundTransparency = 1,
+		Font = Enum.Font.SpecialElite,
+		Text = style.tag:upper(),
+		TextScaled = true,
+		TextColor3 = accent:Lerp(Color3.new(1, 1, 1), 0.2),
+		TextTransparency = 0.1,
+		ZIndex = z + 2,
+		Parent = poster,
+	}, { create("UITextSizeConstraint", { MaxTextSize = big and 15 or 10 }) })
+	return title
+end
+
 local function priceRow(parent, z)
 	return create("Frame", { Name = "PriceRow", BackgroundTransparency = 1, ZIndex = z, Parent = parent }, {
 		create("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, VerticalAlignment = Enum.VerticalAlignment.Center, Padding = UDim.new(0, 6), SortOrder = Enum.SortOrder.LayoutOrder }),
@@ -1088,10 +1185,12 @@ local function makeCard(entry, order)
 	local pic, view = photo(frame, 15)
 	pic.Position = UDim2.fromOffset(8, 8)
 	pic.Size = UDim2.new(1, -16, 0, layout.thumbH or 130)
+	decoratePoster(view, entry, false)
 	tape(frame, UDim2.new(0.5, 0, 0, 0), tilt * -3, 18)
 	if entry.note then
 		-- gelber Notizzettel mit roter Schrift
-		local note = text({ Name = "Note", AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, -4, 0, 14), Size = UDim2.fromOffset(0, 24), AutomaticSize = Enum.AutomaticSize.X, Rotation = 4, Font = Enum.Font.SpecialElite, TextSize = 13, TextColor3 = T.stamp, Text = entry.note, ZIndex = 19, Parent = frame })
+		-- unten rechts auf dem Bild, damit er den Plakat-Titel nicht verdeckt
+		local note = text({ Name = "Note", AnchorPoint = Vector2.new(1, 1), Position = UDim2.new(1, -4, 0, (layout.thumbH or 130) + 2), Size = UDim2.fromOffset(0, 24), AutomaticSize = Enum.AutomaticSize.X, Rotation = 4, Font = Enum.Font.SpecialElite, TextSize = 13, TextColor3 = T.stamp, Text = entry.note, ZIndex = 19, Parent = frame })
 		note.BackgroundTransparency = 0
 		note.BackgroundColor3 = Color3.fromRGB(240, 222, 120)
 		create("UIPadding", { PaddingLeft = UDim.new(0, 8), PaddingRight = UDim.new(0, 8), Parent = note })
@@ -1397,6 +1496,7 @@ function select(entry)
 	end
 	descLabel.Text = description
 	stage:ClearAllChildren()
+	decoratePoster(stage, entry, true)
 	task.spawn(refreshStage)
 	renderActions(entry)
 end

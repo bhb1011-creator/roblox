@@ -1,6 +1,6 @@
 # Handoff – Horror-Spiel „Guesthouse“ (Roblox)
 
-Stand: 11. November 2026, Branch `claude/optimistic-bardeen-4tmohk`, Version `K2-2026-11-12h`.
+Stand: 11. November 2026, Branch `claude/optimistic-bardeen-4tmohk`, Version `K2-2026-11-12i`.
 Ganz oben stehen die neuesten Abschnitte (0000 = 10. Nov., 000 = realistische Familie, 00 = 9. Nov., 0 = Kapitel 3 + Audio);
 Abschnitte 2–8 beschreiben Kapitel 2 (Stand 6. Nov.).
 Diese Datei ist für einen **neuen Chat** gedacht: erst den Prompt unten kopieren, der Rest ist Nachschlagewerk.
@@ -44,6 +44,15 @@ hochladen; bis dahin viele kurze Sounds zu Sammeldateien zusammenfassen, im Spie
 Roblox Studio ist per MCP verbunden – du kannst Studio direkt steuern und testen.
 Fang damit an, dass du die Dateien liest und mir in 5 Sätzen sagst, wo wir stehen.
 ```
+
+---
+
+## 00000000000000. NEU 12. November (Version K2-2026-11-12i): Bundle-Plakate
+
+- Bundles (Starter, Golden, Sarp VIP, Everything, 3 Kleidungs-Sets) haben eigene Plakate (`POSTERS` +
+  `decoratePoster` in `Shop.client.lua`): Farbverlauf, Titel-Schrift (Garamond/Creepster/Bangers/Oswald), Spruch,
+  Verzierung (Strahlenkranz, Krallenspuren, Sterne mit Mond, Streifen), Innenrahmen; die 3D-Figuren stehen im unteren
+  Teil. Auf den Karten und groß in der Vorschau rechts. In Studio als Bild geprüft.
 
 ---
 
