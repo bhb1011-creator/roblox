@@ -1,6 +1,6 @@
 # Handoff – Horror-Spiel „Guesthouse“ (Roblox)
 
-Stand: 11. November 2026, Branch `claude/optimistic-bardeen-4tmohk`, Version `K2-2026-11-12f`.
+Stand: 11. November 2026, Branch `claude/optimistic-bardeen-4tmohk`, Version `K2-2026-11-12g`.
 Ganz oben stehen die neuesten Abschnitte (0000 = 10. Nov., 000 = realistische Familie, 00 = 9. Nov., 0 = Kapitel 3 + Audio);
 Abschnitte 2–8 beschreiben Kapitel 2 (Stand 6. Nov.).
 Diese Datei ist für einen **neuen Chat** gedacht: erst den Prompt unten kopieren, der Rest ist Nachschlagewerk.
@@ -44,6 +44,21 @@ hochladen; bis dahin viele kurze Sounds zu Sammeldateien zusammenfassen, im Spie
 Roblox Studio ist per MCP verbunden – du kannst Studio direkt steuern und testen.
 Fang damit an, dass du die Dateien liest und mir in 5 Sätzen sagst, wo wir stehen.
 ```
+
+---
+
+## 000000000000. NEU 12. November (Version K2-2026-11-12g): Shop mit Charakter (Handelsposten)
+
+- User: „zu clean“. `Shop.client.lua` jetzt im Stil eines alten Handelspostens im Wald: Fenster = dunkle Bretterwand
+  (`planks`) mit Nägeln und Vignette, Holzschild mit Namen, Messingschild mit Münzen, Reiter als Papieretiketten
+  (leicht schief), Karten als vergilbte Papierkarten mit Klebeband, gelbe Notizzettel („Save 249 R$“), roter Stempel
+  „OWNED“, rechts ein Quittungs-Zettel (Schreibmaschine, gestrichelte Linie, Kaffeefleck), Knöpfe: Messing (Münzen),
+  grüner Filz (Robux), Papier (leise). HUD-Knopf als schiefes Holzschild.
+- **Wichtig:** Rahmen mit ViewportFrames nicht drehen (die 3D-Bilder drehen nicht mit) – nur Deko (Klebeband, Zettel,
+  Stempel, Etiketten) ist schief. Kinder zeichnen bei `ZIndexBehavior.Sibling` immer über dem Elternteil (kein
+  „Schatten“-Kind hinter einer Karte).
+- Geprüft in Studio bei 800×600 über Messwerte (keine Fehler, alles im Fenster, Knöpfe 48 px). **Nicht als Bild geprüft**
+  (Bildschirm gesperrt).
 
 ---
 
