@@ -1,6 +1,6 @@
 # Handoff – Horror-Spiel „Guesthouse“ (Roblox)
 
-Stand: 11. November 2026, Branch `claude/optimistic-bardeen-4tmohk`, Version `K2-2026-11-12b`.
+Stand: 11. November 2026, Branch `claude/optimistic-bardeen-4tmohk`, Version `K2-2026-11-12d`.
 Ganz oben stehen die neuesten Abschnitte (0000 = 10. Nov., 000 = realistische Familie, 00 = 9. Nov., 0 = Kapitel 3 + Audio);
 Abschnitte 2–8 beschreiben Kapitel 2 (Stand 6. Nov.).
 Diese Datei ist für einen **neuen Chat** gedacht: erst den Prompt unten kopieren, der Rest ist Nachschlagewerk.
@@ -47,12 +47,13 @@ Fang damit an, dass du die Dateien liest und mir in 5 Sätzen sagst, wo wir steh
 
 ---
 
-## 0000000000. NEU 12. November (Version K2-2026-11-12b): Shop-Hütte, Kiosk, ruhiges Menü mit Anprobe
+## 0000000000. NEU 12. November (Version K2-2026-11-12d): Shop-Hütte, Kiosk, ruhiges Menü mit Anprobe
 
 - **Showroom gelöscht.** Stattdessen `ShopHut.lua`: Holzhütte mit Satteldach, Veranda und Schild „SHOP“ auf der Ostseite
   (Mitte 62/10, Tür nach Westen). Innen: Verkäufer „Tailor“ (Tag `ShopHutPrompt`), Kleiderständer mit den 4 Jacken auf
-  Bügeln, Wandregal mit den 8 Accessoires, Spiegel, Schaufenster mit goldenem Anzug und Shadow Sarp, Gilded Horror in der
-  Ecke. Jedes Stück: „Try on“ (`ShowroomItemPrompt`). Sportwagen daneben auf einer Steinfläche (60/31) mit zwei Spots.
+  Bügeln, Wandregal mit den 8 Accessoires, Spiegel, Sessel mit Pflanze. **Skins nur im Menü (User, 12.11.):** keine
+  Skin-Figuren in der Hütte; in den Schaufenstern stehen Tafeln „SUITS & SKINS“ / „CLOTHING SETS“, die den Katalog am
+  passenden Reiter öffnen (Attribut `ShopTab`). Fenster ohne Glas-Material (hinter Glas sind Schilder unsichtbar). Jedes Stück: „Try on“ (`ShowroomItemPrompt`). Sportwagen daneben auf einer Steinfläche (60/31) mit zwei Spots.
 - **Kiosk:** das frühere Kassenhäuschen heißt „KIOSK“ (`KioskPrompt`), der große Kiosk (`ShopPrompt`) öffnet dasselbe
   Kiosk-Menü: Snacks (Münzen oder Robux) und Extras (Wiederbelebungen, alte `Config.PRODUCTS`). Altes Kassen-Fenster entfernt.
 - **Katalog:** Crimson Count und Obsidian King aus dem Shop gestrichen (Rezepte bleiben in `Skins.lua`). Sarp VIP Pack =

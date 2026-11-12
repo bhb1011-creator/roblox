@@ -115,7 +115,8 @@ local function buildCabin(model, block)
 		local x1, x2 = window[1], window[2]
 		front(x1, x2, 0, 1.8)
 		front(x1, x2, 7.2, H)
-		block("ShopWindow", Vector3.new(x2 - x1, 5.4, 0.15), CFrame.new((x1 + x2) / 2, 4.5, frontZ), C.glass, Enum.Material.Glass, { Transparency = 0.7 })
+		-- kein Glas-Material: hinter Glas sind Schilder (SurfaceGui) unsichtbar
+		block("ShopWindow", Vector3.new(x2 - x1, 5.4, 0.15), CFrame.new((x1 + x2) / 2, 4.5, frontZ), C.glass, Enum.Material.SmoothPlastic, { Transparency = 0.85, Reflectance = 0.15, CastShadow = false })
 		block("WindowFrame", Vector3.new(x2 - x1 + 0.3, 0.25, T + 0.2), CFrame.new((x1 + x2) / 2, 1.8, frontZ), C.trim, Enum.Material.Wood)
 		block("WindowFrame", Vector3.new(x2 - x1 + 0.3, 0.25, T + 0.2), CFrame.new((x1 + x2) / 2, 7.2, frontZ), C.trim, Enum.Material.Wood)
 		-- Blumenkasten unter dem Fenster
@@ -181,10 +182,11 @@ end
 local function easel(parent, block, localPosition, title, line, tab)
 	local base = CFrame.new(localPosition)
 	for _, x in { -0.8, 0.8 } do
-		block("EaselLeg", Vector3.new(0.15, 3.6, 0.15), base * CFrame.new(x, 1.75, 0.2) * CFrame.Angles(math.rad(-10), 0, 0), C.log, Enum.Material.Wood)
+		block("EaselLeg", Vector3.new(0.15, 3.6, 0.15), base * CFrame.new(x, 1.75, 0.3) * CFrame.Angles(math.rad(10), 0, 0), C.log, Enum.Material.Wood)
 	end
-	block("EaselBack", Vector3.new(0.15, 3.4, 0.15), base * CFrame.new(0, 1.6, 0.75) * CFrame.Angles(math.rad(18), 0, 0), C.log, Enum.Material.Wood)
-	local board = block("EaselBoard", Vector3.new(2.6, 1.8, 0.12), base * CFrame.new(0, 3, 0.05) * CFrame.Angles(math.rad(-10), 0, 0), Color3.fromRGB(32, 30, 28), Enum.Material.Slate)
+	block("EaselBack", Vector3.new(0.15, 3.4, 0.15), base * CFrame.new(0, 1.6, 0.95) * CFrame.Angles(math.rad(-18), 0, 0), C.log, Enum.Material.Wood)
+	-- Tafel lehnt nach hinten, Schrift zeigt nach draußen (Westen)
+	local board = block("EaselBoard", Vector3.new(2.6, 1.8, 0.12), base * CFrame.new(0, 3, 0.35) * CFrame.Angles(math.rad(10), 0, 0), Color3.fromRGB(32, 30, 28), Enum.Material.Slate)
 	local gui = Parts.surfaceGui(board, Enum.NormalId.Front, false)
 	gui.PixelsPerStud = 90
 	Parts.text(gui, { Text = title, Font = Enum.Font.SpecialElite, TextColor3 = C.paper, Size = UDim2.fromScale(0.9, 0.38), Position = UDim2.fromScale(0.05, 0.1) })
