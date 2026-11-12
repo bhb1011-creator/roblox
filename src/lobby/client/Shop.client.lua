@@ -1039,7 +1039,8 @@ local function setOpen(value, wantedMode, target)
 	fitting.suit = state.equipped.Player
 	table.clear(fitting.items)
 	local entry = target and byId[target]
-	showTab(entry and entry.tab or currentTab or (mode == "kiosk" and "Snacks" or "Bundles"))
+	local tabTarget = not entry and target or nil -- auch ein Reiter als Ziel ("Skins")
+	showTab(entry and entry.tab or tabTarget or currentTab or (mode == "kiosk" and "Snacks" or "Bundles"))
 	if entry then
 		select(entry)
 	elseif cards[1] then
@@ -1085,7 +1086,7 @@ ProximityPromptService.PromptTriggered:Connect(function(prompt, who)
 		return
 	end
 	if CollectionService:HasTag(prompt, "ShopHutPrompt") then
-		setOpen(true, "shop")
+		setOpen(true, "shop", prompt:GetAttribute("ShopTab"))
 	elseif CollectionService:HasTag(prompt, "ShowroomItemPrompt") then
 		setOpen(true, "shop", prompt:GetAttribute("ShopItem"))
 	elseif CollectionService:HasTag(prompt, "KioskPrompt") or CollectionService:HasTag(prompt, "ShopPrompt") then

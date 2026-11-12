@@ -1,7 +1,7 @@
 -- Shop-Hütte auf der Ostseite der Lobby: kleine Holzhütte mit Satteldach und Veranda, passend zu
 -- Kiosk und Lagerplatz. Innen: Verkäufer an der Theke (öffnet den Shop), Kleiderständer mit den
 -- Jacken auf Bügeln, Wandregal mit Mützen, Brillen & Co., Spiegel zum Anprobieren, im Schaufenster
--- der goldene Anzug und Shadow Sarp, in der Ecke Gilded Horror. Daneben steht der Sportwagen.
+-- Tafeln zum Katalog (Skins sieht man nur im Menü), Sessel in der Ecke. Daneben steht der Sportwagen.
 -- Jedes Stück hat „Try on“ (Tag ShowroomItemPrompt, Attribut ShopItem) und öffnet den Shop dort.
 local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
@@ -9,9 +9,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Layout = require(script.Parent.Layout)
 local Parts = require(ReplicatedStorage.Shared.Parts)
-local RealFigure = require(ReplicatedStorage.Shared.RealFigure)
 local ShopCatalog = require(ReplicatedStorage.Shared.ShopCatalog)
-local Skins = require(ReplicatedStorage.Shared.Skins)
 local SportsCar = require(ReplicatedStorage.Shared.SportsCar)
 
 local ShopHut = {}
@@ -177,44 +175,47 @@ local function buildCabin(model, block)
 	block("Rug", Vector3.new(8, 0.05, 6), CFrame.new(0, FLOOR + 0.02, -1), Color3.fromRGB(120, 45, 40), Enum.Material.Fabric, { CanCollide = false })
 end
 
------------------------------------------------------------------- Figuren
-local function figure(parent, spec, skinId, options, feet, facing)
-	local container = ReplicatedStorage:FindFirstChild(spec.folder)
-	local template = container and container:FindFirstChild(spec.name)
-	if not template then
-		warn("Shop-Hütte: Figur fehlt: " .. spec.folder .. "." .. spec.name)
-		return nil
+------------------------------------------------------------------ Schaufenster
+-- Skins gibt es nur im Menü zu sehen: im Schaufenster steht eine Holztafel, die den Katalog
+-- öffnet (Attribut ShopTab = Reiter im Menü)
+local function easel(parent, block, localPosition, title, line, tab)
+	local base = CFrame.new(localPosition)
+	for _, x in { -0.8, 0.8 } do
+		block("EaselLeg", Vector3.new(0.15, 3.6, 0.15), base * CFrame.new(x, 1.75, 0.2) * CFrame.Angles(math.rad(-10), 0, 0), C.log, Enum.Material.Wood)
 	end
-	local model = RealFigure.prepare(template, { anchor = true, height = spec.height })
-	model.Name = spec.name .. "_" .. skinId
-	pcall(function()
-		model.ModelStreamingMode = Enum.ModelStreamingMode.Atomic
-	end)
-	model:PivotTo(CFrame.lookAt(feet, feet + facing))
-	model.Parent = parent -- erst in den workspace: der Skin misst die Körperform
-	Skins.apply(model, skinId, options)
-	local lowest = math.huge
-	for _, part in model:GetDescendants() do
-		if part:IsA("BasePart") and part.Transparency < 1 and not part.Name:find("^Skin_") then
-			local size, cf = part.Size, part.CFrame
-			local extent = math.abs(cf.RightVector.Y) * size.X / 2 + math.abs(cf.UpVector.Y) * size.Y / 2 + math.abs(cf.LookVector.Y) * size.Z / 2
-			lowest = math.min(lowest, part.Position.Y - extent)
-		end
-	end
-	if lowest < math.huge then
-		model:PivotTo(model:GetPivot() + Vector3.new(0, feet.Y - lowest, 0))
-	end
-	return model
+	block("EaselBack", Vector3.new(0.15, 3.4, 0.15), base * CFrame.new(0, 1.6, 0.75) * CFrame.Angles(math.rad(18), 0, 0), C.log, Enum.Material.Wood)
+	local board = block("EaselBoard", Vector3.new(2.6, 1.8, 0.12), base * CFrame.new(0, 3, 0.05) * CFrame.Angles(math.rad(-10), 0, 0), Color3.fromRGB(32, 30, 28), Enum.Material.Slate)
+	local gui = Parts.surfaceGui(board, Enum.NormalId.Front, false)
+	gui.PixelsPerStud = 90
+	Parts.text(gui, { Text = title, Font = Enum.Font.SpecialElite, TextColor3 = C.paper, Size = UDim2.fromScale(0.9, 0.38), Position = UDim2.fromScale(0.05, 0.1) })
+	Parts.text(gui, { Text = line, Font = Enum.Font.SpecialElite, TextColor3 = Color3.fromRGB(200, 190, 170), Size = UDim2.fromScale(0.9, 0.3), Position = UDim2.fromScale(0.05, 0.56) })
+	local prompt = Instance.new("ProximityPrompt")
+	prompt.ActionText = "Open catalog"
+	prompt.ObjectText = title
+	prompt.HoldDuration = 0
+	prompt.MaxActivationDistance = 8
+	prompt.RequiresLineOfSight = false
+	prompt.Exclusivity = Enum.ProximityPromptExclusivity.OnePerButton
+	prompt:SetAttribute("ShopTab", tab)
+	CollectionService:AddTag(prompt, "ShopHutPrompt")
+	prompt.Parent = board
 end
 
--- Figur auf einem runden Holzpodest mit Preisschild davor
-local function display(parent, localPosition, itemId, skinId, spec, options, title, price)
-	local podium = BASE * CFrame.new(localPosition)
-	Parts.column({ Name = "Podium", Color = C.trim, Material = Enum.Material.Wood, Parent = parent }, 0.5, 3.2, podium)
-	local feet = podium.Position + Vector3.new(0, 0.5, 0)
-	figure(parent, spec, skinId, options, feet, BASE.LookVector)
-	local tag = priceTag(parent, feet + BASE.LookVector * 1.9 + Vector3.new(0, -0.05, 0), BASE.LookVector, title, price)
-	tryOnPrompt(tag, itemId, title)
+-- gemütliche Ecke: Sessel und Topfpflanze
+local function cozyCorner(block, localPosition)
+	local base = CFrame.new(localPosition) * CFrame.Angles(0, math.rad(35), 0)
+	local fabric = Color3.fromRGB(110, 46, 40)
+	block("ChairSeat", Vector3.new(2.4, 0.7, 2.2), base * CFrame.new(0, 0.95, 0), fabric, Enum.Material.Fabric)
+	block("ChairBack", Vector3.new(2.4, 2, 0.5), base * CFrame.new(0, 2, 0.9), fabric, Enum.Material.Fabric)
+	for _, x in { -1.3, 1.3 } do
+		block("ChairArm", Vector3.new(0.4, 1.1, 2.2), base * CFrame.new(x, 1.4, 0), fabric, Enum.Material.Fabric)
+	end
+	block("ChairBase", Vector3.new(2.2, 0.6, 2), base * CFrame.new(0, 0.3, 0), C.trim, Enum.Material.Wood)
+	local pot = base * CFrame.new(2.6, 0, 0.4)
+	block("PlantPot", Vector3.new(0.9, 1, 0.9), pot * CFrame.new(0, 0.5, 0), Color3.fromRGB(140, 80, 55), Enum.Material.Concrete)
+	for i = 0, 4 do
+		block("PlantLeaf", Vector3.new(0.25, 1.6, 0.7), pot * CFrame.Angles(0, i * math.rad(72), math.rad(25)) * CFrame.new(0.35, 1.7, 0), Color3.fromRGB(60, 110, 55), Enum.Material.Grass, { CanCollide = false })
+	end
 end
 
 ------------------------------------------------------------------ Kleidung
@@ -433,15 +434,10 @@ function ShopHut.build(parent)
 	buildCarSpot(model)
 	buildPath(model)
 
-	-- Schaufenster: goldener Anzug (links) und Shadow Sarp (rechts), Gilded Horror in der Ecke
-	local gold = ShopCatalog.find("GoldSuit")
-	display(model, Vector3.new(-6.2, FLOOR, -D / 2 + 2.6), "GoldSuit", "GoldSuit", gold.preview, gold.options, "Golden Suit", priceText(gold))
-	task.wait()
-	local shadow = ShopCatalog.find("ShadowSarp")
-	display(model, Vector3.new(6.2, FLOOR, -D / 2 + 2.6), "ShadowSarp", "ShadowSarp", shadow.preview, shadow.options, "Shadow Sarp", priceText(shadow))
-	task.wait()
-	local gilded = ShopCatalog.find("GildedHorror")
-	display(model, Vector3.new(-6.5, FLOOR, D / 2 - 2.6), "GildedHorror", "GildedHorror", gilded.preview, gilded.options, "Gilded Horror", priceText(gilded))
+	-- Schaufenster: Tafeln zum Katalog (Skins nur im Menü), gemütliche Ecke hinten links
+	easel(model, block, Vector3.new(-6.2, FLOOR, -D / 2 + 2.2), "SUITS & SKINS", "See them in the catalog", "Skins")
+	easel(model, block, Vector3.new(6.2, FLOOR, -D / 2 + 2.2), "CLOTHING SETS", "Buy together, save coins", "Bundles")
+	cozyCorner(block, Vector3.new(-6.8, FLOOR, D / 2 - 2.4))
 
 	Parts.optimize(model)
 	model:SetAttribute("Ready", true)
