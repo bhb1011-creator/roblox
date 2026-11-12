@@ -184,10 +184,10 @@ for _, pass in ShopCatalog.GAMEPASSES do
 	add({ id = pass.id, kind = "Pass", tab = "Passes", title = pass.title, description = pass.description, robux = pass.robux, passId = pass.passId, logo = pass.id, once = true })
 end
 for _, pack in ShopCatalog.COIN_PACKS do
-	add({ id = pack.id, kind = "CoinPack", tab = "Coins", title = money(pack.coins) .. " coins", description = "Spend coins on suits, clothing and snacks.", robux = pack.robux, productId = pack.productId, preview = { kind = "coins", amount = pack.coins }, note = pack.tag and (pack.tag:sub(1, 1) .. pack.tag:sub(2):lower()) or nil })
+	add({ id = pack.id, kind = "CoinPack", tab = "Coins", title = money(pack.coins) .. " coins", description = "Spend coins on suits, clothing and snacks.", robux = pack.robux, productId = pack.productId, logo = pack.id, note = pack.tag and (pack.tag:sub(1, 1) .. pack.tag:sub(2):lower()) or nil })
 end
 local boost = ShopCatalog.COIN_BOOST
-add({ id = boost.id, kind = "Boost", tab = "Coins", title = boost.title, description = boost.description, robux = boost.robux, productId = boost.productId, preview = { kind = "coins", amount = 200, double = true } })
+add({ id = boost.id, kind = "Boost", tab = "Coins", title = boost.title, description = boost.description, robux = boost.robux, productId = boost.productId, logo = boost.id })
 -- Kiosk: Snacks und Extras
 for _, item in ShopCatalog.ITEMS do
 	add({ id = item.id, kind = "Item", tab = "Snacks", title = item.title, description = item.description .. "\nYou can use up to 3 snacks per round.", coins = item.coins, robux = item.robux, productId = item.productId, preview = { kind = "snack", item = item.id } })
@@ -856,14 +856,20 @@ local function decoratePoster(view, entry, big)
 	return title
 end
 
------------------------------------------------------------------- Logos der Gamepässe
--- Abzeichen: runder Rand, Ring, gezeichnetes Symbol, Banner mit Namen
+------------------------------------------------------------------ Logos (Gamepässe und Münzen)
+-- Abzeichen wie geprägtes Metall: Schatten, Strahlenkranz, Metallrand mit Glanz, dunkler Innenring,
+-- Gesicht mit Verlauf, Glanzlicht oben, gezeichnetes Symbol, kleine Kopfzeile, Banner mit gefalteten Enden.
 local LOGOS = {
-	ThreeHearts = { top = Color3.fromRGB(150, 28, 36), bottom = Color3.fromRGB(46, 6, 10), accent = Color3.fromRGB(255, 196, 176), label = "3 HEARTS" },
-	DoubleCoins = { top = Color3.fromRGB(150, 110, 32), bottom = Color3.fromRGB(52, 34, 8), accent = Color3.fromRGB(255, 226, 150), label = "2X COINS" },
-	StrongFlashlight = { top = Color3.fromRGB(46, 60, 84), bottom = Color3.fromRGB(10, 14, 22), accent = Color3.fromRGB(255, 238, 176), label = "FLASHLIGHT" },
-	Supervision = { top = Color3.fromRGB(34, 84, 70), bottom = Color3.fromRGB(8, 24, 20), accent = Color3.fromRGB(196, 255, 224), label = "SUPERVISION" },
-	VipCar = { top = Color3.fromRGB(44, 40, 44), bottom = Color3.fromRGB(8, 8, 10), accent = Color3.fromRGB(236, 196, 96), label = "VIP CAR" },
+	ThreeHearts = { face = { Color3.fromRGB(170, 34, 44), Color3.fromRGB(52, 6, 12) }, rim = { Color3.fromRGB(255, 214, 196), Color3.fromRGB(160, 92, 84) }, ribbon = Color3.fromRGB(236, 72, 72), ribbonText = Color3.fromRGB(255, 244, 238), label = "3 HEARTS", kicker = "GAME PASS" },
+	DoubleCoins = { face = { Color3.fromRGB(176, 128, 36), Color3.fromRGB(62, 40, 8) }, rim = { Color3.fromRGB(255, 236, 170), Color3.fromRGB(150, 104, 30) }, ribbon = Color3.fromRGB(64, 40, 12), ribbonText = Color3.fromRGB(255, 226, 150), label = "2X COINS", kicker = "GAME PASS", rays = true },
+	StrongFlashlight = { face = { Color3.fromRGB(52, 70, 100), Color3.fromRGB(10, 14, 24) }, rim = { Color3.fromRGB(220, 228, 240), Color3.fromRGB(100, 110, 128) }, ribbon = Color3.fromRGB(250, 226, 140), ribbonText = Color3.fromRGB(30, 34, 46), label = "FLASHLIGHT", kicker = "GAME PASS" },
+	Supervision = { face = { Color3.fromRGB(38, 96, 80), Color3.fromRGB(6, 24, 20) }, rim = { Color3.fromRGB(210, 255, 232), Color3.fromRGB(84, 140, 118) }, ribbon = Color3.fromRGB(30, 60, 50), ribbonText = Color3.fromRGB(196, 255, 224), label = "SUPERVISION", kicker = "GAME PASS", rays = true },
+	VipCar = { face = { Color3.fromRGB(56, 50, 56), Color3.fromRGB(8, 8, 10) }, rim = { Color3.fromRGB(255, 226, 140), Color3.fromRGB(150, 104, 30) }, ribbon = Color3.fromRGB(150, 24, 30), ribbonText = Color3.fromRGB(255, 226, 150), label = "VIP CAR", kicker = "GAME PASS", rays = true },
+	Coins200 = { face = { Color3.fromRGB(150, 92, 52), Color3.fromRGB(52, 28, 14) }, rim = { Color3.fromRGB(240, 186, 140), Color3.fromRGB(130, 76, 40) }, ribbon = Color3.fromRGB(90, 52, 28), ribbonText = Color3.fromRGB(252, 220, 180), label = "200", kicker = "COINS", coins = 1 },
+	Coins500 = { face = { Color3.fromRGB(120, 124, 134), Color3.fromRGB(34, 36, 42) }, rim = { Color3.fromRGB(240, 242, 248), Color3.fromRGB(130, 134, 146) }, ribbon = Color3.fromRGB(52, 56, 66), ribbonText = Color3.fromRGB(236, 240, 250), label = "500", kicker = "COINS", coins = 2 },
+	Coins1500 = { face = { Color3.fromRGB(180, 130, 36), Color3.fromRGB(64, 40, 8) }, rim = { Color3.fromRGB(255, 236, 170), Color3.fromRGB(150, 104, 30) }, ribbon = Color3.fromRGB(70, 44, 10), ribbonText = Color3.fromRGB(255, 226, 150), label = "1,500", kicker = "COINS", coins = 3, rays = true },
+	Coins5000 = { face = { Color3.fromRGB(92, 40, 120), Color3.fromRGB(24, 8, 36) }, rim = { Color3.fromRGB(255, 226, 140), Color3.fromRGB(150, 104, 30) }, ribbon = Color3.fromRGB(230, 182, 74), ribbonText = Color3.fromRGB(44, 16, 60), label = "5,000", kicker = "COINS", chest = true, rays = true },
+	CoinBoost = { face = { Color3.fromRGB(36, 84, 150), Color3.fromRGB(8, 18, 40) }, rim = { Color3.fromRGB(200, 236, 255), Color3.fromRGB(70, 120, 170) }, ribbon = Color3.fromRGB(255, 214, 80), ribbonText = Color3.fromRGB(20, 30, 60), label = "BOOST", kicker = "2X COINS", bolt = true, rays = true },
 }
 
 local function round(frame)
@@ -880,61 +886,136 @@ local function shape(parent, x, y, w, h, color, z, props)
 	return f
 end
 
+local function vgrad(frame, top, bottom, rotation)
+	create("UIGradient", { Rotation = rotation or 90, Color = ColorSequence.new(top, bottom), Parent = frame })
+	return frame
+end
+
+-- Glanzlicht: weiße Fläche, die nach unten ausblendet
+local function gloss(parent, x, y, w, h, z, strength)
+	local g = round(shape(parent, x, y, w, h, Color3.new(1, 1, 1), z))
+	create("UIGradient", { Rotation = 90, Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1 - (strength or 0.35)), NumberSequenceKeypoint.new(1, 1) }), Parent = g })
+	return g
+end
+
 local function heart(parent, x, y, size, color, z)
 	local box = shape(parent, x, y, size, size, color, z, { BackgroundTransparency = 1 })
-	round(shape(box, 0.3, 0.36, 0.52, 0.52, color, z))
-	round(shape(box, 0.7, 0.36, 0.52, 0.52, color, z))
-	shape(box, 0.5, 0.56, 0.52, 0.52, color, z, { Rotation = 45 })
+	local dark = color:Lerp(Color3.new(0, 0, 0), 0.35)
+	vgrad(round(shape(box, 0.3, 0.36, 0.52, 0.52, color, z)), color, dark)
+	vgrad(round(shape(box, 0.7, 0.36, 0.52, 0.52, color, z)), color, dark)
+	vgrad(shape(box, 0.5, 0.56, 0.52, 0.52, color, z, { Rotation = 45 }), color:Lerp(dark, 0.4), dark, 45)
+	round(shape(box, 0.3, 0.3, 0.16, 0.12, Color3.new(1, 1, 1), z + 1, { BackgroundTransparency = 0.35, Rotation = -30 }))
 	return box
+end
+
+-- Münze von vorne
+local function coinFace(parent, x, y, size, z, label)
+	local c = vgrad(round(shape(parent, x, y, size, size, T.coin, z)), Color3.fromRGB(255, 226, 130), Color3.fromRGB(196, 140, 40))
+	create("UIStroke", { Color = Color3.fromRGB(130, 86, 24), Thickness = 2, Parent = c })
+	local ring = round(shape(c, 0.5, 0.5, 0.74, 0.74, T.coin, z, { BackgroundTransparency = 1 }))
+	create("UIStroke", { Color = Color3.fromRGB(150, 100, 30), Thickness = 1.5, Transparency = 0.25, Parent = ring })
+	gloss(c, 0.42, 0.3, 0.5, 0.3, z + 1, 0.5)
+	if label then
+		create("TextLabel", { AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.53), Size = UDim2.fromScale(0.7, 0.55), BackgroundTransparency = 1, Font = Enum.Font.Bangers, Text = label, TextScaled = true, TextColor3 = Color3.fromRGB(110, 70, 18), ZIndex = z + 2, Parent = c })
+	end
+	return c
+end
+
+-- Münzstapel von der Seite
+local function coinStack(parent, x, bottom, width, count, z)
+	for i = 0, count - 1 do
+		local piece = vgrad(shape(parent, x, bottom - i * 0.075, width, 0.085, T.coin, z + i), Color3.fromRGB(255, 220, 120), Color3.fromRGB(170, 116, 30))
+		create("UICorner", { CornerRadius = UDim.new(0.5, 0), Parent = piece })
+		create("UIStroke", { Color = Color3.fromRGB(120, 78, 20), Thickness = 1, Parent = piece })
+	end
 end
 
 local ICONS = {}
 function ICONS.ThreeHearts(icon, style, z)
-	heart(icon, 0.24, 0.56, 0.34, Color3.fromRGB(200, 40, 46), z)
-	heart(icon, 0.76, 0.56, 0.34, Color3.fromRGB(200, 40, 46), z)
-	heart(icon, 0.5, 0.46, 0.48, Color3.fromRGB(236, 60, 62), z + 1)
+	heart(icon, 0.2, 0.6, 0.4, Color3.fromRGB(196, 38, 46), z)
+	heart(icon, 0.8, 0.6, 0.4, Color3.fromRGB(196, 38, 46), z)
+	heart(icon, 0.5, 0.46, 0.62, Color3.fromRGB(240, 62, 64), z + 2)
 end
 function ICONS.DoubleCoins(icon, style, z)
-	local coin = round(shape(icon, 0.5, 0.5, 0.8, 0.8, T.coin, z))
-	create("UIStroke", { Color = T.coinEdge, Thickness = 3, Parent = coin })
-	local ring = round(shape(coin, 0.5, 0.5, 0.8, 0.8, T.coin, z, { BackgroundTransparency = 1 }))
-	create("UIStroke", { Color = T.coinEdge, Thickness = 2, Transparency = 0.3, Parent = ring })
-	create("TextLabel", { AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.52), Size = UDim2.fromScale(0.8, 0.6), BackgroundTransparency = 1, Font = Enum.Font.Bangers, Text = "2x", TextScaled = true, TextColor3 = Color3.fromRGB(90, 58, 16), ZIndex = z + 1, Parent = coin })
+	coinFace(icon, 0.36, 0.56, 0.56, z, nil)
+	coinFace(icon, 0.6, 0.46, 0.7, z + 3, "2x")
 end
 function ICONS.StrongFlashlight(icon, style, z)
-	-- Lichtkegel
-	local beam = shape(icon, 0.66, 0.36, 0.9, 0.42, style.accent, z, { Rotation = -35 })
-	create("UIGradient", { Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.15), NumberSequenceKeypoint.new(1, 1) }), Parent = beam })
-	-- Lampe
-	local body = shape(icon, 0.34, 0.66, 0.46, 0.16, Color3.fromRGB(40, 40, 46), z + 1, { Rotation = -35 })
-	create("UICorner", { CornerRadius = UDim.new(0.3, 0), Parent = body })
-	shape(icon, 0.5, 0.54, 0.18, 0.26, Color3.fromRGB(70, 70, 78), z + 1, { Rotation = -35 })
-	round(shape(icon, 0.55, 0.5, 0.12, 0.12, Color3.fromRGB(255, 246, 210), z + 2))
+	local beam = shape(icon, 0.68, 0.34, 0.95, 0.46, Color3.fromRGB(255, 240, 190), z, { Rotation = -35 })
+	create("UIGradient", { Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.05), NumberSequenceKeypoint.new(0.7, 0.75), NumberSequenceKeypoint.new(1, 1) }), Parent = beam })
+	local body = vgrad(shape(icon, 0.32, 0.68, 0.5, 0.17, Color3.fromRGB(46, 46, 52), z + 1, { Rotation = -35 }), Color3.fromRGB(90, 90, 100), Color3.fromRGB(24, 24, 28))
+	create("UICorner", { CornerRadius = UDim.new(0.35, 0), Parent = body })
+	for i = 0, 2 do
+		shape(icon, 0.24 + i * 0.07, 0.73 - i * 0.05, 0.03, 0.16, Color3.fromRGB(20, 20, 24), z + 2, { Rotation = -35 })
+	end
+	vgrad(shape(icon, 0.52, 0.53, 0.2, 0.28, Color3.fromRGB(90, 90, 100), z + 1, { Rotation = -35 }), Color3.fromRGB(150, 150, 160), Color3.fromRGB(50, 50, 58))
+	round(shape(icon, 0.57, 0.48, 0.15, 0.15, Color3.fromRGB(255, 250, 220), z + 3))
 end
 function ICONS.Supervision(icon, style, z)
-	for i = 0, 7 do
-		shape(icon, 0.5, 0.5, 0.03, 0.98, style.accent, z, { Rotation = i * 22.5, BackgroundTransparency = 0.55 })
+	for i = 0, 11 do
+		shape(icon, 0.5, 0.5, 0.025, 1.02, style.rim[1], z, { Rotation = i * 15, BackgroundTransparency = i % 2 == 0 and 0.45 or 0.7 })
 	end
-	local white = shape(icon, 0.5, 0.5, 0.82, 0.46, Color3.fromRGB(240, 236, 226), z + 1)
+	local white = vgrad(shape(icon, 0.5, 0.5, 0.84, 0.46, Color3.new(1, 1, 1), z + 1), Color3.fromRGB(250, 248, 240), Color3.fromRGB(196, 192, 182))
 	create("UICorner", { CornerRadius = UDim.new(1, 0), Parent = white })
-	round(shape(icon, 0.5, 0.5, 0.36, 0.36, Color3.fromRGB(60, 170, 120), z + 2))
-	round(shape(icon, 0.5, 0.5, 0.17, 0.17, Color3.fromRGB(10, 14, 12), z + 3))
-	round(shape(icon, 0.56, 0.44, 0.06, 0.06, Color3.new(1, 1, 1), z + 4))
+	create("UIStroke", { Color = Color3.fromRGB(10, 30, 24), Thickness = 2, Parent = white })
+	vgrad(round(shape(icon, 0.5, 0.5, 0.38, 0.38, Color3.fromRGB(60, 170, 120), z + 2)), Color3.fromRGB(110, 220, 160), Color3.fromRGB(20, 100, 70))
+	round(shape(icon, 0.5, 0.5, 0.17, 0.17, Color3.fromRGB(8, 12, 10), z + 3))
+	round(shape(icon, 0.57, 0.43, 0.07, 0.07, Color3.new(1, 1, 1), z + 4))
 end
 function ICONS.VipCar(icon, style, z)
 	for i = -1, 1 do
-		local star = create("TextLabel", { AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5 + i * 0.22, i == 0 and 0.16 or 0.22), Size = UDim2.fromScale(0.2, 0.2), BackgroundTransparency = 1, Font = Enum.Font.GothamBlack, Text = "★", TextScaled = true, TextColor3 = style.accent, ZIndex = z, Parent = icon })
-		star.Rotation = i * 12
+		create("TextLabel", { AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5 + i * 0.24, i == 0 and 0.13 or 0.2), Size = UDim2.fromScale(i == 0 and 0.24 or 0.18, i == 0 and 0.24 or 0.18), Rotation = i * 14, BackgroundTransparency = 1, Font = Enum.Font.GothamBlack, Text = "★", TextScaled = true, TextColor3 = style.rim[1], TextStrokeColor3 = style.rim[2], TextStrokeTransparency = 0.2, ZIndex = z, Parent = icon })
 	end
-	local red = Color3.fromRGB(150, 26, 32)
-	local body = shape(icon, 0.5, 0.62, 0.92, 0.2, red, z)
-	create("UICorner", { CornerRadius = UDim.new(0.35, 0), Parent = body })
-	local cabin = shape(icon, 0.47, 0.49, 0.48, 0.16, red:Lerp(Color3.new(0, 0, 0), 0.15), z)
-	create("UICorner", { CornerRadius = UDim.new(0.5, 0), Parent = cabin })
-	shape(icon, 0.47, 0.5, 0.36, 0.09, Color3.fromRGB(150, 190, 210), z + 1)
-	for _, x in { 0.27, 0.73 } do
-		round(shape(icon, x, 0.74, 0.18, 0.18, Color3.fromRGB(20, 20, 22), z + 1))
-		round(shape(icon, x, 0.74, 0.08, 0.08, style.accent, z + 2))
+	local red, dark = Color3.fromRGB(196, 36, 42), Color3.fromRGB(92, 12, 16)
+	local body = vgrad(shape(icon, 0.5, 0.63, 0.96, 0.21, red, z), red, dark)
+	create("UICorner", { CornerRadius = UDim.new(0.4, 0), Parent = body })
+	local cabin = vgrad(shape(icon, 0.46, 0.49, 0.5, 0.17, red, z), red:Lerp(Color3.new(1, 1, 1), 0.1), dark)
+	create("UICorner", { CornerRadius = UDim.new(0.6, 0), Parent = cabin })
+	for _, x in { 0.36, 0.56 } do
+		vgrad(shape(icon, x, 0.5, 0.17, 0.09, Color3.new(1, 1, 1), z + 1), Color3.fromRGB(190, 220, 240), Color3.fromRGB(80, 110, 130))
+	end
+	shape(icon, 0.5, 0.6, 0.88, 0.02, Color3.fromRGB(255, 220, 140), z + 1, { BackgroundTransparency = 0.3 })
+	round(shape(icon, 0.95, 0.6, 0.07, 0.06, Color3.fromRGB(255, 244, 200), z + 2))
+	for _, x in { 0.26, 0.74 } do
+		round(shape(icon, x, 0.75, 0.2, 0.2, Color3.fromRGB(16, 16, 18), z + 2))
+		vgrad(round(shape(icon, x, 0.75, 0.1, 0.1, style.rim[1], z + 3)), style.rim[1], style.rim[2])
+	end
+end
+-- Münz-Pakete: mehr Münzen, je größer das Paket
+local function coinsIcon(icon, style, z)
+	if style.chest then
+		-- Schatztruhe voller Münzen
+		coinFace(icon, 0.3, 0.3, 0.3, z, nil)
+		coinFace(icon, 0.55, 0.24, 0.34, z + 1, nil)
+		coinFace(icon, 0.74, 0.34, 0.28, z, nil)
+		local chest = vgrad(shape(icon, 0.5, 0.66, 0.84, 0.44, Color3.fromRGB(120, 70, 36), z + 3), Color3.fromRGB(150, 92, 50), Color3.fromRGB(70, 38, 18))
+		create("UICorner", { CornerRadius = UDim.new(0.12, 0), Parent = chest })
+		create("UIStroke", { Color = Color3.fromRGB(40, 20, 8), Thickness = 2, Parent = chest })
+		for _, x in { 0.16, 0.84 } do
+			vgrad(shape(icon, x, 0.66, 0.07, 0.44, T.coin, z + 4), Color3.fromRGB(255, 220, 120), Color3.fromRGB(160, 110, 30))
+		end
+		vgrad(shape(icon, 0.5, 0.5, 0.86, 0.06, T.coin, z + 4), Color3.fromRGB(255, 220, 120), Color3.fromRGB(160, 110, 30))
+		local lock = vgrad(shape(icon, 0.5, 0.6, 0.14, 0.16, T.coin, z + 5), Color3.fromRGB(255, 226, 130), Color3.fromRGB(170, 116, 30))
+		create("UICorner", { CornerRadius = UDim.new(0.25, 0), Parent = lock })
+		round(shape(lock, 0.5, 0.45, 0.32, 0.32, Color3.fromRGB(50, 30, 10), z + 6))
+	elseif style.bolt then
+		coinFace(icon, 0.42, 0.56, 0.68, z, "2x")
+		for _, info in { { 0.78, 0.26, 0.12, 0.42, 22 }, { 0.72, 0.5, 0.12, 0.42, 22 } } do
+			vgrad(shape(icon, info[1], info[2], info[3], info[4], Color3.fromRGB(255, 220, 70), z + 4, { Rotation = info[5] }), Color3.fromRGB(255, 244, 150), Color3.fromRGB(240, 160, 30))
+		end
+		shape(icon, 0.75, 0.38, 0.22, 0.07, Color3.fromRGB(255, 220, 70), z + 4, { Rotation = -40 })
+	else
+		local n = style.coins or 1
+		if n == 1 then
+			coinFace(icon, 0.5, 0.5, 0.78, z, nil)
+		elseif n == 2 then
+			coinStack(icon, 0.3, 0.84, 0.42, 4, z)
+			coinFace(icon, 0.6, 0.48, 0.66, z + 6, nil)
+		else
+			coinStack(icon, 0.22, 0.86, 0.36, 5, z)
+			coinStack(icon, 0.78, 0.86, 0.36, 6, z)
+			coinFace(icon, 0.5, 0.44, 0.66, z + 8, nil)
+		end
 	end
 end
 
@@ -949,27 +1030,49 @@ local function passLogo(view, id, big)
 	if not style then
 		return
 	end
+	back.ClipsDescendants = true -- Strahlen nicht über den Rand
 	local z = view.ZIndex + 1
 	local holder = create("Frame", { Name = "Logo", Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, ZIndex = z, Parent = back })
-	-- rundes Abzeichen, immer quadratisch und mittig
-	local badge = round(create("Frame", { AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.47), Size = UDim2.fromScale(0.86, 0.86), SizeConstraint = Enum.SizeConstraint.RelativeYY, BackgroundColor3 = Color3.new(1, 1, 1), ZIndex = z, Parent = holder }, {
-		create("UIGradient", { Rotation = 90, Color = ColorSequence.new(style.top, style.bottom) }),
-		create("UIStroke", { Color = style.accent, Thickness = big and 5 or 3 }),
-	}))
-	local ring = round(create("Frame", { AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), Size = UDim2.fromScale(0.84, 0.84), BackgroundTransparency = 1, ZIndex = z, Parent = badge }))
-	create("UIStroke", { Color = style.accent, Thickness = big and 2 or 1, Transparency = 0.4, Parent = ring })
-	local icon = create("Frame", { AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.42), Size = UDim2.fromScale(0.56, 0.56), BackgroundTransparency = 1, ZIndex = z + 1, Parent = badge })
-	ICONS[id](icon, style, z + 1)
-	-- Banner mit Namen quer über den unteren Teil
-	local banner = create("Frame", { AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.78), Size = UDim2.fromScale(1.16, 0.22), BackgroundColor3 = style.accent, ZIndex = z + 6, Parent = badge }, {
-		create("UICorner", { CornerRadius = UDim.new(0, 3) }),
-		create("UIStroke", { Color = style.bottom, Thickness = big and 3 or 2 }),
-	})
-	create("TextLabel", { AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.52), Size = UDim2.fromScale(0.9, 0.78), BackgroundTransparency = 1, Font = Enum.Font.Oswald, Text = style.label, TextScaled = true, TextColor3 = style.bottom, ZIndex = z + 7, Parent = banner })
-	-- Bänder-Enden
-	for _, side in { -1, 1 } do
-		shape(badge, 0.5 + side * 0.6, 0.82, 0.12, 0.16, style.accent:Lerp(Color3.new(0, 0, 0), 0.3), z + 5, { Rotation = side * 12 })
+	-- quadratische Fläche in der Mitte (alles darin in Anteilen)
+	local area = create("Frame", { AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.47), Size = UDim2.fromScale(0.92, 0.92), SizeConstraint = Enum.SizeConstraint.RelativeYY, BackgroundTransparency = 1, ZIndex = z, Parent = holder })
+	if style.rays then
+		for i = 0, 11 do
+			shape(area, 0.5, 0.5, 0.05, 1.5, style.rim[1], z, { Rotation = i * 15, BackgroundTransparency = 0.88 })
+		end
 	end
+	-- Schatten unter dem Abzeichen
+	round(shape(area, 0.52, 0.54, 0.9, 0.9, Color3.new(0, 0, 0), z, { BackgroundTransparency = 0.55 }))
+	-- Metallrand mit Glanz
+	local rim = round(shape(area, 0.5, 0.5, 0.9, 0.9, Color3.new(1, 1, 1), z))
+	create("UIGradient", { Rotation = 135, Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, style.rim[1]), ColorSequenceKeypoint.new(0.5, style.rim[2]), ColorSequenceKeypoint.new(1, style.rim[1]:Lerp(style.rim[2], 0.5)) }), Parent = rim })
+	-- dunkler Innenring, dann das Gesicht
+	local inner = round(shape(rim, 0.5, 0.5, 0.86, 0.86, style.face[2]:Lerp(Color3.new(0, 0, 0), 0.4), z))
+	local face = round(shape(inner, 0.5, 0.5, 0.95, 0.95, Color3.new(1, 1, 1), z))
+	create("UIGradient", { Rotation = 90, Color = ColorSequence.new(style.face[1], style.face[2]), Parent = face })
+	local ring = round(shape(face, 0.5, 0.5, 0.88, 0.88, Color3.new(1, 1, 1), z, { BackgroundTransparency = 1 }))
+	create("UIStroke", { Color = style.rim[1], Thickness = big and 2 or 1, Transparency = 0.55, Parent = ring })
+	-- kleine Kopfzeile oben im Ring
+	create("TextLabel", { AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.15), Size = UDim2.fromScale(0.5, 0.09), BackgroundTransparency = 1, Font = Enum.Font.Oswald, Text = style.kicker, TextScaled = true, TextColor3 = style.rim[1], TextTransparency = 0.15, ZIndex = z + 1, Parent = face })
+	-- Symbol
+	local icon = create("Frame", { AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.48), Size = UDim2.fromScale(0.6, 0.6), BackgroundTransparency = 1, ZIndex = z + 1, Parent = face })
+	if ICONS[id] then
+		ICONS[id](icon, style, z + 1)
+	else
+		coinsIcon(icon, style, z + 1)
+	end
+	-- Glanzlicht oben auf dem Abzeichen
+	gloss(face, 0.5, 0.24, 0.78, 0.42, z + 12, 0.18)
+	-- Banner mit gefalteten Enden
+	for _, side in { -1, 1 } do
+		local tail = vgrad(shape(area, 0.5 + side * 0.47, 0.83, 0.2, 0.15, style.ribbon, z + 13), style.ribbon:Lerp(Color3.new(0, 0, 0), 0.35), style.ribbon:Lerp(Color3.new(0, 0, 0), 0.55))
+		shape(tail, side < 0 and 0 or 1, 0.5, 0.36, 0.36, Color3.new(0, 0, 0), z + 13, { Rotation = 45, BackgroundTransparency = 1 })
+		shape(area, 0.5 + side * 0.4, 0.86, 0.06, 0.06, style.ribbon:Lerp(Color3.new(0, 0, 0), 0.7), z + 14, { Rotation = 45 })
+	end
+	local banner = vgrad(shape(area, 0.5, 0.79, 0.86, 0.17, style.ribbon, z + 15), style.ribbon:Lerp(Color3.new(1, 1, 1), 0.18), style.ribbon:Lerp(Color3.new(0, 0, 0), 0.15))
+	create("UICorner", { CornerRadius = UDim.new(0, 3), Parent = banner })
+	create("UIStroke", { Color = style.ribbon:Lerp(Color3.new(0, 0, 0), 0.5), Thickness = big and 2 or 1, Parent = banner })
+	shape(banner, 0.5, 0.12, 0.94, 0.06, Color3.new(1, 1, 1), z + 16, { BackgroundTransparency = 0.7 })
+	create("TextLabel", { AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.54), Size = UDim2.fromScale(0.9, 0.8), BackgroundTransparency = 1, Font = Enum.Font.Oswald, Text = style.label, TextScaled = true, TextColor3 = style.ribbonText, ZIndex = z + 17, Parent = banner })
 	return holder
 end
 

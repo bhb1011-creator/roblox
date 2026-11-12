@@ -1,6 +1,6 @@
 # Handoff – Horror-Spiel „Guesthouse“ (Roblox)
 
-Stand: 11. November 2026, Branch `claude/optimistic-bardeen-4tmohk`, Version `K2-2026-11-12j`.
+Stand: 11. November 2026, Branch `claude/optimistic-bardeen-4tmohk`, Version `K2-2026-11-12k`.
 Ganz oben stehen die neuesten Abschnitte (0000 = 10. Nov., 000 = realistische Familie, 00 = 9. Nov., 0 = Kapitel 3 + Audio);
 Abschnitte 2–8 beschreiben Kapitel 2 (Stand 6. Nov.).
 Diese Datei ist für einen **neuen Chat** gedacht: erst den Prompt unten kopieren, der Rest ist Nachschlagewerk.
@@ -44,6 +44,17 @@ hochladen; bis dahin viele kurze Sounds zu Sammeldateien zusammenfassen, im Spie
 Roblox Studio ist per MCP verbunden – du kannst Studio direkt steuern und testen.
 Fang damit an, dass du die Dateien liest und mir in 5 Sätzen sagst, wo wir stehen.
 ```
+
+---
+
+## 0000000000000000. NEU 12. November (Version K2-2026-11-12k): bessere Logos, auch für Münzen
+
+- Logos (`LOGOS`, `ICONS`, `coinsIcon`, `passLogo`) jetzt wie geprägtes Metall: Schatten, optional Strahlenkranz,
+  Metallrand mit Glanzverlauf, dunkler Innenring, Gesicht mit Verlauf, Kopfzeile („GAME PASS“/„COINS“), Glanzlicht,
+  Banner mit gefalteten Enden. Symbole mit Schattierung. Neu: Logos für die Münz-Pakete (200 Bronze, 500 Silber,
+  1,500 Gold mit Münztürmen, 5,000 lila mit Schatztruhe) und den Coin Boost (Münze „2x“ mit Blitz).
+- Design-Plugins (UI Design Review, Design, Icons8) sind beim User aktiviert, laden aber erst in einer neuen Sitzung.
+- In Studio als Bild geprüft (Pässe, Münzen).
 
 ---
 
