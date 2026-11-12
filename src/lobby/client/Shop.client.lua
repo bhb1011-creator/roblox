@@ -181,7 +181,7 @@ for _, item in ShopCatalog.CLOTHING do
 end
 -- Shop: Pässe und Münzen
 for _, pass in ShopCatalog.GAMEPASSES do
-	add({ id = pass.id, kind = "Pass", tab = "Passes", title = pass.title, description = pass.description, robux = pass.robux, passId = pass.passId, preview = { kind = "pass", pass = pass.id }, once = true })
+	add({ id = pass.id, kind = "Pass", tab = "Passes", title = pass.title, description = pass.description, robux = pass.robux, passId = pass.passId, logo = pass.id, once = true })
 end
 for _, pack in ShopCatalog.COIN_PACKS do
 	add({ id = pack.id, kind = "CoinPack", tab = "Coins", title = money(pack.coins) .. " coins", description = "Spend coins on suits, clothing and snacks.", robux = pack.robux, productId = pack.productId, preview = { kind = "coins", amount = pack.coins }, note = pack.tag and (pack.tag:sub(1, 1) .. pack.tag:sub(2):lower()) or nil })
@@ -856,6 +856,123 @@ local function decoratePoster(view, entry, big)
 	return title
 end
 
+------------------------------------------------------------------ Logos der Gamepässe
+-- Abzeichen: runder Rand, Ring, gezeichnetes Symbol, Banner mit Namen
+local LOGOS = {
+	ThreeHearts = { top = Color3.fromRGB(150, 28, 36), bottom = Color3.fromRGB(46, 6, 10), accent = Color3.fromRGB(255, 196, 176), label = "3 HEARTS" },
+	DoubleCoins = { top = Color3.fromRGB(150, 110, 32), bottom = Color3.fromRGB(52, 34, 8), accent = Color3.fromRGB(255, 226, 150), label = "2X COINS" },
+	StrongFlashlight = { top = Color3.fromRGB(46, 60, 84), bottom = Color3.fromRGB(10, 14, 22), accent = Color3.fromRGB(255, 238, 176), label = "FLASHLIGHT" },
+	Supervision = { top = Color3.fromRGB(34, 84, 70), bottom = Color3.fromRGB(8, 24, 20), accent = Color3.fromRGB(196, 255, 224), label = "SUPERVISION" },
+	VipCar = { top = Color3.fromRGB(44, 40, 44), bottom = Color3.fromRGB(8, 8, 10), accent = Color3.fromRGB(236, 196, 96), label = "VIP CAR" },
+}
+
+local function round(frame)
+	create("UICorner", { CornerRadius = UDim.new(1, 0), Parent = frame })
+	return frame
+end
+
+-- kleines Teil im Symbol-Feld (Position/Größe in Anteilen des Feldes)
+local function shape(parent, x, y, w, h, color, z, props)
+	local f = create("Frame", { AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(x, y), Size = UDim2.fromScale(w, h), BackgroundColor3 = color, BorderSizePixel = 0, ZIndex = z, Parent = parent })
+	for key, value in props or {} do
+		f[key] = value
+	end
+	return f
+end
+
+local function heart(parent, x, y, size, color, z)
+	local box = shape(parent, x, y, size, size, color, z, { BackgroundTransparency = 1 })
+	round(shape(box, 0.3, 0.36, 0.52, 0.52, color, z))
+	round(shape(box, 0.7, 0.36, 0.52, 0.52, color, z))
+	shape(box, 0.5, 0.56, 0.52, 0.52, color, z, { Rotation = 45 })
+	return box
+end
+
+local ICONS = {}
+function ICONS.ThreeHearts(icon, style, z)
+	heart(icon, 0.24, 0.56, 0.34, Color3.fromRGB(200, 40, 46), z)
+	heart(icon, 0.76, 0.56, 0.34, Color3.fromRGB(200, 40, 46), z)
+	heart(icon, 0.5, 0.46, 0.48, Color3.fromRGB(236, 60, 62), z + 1)
+end
+function ICONS.DoubleCoins(icon, style, z)
+	local coin = round(shape(icon, 0.5, 0.5, 0.8, 0.8, T.coin, z))
+	create("UIStroke", { Color = T.coinEdge, Thickness = 3, Parent = coin })
+	local ring = round(shape(coin, 0.5, 0.5, 0.8, 0.8, T.coin, z, { BackgroundTransparency = 1 }))
+	create("UIStroke", { Color = T.coinEdge, Thickness = 2, Transparency = 0.3, Parent = ring })
+	create("TextLabel", { AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.52), Size = UDim2.fromScale(0.8, 0.6), BackgroundTransparency = 1, Font = Enum.Font.Bangers, Text = "2x", TextScaled = true, TextColor3 = Color3.fromRGB(90, 58, 16), ZIndex = z + 1, Parent = coin })
+end
+function ICONS.StrongFlashlight(icon, style, z)
+	-- Lichtkegel
+	local beam = shape(icon, 0.66, 0.36, 0.9, 0.42, style.accent, z, { Rotation = -35 })
+	create("UIGradient", { Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.15), NumberSequenceKeypoint.new(1, 1) }), Parent = beam })
+	-- Lampe
+	local body = shape(icon, 0.34, 0.66, 0.46, 0.16, Color3.fromRGB(40, 40, 46), z + 1, { Rotation = -35 })
+	create("UICorner", { CornerRadius = UDim.new(0.3, 0), Parent = body })
+	shape(icon, 0.5, 0.54, 0.18, 0.26, Color3.fromRGB(70, 70, 78), z + 1, { Rotation = -35 })
+	round(shape(icon, 0.55, 0.5, 0.12, 0.12, Color3.fromRGB(255, 246, 210), z + 2))
+end
+function ICONS.Supervision(icon, style, z)
+	for i = 0, 7 do
+		shape(icon, 0.5, 0.5, 0.03, 0.98, style.accent, z, { Rotation = i * 22.5, BackgroundTransparency = 0.55 })
+	end
+	local white = shape(icon, 0.5, 0.5, 0.82, 0.46, Color3.fromRGB(240, 236, 226), z + 1)
+	create("UICorner", { CornerRadius = UDim.new(1, 0), Parent = white })
+	round(shape(icon, 0.5, 0.5, 0.36, 0.36, Color3.fromRGB(60, 170, 120), z + 2))
+	round(shape(icon, 0.5, 0.5, 0.17, 0.17, Color3.fromRGB(10, 14, 12), z + 3))
+	round(shape(icon, 0.56, 0.44, 0.06, 0.06, Color3.new(1, 1, 1), z + 4))
+end
+function ICONS.VipCar(icon, style, z)
+	for i = -1, 1 do
+		local star = create("TextLabel", { AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5 + i * 0.22, i == 0 and 0.16 or 0.22), Size = UDim2.fromScale(0.2, 0.2), BackgroundTransparency = 1, Font = Enum.Font.GothamBlack, Text = "★", TextScaled = true, TextColor3 = style.accent, ZIndex = z, Parent = icon })
+		star.Rotation = i * 12
+	end
+	local red = Color3.fromRGB(150, 26, 32)
+	local body = shape(icon, 0.5, 0.62, 0.92, 0.2, red, z)
+	create("UICorner", { CornerRadius = UDim.new(0.35, 0), Parent = body })
+	local cabin = shape(icon, 0.47, 0.49, 0.48, 0.16, red:Lerp(Color3.new(0, 0, 0), 0.15), z)
+	create("UICorner", { CornerRadius = UDim.new(0.5, 0), Parent = cabin })
+	shape(icon, 0.47, 0.5, 0.36, 0.09, Color3.fromRGB(150, 190, 210), z + 1)
+	for _, x in { 0.27, 0.73 } do
+		round(shape(icon, x, 0.74, 0.18, 0.18, Color3.fromRGB(20, 20, 22), z + 1))
+		round(shape(icon, x, 0.74, 0.08, 0.08, style.accent, z + 2))
+	end
+end
+
+-- Logo in ein „Foto“-Feld legen (über dem leeren Vorschaufenster); nil entfernt es
+local function passLogo(view, id, big)
+	local back = view.Parent
+	local old = back:FindFirstChild("Logo")
+	if old then
+		old:Destroy()
+	end
+	local style = id and LOGOS[id]
+	if not style then
+		return
+	end
+	local z = view.ZIndex + 1
+	local holder = create("Frame", { Name = "Logo", Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, ZIndex = z, Parent = back })
+	-- rundes Abzeichen, immer quadratisch und mittig
+	local badge = round(create("Frame", { AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.47), Size = UDim2.fromScale(0.86, 0.86), SizeConstraint = Enum.SizeConstraint.RelativeYY, BackgroundColor3 = Color3.new(1, 1, 1), ZIndex = z, Parent = holder }, {
+		create("UIGradient", { Rotation = 90, Color = ColorSequence.new(style.top, style.bottom) }),
+		create("UIStroke", { Color = style.accent, Thickness = big and 5 or 3 }),
+	}))
+	local ring = round(create("Frame", { AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), Size = UDim2.fromScale(0.84, 0.84), BackgroundTransparency = 1, ZIndex = z, Parent = badge }))
+	create("UIStroke", { Color = style.accent, Thickness = big and 2 or 1, Transparency = 0.4, Parent = ring })
+	local icon = create("Frame", { AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.42), Size = UDim2.fromScale(0.56, 0.56), BackgroundTransparency = 1, ZIndex = z + 1, Parent = badge })
+	ICONS[id](icon, style, z + 1)
+	-- Banner mit Namen quer über den unteren Teil
+	local banner = create("Frame", { AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.78), Size = UDim2.fromScale(1.16, 0.22), BackgroundColor3 = style.accent, ZIndex = z + 6, Parent = badge }, {
+		create("UICorner", { CornerRadius = UDim.new(0, 3) }),
+		create("UIStroke", { Color = style.bottom, Thickness = big and 3 or 2 }),
+	})
+	create("TextLabel", { AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.52), Size = UDim2.fromScale(0.9, 0.78), BackgroundTransparency = 1, Font = Enum.Font.Oswald, Text = style.label, TextScaled = true, TextColor3 = style.bottom, ZIndex = z + 7, Parent = banner })
+	-- Bänder-Enden
+	for _, side in { -1, 1 } do
+		shape(badge, 0.5 + side * 0.6, 0.82, 0.12, 0.16, style.accent:Lerp(Color3.new(0, 0, 0), 0.3), z + 5, { Rotation = side * 12 })
+	end
+	return holder
+end
+
 local function priceRow(parent, z)
 	return create("Frame", { Name = "PriceRow", BackgroundTransparency = 1, ZIndex = z, Parent = parent }, {
 		create("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, VerticalAlignment = Enum.VerticalAlignment.Center, Padding = UDim.new(0, 6), SortOrder = Enum.SortOrder.LayoutOrder }),
@@ -1186,6 +1303,7 @@ local function makeCard(entry, order)
 	pic.Position = UDim2.fromOffset(8, 8)
 	pic.Size = UDim2.new(1, -16, 0, layout.thumbH or 130)
 	decoratePoster(view, entry, false)
+	passLogo(view, entry.logo, false)
 	tape(frame, UDim2.new(0.5, 0, 0, 0), tilt * -3, 18)
 	if entry.note then
 		-- gelber Notizzettel mit roter Schrift
@@ -1497,6 +1615,8 @@ function select(entry)
 	descLabel.Text = description
 	stage:ClearAllChildren()
 	decoratePoster(stage, entry, true)
+	passLogo(stage, entry.logo, true)
+	stageHint.Visible = entry.preview ~= nil -- nur drehbare 3D-Bilder
 	task.spawn(refreshStage)
 	renderActions(entry)
 end
