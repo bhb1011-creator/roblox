@@ -38,6 +38,11 @@ function ShopService.grant(data, entry, kind)
 		for _, id in entry.grants or {} do
 			data.Owned[id] = true
 		end
+	elseif kind == "Outfit" then
+		data.Owned[entry.id] = true
+		for _, id in entry.items or {} do
+			data.Owned[id] = true
+		end
 	else
 		data.Owned[entry.id] = true
 	end
@@ -64,6 +69,17 @@ local function buyWithCoins(player, id)
 	local ok, reason = PlayerData.update(player, function(data)
 		if not consumable and data.Owned[id] then
 			return false, "You already own " .. entry.title .. "."
+		end
+		if kind == "Outfit" then
+			local missing = false
+			for _, itemId in entry.items do
+				if not data.Owned[itemId] then
+					missing = true
+				end
+			end
+			if not missing then
+				return false, "You already own everything in " .. entry.title .. "."
+			end
 		end
 		if data.Coins < entry.coins then
 			return false, "Not enough coins: you need " .. money(entry.coins - data.Coins) .. " more."
@@ -159,7 +175,7 @@ function ShopService.productHandlers()
 			handlers[productId] = apply
 		end
 	end
-	for _, list in { { ShopCatalog.SKINS, "Skin" }, { ShopCatalog.ITEMS, "Item" }, { ShopCatalog.PACKS, "Pack" }, { ShopCatalog.COIN_PACKS, "CoinPack" } } do
+	for _, list in { { ShopCatalog.SKINS, "Skin" }, { ShopCatalog.ITEMS, "Item" }, { ShopCatalog.PACKS, "Pack" }, { ShopCatalog.COIN_PACKS, "CoinPack" }, { ShopCatalog.CLOTHING, "Clothing" }, { ShopCatalog.OUTFITS, "Outfit" } } do
 		for _, entry in list[1] do
 			add(entry.productId, function(data)
 				ShopService.grant(data, entry, list[2])

@@ -175,12 +175,10 @@ figureRow(14, {
 }, 14)
 
 ------------------------------------------------------------------ Reihe 3: Sarp
-sectionTitle(-22, "SARP", "Sarp VIP Pack (499 R$): 3 luxury skins   ·   Shadow Sarp: 3,500 coins or 399 R$")
+sectionTitle(-22, "SARP", "Sarp VIP Pack (499 R$): Gilded Horror   ·   Shadow Sarp: 3,500 coins or 399 R$")
 figureRow(-22, {
 	{ "Sarp", "Sarp2", nil, "SARP" },
 	{ "Sarp", "Sarp2", "GildedHorror", "GILDED HORROR" },
-	{ "Sarp", "Sarp2", "CrimsonCount", "CRIMSON COUNT" },
-	{ "Sarp", "Sarp2", "ObsidianKing", "OBSIDIAN KING" },
 	{ "Sarp", "Sarp2", "ShadowSarp", "SHADOW SARP" },
 	{ "Sarp", "Sarp2", "GoldSuit", "GOLDEN SUIT" },
 }, 17)

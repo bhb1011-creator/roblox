@@ -1,6 +1,6 @@
 -- Gebäude am Südrand: begehbarer Kiosk mit Verkäufer und drei Snack-Regalen,
--- Kassenhäuschen mit Kassierer (Robux-Käufe), große Bestenliste, verlassener
--- Wohnwagen.
+-- kleiner Kiosk (früher Kassenhäuschen) für Snacks und Wiederbelebungen, große Bestenliste,
+-- verlassener Wohnwagen. Beide Verkäufer öffnen das Kiosk-Menü (Shop.client.lua).
 local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -260,7 +260,7 @@ end
 
 local function buildBooth(parent)
 	local booth = Instance.new("Model")
-	booth.Name = "Kassenhaeuschen"
+	booth.Name = "KioskBooth"
 	local block = Parts.builder(booth, Layout.BOOTH)
 	local W, D, H, T = 12, 9, 9, 0.6
 	local frontZ = -D / 2 + T / 2
@@ -285,16 +285,16 @@ local function buildBooth(parent)
 	local lamp = block("DeskLamp", Vector3.new(0.6, 0.6, 0.6), CFrame.new(-1, 3.75, frontZ + 1.5), COLORS.neonWarm, Enum.Material.Neon)
 	Parts.light("PointLight", lamp, { Range = 10, Brightness = 0.9, Color = COLORS.neonWarm })
 
-	local nameplate = block("Nameplate", Vector3.new(4, 1, 0.2), CFrame.new(1, H - 1.1, frontZ - 0.4), Color3.fromRGB(230, 225, 210), Enum.Material.Metal)
-	Parts.text(Parts.surfaceGui(nameplate, Enum.NormalId.Front), { Text = "CHECKOUT", TextColor3 = Color3.fromRGB(40, 40, 40) })
+	local nameplate = block("Nameplate", Vector3.new(5, 1.3, 0.2), CFrame.new(1, H - 1.1, frontZ - 0.4), Color3.fromRGB(230, 225, 210), Enum.Material.Metal)
+	Parts.text(Parts.surfaceGui(nameplate, Enum.NormalId.Front), { Text = "KIOSK", Font = Enum.Font.SpecialElite, TextColor3 = Color3.fromRGB(40, 32, 28), Size = UDim2.fromScale(0.9, 0.84), Position = UDim2.fromScale(0.05, 0.08) })
 	local outsideLamp = block("OutsideLamp", Vector3.new(1, 0.4, 0.6), CFrame.new(-4, H - 0.6, frontZ - 0.6), COLORS.neonWarm, Enum.Material.Neon)
 	Parts.light("SpotLight", outsideLamp, { Face = Enum.NormalId.Bottom, Range = 14, Angle = 100, Brightness = 1.2, Color = COLORS.neonWarm })
 
 	booth.Parent = parent
 	createNpc(booth, Layout.BOOTH * CFrame.new(1, 0.4, frontZ + 3.2), {
-		name = "Kassierer",
-		action = "Open checkout",
-		tag = "CashierPrompt",
+		name = "Kiosk",
+		action = "Buy snacks",
+		tag = "KioskPrompt",
 		distance = 12,
 		skin = Color3.fromRGB(150, 105, 80),
 		shirt = Color3.fromRGB(120, 30, 35),

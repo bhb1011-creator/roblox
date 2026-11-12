@@ -15,7 +15,7 @@ local LobbyBuilder = require(script.Parent.LobbyBuilder)
 local PlayerData = require(script.Parent.PlayerData)
 local Purchases = require(script.Parent.Purchases)
 local ShopService = require(script.Parent.ShopService)
-local Showroom = require(script.Parent.Showroom)
+local ShopHut = require(script.Parent.ShopHut)
 
 local remotes = Instance.new("Folder")
 remotes.Name = "Remotes"
@@ -35,5 +35,5 @@ Purchases.init(notify)
 
 local lobby = LobbyBuilder.build()
 CarQueue.init(lobby.carsFolder, lobby.gate, notify)
--- VIP-Showroom zuletzt bauen: viele Figuren, die Lobby soll vorher stehen
-task.spawn(Showroom.build, lobby.folder)
+-- Shop-Hütte zuletzt bauen: Figuren und Kleidung, die Lobby soll vorher stehen
+task.spawn(ShopHut.build, lobby.folder)

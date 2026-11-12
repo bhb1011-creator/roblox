@@ -555,6 +555,27 @@ local function pauldrons(model, color, gemColor)
 	end
 end
 
+-- glühende Augen vorne am Kopf (Lage gemessen an Sarp: 0,17 über der Kopfmitte, 0,1 seitlich;
+-- skaliert mit der Kopfgröße), sitzen halb in der Oberfläche
+local function glowingEyes(model, color)
+	local root = rootOf(model)
+	local head = bodyPart(model, "Head")
+	if not (root and head) then
+		return
+	end
+	local center = root.CFrame:PointToObjectSpace(head.Position)
+	local k = head.Size.Y / 1.2
+	for _, side in { -1, 1 } do
+		local x, y = center.X + side * 0.1 * k, center.Y + 0.17 * k
+		local position = frontHit(model, x, y, { "Head" })
+		local cf = position and (CFrame.new(position) * root.CFrame.Rotation) or (root.CFrame * CFrame.new(x, y, center.Z - head.Size.Z * 0.36))
+		local eye = attachWorld(model, head, "Eye", Vector3.new(0.085, 0.07, 0.085) * k, cf * CFrame.new(0, 0, 0.012), color, M.Neon, { Shape = Enum.PartType.Ball })
+		if eye and side == 1 then
+			glow(eye, color, 3, 1.2)
+		end
+	end
+end
+
 -- alle sichtbaren Körperteile (auch Kopf und Hände) einfärben
 local function recolorAll(model, color, material, reflectance)
 	for _, part in bodyParts(model) do
@@ -676,7 +697,7 @@ function RECIPES.ObsidianKing(model)
 end
 
 -- Shadow Sarp (einzeln, 399 R$ / 3500 Münzen) – ganz schwarz wie ein Schatten (auch Kopf und
--- Hände), dunkler Rauch, nur ein schwaches kaltes Licht
+-- Hände), dunkler Rauch und glühende rote Augen
 function RECIPES.ShadowSarp(model)
 	local black = Color3.fromRGB(5, 5, 7)
 	recolorAll(model, black, M.Slate, 0)
@@ -687,10 +708,7 @@ function RECIPES.ShadowSarp(model)
 			smoke(part, Color3.fromRGB(8, 8, 10), torso and 10 or (name == "Head" and 4 or 5), torso and 1.6 or 0.9)
 		end
 	end
-	local head = bodyPart(model, "Head")
-	if head then
-		glow(head, Color3.fromRGB(200, 210, 255), 4, 0.25)
-	end
+	glowingEyes(model, Color3.fromRGB(255, 25, 20))
 end
 
 function Skins.apply(model, skinId, options)
