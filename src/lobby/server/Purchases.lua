@@ -1,4 +1,4 @@
--- Robux-Käufe: Kasse (Wiederbelebungen, Rebirths) und alle Shop-Produkte (Skins, Packs, Münzen,
+-- Robux-Käufe: Kasse (Wiederbelebungen) und alle Shop-Produkte (Skins, Packs, Münzen,
 -- Snacks, Starter Pack). Produkte mit ID 0 sind noch nicht im Creator Hub angelegt.
 local MarketplaceService = game:GetService("MarketplaceService")
 local Players = game:GetService("Players")

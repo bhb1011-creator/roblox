@@ -1,6 +1,6 @@
 # Handoff – Horror-Spiel „Guesthouse“ (Roblox)
 
-Stand: 12. November 2026, Branch `claude/optimistic-bardeen-4tmohk`, Version `K2-2026-11-12m`.
+Stand: 12. November 2026, Branch `claude/optimistic-bardeen-4tmohk`, Version `K2-2026-11-12n`.
 Ganz oben stehen die neuesten Abschnitte (0000 = 10. Nov., 000 = realistische Familie, 00 = 9. Nov., 0 = Kapitel 3 + Audio);
 Abschnitte 2–8 beschreiben Kapitel 2 (Stand 6. Nov.).
 Diese Datei ist für einen **neuen Chat** gedacht: erst den Prompt unten kopieren, der Rest ist Nachschlagewerk.
@@ -36,7 +36,7 @@ Regeln:
 - Sei ehrlich: sag klar, was ungetestet ist.
   Arbeite gründlich und sag, wenn etwas fertig ist.
 
-Stand: Version `K2-2026-11-12m`. Kapitel 1, 2 und 3 sind gebaut und laufen am Stück (`spiel.project.json`).
+Stand: Version `K2-2026-11-12n`. Kapitel 1, 2 und 3 sind gebaut und laufen am Stück (`spiel.project.json`).
 Alle Figuren sind realistische KI-Figuren (Familie Wagner, Sarp in drei Stufen, feste Spielerfiguren).
 Gerade in Arbeit: Shop und Spielfluss (Plan: `plan_shop_spielfluss.md`). In der Lobby stehen schon:
 Shop-Hütte (Kleidung auf Bügeln/Regal, Sportwagen daneben, Skins nur im Menü), Kiosk für Snacks,
@@ -51,6 +51,14 @@ Roblox Studio ist per MCP verbunden – du kannst Studio direkt steuern und test
 `/Applications/RobloxStudio.app/Contents/MacOS/RobloxStudio -launchIntentString '{"task":"EditFile","localplacefile":"<Pfad>"}'`).
 Fang damit an, dass du die Dateien liest und mir in 5 Sätzen sagst, wo wir stehen.
 ```
+
+---
+
+## 0000000000000000000. NEU 12. November (Version K2-2026-11-12n): Rebirth raus, Sportwagen gerade
+
+- Rebirth-Produkt aus `Config.PRODUCTS` entfernt (Kiosk zeigt es nicht mehr). Das alte DataStore-Feld `Rebirths` bleibt
+  nur für alte Spielstände drin.
+- Sportwagen neben der Shop-Hütte steht jetzt gerade, längs auf dem Podest (vorher schräg, -120°). In Studio geprüft.
 
 ---
 

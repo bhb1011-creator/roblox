@@ -50,14 +50,6 @@ Config.PRODUCTS = {
 		amount = 3,
 		robux = 60,
 	},
-	{
-		id = 0,
-		title = "Rebirth",
-		description = "Start over with a permanent bonus.",
-		field = "Rebirths",
-		amount = 1,
-		robux = 99,
-	},
 }
 
 -- Snacks im Kiosk, die im Spiel helfen. Gekauft wird später mit Münzen aus dem Spiel.
@@ -214,7 +206,7 @@ Config.TEST_START_KAPITEL2 = ""
 Config.TEST_AUTOSTART = ""
 -- Versionsnummer: steht beim Laden auf dem Bildschirm und im Output. So sieht man sofort,
 -- ob in Studio wirklich der neueste Stand läuft (nach "git pull").
-Config.BUILD = "K2-2026-11-12m"
+Config.BUILD = "K2-2026-11-12n"
 Config.VOICES = {
 	-- Sarp: etwas tiefer, langsam, ruhig – mit Bass, weniger Höhen und dunklem Hall
 	sarp = {

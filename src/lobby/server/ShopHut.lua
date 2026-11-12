@@ -390,7 +390,7 @@ local function buildCarSpot(parent)
 	local center = Vector3.new(60, Y, 31) -- südlich der Hütte
 	local stage = Parts.new("Part", { Name = "CarStage", Size = Vector3.new(17, 0.35, 11), CFrame = CFrame.new(center + Vector3.new(0, 0.175, 0)), Color = Color3.fromRGB(88, 84, 80), Material = Enum.Material.Cobblestone, Parent = parent })
 	Parts.new("Part", { Name = "CarStageEdge", Size = Vector3.new(17.4, 0.3, 11.4), CFrame = CFrame.new(center + Vector3.new(0, 0.1, 0)), Color = C.log, Material = Enum.Material.Wood, Parent = parent })
-	SportsCar.build(parent, CFrame.new(center + Vector3.new(0, 0.35, 0)) * CFrame.Angles(0, math.rad(-120), 0))
+	SportsCar.build(parent, CFrame.new(center + Vector3.new(0, 0.35, 0)) * CFrame.Angles(0, math.rad(90), 0)) -- gerade, längs auf dem Podest
 	-- zwei Laternenmasten mit Spot aufs Auto
 	for _, offset in { Vector3.new(-9.5, 0, -6.5), Vector3.new(9.5, 0, 6.5) } do
 		local foot = center + offset
