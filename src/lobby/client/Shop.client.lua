@@ -517,7 +517,7 @@ local function show(viewport, model, yaw)
 	clone.Parent = world
 	local cf, size = clone:GetBoundingBox()
 	-- Podest unter dem Modell (dunkles Holz mit hellem Rand)
-	local radius = math.clamp(math.max(size.X, size.Z) * 0.62, 0.8, 6)
+	local radius = math.clamp(math.max(size.X, size.Z) * 0.52, 0.6, 6)
 	local bottom = cf.Position.Y - size.Y / 2
 	local function disc(height, r, color, material)
 		local part = Instance.new("Part")
@@ -529,7 +529,7 @@ local function show(viewport, model, yaw)
 		part.Anchored = true
 		part.Parent = world
 	end
-	disc(radius * 0.12, radius, Color3.fromRGB(58, 42, 32), Enum.Material.Wood)
+	disc(math.min(radius * 0.08, 0.25), radius, Color3.fromRGB(58, 42, 32), Enum.Material.Wood)
 	disc(radius * 0.02, radius * 1.03, Color3.fromRGB(150, 112, 60), Enum.Material.Wood)
 	local camera = Instance.new("Camera")
 	camera.FieldOfView = 26
