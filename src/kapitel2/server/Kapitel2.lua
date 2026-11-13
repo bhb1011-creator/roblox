@@ -1156,6 +1156,38 @@ function Kapitel2.start()
 		end
 	end
 
+	-- Teststart "haus": nur das Haus ansehen – kein Gespräch, keine Nacht, kein Sarp.
+	-- Man steht in der Halle, alle Türen gehen auf, die Betten bleiben aus (sonst käme die Nacht).
+	local tour = Config.TEST_START_KAPITEL2 == "haus"
+	if tour then
+		print("Kapitel 2: TESTSTART Haus besichtigen (ohne Szene, ohne Sarp)")
+		inside = true
+		candlesGiven = true
+		started = true
+		prompt.Enabled = false
+		remotes:SetAttribute("TestStart", true)
+		remotes:SetAttribute("Inside", true)
+		for _, npc in { mrs, mr } do
+			if npc then
+				Wagners.place(npc, hiddenSpot, facing)
+			end
+		end
+		for _, door in Mansion.doors do
+			door.locked = false
+			if door.prompt then
+				door.prompt.ActionText = door.angle > 0 and "Close" or "Open"
+			end
+		end
+		-- vernagelte Tür 1: Bretter bleiben sichtbar, man kann aber hindurchgehen
+		if Mansion.model then
+			for _, part in Mansion.model:GetDescendants() do
+				if part:IsA("BasePart") and part.Name == "Board" then
+					part.CanCollide = false
+				end
+			end
+		end
+	end
+
 	local firstJoin
 	local function onPlayerAdded(player)
 		spawnPlayer(player)
@@ -1179,6 +1211,9 @@ function Kapitel2.start()
 					nightStartAt = escapeTest and Config.TEST_START_KAPITEL2 or "afterHide"
 					remotes:SetAttribute("Night", true)
 					task.spawn(startNight)
+					return
+				end
+				if tour then
 					return
 				end
 				task.wait(5)

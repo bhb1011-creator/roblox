@@ -237,7 +237,7 @@ local function refresh()
 	local chosen = ReplicatedStorage:GetAttribute("StartChoice")
 	if chosen == nil then
 		title.Text = "TESTMENÜ – Wo willst du starten?"
-		note.Text = "Anklicken oder Zahl drücken (1–" .. #TestStarts .. "). Ohne Wahl geht es nach 40 Sekunden normal mit Kapitel 1 los."
+		note.Text = "Anklicken oder Zahl drücken (1–" .. math.min(#TestStarts, 9) .. "). Ohne Wahl geht es nach 40 Sekunden normal mit Kapitel 1 los."
 	else
 		title.Text = "TESTMENÜ"
 		note.Text = "Gestartet bei: " .. chosenTitle() .. "\nZum Springen: in Studio Stop drücken, dann Play – das Menü kommt beim Start von selbst."

@@ -7,6 +7,12 @@ Diese Datei ist für einen **neuen Chat** gedacht: erst den Prompt unten kopiere
 
 ---
 
+## Stand K2-2026-11-13i (13. Nov.)
+- Testmenü: neuer Eintrag **„Haus besichtigen“** (id `haus`, TestStarts.lua). Man steht in der Halle mit Kerze,
+  kein Gespräch, keine Nacht, kein Sarp. Alle Türen sind aufgeschlossen, die Bretter an Tür 1 haben keine Kollision,
+  Betten bleiben aus (sonst würde die Nacht starten). Code: Kapitel2.lua, Block `tour`.
+- Getestet in Studio: Start, Kerze, keine Nacht, Tür 1 geht auf, keine Fehler.
+
 ## 1. Prompt zum Einfügen in den neuen Chat
 
 ```text

@@ -3,6 +3,7 @@
 return {
 	{ id = "kapitel1", title = "Kapitel 1 – Die Fahrt", info = "Ganz normal von vorne (im Auto)" },
 	{ id = "", title = "Kapitel 2 – Haustür", info = "Vor der Haustür der Wagners" },
+	{ id = "haus", title = "Haus besichtigen", info = "Ohne Sarp und ohne Szene, alle Türen offen (T = Tag)" },
 	{ id = "nachVerstecken", title = "Kapitel 2 – Nach dem Verstecken", info = "Richard kommt, Axt im Keller holen" },
 	{ id = "tuer1", title = "Kapitel 2 – Die Flucht", info = "Großmutters Zimmer: Chemikalien und Pulver suchen" },
 	{ id = "schluessel", title = "Kapitel 2 – Schlüssel", info = "Vorratskeller vor dem Regal, Schlüssel in der Hand" },
