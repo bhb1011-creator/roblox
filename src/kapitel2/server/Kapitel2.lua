@@ -104,7 +104,7 @@ function Kapitel2.start()
 	print("Kapitel 2: Welt und Haus werden gebaut …")
 	local buildStarted = os.clock()
 	local ok, problem = xpcall(function()
-		World.build()
+		World.build({ keepRadius = 450 }) -- nur die Umgebung ums Haus, nicht die ganze Strecke aus Kapitel 1
 		task.wait()
 		local removed = Mansion.clearAround(workspace:FindFirstChild("Level1"))
 		require(ReplicatedStorage.Shared.Parts).optimize(workspace) -- Leistung (siehe Parts.optimize)

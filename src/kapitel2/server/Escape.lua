@@ -347,25 +347,106 @@ function Escape.run(kit)
 		end
 	end
 	local upright = CFrame.Angles(0, 0, math.rad(90)) -- Zylinder stehen in Roblox auf der Seite
+	local M = Enum.Material
+	local CYL, BALL = Enum.PartType.Cylinder, Enum.PartType.Ball
+	-- Glasflasche mit Flüssigkeit, Hals, Korken und Papier-Etikett (steht auf `bottom`)
+	local function bottle(piece, x, z, bottom, height, radius, glass, liquid, fill)
+		local body = piece("Bottle", Vector3.new(height, radius * 2, radius * 2), CFrame.new(x, bottom + height / 2, z) * upright, glass, M.Glass, CYL)
+		body.Transparency = 0.45
+		piece("Liquid", Vector3.new(height * fill, radius * 1.7, radius * 1.7), CFrame.new(x, bottom + height * fill / 2 + 0.01, z) * upright, liquid, M.SmoothPlastic, CYL)
+		piece("Shoulder", Vector3.new(radius * 1.6, radius * 1.6, radius * 1.6), CFrame.new(x, bottom + height, z), glass, M.Glass, BALL).Transparency = 0.45
+		piece("Neck", Vector3.new(radius * 1.4, radius * 0.8, radius * 0.8), CFrame.new(x, bottom + height + radius * 0.7, z) * upright, glass, M.Glass, CYL).Transparency = 0.35
+		piece("Cork", Vector3.new(radius * 0.6, radius * 0.7, radius * 0.7), CFrame.new(x, bottom + height + radius * 1.5, z) * upright, Color3.fromRGB(176, 136, 90), M.Wood, CYL)
+		piece("Label", Vector3.new(height * 0.4, radius * 2.04, radius * 2.04), CFrame.new(x, bottom + height * 0.45, z) * upright, Color3.fromRGB(226, 214, 180), M.Fabric, CYL)
+	end
 	local BUILDERS = {
+		-- Holzkiste mit drei Flaschen auf Holzwolle, Warnzettel vorne
 		chemicals = function(piece)
-			piece("Crate", Vector3.new(0.9, 0.5, 0.6), CFrame.new(), Color3.fromRGB(110, 84, 56), Enum.Material.WoodPlanks)
-			for i = -1, 1 do
-				piece("Bottle", Vector3.new(0.6, 0.22, 0.22), CFrame.new(i * 0.26, 0.45, 0) * upright, Color3.fromRGB(70, 40, 20), Enum.Material.Glass, Enum.PartType.Cylinder)
+			local wood, dark = Color3.fromRGB(122, 92, 60), Color3.fromRGB(78, 56, 36)
+			piece("Crate", Vector3.new(0.9, 0.5, 0.6), CFrame.new(), wood, M.WoodPlanks)
+			-- Eckleisten und Querlatten
+			for _, x in { -0.43, 0.43 } do
+				for _, z in { -0.28, 0.28 } do
+					piece("Corner", Vector3.new(0.06, 0.52, 0.06), CFrame.new(x, 0, z), dark, M.Wood)
+				end
+			end
+			for _, z in { -0.31, 0.31 } do
+				piece("Slat", Vector3.new(0.92, 0.08, 0.03), CFrame.new(0, 0.13, z), dark, M.Wood)
+				piece("Slat", Vector3.new(0.92, 0.08, 0.03), CFrame.new(0, -0.13, z), dark, M.Wood)
+			end
+			-- Holzwolle oben, dazwischen die Flaschen
+			piece("Straw", Vector3.new(0.84, 0.06, 0.54), CFrame.new(0, 0.24, 0), Color3.fromRGB(196, 164, 104), M.Fabric)
+			bottle(piece, -0.26, 0.02, 0.2, 0.42, 0.1, Color3.fromRGB(96, 56, 24), Color3.fromRGB(60, 30, 10), 0.75)
+			bottle(piece, 0, -0.04, 0.2, 0.5, 0.11, Color3.fromRGB(56, 96, 60), Color3.fromRGB(150, 200, 70), 0.6)
+			bottle(piece, 0.26, 0.04, 0.2, 0.38, 0.1, Color3.fromRGB(200, 210, 214), Color3.fromRGB(190, 120, 220), 0.5)
+			-- Warnzettel: gelbes Papier mit schwarzem Rand
+			piece("Warning", Vector3.new(0.3, 0.2, 0.02), CFrame.new(0.18, 0, -0.32), Color3.fromRGB(226, 190, 60), M.SmoothPlastic)
+			piece("WarningMark", Vector3.new(0.06, 0.12, 0.025), CFrame.new(0.18, 0.01, -0.325), Color3.fromRGB(30, 26, 22), M.SmoothPlastic)
+		end,
+		-- Pulverfass: Dauben, zwei Eisenringe, Deckel mit Spund, Etikett, etwas verschüttetes Pulver
+		powder = function(piece)
+			local wood = Color3.fromRGB(92, 64, 40)
+			piece("Keg", Vector3.new(0.8, 0.6, 0.6), CFrame.new(0, 0.1, 0) * upright, wood, M.Wood, CYL)
+			-- Bauch: etwas dicker in der Mitte
+			piece("Belly", Vector3.new(0.4, 0.66, 0.66), CFrame.new(0, 0.1, 0) * upright, wood, M.Wood, CYL)
+			for i = 0, 7 do
+				local a = i / 8 * math.pi * 2
+				piece("Stave", Vector3.new(0.02, 0.82, 0.04), CFrame.new(math.cos(a) * 0.325, 0.1, math.sin(a) * 0.325) * CFrame.Angles(0, -a, 0), Color3.fromRGB(58, 40, 26), M.Wood)
+			end
+			for _, y in { -0.2, 0.4 } do
+				piece("KegBand", Vector3.new(0.07, 0.65, 0.65), CFrame.new(0, y, 0) * upright, Color3.fromRGB(46, 46, 50), M.Metal, CYL)
+			end
+			piece("Lid", Vector3.new(0.03, 0.54, 0.54), CFrame.new(0, 0.51, 0) * upright, Color3.fromRGB(70, 48, 30), M.Wood, CYL)
+			piece("Bung", Vector3.new(0.06, 0.1, 0.1), CFrame.new(0.14, 0.54, 0.06) * upright, Color3.fromRGB(150, 110, 70), M.Wood, CYL)
+			piece("Spill", Vector3.new(0.01, 0.16, 0.12), CFrame.new(-0.08, 0.53, -0.1) * upright, Color3.fromRGB(28, 28, 30), M.Sand, CYL)
+			-- Papier-Etikett vorne mit schwarzen Balken (wie gestempelt)
+			piece("Label", Vector3.new(0.3, 0.2, 0.02), CFrame.new(0, 0.1, -0.34), Color3.fromRGB(220, 204, 166), M.Fabric)
+			for _, y in { 0.15, 0.05 } do
+				piece("LabelInk", Vector3.new(0.22, 0.03, 0.025), CFrame.new(0, y, -0.345), Color3.fromRGB(40, 30, 24), M.SmoothPlastic)
 			end
 		end,
-		powder = function(piece)
-			piece("Keg", Vector3.new(0.8, 0.6, 0.6), CFrame.new(0, 0.1, 0) * upright, Color3.fromRGB(66, 46, 30), Enum.Material.Wood, Enum.PartType.Cylinder)
-			piece("KegBand", Vector3.new(0.08, 0.64, 0.64), CFrame.new(0, 0.3, 0) * upright, Color3.fromRGB(40, 40, 42), Enum.Material.Metal, Enum.PartType.Cylinder)
-		end,
+		-- die Ladung: Holzkästchen, Pulverbeutel und zwei Flaschen mit Klebeband umwickelt, Draht, Lunte
 		charge = function(piece)
-			piece("Charge", Vector3.new(1, 0.7, 0.6), CFrame.new(), Color3.fromRGB(66, 46, 30), Enum.Material.Wood)
-			piece("ChargeTape", Vector3.new(1.04, 0.2, 0.64), CFrame.new(0, 0.1, 0), Color3.fromRGB(150, 140, 110), Enum.Material.Fabric)
-			piece("Fuse", Vector3.new(0.06, 0.8, 0.06), CFrame.new(0.3, 0.7, 0) * CFrame.Angles(0, 0, math.rad(-20)), Color3.fromRGB(30, 26, 22), Enum.Material.Fabric)
+			local wood = Color3.fromRGB(86, 60, 38)
+			piece("Charge", Vector3.new(1, 0.7, 0.6), CFrame.new(), wood, M.WoodPlanks)
+			for _, x in { -0.47, 0.47 } do
+				for _, y in { -0.32, 0.32 } do
+					piece("Nail", Vector3.new(0.02, 0.05, 0.05), CFrame.new(x + (x > 0 and 0.02 or -0.02), y, 0.22) * CFrame.Angles(0, 0, 0), Color3.fromRGB(70, 70, 74), M.Metal, CYL)
+				end
+			end
+			-- Pulverbeutel oben drauf
+			piece("Pouch", Vector3.new(0.5, 0.26, 0.4), CFrame.new(-0.12, 0.44, 0), Color3.fromRGB(150, 126, 90), M.Fabric, BALL)
+			piece("PouchTie", Vector3.new(0.06, 0.12, 0.12), CFrame.new(-0.12, 0.58, 0) * upright, Color3.fromRGB(60, 44, 30), M.Fabric, CYL)
+			-- zwei Flaschen seitlich (liegend) festgeklebt
+			for _, z in { -0.36, 0.36 } do
+				local glass = piece("SideBottle", Vector3.new(0.7, 0.18, 0.18), CFrame.new(0, -0.08, z), Color3.fromRGB(96, 56, 24), M.Glass, CYL)
+				glass.Transparency = 0.4
+				piece("SideLiquid", Vector3.new(0.6, 0.14, 0.14), CFrame.new(-0.02, -0.09, z), Color3.fromRGB(60, 30, 10), M.SmoothPlastic, CYL)
+				piece("SideCork", Vector3.new(0.08, 0.08, 0.08), CFrame.new(0.38, -0.08, z), Color3.fromRGB(176, 136, 90), M.Wood, CYL)
+			end
+			-- Klebeband rundherum (zwei Lagen, leicht schief)
+			piece("ChargeTape", Vector3.new(0.16, 0.74, 1.0), CFrame.new(-0.28, 0, 0) * CFrame.Angles(math.rad(2), 0, 0), Color3.fromRGB(160, 150, 120), M.Fabric)
+			piece("ChargeTape", Vector3.new(0.16, 0.74, 1.0), CFrame.new(0.26, 0, 0) * CFrame.Angles(math.rad(-3), 0, 0), Color3.fromRGB(150, 140, 112), M.Fabric)
+			-- Draht, der alles zusammenhält
+			piece("Wire", Vector3.new(1.04, 0.02, 0.02), CFrame.new(0, 0.2, 0.31), Color3.fromRGB(150, 90, 50), M.Metal)
+			piece("Wire", Vector3.new(1.04, 0.02, 0.02), CFrame.new(0, -0.22, 0.31), Color3.fromRGB(150, 90, 50), M.Metal)
+			-- Lunte: geschwungen aus dem Beutel heraus, die Spitze heißt "Fuse" (dort sprühen die Funken)
+			local points = { Vector3.new(-0.12, 0.6, 0), Vector3.new(0.05, 0.72, 0.04), Vector3.new(0.22, 0.76, 0.02), Vector3.new(0.36, 0.86, -0.04), Vector3.new(0.42, 1.02, -0.06) }
+			for i = 1, #points - 1 do
+				local a, b = points[i], points[i + 1]
+				local last = i == #points - 1
+				piece(last and "Fuse" or "FuseCord", Vector3.new(0.045, 0.045, (b - a).Magnitude + 0.02), CFrame.lookAt((a + b) / 2, b), Color3.fromRGB(34, 28, 22), M.Fabric)
+			end
 		end,
+		-- alter Bartschlüssel: Ring mit Loch, Kragen, Schaft und Bart
 		key = function(piece)
-			piece("KeyBow", Vector3.new(0.05, 0.3, 0.3), CFrame.new(), Color3.fromRGB(190, 160, 80), Enum.Material.Metal, Enum.PartType.Cylinder)
-			piece("KeyShaft", Vector3.new(0.06, 0.06, 0.6), CFrame.new(0, 0, -0.4), Color3.fromRGB(190, 160, 80), Enum.Material.Metal)
+			local brass = Color3.fromRGB(190, 160, 80)
+			piece("KeyBow", Vector3.new(0.05, 0.3, 0.3), CFrame.new(), brass, M.Metal, CYL)
+			piece("KeyHole", Vector3.new(0.06, 0.14, 0.14), CFrame.new(), Color3.fromRGB(30, 26, 20), M.Metal, CYL)
+			piece("KeyCollar", Vector3.new(0.08, 0.09, 0.09), CFrame.new(0, 0, -0.17) * CFrame.Angles(0, math.rad(90), 0), brass:Lerp(Color3.new(0, 0, 0), 0.2), M.Metal, CYL)
+			piece("KeyShaft", Vector3.new(0.06, 0.06, 0.6), CFrame.new(0, 0, -0.4), brass, M.Metal)
+			piece("KeyBit", Vector3.new(0.04, 0.16, 0.1), CFrame.new(0, -0.08, -0.62), brass, M.Metal)
+			piece("KeyBit", Vector3.new(0.04, 0.1, 0.05), CFrame.new(0, -0.05, -0.52), brass, M.Metal)
 		end,
 	}
 	-- dasselbe als freistehendes Modell in der Welt (am Fundort, auf dem Pult, am Safe)

@@ -1,6 +1,6 @@
 # Handoff – Horror-Spiel „Guesthouse“ (Roblox)
 
-Stand: 12. November 2026, Branch `claude/optimistic-bardeen-4tmohk`, Version `K2-2026-11-13f`.
+Stand: 12. November 2026, Branch `claude/optimistic-bardeen-4tmohk`, Version `K2-2026-11-13g`.
 Ganz oben stehen die neuesten Abschnitte (0000 = 10. Nov., 000 = realistische Familie, 00 = 9. Nov., 0 = Kapitel 3 + Audio);
 Abschnitte 2–8 beschreiben Kapitel 2 (Stand 6. Nov.).
 Diese Datei ist für einen **neuen Chat** gedacht: erst den Prompt unten kopieren, der Rest ist Nachschlagewerk.
@@ -36,7 +36,7 @@ Regeln:
 - Sei ehrlich: sag klar, was ungetestet ist.
   Arbeite gründlich und sag, wenn etwas fertig ist.
 
-Stand: Version `K2-2026-11-13f`. Kapitel 1, 2 und 3 sind gebaut und laufen am Stück (`spiel.project.json`).
+Stand: Version `K2-2026-11-13g`. Kapitel 1, 2 und 3 sind gebaut und laufen am Stück (`spiel.project.json`).
 Alle Figuren sind realistische KI-Figuren (Familie Wagner, Sarp in drei Stufen, feste Spielerfiguren).
 Gerade in Arbeit: Shop und Spielfluss (Plan: `plan_shop_spielfluss.md`). In der Lobby stehen schon:
 Shop-Hütte (Kleidung auf Bügeln/Regal, Sportwagen daneben, Skins nur im Menü), Kiosk für Snacks,
@@ -52,6 +52,20 @@ Roblox Studio ist per MCP verbunden – du kannst Studio direkt steuern und test
 `/Applications/RobloxStudio.app/Contents/MacOS/RobloxStudio -launchIntentString '{"task":"EditFile","localplacefile":"<Pfad>"}'`).
 Fang damit an, dass du die Dateien liest und mir in 5 Sätzen sagst, wo wir stehen.
 ```
+
+---
+
+## 0000000000000000000000000. NEU 13. November (Version K2-2026-11-13g): Kapitel 2 schlanker, Bomben-Teile detailliert, Handy weg
+
+- Kapitel 2 baut nur noch die Umgebung im Umkreis von 450 Studs ums Haus: `World.build({ keepRadius = 450 })`
+  (`Kapitel2.lua`). Ohne Einstellung baut `World.lua` wie bisher (Kapitel 1 unverändert, gleiche Zufallsfolge).
+  Gemessen in Studio, Start „Kapitel 2 – Haustür“: vorher 20.291 Teile, jetzt 14.893 (–27 %), Boden nur noch ums Haus.
+- Bomben-Teile neu (`Escape.lua`, BUILDERS): Chemikalien-Kiste mit Eckleisten, Holzwolle, 3 verschiedenen Flaschen
+  (Glas, Flüssigkeit, Korken, Etikett) und Warnzettel; Pulverfass mit Dauben, Bauch, zwei Eisenringen, Deckel, Spund,
+  verschüttetem Pulver und Etikett; Ladung mit Nägeln, Pulverbeutel, zwei Flaschen, Klebeband, Draht und geschwungener
+  Lunte (Spitze heißt weiter „Fuse“ für die Funken); Schlüssel mit Loch, Kragen und Bart. Maße/Unterkanten wie vorher.
+  Geprüft: Modelle bauen ohne Fehler, liegen auf. NICHT als Bild geprüft (Studio hat das Fenster nicht gezeichnet).
+- Handy aus der Inventarleiste entfernt (ließ sich nicht öffnen). Das Licht bleibt auf Taste F.
 
 ---
 

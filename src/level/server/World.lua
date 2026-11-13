@@ -12,6 +12,10 @@ local House = require(script.Parent.House)
 
 local World = {}
 
+-- Nur für Kapitel 2 (World.build({ keepRadius = … })): Dinge weit weg vom Haus der Wagners
+-- werden gar nicht gebaut. nil = alles bauen (Kapitel 1, unverändert).
+local keep = nil
+
 local Y = Route.GROUND_Y
 local WIDTH = Route.ROAD_WIDTH
 local SEGMENT = 4
@@ -111,16 +115,24 @@ local function buildTerrain(segments)
 	terrain:SetMaterialColor(Enum.Material.Ground, Color3.fromRGB(78, 64, 48))
 	terrain:SetMaterialColor(Enum.Material.Mud, Color3.fromRGB(60, 50, 40))
 
-	terrain:FillBlock(CFrame.new(10, -6, -900), Vector3.new(900, 12, 2400), Enum.Material.LeafyGrass)
+	if keep then
+		-- nur ein Quadrat ums Haus (etwas größer als der Bau-Umkreis, damit man keinen Rand sieht)
+		local middle = Route.houseCFrame().Position
+		local size = keep.radius * 2 + 260
+		terrain:FillBlock(CFrame.new(middle.X, -6, middle.Z), Vector3.new(size, 12, size), Enum.Material.LeafyGrass)
+	else
+		terrain:FillBlock(CFrame.new(10, -6, -900), Vector3.new(900, 12, 2400), Enum.Material.LeafyGrass)
+	end
 	local rng = Random.new(5)
 	for _ = 1, 260 do
 		local s = rng:NextNumber(0, Route.TOTAL_LENGTH)
 		local position = Route.sidePoint(s, rng:NextNumber(-180, 180), 0)
-		terrain:FillBlock(
-			CFrame.new(position.X, -2, position.Z) * CFrame.Angles(0, rng:NextNumber(0, math.pi), 0),
-			Vector3.new(rng:NextNumber(10, 34), 4, rng:NextNumber(10, 34)),
-			rng:NextNumber() < 0.7 and Enum.Material.Ground or Enum.Material.Mud
-		)
+		local cframe = CFrame.new(position.X, -2, position.Z) * CFrame.Angles(0, rng:NextNumber(0, math.pi), 0)
+		local size = Vector3.new(rng:NextNumber(10, 34), 4, rng:NextNumber(10, 34))
+		local material = rng:NextNumber() < 0.7 and Enum.Material.Ground or Enum.Material.Mud
+		if not keep or keep.near(position) then
+			terrain:FillBlock(cframe, size, material)
+		end
 	end
 	-- Der Hügel mit dem Haus der Wagners: Säulen aus Gelände, so hoch wie Route.hillHeight
 	local center = Route.houseCFrame().Position
@@ -565,7 +577,9 @@ local function buildForest(parent)
 			local position = Route.sidePoint(s, side * rng:NextNumber(minDistance, maxDistance), 0)
 			position = Vector3.new(position.X, groundLevel(position.X, position.Z), position.Z)
 			if isClear(position, margin, pathMargin) then
-				build(position)
+				if not keep or keep.near(position) then
+					build(position)
+				end
 				placed += 1
 			end
 		end
@@ -614,7 +628,9 @@ local function buildForest(parent)
 			local position = here + across * side * rng:NextNumber(minDistance, maxDistance)
 			position = Vector3.new(position.X, groundLevel(position.X, position.Z), position.Z)
 			if isClear(position, margin, pathMargin) then
-				build(position)
+				if not keep or keep.near(position) then
+					build(position)
+				end
 				placed += 1
 			end
 		end
@@ -714,7 +730,7 @@ local function buildCreepyPath(parent)
 	end
 end
 
-function World.build()
+function World.build(options)
 	for _, name in { "Baseplate", "SpawnLocation" } do
 		local existing = workspace:FindFirstChild(name)
 		if existing then
@@ -723,7 +739,28 @@ function World.build()
 	end
 	setupLighting()
 
+	keep = nil
+	if options and options.keepRadius then
+		local middle = Route.houseCFrame().Position
+		local radius = options.keepRadius
+		keep = {
+			radius = radius,
+			near = function(position)
+				return Vector2.new(position.X - middle.X, position.Z - middle.Z).Magnitude <= radius
+			end,
+		}
+	end
+
 	local segments = roadSegments()
+	if keep then
+		local nearSegments = {}
+		for _, segment in segments do
+			if keep.near(segment.cframe.Position) then
+				table.insert(nearSegments, segment)
+			end
+		end
+		segments = nearSegments
+	end
 	buildTerrain(segments)
 
 	local world = Instance.new("Folder")
@@ -737,6 +774,19 @@ function World.build()
 	House.build(world)
 	buildCreepyPath(world)
 	buildForest(world)
+	if keep then
+		-- Reste weit weg vom Haus (Schilder, Parkbucht, Laternen …) wieder entfernen
+		for _, folder in world:GetChildren() do
+			if folder.Name ~= "Forest" and not folder:IsA("BasePart") then
+				for _, item in folder:GetChildren() do
+					local position = item:IsA("BasePart") and item.Position or item:IsA("Model") and item:GetPivot().Position
+					if position and not keep.near(position) then
+						item:Destroy()
+					end
+				end
+			end
+		end
+	end
 end
 
 return World

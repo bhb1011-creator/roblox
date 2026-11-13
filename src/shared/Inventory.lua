@@ -1,6 +1,6 @@
 -- Inventarleiste (Client, Kapitel 1–3): unten in der Mitte sieht man, was man gerade dabei hat.
 -- Sie liest einfach die Spielfigur: Kerze, rote Kerze, Axt, Chemikalien, Schießpulver,
--- Schlüssel und das Handy (Taschenlampe). Ist das Licht aus (Taste F), wird die Kerze grau.
+-- Schlüssel. Ist das Licht aus (Taste F), wird die Kerze grau.
 local Players = game:GetService("Players")
 
 local Inventory = {}
@@ -102,15 +102,7 @@ function Inventory.start()
 				slot.Label.Text = off and (name .. " (off)") or name
 			end
 		end
-		-- Handy: das Licht-Teil "PhoneLight" folgt der Kamera (Kapitel 1 und 2)
-		local phone = workspace:FindFirstChild("PhoneLight")
-		local spot = phone and phone:FindFirstChildOfClass("SpotLight")
-		if spot and not (seen["Candle"] and not spot.Enabled) then
-			seen["Phone"] = true
-			local slot = slotFor({ icon = "📱", name = "Phone" }, 0)
-			slot.Icon.TextTransparency = spot.Enabled and 0 or 0.6
-			slot.Label.Text = spot.Enabled and "Phone" or "Phone (off)"
-		end
+		-- (das Handy wird nicht mehr angezeigt: man konnte es nicht öffnen; das Licht bleibt auf Taste F)
 		for name, slot in slots do
 			if not seen[name] then
 				slot:Destroy()
