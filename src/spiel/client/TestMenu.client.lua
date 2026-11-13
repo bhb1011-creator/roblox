@@ -209,6 +209,9 @@ UserInputService.InputBegan:Connect(function(input, processed)
 		return
 	end
 	if input.KeyCode == Enum.KeyCode.O then
+		if ReplicatedStorage:GetAttribute("Combined") and ReplicatedStorage:GetAttribute("StartChoice") == nil then
+			return -- noch in der Lobby: dort gilt das Lobby-Testmenü
+		end
 		setOpen(not panel.Visible)
 	elseif panel.Visible and ReplicatedStorage:GetAttribute("StartChoice") == nil then
 		local number = input.KeyCode.Value - Enum.KeyCode.One.Value + 1
@@ -220,7 +223,14 @@ UserInputService.InputBegan:Connect(function(input, processed)
 end)
 
 refresh()
-setOpen(ReplicatedStorage:GetAttribute("StartChoice") == nil)
+-- in der gemeinsamen Testdatei startet man in der Lobby (dort gibt es ein eigenes Testmenü)
+setOpen(ReplicatedStorage:GetAttribute("StartChoice") == nil and not ReplicatedStorage:GetAttribute("Combined"))
+if ReplicatedStorage:GetAttribute("Combined") and ReplicatedStorage:GetAttribute("StartChoice") == nil then
+	openButton.Visible = false
+	ReplicatedStorage:GetAttributeChangedSignal("StartChoice"):Once(function()
+		openButton.Visible = true
+	end)
+end
 
 -- "Figuren ansehen": Kamera fährt der Reihe nach zu jeder Figur (Gesicht nah, dann ganz).
 -- Taste N = nächste Figur, Taste B = Kamera wieder frei.

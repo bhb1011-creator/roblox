@@ -50,6 +50,16 @@ pick.OnServerEvent:Connect(function(_, id)
 		choose(id)
 	end
 end)
+-- Lobby und Spiel in einer Testdatei (alles.project.json): die Lobby räumt auf und meldet die Wahl
+if ReplicatedStorage:GetAttribute("Combined") then
+	ReplicatedStorage:GetAttributeChangedSignal("LobbyPick"):Connect(function()
+		local id = ReplicatedStorage:GetAttribute("LobbyPick")
+		if type(id) == "string" and valid[id] then
+			choose(id)
+		end
+	end)
+	return -- kein automatischer Start: man spielt erst in der Lobby
+end
 -- Uhr läuft erst, wenn jemand da ist
 task.spawn(function()
 	while #Players:GetPlayers() == 0 do
