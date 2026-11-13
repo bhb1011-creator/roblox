@@ -1,6 +1,6 @@
 # Handoff – Horror-Spiel „Guesthouse“ (Roblox)
 
-Stand: 12. November 2026, Branch `claude/optimistic-bardeen-4tmohk`, Version `K2-2026-11-13g`.
+Stand: 12. November 2026, Branch `claude/optimistic-bardeen-4tmohk`, Version `K2-2026-11-13h`.
 Ganz oben stehen die neuesten Abschnitte (0000 = 10. Nov., 000 = realistische Familie, 00 = 9. Nov., 0 = Kapitel 3 + Audio);
 Abschnitte 2–8 beschreiben Kapitel 2 (Stand 6. Nov.).
 Diese Datei ist für einen **neuen Chat** gedacht: erst den Prompt unten kopieren, der Rest ist Nachschlagewerk.
@@ -36,7 +36,7 @@ Regeln:
 - Sei ehrlich: sag klar, was ungetestet ist.
   Arbeite gründlich und sag, wenn etwas fertig ist.
 
-Stand: Version `K2-2026-11-13g`. Kapitel 1, 2 und 3 sind gebaut und laufen am Stück (`spiel.project.json`).
+Stand: Version `K2-2026-11-13h`. Kapitel 1, 2 und 3 sind gebaut und laufen am Stück (`spiel.project.json`).
 Alle Figuren sind realistische KI-Figuren (Familie Wagner, Sarp in drei Stufen, feste Spielerfiguren).
 Gerade in Arbeit: Shop und Spielfluss (Plan: `plan_shop_spielfluss.md`). In der Lobby stehen schon:
 Shop-Hütte (Kleidung auf Bügeln/Regal, Sportwagen daneben, Skins nur im Menü), Kiosk für Snacks,
@@ -52,6 +52,23 @@ Roblox Studio ist per MCP verbunden – du kannst Studio direkt steuern und test
 `/Applications/RobloxStudio.app/Contents/MacOS/RobloxStudio -launchIntentString '{"task":"EditFile","localplacefile":"<Pfad>"}'`).
 Fang damit an, dass du die Dateien liest und mir in 5 Sätzen sagst, wo wir stehen.
 ```
+
+---
+
+## 00000000000000000000000000. NEU 13. November (Version K2-2026-11-13h): Möbel detaillierter (Runde 1: Halle + Wohnzimmer)
+
+- `Furniture.lua`: Teppich (Zierlinien, Mittelmuster, Fransen), Tisch (Kante, Zarge, gedrechselte Beine), Stuhl
+  (Sprossenlehne, Pfosten mit Knauf, Sitzkissen, Streben), Sofa unter Tuch (Polster-Rollen, Falten, Staub) bzw. offen
+  (Kissen, Rückenkissen mit Knöpfen, Rollarmlehnen, Füße), Regal (Kranz, Sockel, Bücher mit Goldbändern, schief,
+  gestapelt, Lücken; Gläser mit Deckel/Schnur), Bild (Innenleiste, gemalte Landschaft mit Mond, Schildchen),
+  Kamin (Pfeiler, Schlussstein, Ziegel, Ruß, Rost mit Scheiten, Steinplatte, Kaminbesteck, Sims, stehengebliebene Uhr,
+  Kerzenstummel). Weil die Funktionen überall im Haus benutzt werden, wird es im ganzen Haus detaillierter.
+- Zierteile ohne Kollision (`DECO`); alte Kollisionsformen bleiben (Tischbein-/Stuhllehnen-Kern unsichtbar).
+  Wegfindung (Nav) unverändert: Hindernisse kommen von Platten/Sitzen/Sofas wie vorher.
+- Gemessen Kapitel 2: 14.893 → 16.591 Teile (+1.700, immer noch weniger als vor 13g mit 20.291).
+- Geprüft: ohne Fehler, keine kaputten Maße, Kaminteile am Kamin. NICHT als Bild geprüft.
+- Nächste Möbel-Runden: Esszimmer/Küche (Herd, Spüle, Kühlschrank), Schlafzimmer (Bett, Schrank, Nachttisch),
+  Kinderzimmer (Puppe, Puppenhaus, Schaukelpferd), Klavier/Arbeitszimmer, Bad, Keller.
 
 ---
 
