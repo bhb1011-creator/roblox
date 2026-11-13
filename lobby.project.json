@@ -1,0 +1,48 @@
+{
+  "name": "HorrorLobby",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "Shared": {
+        "$path": "src/shared"
+      },
+      "Spieler": {
+        "$path": "assets/spieler"
+      },
+      "Natur": {
+        "$path": "assets/natur"
+      },
+      "Wagners": {
+        "$path": "assets/figuren"
+      },
+      "Sarp": {
+        "$path": "assets/sarp"
+      },
+      "Shop": {
+        "$className": "Folder",
+        "Kleidung": {
+          "$path": "assets/shop/Kleidung"
+        }
+      }
+    },
+    "ServerScriptService": {
+      "$ignoreUnknownInstances": false,
+      "Lobby": {
+        "$path": "src/lobby/server"
+      }
+    },
+    "StarterPlayer": {
+      "StarterPlayerScripts": {
+        "$ignoreUnknownInstances": false,
+        "Lobby": {
+          "$path": "src/lobby/client"
+        }
+      }
+    },
+    "Lighting": {
+      "$properties": {
+        "Technology": "Future"
+      }
+    }
+  }
+}

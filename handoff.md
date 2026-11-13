@@ -1,6 +1,6 @@
 # Handoff – Horror-Spiel „Guesthouse“ (Roblox)
 
-Stand: 12. November 2026, Branch `claude/optimistic-bardeen-4tmohk`, Version `K2-2026-11-13d`.
+Stand: 12. November 2026, Branch `claude/optimistic-bardeen-4tmohk`, Version `K2-2026-11-13e`.
 Ganz oben stehen die neuesten Abschnitte (0000 = 10. Nov., 000 = realistische Familie, 00 = 9. Nov., 0 = Kapitel 3 + Audio);
 Abschnitte 2–8 beschreiben Kapitel 2 (Stand 6. Nov.).
 Diese Datei ist für einen **neuen Chat** gedacht: erst den Prompt unten kopieren, der Rest ist Nachschlagewerk.
@@ -29,14 +29,14 @@ Regeln:
   Richard stand lange auf ihrer Seite – das kommt erst im DLC).
 - Ich teste selbst: in `~/Documents/roblox-neu` `git pull`, dann
   `~/Downloads/rojo serve spiel.project.json --port 34872` (ganzes Spiel) bzw.
-  `~/Downloads/rojo serve default.project.json --port 34872` (Lobby mit Shop), in Studio „Connect“ und „Play“.
+  `~/Downloads/rojo serve lobby.project.json --port 34872` (Lobby mit Shop), in Studio „Connect“ und „Play“.
 - Kapitel 1 bleibt wie es ist (nur bei Fehlern oder auf Wunsch ändern).
 - Design: ruhig, mit Charakter, passend zur Umgebung – KEIN „KI-Look“ (keine Emojis, kein Neon, keine bunten Rahmen).
   Knöpfe mindestens 48 px hoch (Handy).
 - Sei ehrlich: sag klar, was ungetestet ist.
   Arbeite gründlich und sag, wenn etwas fertig ist.
 
-Stand: Version `K2-2026-11-13d`. Kapitel 1, 2 und 3 sind gebaut und laufen am Stück (`spiel.project.json`).
+Stand: Version `K2-2026-11-13e`. Kapitel 1, 2 und 3 sind gebaut und laufen am Stück (`spiel.project.json`).
 Alle Figuren sind realistische KI-Figuren (Familie Wagner, Sarp in drei Stufen, feste Spielerfiguren).
 Gerade in Arbeit: Shop und Spielfluss (Plan: `plan_shop_spielfluss.md`). In der Lobby stehen schon:
 Shop-Hütte (Kleidung auf Bügeln/Regal, Sportwagen daneben, Skins nur im Menü), Kiosk für Snacks,
@@ -47,10 +47,18 @@ Kleidung im Spiel tragen, Snacks im Spiel, Tod/Revive, Abfahrt; Lobby/Duo/Handy 
 Danach Audio (ab 24. November kann ich wieder Sounds hochladen).
 Für Menü-Design gibt es aktivierte Plugins (UI Design Review, Design, Icons8) – nutze sie.
 Roblox Studio ist per MCP verbunden – du kannst Studio direkt steuern und testen
-(lokale Testdatei: `rojo build default.project.json -o ~/Documents/X.rbxl`, öffnen mit
+(lokale Testdatei: `rojo build lobby.project.json -o ~/Documents/X.rbxl`, öffnen mit
 `/Applications/RobloxStudio.app/Contents/MacOS/RobloxStudio -launchIntentString '{"task":"EditFile","localplacefile":"<Pfad>"}'`).
 Fang damit an, dass du die Dateien liest und mir in 5 Sätzen sagst, wo wir stehen.
 ```
+
+---
+
+## 00000000000000000000000. NEU 13. November (Version K2-2026-11-13e): `rojo serve` startet jetzt das Spiel
+
+- Einfach `rojo serve` (ohne Dateinamen) nimmt `default.project.json` – das ist jetzt das ganze Spiel mit Kapitel-Testmenü
+  (Kopie von `spiel.project.json`). Die Lobby heißt jetzt `lobby.project.json` (`rojo serve lobby.project.json`).
+  Bei Änderungen an `spiel.project.json` auch `default.project.json` anpassen.
 
 ---
 

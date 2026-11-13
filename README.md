@@ -27,7 +27,7 @@ und man landet wieder am Lagerfeuer.
 
 1. Roblox Studio öffnen → neues Spiel mit der Vorlage **„Baseplate“**.
 2. In VS Code diesen Ordner öffnen.
-3. Rojo starten: im Terminal `rojo serve` (nutzt automatisch `default.project.json`).
+3. Rojo starten: im Terminal `rojo serve` (nutzt automatisch `default.project.json` = ganzes Spiel mit Kapitel-Testmenü).
 4. In Studio: **Plugins → Rojo → Connect**.
 5. Auf **Play** drücken.
 
@@ -41,7 +41,8 @@ Jeder Teil ist ein eigenes Rojo-Projekt (am Ende wird alles zusammengefügt):
 
 | Teil | Starten mit |
 |---|---|
-| Lobby | `rojo serve` (nutzt `default.project.json`) |
+| Ganzes Spiel (Kapitel-Menü) | `rojo serve` (nutzt `default.project.json`, gleich wie `spiel.project.json`) |
+| Lobby | `rojo serve lobby.project.json` |
 | Kapitel 1 – Die Fahrt | `rojo serve level.project.json --port 34873` |
 | Kapitel 2 – Die Wagners | `rojo serve kapitel2.project.json --port 34874` |
 | **Ganzes Spiel** (Kapitel 1 → 2 → 3 am Stück) | `rojo serve spiel.project.json --port 34875` |

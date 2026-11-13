@@ -3,7 +3,7 @@
 
 Die Formen stammen aus dem kostenlosen Creator-Store-Paket "Ponderosa Pine Tree Pack"
 von Letaij (Asset 130515502281374). Hier stehen nur die Asset-Nummern und Maße; Rojo
-baut daraus ReplicatedStorage.Natur.Tannen (siehe default.project.json).
+baut daraus ReplicatedStorage.Natur.Tannen (siehe lobby.project.json).
 Die Teile stehen mit dem Fuß des Stamms auf dem Ursprung (0, 0, 0).
 
 Aufruf:  python3 tools/make_tree_models.py

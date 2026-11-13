@@ -1,47 +1,79 @@
 {
-  "name": "HorrorLobby",
+  "name": "GanzesSpiel",
   "tree": {
     "$className": "DataModel",
     "ReplicatedStorage": {
+      "$attributes": {
+        "FullGame": true
+      },
       "Shared": {
         "$path": "src/shared"
-      },
-      "Spieler": {
-        "$path": "assets/spieler"
-      },
-      "Natur": {
-        "$path": "assets/natur"
       },
       "Wagners": {
         "$path": "assets/figuren"
       },
+      "Spieler": {
+        "$path": "assets/spieler"
+      },
       "Sarp": {
         "$path": "assets/sarp"
       },
-      "Shop": {
-        "$className": "Folder",
-        "Kleidung": {
-          "$path": "assets/shop/Kleidung"
-        }
+      "Natur": {
+        "$path": "assets/natur"
       }
     },
     "ServerScriptService": {
       "$ignoreUnknownInstances": false,
-      "Lobby": {
-        "$path": "src/lobby/server"
+      "Kapitel1": {
+        "$path": "src/level/server"
+      },
+      "Kapitel2": {
+        "$path": "src/kapitel2/server",
+        "World": {
+          "$path": "src/level/server/World.lua"
+        },
+        "House": {
+          "$path": "src/level/server/House.lua"
+        },
+        "ForestWalk": {
+          "$path": "src/level/server/ForestWalk.lua"
+        }
+      },
+      "Spiel": {
+        "$path": "src/spiel/server"
       }
     },
     "StarterPlayer": {
       "StarterPlayerScripts": {
         "$ignoreUnknownInstances": false,
-        "Lobby": {
-          "$path": "src/lobby/client"
+        "Kapitel1": {
+          "$path": "src/level/client"
+        },
+        "Kapitel2": {
+          "$path": "src/kapitel2/client",
+          "Speech": {
+            "$path": "src/level/client/Speech.lua"
+          },
+          "Choices": {
+            "$path": "src/level/client/Choices.lua"
+          },
+          "Ambience": {
+            "$path": "src/level/client/Ambience.lua"
+          }
+        },
+        "Spiel": {
+          "$path": "src/spiel/client"
         }
       }
     },
     "Lighting": {
       "$properties": {
         "Technology": "Future"
+      }
+    },
+    "Workspace": {
+      "$properties": {
+        "StreamingEnabled": false
       }
     }
   }
