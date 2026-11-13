@@ -29,15 +29,6 @@ local ENTRIES = {
 	{ "Käufe zurücksetzen (5,000 Münzen)", "reset" },
 	{ "Zur Lobby (Menü schließen)", "close" },
 }
--- Lobby und Spiel in einer Testdatei (alles.project.json): auch jedes Kapitel starten
-local combined = ReplicatedStorage:GetAttribute("Combined") == true
-if combined then
-	local TestStarts = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("TestStarts"))
-	-- Kapitel oben im Menü (Zahlentasten 1–9)
-	for index, start in TestStarts do
-		table.insert(ENTRIES, index, { "Spiel: " .. start.title, "start", start.id })
-	end
-end
 
 local function create(className, props)
 	local instance = Instance.new(className)
@@ -108,8 +99,7 @@ create("TextLabel", {
 	TextWrapped = true,
 	TextColor3 = Color3.fromRGB(180, 180, 186),
 	TextXAlignment = Enum.TextXAlignment.Left,
-	Text = "Anklicken oder Zahl drücken. „Zur Lobby“ schließt das Menü (wieder öffnen mit O)."
-		.. (combined and " Ein Kapitel startet das Spiel; zurück in die Lobby: Stop, dann Play." or ""),
+	Text = "Anklicken oder Zahl drücken. „Zur Lobby“ schließt das Menü (wieder öffnen mit O).",
 	Parent = panel,
 })
 
@@ -123,10 +113,6 @@ local function run(entry)
 		end
 	elseif entry[2] == "close" then
 		return
-	elseif entry[2] == "start" then
-		if action then
-			action:FireServer("start", entry[3])
-		end
 	elseif action then
 		action:FireServer(entry[2])
 	end
@@ -166,30 +152,3 @@ UserInputService.InputBegan:Connect(function(input, processed)
 		end
 	end
 end)
-
--- Kapitel gestartet: alles von der Lobby auf dem Bildschirm wegräumen und die Lobby-Skripte stoppen
-local function leaveLobby()
-	for _, name in { "VipShop", "LobbyHUD", "Crosshair" } do
-		local item = playerGui:FindFirstChild(name)
-		if item then
-			item:Destroy()
-		end
-	end
-	pcall(RunService.UnbindFromRenderStep, RunService, "FirstPersonPolish")
-	player.CameraMode = Enum.CameraMode.Classic
-	player.CameraMaxZoomDistance = 128
-	UserInputService.MouseBehavior = Enum.MouseBehavior.Default
-	gui:Destroy()
-	local scripts = player:FindFirstChild("PlayerScripts")
-	local lobby = scripts and scripts:FindFirstChild("Lobby")
-	if lobby then
-		task.defer(lobby.Destroy, lobby)
-	end
-end
-if combined then
-	if ReplicatedStorage:GetAttribute("StartChoice") ~= nil then
-		leaveLobby()
-	else
-		ReplicatedStorage:GetAttributeChangedSignal("StartChoice"):Connect(leaveLobby)
-	end
-end

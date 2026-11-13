@@ -27,23 +27,6 @@ remotes.Parent = ReplicatedStorage
 
 Players.RespawnTime = 2
 
--- Lobby und Spiel in einer Testdatei: die Kapitel schalten das automatische Laden der
--- Figuren ab – in der Lobby braucht man aber eine Figur
-if ReplicatedStorage:GetAttribute("Combined") then
-	task.defer(function()
-		task.wait(0.5)
-		if ReplicatedStorage:GetAttribute("StartChoice") ~= nil then
-			return
-		end
-		Players.CharacterAutoLoads = true
-		for _, player in Players:GetPlayers() do
-			if not player.Character then
-				task.spawn(player.LoadCharacter, player)
-			end
-		end
-	end)
-end
-
 Players.PlayerAdded:Connect(PlayerData.load)
 for _, player in Players:GetPlayers() do
 	task.spawn(PlayerData.load, player)
