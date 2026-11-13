@@ -7,6 +7,17 @@ Diese Datei ist für einen **neuen Chat** gedacht: erst den Prompt unten kopiere
 
 ---
 
+## Stand K2-2026-11-13k (13. Nov.)
+- Küche: Unterschränke mit Türen, Füllung, Schubladen, Knäufen und Sockel (keine dünnen Linien mehr);
+  neuer Hängeschrank mit Glas und Tellern (`Furniture.wallCabinet`); Spüle mit Drehgriffen und Abfluss;
+  gusseiserner Herd (Herdplatte, Kochstellen, Topfdeckel, Backofen- und Feuertür mit Glut, rundes Ofenrohr,
+  Geschirrtuch, Steinplatte); 50er-Kühlschrank mit zwei Türen, Chromgriffen, Gitter und Radio obendrauf;
+  Brett mit Brot, Becher und Emaille-Hängelampe am Küchentisch (Platz für Chemikalien bleibt frei).
+- Esszimmer: Gläser und Servietten an allen Plätzen, Servierhaube und Brotkorb, Kronleuchter (nur Deko),
+  Anrichte an der Wand zur Küche (`Furniture.sideboard`) mit Kerzenleuchtern, Terrine, Tellern, Spiegel darüber.
+- Arbeitsplatte (3.2) und Küchentisch (2.9) gleich hoch wie vorher → Fundorte der Bombenteile stimmen weiter.
+- Teile in Kapitel 2: 17.254 (+185), Schattenlichter 23. Getestet in Studio („Haus besichtigen“), keine Fehler.
+
 ## Stand K2-2026-11-13j (13. Nov.)
 - Elternschlafzimmer: Bett stand frei vor dem Erker → Kopfteil jetzt an der Ostwand, Nachttische daneben.
 - Sofas: dünne Streifen weg (Tuch-Falten, Ziernaht, Staubstreifen, Armlehnen-Scheiben).

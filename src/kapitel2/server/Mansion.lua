@@ -1072,6 +1072,44 @@ local function buildFurniture()
 	for _, y in { 24, 30, 36 } do
 		lit(at(67, y, E + 2.9), 1)
 	end
+	-- gedeckt: an jedem Platz ein Glas und eine gefaltete Serviette; in der Mitte eine Haube
+	-- auf einer Platte und ein Brotkorb (nichts davon hat Kollision)
+	local places = { { 67, 36.4, 0, -1 } }
+	for i = -1, 1 do
+		table.insert(places, { 65.4, 30 + i * 4.5, 1, 0 })
+		table.insert(places, { 68.6, 30 + i * 4.5, -1, 0 })
+	end
+	for _, p in places do
+		local gx, gy = p[1] + p[3] * 0.75 + p[4] * 0.6, p[2] + 0.7 + p[4] * 0.7
+		cyl("GlassFoot", 0.04, 0.3, at(gx, gy, E + 2.94), Color3.fromRGB(200, 210, 206), M.Glass, { CanCollide = false, Transparency = 0.4 })
+		cyl("GlassStem", 0.35, 0.06, at(gx, gy, E + 2.97), Color3.fromRGB(200, 210, 206), M.Glass, { CanCollide = false, Transparency = 0.4 })
+		cyl("GlassBowl", 0.4, 0.3, at(gx, gy, E + 3.3), Color3.fromRGB(200, 210, 206), M.Glass, { CanCollide = false, Transparency = 0.5 })
+		box("Napkin", Vector3.new(0.5, 0.08, 0.35), CFrame.new(L(p[1], p[2], E + 3.04)) * CFrame.Angles(0, math.rad(20), 0), Color3.fromRGB(150, 40, 36), M.Fabric, { CanCollide = false })
+	end
+	cyl("Platter", 0.06, 1.6, at(67, 27, E + 2.94), Color3.fromRGB(176, 170, 156), M.Metal, { CanCollide = false })
+	for i, d in { 1.25, 0.95, 0.55 } do
+		cyl("Cloche", 0.22, d, at(67, 27, E + 2.98 + (i - 1) * 0.22), Color3.fromRGB(150, 146, 136), M.Metal, { CanCollide = false })
+	end
+	ball("ClocheKnob", 0.2, CFrame.new(L(67, 27, E + 3.72)), Color3.fromRGB(120, 96, 52), M.Metal)
+	cyl("BreadBasket", 0.35, 1.1, at(67, 33, E + 2.94), Color3.fromRGB(150, 110, 66), M.Fabric, { CanCollide = false })
+	for i = 0, 2 do
+		box("BreadRoll", Vector3.new(0.4, 0.28, 0.3), CFrame.new(L(66.8 + (i % 2) * 0.35, 32.8 + i * 0.25, E + 3.4)) * CFrame.Angles(0, i, 0), Color3.fromRGB(176, 128, 72), M.Fabric, { CanCollide = false })
+	end
+	-- Kronleuchter über dem Tisch (nur Deko, die Kerzen auf dem Tisch geben das Licht)
+	Furniture.chandelier(b, CFrame.new(L(67, 30, CEIL.E)), 2.4)
+	-- Anrichte an der Wand zur Küche, darauf Kerzenleuchter, Suppenterrine, Tellerstapel
+	local board = Furniture.sideboard(b, at(55.45, 28, E, "E"), 6)
+	for _, z in { -2.3, 2.3 } do
+		cyl("Candlestick", 1.1, 0.22, board * CFrame.new(z, 0, -0.1), Color3.fromRGB(120, 96, 52), M.Metal, { CanCollide = false })
+		cyl("CandlestickBase", 0.12, 0.5, board * CFrame.new(z, 0, -0.1), Color3.fromRGB(120, 96, 52), M.Metal, { CanCollide = false })
+		cyl("StickCandle", 0.9, 0.16, board * CFrame.new(z, 1.1, -0.1), Color3.fromRGB(220, 210, 184), M.SmoothPlastic, { CanCollide = false })
+	end
+	cyl("Tureen", 0.6, 1.0, board * CFrame.new(-0.6, 0, -0.1), Color3.fromRGB(200, 196, 186), M.SmoothPlastic, { CanCollide = false })
+	cyl("TureenLid", 0.18, 0.85, board * CFrame.new(-0.6, 0.6, -0.1), Color3.fromRGB(200, 196, 186), M.SmoothPlastic, { CanCollide = false })
+	for i = 0, 3 do
+		cyl("StackPlate", 0.07, 0.95, board * CFrame.new(1.0, i * 0.07, -0.1), Color3.fromRGB(210, 204, 190), M.SmoothPlastic, { CanCollide = false })
+	end
+	Furniture.mirror(b, at(54.46, 28, E + 5.6, "E"))
 	Furniture.shelf(b, at(72, 13, E, "S"), 6, 2.9, "books", rng) -- niedrig, unter dem Erkerfenster
 	-- Verstecke für die erste Nacht (Night.lua): Schrank, unter dem Tisch, hinter dem Vorhang
 	local wardrobeFrame = at(75, 40.5, E, "N") -- an der Wand zum Wohnzimmer (rechts sind Fenster)
@@ -1092,8 +1130,22 @@ local function buildFurniture()
 	Furniture.sink(b, at(39, 21.3, E, "S"))
 	Furniture.stove(b, at(35.4, 39.5, E, "E"))
 	Furniture.fridge(b, at(47.6, 40.6, E, "N"))
+	Furniture.wallCabinet(b, at(41.4, 20.85, E, "S"), 3.6)
 	local kitchenTable = Furniture.table(b, at(42, 31, E), 5, 3.4, 2.9)
 	lit(kitchenTable * CFrame.new(0.8, 0, 0.4), 0.7)
+	-- auf dem Tisch: Brett mit Brot und Messer, zwei Becher (Platz für die Chemikalien bleibt frei)
+	box("BreadBoard", Vector3.new(1.4, 0.1, 0.9), CFrame.new(L(43.8, 29.9, E + 2.95)) * CFrame.Angles(0, 0.2, 0), Color3.fromRGB(120, 90, 58), M.Wood, { CanCollide = false })
+	box("BreadLoaf", Vector3.new(0.9, 0.45, 0.5), CFrame.new(L(43.7, 29.9, E + 3.22)) * CFrame.Angles(0, 0.2, 0), Color3.fromRGB(150, 100, 56), M.Fabric, { CanCollide = false })
+	box("BreadKnife", Vector3.new(0.9, 0.04, 0.12), CFrame.new(L(43.9, 30.25, E + 3.02)) * CFrame.Angles(0, 0.35, 0), COLORS.metal, M.Metal, { CanCollide = false })
+	for _, m in { { 40.0, 30.2 }, { 44.0, 32.0 } } do
+		cyl("Mug", 0.45, 0.4, at(m[1], m[2], E + 2.9), Color3.fromRGB(176, 170, 150), M.SmoothPlastic, { CanCollide = false })
+	end
+	-- Hängelampe über dem Küchentisch (Schirm aus Emaille, ohne eigenes Licht)
+	box("LampCord", Vector3.new(0.06, CEIL.E - (E + 7.0), 0.06), CFrame.new(L(42, 31, (CEIL.E + E + 7.0) / 2)), Color3.fromRGB(30, 28, 26), M.Fabric, { CanCollide = false })
+	for i, d in { 1.7, 1.2, 0.5 } do
+		cyl("LampShade", 0.22, d, at(42, 31, E + 6.4 + (i - 1) * 0.22), Color3.fromRGB(56, 70, 62), M.Metal, { CanCollide = false })
+	end
+	ball("LampBulb", 0.35, CFrame.new(L(42, 31, E + 6.35)), Color3.fromRGB(220, 200, 150), M.SmoothPlastic)
 	for _, c in { { 39, 31, "E" }, { 45, 31, "W" }, { 42, 28.6, "S" }, { 42, 33.6, "N" } } do
 		Furniture.chair(b, at(c[1], c[2], E, c[3]))
 	end

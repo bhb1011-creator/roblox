@@ -459,34 +459,148 @@ function Furniture.desk(b, cf, rng)
 	Furniture.chair(b, cf * CFrame.new(0, 0, 2.2) * CFrame.Angles(0, math.pi, 0))
 end
 
+-- Küchenzeile: Unterschrank mit Türen (mit Füllung), Schubladen, Messingknäufen und Sockel.
+-- "Counter" bleibt der Klotz für die Kollision; die Arbeitsplatte liegt wie bisher auf 3.2.
 function Furniture.counter(b, cf, w)
-	b.box("Counter", Vector3.new(w, 3, 2), cf * CFrame.new(0, 1.5, 0), Color3.fromRGB(92, 84, 70), M.Wood)
+	local body = Color3.fromRGB(92, 84, 70)
+	local door = Color3.fromRGB(106, 96, 78)
+	b.box("Counter", Vector3.new(w, 3, 2), cf * CFrame.new(0, 1.5, 0), body, M.Wood)
 	b.box("CounterTop", Vector3.new(w + 0.1, 0.2, 2.2), cf * CFrame.new(0, 3.1, -0.05), Color3.fromRGB(140, 134, 120), M.Marble)
-	for x = -w / 2 + 1, w / 2 - 1, 2 do
-		b.box("CabinetLine", Vector3.new(0.05, 2.4, 0.04), cf * CFrame.new(x + 1, 1.5, -1.02), C.darkWood)
+	b.box("ToeKick", Vector3.new(w - 0.1, 0.35, 0.06), cf * CFrame.new(0, 0.18, -1.0), shade(body, 0.55), M.Wood, DECO)
+	local n = math.max(1, math.floor(w / 1.8 + 0.5))
+	local dw = w / n
+	for i = 1, n do
+		local x = -w / 2 + (i - 0.5) * dw
+		b.box("CabinetDoor", Vector3.new(dw - 0.14, 1.75, 0.08), cf * CFrame.new(x, 1.3, -1.03), door, M.Wood, DECO)
+		b.box("CabinetPanel", Vector3.new(dw - 0.6, 1.2, 0.04), cf * CFrame.new(x, 1.3, -1.08), shade(door, 0.12), M.Wood, DECO)
+		b.box("Drawer", Vector3.new(dw - 0.14, 0.6, 0.08), cf * CFrame.new(x, 2.6, -1.03), door, M.Wood, DECO)
+		b.ball("CabinetKnob", 0.16, cf * CFrame.new(x, 2.6, -1.1), C.brass, M.Metal)
+		b.ball("CabinetKnob", 0.16, cf * CFrame.new(x + (i % 2 == 0 and -1 or 1) * (dw / 2 - 0.3), 1.75, -1.1), C.brass, M.Metal)
+	end
+end
+
+-- Hängeschrank über der Arbeitsplatte (cf = Boden direkt darunter, Rückseite an der Wand)
+function Furniture.wallCabinet(b, cf, w)
+	local body = Color3.fromRGB(92, 84, 70)
+	local door = Color3.fromRGB(106, 96, 78)
+	b.box("WallCabinet", Vector3.new(w, 2.2, 1.1), cf * CFrame.new(0, 6.1, 0), body, M.Wood, DECO)
+	b.box("WallCabinetCrown", Vector3.new(w + 0.25, 0.22, 1.3), cf * CFrame.new(0, 7.3, -0.1), shade(body, 0.2), M.Wood, DECO)
+	local n = math.max(1, math.floor(w / 1.8 + 0.5))
+	local dw = w / n
+	for i = 1, n do
+		local x = -w / 2 + (i - 0.5) * dw
+		b.box("WallCabinetDoor", Vector3.new(dw - 0.14, 2.0, 0.08), cf * CFrame.new(x, 6.1, -0.58), door, M.Wood, DECO)
+		-- Glasfüllung mit Tellern dahinter
+		b.box("WallCabinetGlass", Vector3.new(dw - 0.6, 1.4, 0.04), cf * CFrame.new(x, 6.15, -0.63), Color3.fromRGB(70, 78, 76), M.Glass, deco({ Transparency = 0.6 }))
+		for j = -1, 1 do
+			b.cyl("CabinetPlate", 0.08, 0.9, cf * CFrame.new(x + j * 0.22, 5.6, -0.1) * CFrame.Angles(math.rad(80), 0, 0), C.porcelain, M.SmoothPlastic, DECO)
+		end
+		b.ball("CabinetKnob", 0.15, cf * CFrame.new(x + (i % 2 == 0 and -1 or 1) * (dw / 2 - 0.28), 5.4, -0.66), C.brass, M.Metal)
 	end
 end
 
 function Furniture.sink(b, cf)
 	b.box("SinkBasin", Vector3.new(2.2, 0.5, 1.5), cf * CFrame.new(0, 3.0, -0.1), C.porcelain, M.SmoothPlastic)
 	b.box("SinkHole", Vector3.new(1.8, 0.05, 1.1), cf * CFrame.new(0, 3.26, -0.1), Color3.fromRGB(110, 106, 98))
+	b.cyl("SinkDrain", 0.03, 0.22, cf * CFrame.new(0, 3.27, -0.1), C.metal, M.Metal, DECO)
+	-- Wasserhahn: Sockel, Säule, Auslauf und zwei Drehgriffe
+	b.cyl("TapBase", 0.12, 0.4, cf * CFrame.new(0, 3.25, 0.55), C.metal, M.Metal, DECO)
 	b.box("Tap", Vector3.new(0.15, 0.7, 0.15), cf * CFrame.new(0, 3.6, 0.55), C.metal, M.Metal)
 	b.box("TapSpout", Vector3.new(0.12, 0.12, 0.5), cf * CFrame.new(0, 3.9, 0.35), C.metal, M.Metal)
-end
-
-function Furniture.stove(b, cf)
-	b.box("Stove", Vector3.new(3, 3, 2.2), cf * CFrame.new(0, 1.5, 0), Color3.fromRGB(36, 34, 32), M.Metal)
-	b.box("StoveDoor", Vector3.new(1.8, 1.2, 0.06), cf * CFrame.new(0, 1.2, -1.12), Color3.fromRGB(24, 22, 20), M.Metal)
-	for _, x in { -0.7, 0.7 } do
-		b.cyl("Pot", 0.8, 1.0, cf * CFrame.new(x, 3.0, 0), C.metal, M.Metal)
+	b.box("TapNozzle", Vector3.new(0.12, 0.2, 0.12), cf * CFrame.new(0, 3.8, 0.12), C.metal, M.Metal, DECO)
+	for _, x in { -0.4, 0.4 } do
+		b.cyl("TapHandleStem", 0.25, 0.12, cf * CFrame.new(x, 3.25, 0.55), C.metal, M.Metal, DECO)
+		b.ball("TapHandle", 0.22, cf * CFrame.new(x, 3.55, 0.55), C.porcelain, M.SmoothPlastic)
 	end
-	b.box("StovePipe", Vector3.new(0.5, 6, 0.5), cf * CFrame.new(0, 6, 0.8), Color3.fromRGB(30, 28, 26), M.Metal)
 end
 
+-- Alter gusseiserner Küchenherd: Herdplatte, Kochstellen, Töpfe mit Deckel, Backofen- und
+-- Feuertür (mit Glut dahinter), rundes Ofenrohr mit Manschetten, Steinplatte am Boden.
+function Furniture.stove(b, cf)
+	local iron = Color3.fromRGB(36, 34, 32)
+	local plate = Color3.fromRGB(52, 50, 48)
+	b.box("Stove", Vector3.new(3, 3, 2.2), cf * CFrame.new(0, 1.5, 0), iron, M.Metal)
+	b.box("StoveHearth", Vector3.new(3.8, 0.06, 3.0), cf * CFrame.new(0, 0.03, -0.2), C.stone, M.Slate, DECO)
+	b.box("StoveCookTop", Vector3.new(3.3, 0.18, 2.4), cf * CFrame.new(0, 3.09, 0), plate, M.Metal, DECO)
+	b.box("StovePlinth", Vector3.new(3.15, 0.3, 2.3), cf * CFrame.new(0, 0.15, 0), shade(iron, 0.3), M.Metal, DECO)
+	-- Backofentür (unten) und Feuertür (oben links), beide mit Griff
+	b.box("StoveDoor", Vector3.new(1.8, 1.2, 0.06), cf * CFrame.new(0.4, 1.2, -1.12), Color3.fromRGB(24, 22, 20), M.Metal)
+	b.box("StoveDoorHandle", Vector3.new(1.0, 0.14, 0.14), cf * CFrame.new(0.4, 1.95, -1.22), C.brass, M.Metal, DECO)
+	b.box("FireDoor", Vector3.new(1.0, 0.8, 0.06), cf * CFrame.new(-0.8, 2.3, -1.12), Color3.fromRGB(24, 22, 20), M.Metal, DECO)
+	b.box("FireGlow", Vector3.new(0.7, 0.16, 0.04), cf * CFrame.new(-0.8, 2.05, -1.16), Color3.fromRGB(150, 58, 24), M.SmoothPlastic, DECO)
+	b.ball("FireDoorKnob", 0.18, cf * CFrame.new(-0.4, 2.3, -1.2), C.brass, M.Metal)
+	b.cyl("StoveDial", 0.06, 0.5, cf * CFrame.new(0.9, 2.35, -1.11) * CFrame.Angles(math.rad(90), 0, 0), C.porcelain, M.SmoothPlastic, DECO)
+	-- zwei Kochstellen mit Töpfen (einer mit Deckel)
+	for i, x in { -0.7, 0.7 } do
+		b.cyl("Burner", 0.05, 1.05, cf * CFrame.new(x, 3.18, 0), Color3.fromRGB(28, 26, 24), M.Metal, DECO)
+		b.cyl("Pot", 0.8, 1.0, cf * CFrame.new(x, 3.2, 0), C.metal, M.Metal)
+		b.box("PotHandle", Vector3.new(0.45, 0.1, 0.14), cf * CFrame.new(x + (i == 1 and -0.65 or 0.65), 3.85, 0), C.black, M.Wood, DECO)
+		if i == 2 then
+			b.cyl("PotLid", 0.06, 1.06, cf * CFrame.new(x, 4.0, 0), C.metal, M.Metal, DECO)
+			b.ball("PotLidKnob", 0.2, cf * CFrame.new(x, 4.12, 0), C.black, M.Wood)
+		end
+	end
+	-- rundes Ofenrohr mit zwei Manschetten
+	b.cyl("StovePipe", 6, 0.6, cf * CFrame.new(0, 3.0, 0.8), Color3.fromRGB(30, 28, 26), M.Metal)
+	for _, y in { 3.25, 6.2 } do
+		b.cyl("StovePipeCollar", 0.2, 0.75, cf * CFrame.new(0, y, 0.8), shade(plate, 0.2), M.Metal, DECO)
+	end
+	-- Geschirrtuch über dem Ofengriff
+	b.box("DishTowel", Vector3.new(0.5, 0.9, 0.04), cf * CFrame.new(0.1, 1.55, -1.27), Color3.fromRGB(170, 160, 136), M.Fabric, DECO)
+end
+
+-- Alter Kühlschrank (50er-Jahre): Gehäuse etwas dunkler als die beiden Türen, damit man den
+-- Spalt sieht, verchromte Griffe, Lüftungsgitter unten, Radio obendrauf.
 function Furniture.fridge(b, cf)
-	b.box("Fridge", Vector3.new(2.6, 6, 2.2), cf * CFrame.new(0, 3, 0), Color3.fromRGB(196, 190, 170), M.SmoothPlastic)
-	b.box("FridgeHandle", Vector3.new(0.15, 1.2, 0.15), cf * CFrame.new(0.9, 4, -1.15), C.metal, M.Metal)
-	b.box("FridgeLine", Vector3.new(2.5, 0.05, 0.04), cf * CFrame.new(0, 4.2, -1.11), Color3.fromRGB(120, 116, 104))
+	local door = Color3.fromRGB(204, 198, 180)
+	b.box("Fridge", Vector3.new(2.6, 6, 2.2), cf * CFrame.new(0, 3, 0), Color3.fromRGB(170, 164, 146), M.SmoothPlastic)
+	b.box("FridgeDoor", Vector3.new(2.45, 3.75, 0.1), cf * CFrame.new(0, 2.3, -1.14), door, M.SmoothPlastic, DECO)
+	b.box("FreezerDoor", Vector3.new(2.45, 1.5, 0.1), cf * CFrame.new(0, 5.05, -1.14), door, M.SmoothPlastic, DECO)
+	b.box("FridgeHandle", Vector3.new(0.15, 1.2, 0.18), cf * CFrame.new(0.95, 3.4, -1.27), C.metal, M.Metal, DECO)
+	b.box("FreezerHandle", Vector3.new(0.15, 0.6, 0.18), cf * CFrame.new(0.95, 4.75, -1.27), C.metal, M.Metal, DECO)
+	b.box("FridgeGrille", Vector3.new(2.2, 0.3, 0.06), cf * CFrame.new(0, 0.2, -1.12), Color3.fromRGB(70, 68, 62), M.Metal, DECO)
+	b.box("FridgeBadge", Vector3.new(0.6, 0.18, 0.04), cf * CFrame.new(0, 5.55, -1.2), C.metal, M.Metal, DECO)
+	-- Radio obendrauf
+	b.box("Radio", Vector3.new(1.3, 0.75, 0.6), cf * CFrame.new(-0.3, 6.38, 0.1), Color3.fromRGB(96, 60, 38), M.Wood, DECO)
+	b.box("RadioCloth", Vector3.new(0.7, 0.5, 0.04), cf * CFrame.new(-0.55, 6.38, -0.21), Color3.fromRGB(150, 130, 96), M.Fabric, DECO)
+	b.cyl("RadioDial", 0.05, 0.3, cf * CFrame.new(0.1, 6.38, -0.21) * CFrame.Angles(math.rad(90), 0, 0), Color3.fromRGB(210, 196, 150), M.SmoothPlastic, DECO)
+end
+
+-- Anrichte (Esszimmer): Korpus mit drei Türen, Sockel, überstehende Deckplatte
+function Furniture.sideboard(b, cf, w)
+	local wood = Color3.fromRGB(62, 44, 30)
+	b.box("Sideboard", Vector3.new(w, 2.6, 1.4), cf * CFrame.new(0, 1.55, 0), wood, M.Wood)
+	b.box("SideboardTop", Vector3.new(w + 0.2, 0.15, 1.6), cf * CFrame.new(0, 2.92, -0.05), wood, M.Wood, DECO)
+	b.box("SideboardPlinth", Vector3.new(w - 0.1, 0.25, 1.3), cf * CFrame.new(0, 0.13, 0.02), shade(wood, 0.35), M.Wood, DECO)
+	local n = 3
+	local dw = w / n
+	for i = 1, n do
+		local x = -w / 2 + (i - 0.5) * dw
+		b.box("SideboardDoor", Vector3.new(dw - 0.16, 1.7, 0.08), cf * CFrame.new(x, 1.3, -0.73), wood, M.Wood, DECO)
+		b.box("SideboardPanel", Vector3.new(dw - 0.6, 1.15, 0.04), cf * CFrame.new(x, 1.3, -0.78), shade(wood, 0.18), M.Wood, DECO)
+		b.box("SideboardDrawer", Vector3.new(dw - 0.16, 0.45, 0.08), cf * CFrame.new(x, 2.5, -0.73), wood, M.Wood, DECO)
+		b.ball("SideboardKnob", 0.16, cf * CFrame.new(x, 2.5, -0.8), C.brass, M.Metal)
+	end
+	return cf * CFrame.new(0, 3.0, 0)
+end
+
+-- Kronleuchter (nur Deko, kein eigenes Licht): Kette von der Decke, Mittelsäule, sechs Arme
+-- mit Kerzen. `drop` = Abstand Decke → Kerzenteller
+function Furniture.chandelier(b, ceilingCf, drop)
+	local brass = C.brass
+	b.box("ChandelierChain", Vector3.new(0.08, drop - 0.6, 0.08), ceilingCf * CFrame.new(0, -(drop - 0.6) / 2, 0), C.metal, M.Metal, DECO)
+	b.cyl("ChandelierCanopy", 0.2, 0.7, ceilingCf * CFrame.new(0, -0.2, 0), brass, M.Metal, DECO)
+	local hub = ceilingCf * CFrame.new(0, -drop, 0)
+	b.cyl("ChandelierColumn", 1.1, 0.35, hub * CFrame.new(0, -0.4, 0), brass, M.Metal, DECO)
+	b.ball("ChandelierBowl", 0.6, hub * CFrame.new(0, -0.45, 0), brass, M.Metal)
+	for i = 1, 6 do
+		local arm = hub * CFrame.Angles(0, i * math.pi / 3, 0)
+		b.box("ChandelierArm", Vector3.new(0.12, 0.12, 1.5), arm * CFrame.new(0, -0.3, -0.75), brass, M.Metal, DECO)
+		local tip = arm * CFrame.new(0, -0.3, -1.45)
+		b.cyl("ChandelierCup", 0.12, 0.4, tip, brass, M.Metal, DECO)
+		b.cyl("ChandelierCandle", 0.5, 0.18, tip * CFrame.new(0, 0.12, 0), Color3.fromRGB(220, 210, 184), M.SmoothPlastic, DECO)
+		b.ball("ChandelierWick", 0.08, tip * CFrame.new(0, 0.66, 0), C.black, M.SmoothPlastic)
+	end
 end
 
 function Furniture.bathtub(b, cf)
