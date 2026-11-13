@@ -16,6 +16,7 @@ local PlayerData = require(script.Parent.PlayerData)
 local Purchases = require(script.Parent.Purchases)
 local ShopService = require(script.Parent.ShopService)
 local ShopHut = require(script.Parent.ShopHut)
+local TestMenu = require(script.Parent.TestMenu)
 
 local remotes = Instance.new("Folder")
 remotes.Name = "Remotes"
@@ -32,6 +33,7 @@ for _, player in Players:GetPlayers() do
 end
 ShopService.init()
 Purchases.init(notify)
+TestMenu.init() -- nur in Studio
 
 local lobby = LobbyBuilder.build()
 CarQueue.init(lobby.carsFolder, lobby.gate, notify)
