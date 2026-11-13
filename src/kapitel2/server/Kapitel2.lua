@@ -108,6 +108,14 @@ function Kapitel2.start()
 		task.wait()
 		local removed = Mansion.clearAround(workspace:FindFirstChild("Level1"))
 		require(ReplicatedStorage.Shared.Parts).optimize(workspace) -- Leistung (siehe Parts.optimize)
+		-- Leistung: Lampen draußen (Straßenlaternen von Kapitel 1, 110–450 Studs entfernt) leuchten
+		-- weiter, werfen aber keine Schatten mehr. Kerzen im Haus behalten ihre Schatten.
+		local level1 = workspace:FindFirstChild("Level1")
+		for _, light in level1 and level1:GetDescendants() or {} do
+			if light:IsA("Light") and not light:FindFirstAncestor("WagnerHouse") then
+				light.Shadows = false
+			end
+		end
 		print(string.format("Kapitel 2: Welt fertig nach %.1f s (%d Bäume und Teile ums Haus entfernt).", os.clock() - buildStarted, removed or 0))
 	end, debug.traceback)
 	local house = workspace:FindFirstChild("WagnerHouse", true)

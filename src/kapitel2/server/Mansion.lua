@@ -427,6 +427,10 @@ local function buildWall(floorKey, a, b, kind, openings, topOverride)
 					panel("Wallpaper", floorTop + 0.45, ceiling, 0.06, room.wall[1], room.wall[2])
 					panel("Baseboard", floorTop, floorTop + 0.45, 0.14, Color3.fromRGB(46, 36, 28), M.Wood, 0.03)
 				end
+				-- Stuckleiste (Holz) oben an der Decke – nicht im Keller und nicht im Treppenschacht
+				if floorKey ~= "K" and kind ~= "stone" and not room.noFloor then
+					panel("Cornice", ceiling - 0.4, ceiling, 0.2, Color3.fromRGB(54, 42, 32), M.Wood, 0.08)
+				end
 			elseif not room and kind == "ext" then
 				-- außen: waagerechte Bretter und ein Steinsockel
 				local first = math.max(ya, BASE + 0.9)
@@ -1142,10 +1146,9 @@ local function buildFurniture()
 		box("RainCoat", Vector3.new(1.2, 3.2, 0.5), CFrame.new(L(19 + i * 3, 37.4, E + 5.5)), Color3.fromRGB(60 + i * 20, 70, 50), M.Fabric)
 	end
 
-	-- Wintergarten: tote Pflanzen, Korbstühle
-	for i, p in { { 9, 20 }, { 20, 14 }, { 20, 24 }, { 7, 13 }, { 8, 25 } } do
-		cyl("PlantPot", 1.6, 1.8, at(p[1], p[2], E), Color3.fromRGB(110, 62, 44), M.Concrete)
-		box("DeadPlant", Vector3.new(1.2, 2.4, 1.2), CFrame.new(L(p[1], p[2], E + 2.8)) * CFrame.Angles(0, i, math.rad(15)), Color3.fromRGB(70, 58, 40), M.Grass)
+	-- Wintergarten: Topfpflanzen (Palme, Farne, große Blätter), Korbstühle
+	for i, p in { { 9, 20, "palm", 1.1 }, { 20, 14, "fern", 1 }, { 20, 24, "leafy", 1 }, { 7, 13, "tall", 0.9 }, { 8, 25, "fern", 0.85 } } do
+		Furniture.plant(b, at(p[1], p[2], E, i * 70), p[3], rng, p[4])
 	end
 	Furniture.chair(b, at(19, 19, E, "W"), Color3.fromRGB(120, 100, 70))
 	Furniture.chair(b, at(9, 16, E, "E"), Color3.fromRGB(120, 100, 70))
@@ -1208,9 +1211,10 @@ local function buildFurniture()
 	Furniture.toilet(b, at(62.9, 30, O, "W"))
 
 	-- Elternschlafzimmer
-	Furniture.bed(b, at(72, 26, O, "S"), 6, 7, Color3.fromRGB(90, 50, 46))
-	Furniture.nightstand(b, at(68, 21, O, "S"))
-	Furniture.nightstand(b, at(76, 21, O, "S"))
+	-- Kopfteil an der Ostwand (vorher stand es frei mitten vor dem Erker), Nachttische daneben
+	Furniture.bed(b, at(76.25, 23.6, O, "W"), 6, 7, Color3.fromRGB(90, 50, 46))
+	Furniture.nightstand(b, at(79.3, 19.7, O, "W"))
+	Furniture.nightstand(b, at(79.3, 27.5, O, "W"))
 	Furniture.wardrobe(b, at(79.4, 30.4, O, "W"), 4)
 	Furniture.mirror(b, at(64.4, 26, O + 5.2, "E"))
 	Furniture.picture(b, at(64.39, 30.5, O + 5, "E"), 4, 3, Color3.fromRGB(60, 50, 44), true) -- Familienfoto, Gesichter zerkratzt
@@ -1851,7 +1855,7 @@ local function buildNavigation()
 	-- keine Lampen an der Decke, keine Wände/Böden/Treppen – die regelt das Raumnetz)
 	local obstacles = { K = {}, E = {}, O = {} }
 	local inverse = origin:Inverse()
-	local SKIP = { Wall = true, StoneWall = true, Floor = true, Ceiling = true, Wallpaper = true, Baseboard = true, Wainscot = true, ChairRail = true, WallTiles = true }
+	local SKIP = { Wall = true, StoneWall = true, Floor = true, Ceiling = true, Wallpaper = true, Baseboard = true, Cornice = true, Wainscot = true, ChairRail = true, WallTiles = true }
 	local function collect(folder)
 		for _, part in folder:GetDescendants() do
 			if part:IsA("BasePart") and part.CanCollide and part.Transparency < 0.9 and not SKIP[part.Name] and not part.Name:find("^Stair") and not part.Name:find("^Door") and not part.Name:find("^Rug") and not part.Name:find("^Cellar") and not part.Name:find("^Escape") then

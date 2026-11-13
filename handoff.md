@@ -7,6 +7,15 @@ Diese Datei ist für einen **neuen Chat** gedacht: erst den Prompt unten kopiere
 
 ---
 
+## Stand K2-2026-11-13j (13. Nov.)
+- Elternschlafzimmer: Bett stand frei vor dem Erker → Kopfteil jetzt an der Ostwand, Nachttische daneben.
+- Sofas: dünne Streifen weg (Tuch-Falten, Ziernaht, Staubstreifen, Armlehnen-Scheiben).
+- Betten (alle): Fußteil, Pfosten mit Knäufen, umgeschlagenes Laken, seitlich hängende Decke, im breiten Bett 2 Kissen.
+- Wintergarten: echte Topfpflanzen (`Furniture.plant`: palm, fern, tall, leafy) statt der toten Klötze → Grafik-Wunsch erledigt.
+- Ganzes Haus: Holz-Stuckleiste („Cornice“) oben an allen tapezierten Wänden (nicht im Keller).
+- Leistung: Lampen draußen (Straßenlaternen Kapitel 1) ohne Schatten → 23 statt 44 Schattenlichter.
+  Teile in Kapitel 2: 17.069 (vorher 16.591, +3 %; vor keepRadius 20.291). Bau dauert 0,8 s.
+
 ## Stand K2-2026-11-13i (13. Nov.)
 - Testmenü: neuer Eintrag **„Haus besichtigen“** (id `haus`, TestStarts.lua). Man steht in der Halle mit Kerze,
   kein Gespräch, keine Nacht, kein Sarp. Alle Türen sind aufgeschlossen, die Bretter an Tür 1 haben keine Kollision,
@@ -50,7 +59,7 @@ Shop-Menü im Handelsposten-Stil (Bretterwand, Papierkarten, Stempel, Bundle-Pla
 Anprobe, Münzen ODER Robux, durchgestrichene Rabatte, Animationen). Münzen/Besitz im DataStore.
 Offen: Robux-Produkte im Creator Hub anlegen (alle IDs 0), Gratis-Automat, Angebote, Abzeichen-Anzeige,
 Kleidung im Spiel tragen, Snacks im Spiel, Tod/Revive, Abfahrt; Lobby/Duo/Handy echt testen.
-Grafik-Wunsch (notiert 13. Nov.): Pflanzen im Gartenhaus/Wintergarten der Wagners (`Mansion.lua`, Raum "winter").
+(erledigt in 13j) Grafik-Wunsch: Pflanzen im Gartenhaus/Wintergarten der Wagners (`Mansion.lua`, Raum "winter").
 Danach Audio (ab 24. November kann ich wieder Sounds hochladen).
 Für Menü-Design gibt es aktivierte Plugins (UI Design Review, Design, Icons8) – nutze sie.
 Roblox Studio ist per MCP verbunden – du kannst Studio direkt steuern und testen

@@ -114,7 +114,7 @@ function Furniture.chair(b, cf, color)
 	b.box("ChairStretcher", Vector3.new(1.2, 0.08, 0.08), cf * CFrame.new(0, 0.7, 0), color, M.Wood, DECO)
 end
 
--- Sessel oder Sofa, optional unter einem weißen Tuch (mit Falten, unter dem man die Form ahnt)
+-- Sessel oder Sofa, optional unter einem weißen Tuch (unter dem man die Form ahnt)
 function Furniture.sofa(b, cf, w, color, covered)
 	local fabric = covered and C.sheet or color
 	local mat = M.Fabric
@@ -127,8 +127,7 @@ function Furniture.sofa(b, cf, w, color, covered)
 	local seats = math.max(1, math.floor((w - 1.4) / 1.6 + 0.5))
 	local seatW = (w - 1.4) / seats
 	if covered then
-		-- das Tuch: weiche Rundungen über Polstern und Armlehnen, Falten und ein Saum am Boden
-		local fold = shade(C.sheet, 0.12)
+		-- das Tuch: weiche Rundungen über Polstern und Armlehnen und ein Saum am Boden
 		for i = 1, seats do
 			local x = -w / 2 + 0.7 + (i - 0.5) * seatW
 			-- liegende Rollen (von links nach rechts): Sitzpolster vorne, Rückenpolster oben
@@ -140,21 +139,8 @@ function Furniture.sofa(b, cf, w, color, covered)
 			b.cyl("SheetArmRoll", 2.6, 0.95, cf * CFrame.new(x * (w / 2 - 0.35), 2.5, -1.3) * CFrame.Angles(math.rad(90), 0, 0), C.sheet, mat, DECO)
 		end
 		b.box("Sheet", Vector3.new(w + 0.2, 0.6, 3.0), cf * CFrame.new(0, 0.3, -0.1), C.sheet, mat)
-		-- Falten: schräg hängende Streifen vorne und an den Seiten
-		for i = 0, math.floor(w / 0.9) do
-			local x = -w / 2 + 0.3 + i * 0.9
-			if x < w / 2 - 0.2 then
-				b.box("SheetFold", Vector3.new(0.12, 1.5, 0.08), cf * CFrame.new(x, 0.95, -1.62) * CFrame.Angles(0, 0, math.rad((i % 2 == 0) and 6 or -5)), fold, mat, DECO)
-			end
-		end
-		for _, x in { -1, 1 } do
-			b.box("SheetFold", Vector3.new(0.08, 1.6, 0.12), cf * CFrame.new(x * (w / 2 + 0.11), 1.0, -0.6) * CFrame.Angles(math.rad(7), 0, 0), fold, mat, DECO)
-			b.box("SheetFold", Vector3.new(0.08, 1.4, 0.12), cf * CFrame.new(x * (w / 2 + 0.11), 0.9, 0.5) * CFrame.Angles(math.rad(-6), 0, 0), fold, mat, DECO)
-		end
-		-- Staub auf dem Tuch
-		b.box("SheetDust", Vector3.new(w * 0.6, 0.02, 0.5), cf * CFrame.new(0, 3.63, 1.0), Color3.fromRGB(150, 146, 136), mat, DECO)
 	else
-		-- Sockel mit gedrechselten Füßen, einzelne Sitz- und Rückenkissen, gerollte Armlehnen, Ziernähte
+		-- Sockel mit gedrechselten Füßen, einzelne Sitz- und Rückenkissen, gerollte Armlehnen
 		b.box("SofaBase", Vector3.new(w - 0.1, 0.45, 2.4), cf * CFrame.new(0, 0.37, 0), C.darkWood, M.Wood)
 		for _, x in { -1, 1 } do
 			for _, z in { -1, 1 } do
@@ -165,24 +151,104 @@ function Furniture.sofa(b, cf, w, color, covered)
 		for i = 1, seats do
 			local x = -w / 2 + 0.7 + (i - 0.5) * seatW
 			b.box("SofaCushion", Vector3.new(seatW - 0.08, 0.35, 2.1), cf * CFrame.new(x, 1.95, -0.2), color, mat, DECO)
-			b.box("SofaPiping", Vector3.new(seatW - 0.06, 0.05, 0.05), cf * CFrame.new(x, 2.1, -1.26), seam, mat, DECO)
 			b.box("SofaBackCushion", Vector3.new(seatW - 0.1, 1.4, 0.4), cf * CFrame.new(x, 2.85, 0.45) * CFrame.Angles(math.rad(-8), 0, 0), color, mat, DECO)
 			b.ball("SofaButton", 0.1, cf * CFrame.new(x, 3.0, 0.23), seam, mat)
 		end
 		for _, x in { -1, 1 } do
 			b.cyl("SofaArmRoll", 2.6, 0.8, cf * CFrame.new(x * (w / 2 - 0.35), 2.5, -1.3) * CFrame.Angles(math.rad(90), 0, 0), color, mat, DECO)
-			b.cyl("SofaArmFace", 0.04, 0.6, cf * CFrame.new(x * (w / 2 - 0.35), 2.5, -1.33) * CFrame.Angles(math.rad(90), 0, 0), seam, mat, DECO)
 		end
 	end
 end
 
 function Furniture.bed(b, cf, w, l, sheet, frame)
 	frame = frame or C.darkWood
+	local linen = Color3.fromRGB(214, 208, 196)
 	b.box("BedFrame", Vector3.new(w, 1.2, l), cf * CFrame.new(0, 0.9, 0), frame, M.Wood)
 	b.box("Mattress", Vector3.new(w - 0.2, 0.6, l - 0.3), cf * CFrame.new(0, 1.8, -0.1), Color3.fromRGB(200, 194, 180), M.Fabric)
 	b.box("Blanket", Vector3.new(w - 0.1, 0.25, l * 0.62), cf * CFrame.new(0, 2.15, -l * 0.18 - 0.08), sheet, M.Fabric)
-	b.box("Pillow", Vector3.new(w * 0.7, 0.4, 1.1), cf * CFrame.new(0, 2.3, l / 2 - 0.9), Color3.fromRGB(214, 208, 196), M.Fabric)
+	-- umgeschlagenes Laken am oberen Rand der Decke, Decke hängt seitlich etwas herunter
+	b.box("SheetTurn", Vector3.new(w - 0.06, 0.28, 0.55), cf * CFrame.new(0, 2.17, l * 0.13 - 0.3), linen, M.Fabric, DECO)
+	for _, x in { -1, 1 } do
+		b.box("BlanketSide", Vector3.new(0.08, 0.75, l * 0.6), cf * CFrame.new(x * (w / 2 - 0.02), 1.8, -l * 0.18 - 0.08), sheet, M.Fabric, DECO)
+	end
+	-- Kissen: zwei nebeneinander im breiten Bett, leicht schräg angelehnt
+	local pillows = w >= 5 and { -w * 0.22, w * 0.22 } or { 0 }
+	for i, x in pillows do
+		local pw = #pillows > 1 and w * 0.4 or w * 0.7
+		b.box("Pillow", Vector3.new(pw, 0.45, 1.1), cf * CFrame.new(x, 2.35, l / 2 - 0.85) * CFrame.Angles(math.rad(-12), math.rad(i == 1 and 2 or -2), 0), linen, M.Fabric, i > 1 and DECO or nil)
+	end
 	b.box("Headboard", Vector3.new(w, 2.9, 0.4), cf * CFrame.new(0, 1.45, l / 2 + 0.1), frame, M.Wood) -- bleibt unter der Fensterbank
+	b.box("HeadboardPanel", Vector3.new(w - 0.9, 1.3, 0.06), cf * CFrame.new(0, 2.35, l / 2 - 0.12), shade(frame, 0.25), M.Wood, DECO)
+	b.box("HeadboardCap", Vector3.new(w + 0.1, 0.18, 0.55), cf * CFrame.new(0, 2.95, l / 2 + 0.1), frame, M.Wood, DECO)
+	-- Fußteil und gedrechselte Pfosten mit Knäufen
+	b.box("Footboard", Vector3.new(w - 0.3, 1.3, 0.22), cf * CFrame.new(0, 1.15, -l / 2 - 0.05), frame, M.Wood, DECO)
+	for _, x in { -1, 1 } do
+		b.cyl("BedPost", 3.05, 0.34, cf * CFrame.new(x * (w / 2 - 0.12), 0, l / 2 + 0.1), frame, M.Wood, DECO)
+		b.ball("BedKnob", 0.42, cf * CFrame.new(x * (w / 2 - 0.12), 3.15, l / 2 + 0.1), frame:Lerp(Color3.new(1, 1, 1), 0.08), M.Wood)
+		b.cyl("BedPost", 1.9, 0.3, cf * CFrame.new(x * (w / 2 - 0.12), 0, -l / 2 - 0.05), frame, M.Wood, DECO)
+		b.ball("BedKnob", 0.36, cf * CFrame.new(x * (w / 2 - 0.12), 1.98, -l / 2 - 0.05), frame:Lerp(Color3.new(1, 1, 1), 0.08), M.Wood)
+	end
+end
+
+-- Topfpflanze (Wintergarten): Topf mit Rand und Erde, dazu je nach Art Blätter aus schräg
+-- gestellten flachen Teilen. kind = "palm" | "fern" | "leafy" | "tall". Blätter ohne Kollision.
+function Furniture.plant(b, cf, kind, rng, size)
+	size = size or 1
+	local pot = Color3.fromRGB(116, 66, 46)
+	local potH, potD = 1.5 * size, 1.7 * size
+	b.cyl("PlantPot", potH, potD, cf, pot, M.Concrete)
+	b.cyl("PotRim", 0.25, potD + 0.2, cf * CFrame.new(0, potH - 0.2, 0), shade(pot, 0.12), M.Concrete, DECO)
+	b.cyl("PotSoil", 0.06, potD - 0.15, cf * CFrame.new(0, potH - 0.1, 0), Color3.fromRGB(38, 30, 24), M.Ground, DECO)
+	local top = cf * CFrame.new(0, potH - 0.05, 0)
+	local greens = { Color3.fromRGB(46, 70, 40), Color3.fromRGB(58, 82, 44), Color3.fromRGB(40, 60, 36), Color3.fromRGB(96, 92, 50) }
+	local function green(i)
+		-- ab und zu ein welkes, gelbbraunes Blatt (das Haus wird kaum gepflegt)
+		return rng:NextNumber() < 0.15 and Color3.fromRGB(120, 100, 56) or greens[(i % 3) + 1]
+	end
+	local function leaf(name, base, yaw, tilt, length, width, color)
+		-- Blatt beginnt bei `base` und zeigt schräg nach außen
+		local dir = CFrame.Angles(0, yaw, 0) * CFrame.Angles(tilt, 0, 0)
+		b.box(name, Vector3.new(width, 0.05, length), base * dir * CFrame.new(0, 0, -length / 2), color, M.Grass, DECO)
+	end
+	if kind == "palm" then
+		-- Stamm aus kleiner werdenden Ringen, oben ein Schopf langer Wedel
+		local h = 0
+		for i = 1, 6 do
+			local d = (0.55 - i * 0.04) * size
+			b.cyl("PalmTrunk", 0.75 * size, d, top * CFrame.new(0, h, 0) * CFrame.Angles(0, i, math.rad(i * 1.2)), Color3.fromRGB(92 - i * 3, 72, 50), M.Wood, DECO)
+			h += 0.7 * size
+		end
+		local crown = top * CFrame.new(0.1 * size, h, 0)
+		for i = 1, 9 do
+			local yaw = i * math.pi * 2 / 9 + rng:NextNumber(-0.2, 0.2)
+			leaf("PalmFrond", crown, yaw, math.rad(rng:NextNumber(-35, -5)), rng:NextNumber(2.4, 3.2) * size, 0.55 * size, green(i))
+		end
+	elseif kind == "fern" then
+		for i = 1, 14 do
+			local yaw = i * 2.4
+			leaf("FernFrond", top * CFrame.new(0, 0.1, 0), yaw, math.rad(rng:NextNumber(15, 50)), rng:NextNumber(1.4, 2.0) * size, 0.42 * size, green(i))
+		end
+	elseif kind == "tall" then
+		-- schlanke Stängel mit langen, schmalen Blättern (wie Bogenhanf)
+		for i = 1, 9 do
+			local yaw = i * 2.1
+			local lean = math.rad(rng:NextNumber(70, 84))
+			leaf("TallLeaf", top * CFrame.new(math.cos(yaw) * 0.25 * size, 0, math.sin(yaw) * 0.25 * size), yaw, lean, rng:NextNumber(2.6, 3.6) * size, 0.32 * size, green(i))
+		end
+	else
+		-- "leafy" (wie ein Gummibaum): wenige Stämmchen, an jedem mehrere schmale Blätter,
+		-- die schräg nach oben zeigen
+		for i = 1, 4 do
+			local yaw = i * 1.7
+			local stemH = rng:NextNumber(1.6, 2.8) * size
+			local lean = CFrame.Angles(0, yaw, 0) * CFrame.Angles(math.rad(-8), 0, 0)
+			b.box("PlantStem", Vector3.new(0.09, stemH, 0.09), top * lean * CFrame.new(0, stemH / 2, 0), Color3.fromRGB(70, 66, 44), M.Wood, DECO)
+			for j = 1, 4 do
+				local base = top * lean * CFrame.new(0, stemH * (0.35 + j * 0.16), 0)
+				leaf("BigLeaf", base, j * 1.9 + i, math.rad(rng:NextNumber(25, 55)), rng:NextNumber(0.8, 1.1) * size, 0.42 * size, green(i + j))
+			end
+		end
+	end
 end
 
 function Furniture.nightstand(b, cf)
