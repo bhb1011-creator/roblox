@@ -585,7 +585,7 @@ local function show(viewport, model, yaw)
 	-- Figuren (hoch und schmal) füllen das Bild fast ganz, damit man sie gut sieht
 	local tall = size.Y > math.max(size.X, size.Z) * 1.4
 	local reach = math.max(size.X, size.Y * (tall and 1.0 or 1.08), size.Z) * 0.5
-	local distance = reach / math.tan(math.rad(camera.FieldOfView / 2)) * (tall and 1.04 or 1.12)
+	local distance = reach / math.tan(math.rad(camera.FieldOfView / 2)) * (tall and 1.08 or 1.12)
 	local focus = cf.Position - Vector3.new(0, size.Y * 0.03, 0)
 	local function aim(angle)
 		local offset = Vector3.new(math.sin(angle), 0.16, -math.cos(angle)).Unit * distance

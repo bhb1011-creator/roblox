@@ -27,6 +27,7 @@ local ENTRIES = {
 	{ "Kiosk: Extras", "open", "Extras" },
 	{ "+5,000 Münzen", "coins" },
 	{ "Käufe zurücksetzen (5,000 Münzen)", "reset" },
+	{ "Zur Lobby (Menü schließen)", "close" },
 }
 
 local function create(className, props)
@@ -67,10 +68,12 @@ local panel = create("ScrollingFrame", {
 	BorderSizePixel = 0,
 	BackgroundColor3 = Color3.fromRGB(16, 16, 20),
 	BackgroundTransparency = 0.05,
-	Visible = false,
+	Visible = true, -- in Studio startet man direkt im Testmenü
 	Parent = gui,
 })
 create("UICorner", { CornerRadius = UDim.new(0, 10), Parent = panel })
+-- unsichtbarer Modal-Knopf: solange das Menü offen ist, ist der Mauszeiger frei (sonst Ich-Sicht-Sperre)
+create("TextButton", { Name = "FreeMouse", Size = UDim2.fromOffset(0, 0), BackgroundTransparency = 1, Text = "", Modal = true, Parent = panel })
 create("UIStroke", { Color = Color3.fromRGB(120, 30, 30), Thickness = 2, Parent = panel })
 create("UIPadding", { PaddingTop = UDim.new(0, 14), PaddingBottom = UDim.new(0, 14), PaddingLeft = UDim.new(0, 14), PaddingRight = UDim.new(0, 14), Parent = panel })
 create("UISizeConstraint", { MaxSize = Vector2.new(420, 640), Parent = panel })
@@ -86,6 +89,19 @@ create("TextLabel", {
 	Text = "TESTMENÜ – Lobby",
 	Parent = panel,
 })
+create("TextLabel", {
+	LayoutOrder = 1,
+	Size = UDim2.new(1, 0, 0, 0),
+	AutomaticSize = Enum.AutomaticSize.Y,
+	BackgroundTransparency = 1,
+	Font = Enum.Font.Gotham,
+	TextSize = 14,
+	TextWrapped = true,
+	TextColor3 = Color3.fromRGB(180, 180, 186),
+	TextXAlignment = Enum.TextXAlignment.Left,
+	Text = "Anklicken oder Zahl drücken. „Zur Lobby“ schließt das Menü (wieder öffnen mit O).",
+	Parent = panel,
+})
 
 local function run(entry)
 	panel.Visible = false
@@ -95,6 +111,8 @@ local function run(entry)
 			shop:SetAttribute("TestOpen", nil)
 			shop:SetAttribute("TestOpen", entry[3])
 		end
+	elseif entry[2] == "close" then
+		return
 	elseif action then
 		action:FireServer(entry[2])
 	end
@@ -102,7 +120,7 @@ end
 
 for index, entry in ENTRIES do
 	local button = create("TextButton", {
-		LayoutOrder = index,
+		LayoutOrder = index + 1,
 		Size = UDim2.new(1, 0, 0, 48),
 		BackgroundColor3 = Color3.fromRGB(40, 40, 46),
 		TextColor3 = Color3.fromRGB(235, 235, 235),
