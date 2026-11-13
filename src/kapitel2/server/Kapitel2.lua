@@ -616,13 +616,44 @@ function Kapitel2.start()
 				prompt.ObjectText = "Door"
 				prompt.ActionText = door.locked and "Open" or (door.angle > 0 and "Close" or "Open")
 				prompt.HoldDuration = 0
-				prompt.MaxActivationDistance = 7
+				prompt.MaxActivationDistance = 6
 				prompt.RequiresLineOfSight = false
 				prompt.Style = Enum.ProximityPromptStyle.Default
-				prompt.Parent = leaf
+				-- Die Abfrage sitzt fest in der Türöffnung (nicht am Türblatt, das beim Öffnen weit in
+				-- den Raum schwenkt). Roblox zeigt pro Taste nur die nächste Abfrage – so ist das immer
+				-- die Tür, vor der man steht, und nicht die offene Nachbartür.
+				local doorway = door.frame(0)
+				local anchor = Instance.new("Part")
+				anchor.Name = "DoorPromptAnchor"
+				anchor.Size = Vector3.new(0.2, 0.2, 0.2)
+				anchor.Transparency = 1
+				anchor.CanCollide = false
+				anchor.CanQuery = false
+				anchor.CanTouch = false
+				anchor.Anchored = true
+				anchor.CFrame = doorway * CFrame.new(0, -0.8, 0)
+				anchor.Parent = door.model.Parent
+				prompt.Parent = anchor
 				door.prompt = prompt
+				-- steht jemand in der Türöffnung? (dann geht die Tür nicht zu – sonst steckt man im Türblatt)
+				local function someoneInDoorway()
+					for _, other in Players:GetPlayers() do
+						local root = other.Character and other.Character:FindFirstChild("HumanoidRootPart")
+						if root then
+							local offset = doorway:PointToObjectSpace(root.Position)
+							if math.abs(offset.X) < leaf.Size.X / 2 + 0.8 and math.abs(offset.Z) < 1.6 then
+								return true
+							end
+						end
+					end
+					return false
+				end
 				prompt.Triggered:Connect(function(player)
 					if door.moving then
+						return
+					end
+					if door.angle > 0 and someoneInDoorway() then
+						event:FireClient(player, { type = "hint", text = "Step out of the doorway first.", seconds = 2 })
 						return
 					end
 					if door.locked then
@@ -1180,10 +1211,13 @@ function Kapitel2.start()
 				Wagners.place(npc, hiddenSpot, facing)
 			end
 		end
+		-- alle Türen aufschließen und gleich ganz öffnen (man kann überall einfach durchlaufen)
 		for _, door in Mansion.doors do
 			door.locked = false
-			if door.prompt then
-				door.prompt.ActionText = door.angle > 0 and "Close" or "Open"
+			if door.angle == 0 and door.model then
+				task.spawn(moveDoor, door, door.openAngle, 0.05)
+			elseif door.prompt then
+				door.prompt.ActionText = "Close"
 			end
 		end
 		-- vernagelte Tür 1: Bretter bleiben sichtbar, man kann aber hindurchgehen

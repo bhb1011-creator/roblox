@@ -7,6 +7,15 @@ Diese Datei ist für einen **neuen Chat** gedacht: erst den Prompt unten kopiere
 
 ---
 
+## Stand K2-2026-11-13l (14. Nov.)
+- Türen: Die E-Abfrage hing am Türblatt (schwenkt beim Öffnen 3 Studs in den Raum). Roblox zeigt pro Taste nur
+  die nächste Abfrage → man erwischte oft die Nachbartür. Jetzt sitzt sie an einem unsichtbaren Teil
+  „DoorPromptAnchor“ fest in der Türöffnung (Reichweite 6).
+- Eine Tür geht nicht mehr zu, solange ein Spieler in der Öffnung steht (Hinweis „Step out of the doorway first.“).
+- „Haus besichtigen“: alle Türen sind von Anfang an ganz offen.
+- Geprüft in Studio: Öffnungen offener Türen sind frei (nichts mit Kollision drin), alle 25 Türen reagieren auf E,
+  in der Öffnung wird Schließen verweigert. Hinweis für Tests: Abfragen reagieren nur, wenn sie im Bild sind.
+
 ## Stand K2-2026-11-13k (13. Nov.)
 - Küche: Unterschränke mit Türen, Füllung, Schubladen, Knäufen und Sockel (keine dünnen Linien mehr);
   neuer Hängeschrank mit Glas und Tellern (`Furniture.wallCabinet`); Spüle mit Drehgriffen und Abfluss;
