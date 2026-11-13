@@ -1,6 +1,6 @@
 # Handoff – Horror-Spiel „Guesthouse“ (Roblox)
 
-Stand: 12. November 2026, Branch `claude/optimistic-bardeen-4tmohk`, Version `K2-2026-11-13e`.
+Stand: 12. November 2026, Branch `claude/optimistic-bardeen-4tmohk`, Version `K2-2026-11-13f`.
 Ganz oben stehen die neuesten Abschnitte (0000 = 10. Nov., 000 = realistische Familie, 00 = 9. Nov., 0 = Kapitel 3 + Audio);
 Abschnitte 2–8 beschreiben Kapitel 2 (Stand 6. Nov.).
 Diese Datei ist für einen **neuen Chat** gedacht: erst den Prompt unten kopieren, der Rest ist Nachschlagewerk.
@@ -36,7 +36,7 @@ Regeln:
 - Sei ehrlich: sag klar, was ungetestet ist.
   Arbeite gründlich und sag, wenn etwas fertig ist.
 
-Stand: Version `K2-2026-11-13e`. Kapitel 1, 2 und 3 sind gebaut und laufen am Stück (`spiel.project.json`).
+Stand: Version `K2-2026-11-13f`. Kapitel 1, 2 und 3 sind gebaut und laufen am Stück (`spiel.project.json`).
 Alle Figuren sind realistische KI-Figuren (Familie Wagner, Sarp in drei Stufen, feste Spielerfiguren).
 Gerade in Arbeit: Shop und Spielfluss (Plan: `plan_shop_spielfluss.md`). In der Lobby stehen schon:
 Shop-Hütte (Kleidung auf Bügeln/Regal, Sportwagen daneben, Skins nur im Menü), Kiosk für Snacks,
@@ -44,6 +44,7 @@ Shop-Menü im Handelsposten-Stil (Bretterwand, Papierkarten, Stempel, Bundle-Pla
 Anprobe, Münzen ODER Robux, durchgestrichene Rabatte, Animationen). Münzen/Besitz im DataStore.
 Offen: Robux-Produkte im Creator Hub anlegen (alle IDs 0), Gratis-Automat, Angebote, Abzeichen-Anzeige,
 Kleidung im Spiel tragen, Snacks im Spiel, Tod/Revive, Abfahrt; Lobby/Duo/Handy echt testen.
+Grafik-Wunsch (notiert 13. Nov.): Pflanzen im Gartenhaus/Wintergarten der Wagners (`Mansion.lua`, Raum "winter").
 Danach Audio (ab 24. November kann ich wieder Sounds hochladen).
 Für Menü-Design gibt es aktivierte Plugins (UI Design Review, Design, Icons8) – nutze sie.
 Roblox Studio ist per MCP verbunden – du kannst Studio direkt steuern und testen
@@ -51,6 +52,16 @@ Roblox Studio ist per MCP verbunden – du kannst Studio direkt steuern und test
 `/Applications/RobloxStudio.app/Contents/MacOS/RobloxStudio -launchIntentString '{"task":"EditFile","localplacefile":"<Pfad>"}'`).
 Fang damit an, dass du die Dateien liest und mir in 5 Sätzen sagst, wo wir stehen.
 ```
+
+---
+
+## 000000000000000000000000. NEU 13. November (Version K2-2026-11-13f): Tag-Schalter im Testmenü
+
+- Spiel-Testmenü: Knopf „Tag (T)“ unten links neben „Test (O)“ bzw. Taste T. Macht alles hell wie am Mittag
+  (Uhrzeit 13, wenig Nebel, Farbfilter/Unschärfe aus), nur auf dem eigenen Bildschirm, wird jedes Bild erzwungen.
+  Nochmal T = altes Licht zurück. Zum Prüfen der Umgebung auf Fehler. In Studio gesehen (Kapitel 2, Haustür hell);
+  Zurückschalten nicht geprüft.
+- Notiert: Pflanzen im Gartenhaus/Wintergarten (siehe „Offen“ oben).
 
 ---
 

@@ -54,6 +54,82 @@ local openButton = create("TextButton", {
 })
 create("UICorner", { CornerRadius = UDim.new(0, 6), Parent = openButton })
 
+-- Tag-Schalter (Taste T): macht alles hell wie am Mittag, um die Umgebung auf Fehler zu prüfen.
+-- Nur auf diesem Bildschirm; die Kapitel setzen ihr Licht ständig neu, deshalb wird der Tag jedes Bild erzwungen.
+local Lighting = game:GetService("Lighting")
+local RunService = game:GetService("RunService")
+local dayButton = create("TextButton", {
+	Name = "Day",
+	Size = UDim2.fromOffset(84, 30),
+	AnchorPoint = Vector2.new(0, 1),
+	Position = UDim2.new(0, 104, 1, -12),
+	BackgroundColor3 = Color3.fromRGB(30, 30, 34),
+	BackgroundTransparency = 0.25,
+	TextColor3 = Color3.fromRGB(230, 230, 230),
+	Font = Enum.Font.GothamBold,
+	TextSize = 14,
+	Text = "Tag (T)",
+	AutoButtonColor = true,
+	Parent = gui,
+})
+create("UICorner", { CornerRadius = UDim.new(0, 6), Parent = dayButton })
+local DAY = {
+	ClockTime = 13,
+	Brightness = 3,
+	Ambient = Color3.fromRGB(150, 150, 150),
+	OutdoorAmbient = Color3.fromRGB(170, 170, 170),
+	ExposureCompensation = 0,
+	FogEnd = 100000,
+	FogStart = 0,
+	GlobalShadows = true,
+}
+local dayOn = false
+local savedLight, hidden = {}, {}
+local dayConnection
+local function setDay(on)
+	if on == dayOn then
+		return
+	end
+	dayOn = on
+	dayButton.Text = on and "Nacht (T)" or "Tag (T)"
+	if on then
+		for key in DAY do
+			savedLight[key] = Lighting[key]
+		end
+		dayConnection = RunService.RenderStepped:Connect(function()
+			for key, value in DAY do
+				Lighting[key] = value
+			end
+			-- Nebel, Farbfilter und Unschärfe der Kapitel ausschalten (merken, um sie zurückzugeben)
+			for _, child in Lighting:GetChildren() do
+				if child:IsA("Atmosphere") and child.Density > 0.05 then
+					hidden[child] = hidden[child] or { "Density", child.Density }
+					child.Density = 0.05
+				elseif (child:IsA("ColorCorrectionEffect") or child:IsA("BlurEffect") or child:IsA("DepthOfFieldEffect")) and child.Enabled then
+					hidden[child] = hidden[child] or { "Enabled", true }
+					child.Enabled = false
+				end
+			end
+		end)
+	else
+		if dayConnection then
+			dayConnection:Disconnect()
+		end
+		for key, value in savedLight do
+			Lighting[key] = value
+		end
+		for child, info in hidden do
+			if child.Parent then
+				child[info[1]] = info[2]
+			end
+		end
+		table.clear(hidden)
+	end
+end
+dayButton.Activated:Connect(function()
+	setDay(not dayOn)
+end)
+
 -- (scrollt, wenn das Fenster klein ist)
 local panel = create("ScrollingFrame", {
 	Name = "Panel",
@@ -206,6 +282,10 @@ openButton.Activated:Connect(function()
 end)
 UserInputService.InputBegan:Connect(function(input, processed)
 	if processed then
+		return
+	end
+	if input.KeyCode == Enum.KeyCode.T then
+		setDay(not dayOn)
 		return
 	end
 	if input.KeyCode == Enum.KeyCode.O then
