@@ -683,6 +683,15 @@ function Furniture.boiler(b, cf)
 		b.box("Pipe", Vector3.new(0.35, 3.6, 0.35), cf * CFrame.new(x, 7.8, 0), C.metal, M.Metal) -- endet im Boden darüber
 	end
 	b.box("CoalPile", Vector3.new(2.5, 0.8, 2), cf * CFrame.new(3, 0.4, -1), Color3.fromRGB(20, 20, 20), M.Slate)
+	-- Kohlestücke obendrauf, eine Schaufel im Haufen, Druckanzeige und Ofenklappe am Kessel
+	for i = 0, 6 do
+		b.ball("Coal", 0.5 + (i % 3) * 0.2, cf * CFrame.new(2.1 + (i % 4) * 0.6, 0.85 + (i % 2) * 0.1, -1.5 + math.floor(i / 4) * 0.8), Color3.fromRGB(24, 24, 26), M.Slate)
+	end
+	b.box("ShovelHandle", Vector3.new(0.12, 3.0, 0.12), cf * CFrame.new(4.0, 1.7, -0.6) * CFrame.Angles(0, 0, math.rad(-20)), C.lightWood, M.Wood, DECO)
+	b.box("ShovelBlade", Vector3.new(0.8, 0.08, 0.9), cf * CFrame.new(3.55, 0.85, -0.6) * CFrame.Angles(0, 0, math.rad(-20)), C.metal, M.Metal, DECO)
+	b.cyl("BoilerGauge", 0.1, 0.7, cf * CFrame.new(0.8, 4.2, -1.6) * CFrame.Angles(math.rad(90), 0, 0), Color3.fromRGB(200, 190, 160), M.SmoothPlastic, DECO)
+	b.box("BoilerGaugeNeedle", Vector3.new(0.05, 0.28, 0.02), cf * CFrame.new(0.8, 4.25, -1.72) * CFrame.Angles(0, 0, math.rad(35)), C.black, M.SmoothPlastic, DECO)
+	b.cyl("BoilerBand", 0.3, 3.35, cf * CFrame.new(0, 5.4, 0), shade(Color3.fromRGB(60, 54, 48), 0.25), M.Metal, DECO)
 end
 
 function Furniture.washtub(b, cf)

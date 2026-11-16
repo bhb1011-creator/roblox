@@ -7,6 +7,21 @@ Diese Datei ist für einen **neuen Chat** gedacht: erst den Prompt unten kopiere
 
 ---
 
+## Stand K2-2026-11-16b (16. Nov.)
+- Gelände im Keller: Es wölbte sich durch die 1 Stud dicken Steinwände (Waschkeller bis 5 Studs hoch, kleiner
+  im Vorratskeller, Heizungsraum, Kriechkeller). Ursache: 4er-Raster des Geländes, nur 2 Studs Rand beim Ausheben.
+  Jetzt (Mansion.lua, buildTerrainAndTunnel): zusätzlich 5 Studs Rand – an Seiten unter dem Haus (Erdgeschossboden
+  darüber, geprüft per Streifen im 1-Stud-Raster) bis 2.4 unter den Hof, an Außenseiten nur unter 6.4.
+  WICHTIG: Gelände-Zellen nie zweimal teilweise ausheben – das leert sie ganz (gab Löcher draußen am Haus).
+- Loch im Hof südlich vom Haus (zwischen Ritualraum und Heizungsraum, gab es schon vorher) aufgefüllt.
+- Tunnel: 7 statt 5.4 breit ausgehoben, an den Knicken eine Luftkugel. Ein paar kleine Erdbuckel (bis 2.4) an den
+  Tunnelwänden bleiben – das ist eine Erdhöhle ohne Wände.
+- Messung (Studio): Keller 0 Stellen mit Gelände (1-Stud-Raster bis unter die Decke), draußen 0 tiefe Löcher
+  (vorher 2), flache Mulden 50 (vorher 66). EG/OG: kein Gelände in Räumen.
+- Keller schöner: Deckenbalken, kaputte Glühbirnen (ohne Licht), Spinnweben, Pfützen, zwei Fässer, Kartoffelsäcke,
+  Kohle + Schaufel + Druckanzeige am Kessel, Holzstapel, Eimer mit Bürste, Bodenabfluss. Fundorte/Kisten/Axt gleich.
+- Teile in Kapitel 2: 17.361 (+107 gegenüber 13k), Schattenlichter 23.
+
 ## Stand K2-2026-11-16a (16. Nov.)
 - Türen „kaputt, man kommt nicht durch“: Ursache war die feste Spielfigur (PlayerFigure) mit 3,4 Studs breitem
   Oberkörper bei 3,2–3,6 Studs breiten Türen. Jetzt stößt in Kapitel 2/3 nur der HumanoidRootPart (1,9) mit der

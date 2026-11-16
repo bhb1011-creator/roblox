@@ -1596,6 +1596,73 @@ local function buildFurniture()
 	for i = 0, 5 do
 		box("Box", Vector3.new(2, 1.5, 2), CFrame.new(L(72 + (i % 3) * 2.8, 22 + math.floor(i / 3) * 12, Kf + 0.75)) * CFrame.Angles(0, i, 0), Color3.fromRGB(110, 90, 64), M.Cardboard)
 	end
+	------------------------------------------------ Keller: mehr Atmosphäre (alles ohne Kollision,
+	-- außer Fässern, Säcken und dem Holzstapel; die Fundorte und Kisten der Flucht bleiben gleich)
+	local NC = { CanCollide = false }
+	local joist = Color3.fromRGB(58, 44, 32)
+	-- Deckenbalken unter dem Erdgeschoss (nicht über der Kellertreppe, nicht über den Rohren)
+	local beamBottom = CEIL.K - 0.7
+	local function joistAlongY(x, y0, y1)
+		box("CellarJoist", Vector3.new(0.5, 0.7, y1 - y0), CFrame.new(L(x, (y0 + y1) / 2, beamBottom + 0.35)), joist, M.Wood, NC)
+	end
+	local function joistAlongX(y, x0, x1)
+		box("CellarJoist", Vector3.new(x1 - x0, 0.7, 0.5), CFrame.new(L((x0 + x1) / 2, y, beamBottom + 0.35)), joist, M.Wood, NC)
+	end
+	for x = 36, 48, 4 do
+		joistAlongY(x, 20.5, 33.5) -- Vorratskeller (die Treppe kommt bei x > 50 herunter)
+	end
+	for x = 37, 53, 4 do
+		joistAlongY(x, 34.5, 41.5) -- Kellergang
+	end
+	for _, y in { 40, 44, 48, 52.5, 57.5 } do
+		joistAlongX(y, 14.5, 33.5) -- Waschkeller (zwischen den Wäscheleinen)
+	end
+	for _, y in { 27.5, 31.5, 35.5, 39.5 } do
+		joistAlongX(y, 54.75, 69.5) -- Heizungsraum (die Rohre laufen bei y = 20–24)
+	end
+	-- kaputte Glühbirnen an Kabeln (ohne Licht: im Keller sieht man nur mit der Kerze)
+	for _, p in { { 42, 27 }, { 44, 38 }, { 24, 46 }, { 62, 33 } } do
+		box("BulbCord", Vector3.new(0.05, 1.6, 0.05), CFrame.new(L(p[1], p[2], CEIL.K - 0.8)), Color3.fromRGB(30, 28, 26), M.Fabric, NC)
+		cyl("BulbSocket", 0.3, 0.3, at(p[1], p[2], CEIL.K - 1.9), Color3.fromRGB(60, 56, 50), M.Metal, NC)
+		box("Bulb", Vector3.new(0.4, 0.4, 0.4), CFrame.new(L(p[1], p[2], CEIL.K - 2.05)), Color3.fromRGB(170, 164, 140), M.Glass, { CanCollide = false, Shape = Enum.PartType.Ball })
+	end
+	-- Spinnweben in Deckenecken (flach, halb durchsichtig)
+	for _, c in { { 34.6, 20.6, 1, 1 }, { 53.6, 34.6, -1, 1 }, { 14.6, 59.4, 1, -1 }, { 33.4, 38.6, -1, 1 }, { 69.4, 41.4, -1, -1 }, { 54.9, 18.6, 1, 1 } } do
+		local corner = L(c[1], c[2], CEIL.K - 0.6)
+		local inward = L(c[1] + c[3], c[2] + c[4], CEIL.K - 0.6) - corner
+		box("Cobweb", Vector3.new(2.2, 1.6, 0.02), CFrame.lookAt(corner + inward * 0.55, corner + inward * 0.55 + inward) * CFrame.Angles(math.rad(35), 0, 0), Color3.fromRGB(196, 196, 190), M.SmoothPlastic, { CanCollide = false, Transparency = 0.6 })
+	end
+	-- Pfützen und feuchte Flecken auf dem Steinboden
+	for _, p in { { 44, 29, 1.6 }, { 39, 37, 2.2 }, { 22, 41, 1.8 }, { 30, 53, 2.4 }, { 64, 29, 1.5 }, { 75, 37, 2 } } do
+		cyl("Puddle", 0.03, p[3], at(p[1], p[2], Kf + 0.01), Color3.fromRGB(16, 16, 18), M.SmoothPlastic, { CanCollide = false, Reflectance = 0.06 })
+	end
+	-- Vorratskeller: zwei Fässer mit Reifen und Deckel, Kartoffelsäcke, Weinregal
+	for i, p in { { 47.6, 31.9 }, { 45.4, 32.2 } } do
+		cyl("Barrel", 2.6, 1.9, at(p[1], p[2], Kf), Color3.fromRGB(92, 66, 44), M.WoodPlanks)
+		for _, h in { 0.35, 2.05 } do
+			cyl("BarrelHoop", 0.18, 1.98, at(p[1], p[2], Kf + h), Color3.fromRGB(52, 50, 48), M.Metal, NC)
+		end
+		cyl("BarrelLid", 0.08, 1.7, at(p[1], p[2], Kf + 2.6), Color3.fromRGB(80, 58, 40), M.Wood, NC)
+		if i == 1 then
+			box("Ladle", Vector3.new(0.12, 0.08, 1.4), CFrame.new(L(p[1], p[2], Kf + 2.72)) * CFrame.Angles(0, 0.6, 0), Color3.fromRGB(120, 92, 60), M.Wood, NC)
+		end
+	end
+	for i = 0, 1 do
+		box("PotatoSack", Vector3.new(1.4, 1.6, 1.1), CFrame.new(L(37.0 + i * 1.6, 32.6, Kf + 0.8)) * CFrame.Angles(0, i * 0.5, math.rad(i == 1 and 8 or -4)), Color3.fromRGB(140, 120, 86), M.Fabric)
+		box("SackTie", Vector3.new(0.5, 0.25, 0.5), CFrame.new(L(37.0 + i * 1.6, 32.6, Kf + 1.75)), Color3.fromRGB(110, 92, 64), M.Fabric, NC)
+	end
+	-- Heizungsraum: Holzstapel neben dem Hackklotz (Kohle, Schaufel, Anzeige: Furniture.boiler)
+	for row = 0, 2 do
+		for k = 0, 4 - row do
+			local x = 58.6 + k * 0.95 + row * 0.47
+			cyl("Firewood", 2.2, 0.9, CFrame.new(L(x, 40.3, Kf + 0.45 + row * 0.8)) * CFrame.Angles(math.rad(90), 0, 0) * CFrame.new(0, -1.1, 0), Color3.fromRGB(104 - row * 6, 78, 52), M.Wood)
+		end
+	end
+	-- Waschkeller: Eimer mit Bürste, Abfluss im Boden
+	cyl("Bucket", 1.1, 1.0, at(22.4, 42.6, Kf), Color3.fromRGB(120, 122, 120), M.Metal)
+	box("ScrubBrush", Vector3.new(0.7, 0.25, 0.35), CFrame.new(L(22.6, 42.7, Kf + 1.25)) * CFrame.Angles(0, 0.4, 0), Color3.fromRGB(150, 120, 80), M.Wood, NC)
+	box("FloorDrain", Vector3.new(1.2, 0.04, 1.2), CFrame.new(L(24, 47, Kf + 0.02)), Color3.fromRGB(40, 40, 42), M.DiamondPlate, NC)
+
 	-- Ritualraum: Altar, Kreis aus Kerzen, Zeichen, Fotos früherer Gäste
 	Furniture.altar(b, at(47, -2.6, Kf, "S"))
 	local circle = {}
@@ -1649,7 +1716,54 @@ local function buildTerrainAndTunnel()
 		local c = L((minX + maxX) / 2, (minY + maxY) / 2, (bottom + top) / 2)
 		breathe()
 		terrain:FillBlock(origin * CFrame.new(c), Vector3.new(maxX - minX + 4, top - bottom, maxY - minY + 4), Enum.Material.Air)
+		-- 2 Studs Rand reichen nicht: Gelände hat ein 4er-Raster und wölbte sich durch die nur 1 Stud
+		-- dicken Steinwände in den Keller. Deshalb zusätzlich mit 5 Studs Rand ausheben:
+		-- • Seiten unter dem Haus (dort liegt der Erdgeschossboden darüber): bis 2.4 unter den Hof
+		-- • Seiten zur Außenwand: nur tief unten (ab 6.4 unter dem Hof), sonst entstehen draußen Löcher
+		local function under(x, y)
+			return roomAt("E", x, y) ~= nil -- (nur dort liegt ein Erdgeschossboden darüber)
+		end
+		-- liegt dieser ganze Streifen unter dem Haus? (1-Stud-Raster)
+		local function stripUnder(x0, x1, y0, y1)
+			for x = x0 + 0.5, x1 - 0.5, 1 do
+				for y = y0 + 0.5, y1 - 0.5, 1 do
+					if not under(x, y) then
+						return false
+					end
+				end
+			end
+			return true
+		end
+		-- (Außenseite: 0 – dort hat schon das erste Ausheben 2 Studs Rand. Zweimal über dieselben,
+		-- nur halb getroffenen Gelände-Zellen leert sie ganz: dann klafft draußen ein Loch.)
+		local mW, mE, mS, mN = 5, 5, 5, 5
+		for _ = 1, 2 do
+			if not stripUnder(minX - mW, minX, minY - mS, maxY + mN) then
+				mW = 0
+			end
+			if not stripUnder(maxX, maxX + mE, minY - mS, maxY + mN) then
+				mE = 0
+			end
+			if not stripUnder(minX - mW, maxX + mE, minY - mS, minY) then
+				mS = 0
+			end
+			if not stripUnder(minX - mW, maxX + mE, maxY, maxY + mN) then
+				mN = 0
+			end
+		end
+		local function dig(x0, x1, y0, y1, digTop)
+			local c2 = L((x0 + x1) / 2, (y0 + y1) / 2, (bottom + digTop) / 2)
+			breathe()
+			terrain:FillBlock(origin * CFrame.new(c2), Vector3.new(x1 - x0, digTop - bottom, y1 - y0), Enum.Material.Air)
+		end
+		dig(minX - mW, maxX + mE, minY - mS, maxY + mN, math.min(top, -2.4))
+		dig(minX - 5, maxX + 5, minY - 5, maxY + 5, math.min(top, -6.4))
 	end
+	-- Südlich vom Haus, zwischen Ritualraum und Heizungsraum, klaffte im Hof ein Loch (dort treffen
+	-- sich die Aushebungen). Die oberste Erdschicht wieder auffüllen – über der Decke des
+	-- Ritualraums und mit Abstand zu den Kellerwänden (sonst wölbt sie sich wieder hinein).
+	breathe()
+	terrain:FillBlock(origin * CFrame.new(L(60.25, 11.75, -1.3)), Vector3.new(11.5, 1.8, 7.5), Enum.Material.Ground)
 	-- Tunnel: windet sich vom Ritualraum hinaus in den Wald, mit Holzstützen. Hinter dem
 	-- Haus fällt das Gelände ab, deshalb geht der Tunnel mit nach unten (immer Erde darüber).
 	local function groundAt(point)
@@ -1667,7 +1781,8 @@ local function buildTerrainAndTunnel()
 		local mid = (a + c) / 2
 		local frame = CFrame.lookAt(mid, c)
 		breathe()
-		terrain:FillBlock(origin * frame * CFrame.new(0, 1.0, 0), Vector3.new(5.4, 9.6, length + 4), Enum.Material.Air)
+		-- (breit genug, damit sich die Erde nicht zwischen den Stützen in den Gang wölbt)
+		terrain:FillBlock(origin * frame * CFrame.new(0, 1.0, 0), Vector3.new(7, 9.6, length + 4), Enum.Material.Air)
 		box("TunnelFloor", Vector3.new(4.6, 0.4, length + 2), frame * CFrame.new(0, -0.2, 0), Color3.fromRGB(70, 56, 40), M.Ground)
 		local count = math.floor(length / 6)
 		for k = 0, count do
@@ -1677,6 +1792,12 @@ local function buildTerrainAndTunnel()
 			end
 			box("TunnelBeam", Vector3.new(4.6, 0.5, 0.5), frame * CFrame.new(0, 5.4, s), Color3.fromRGB(80, 60, 40), M.Wood)
 		end
+	end
+	-- an den Knicken wölbt sich die Erde sonst in den Gang: dort rund ausheben
+	for i = 2, #TUNNEL do
+		local joint = tunnelFloor(TUNNEL[i][1], TUNNEL[i][2])
+		breathe()
+		terrain:FillBall((origin * CFrame.new(joint + Vector3.new(0, 2.6, 0))).Position, 3.8, Enum.Material.Air)
 	end
 	-- am Ende: ein Schacht mit Leiter hinauf zu einer verschlossenen Luke im Waldboden
 	local last = tunnelFloor(TUNNEL[#TUNNEL][1], TUNNEL[#TUNNEL][2])
