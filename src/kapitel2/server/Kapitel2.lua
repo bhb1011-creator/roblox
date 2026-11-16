@@ -410,6 +410,52 @@ function Kapitel2.start()
 	-- Wo man nach dem Sterben wieder anfängt (Flucht: im Raum hinter Tür 1)
 	local checkpoint -- function(index) -> CFrame
 	local loseHeartOnDeath -- (wird unten bei den Herzen festgelegt)
+	-- Die feste Spielfigur (PlayerFigure) hat einen sehr breiten Oberkörper (3,4 Studs) – damit passt
+	-- man kaum durch die Türen (3,2–3,6 Studs). Deshalb stößt in Kapitel 2 und 3 nur der Körperkern
+	-- (HumanoidRootPart, 1,9 Studs) mit der Welt zusammen; Arme, Oberkörper, Kopf usw. nicht.
+	-- Aussehen und Laufen bleiben gleich (der Humanoid steht über den Körperkern auf dem Boden).
+	local PhysicsService = game:GetService("PhysicsService")
+	pcall(function()
+		PhysicsService:RegisterCollisionGroup("PlayerBody")
+	end)
+	pcall(function()
+		PhysicsService:CollisionGroupSetCollidable("PlayerBody", "Default", false)
+		PhysicsService:CollisionGroupSetCollidable("PlayerBody", "PlayerBody", false)
+	end)
+	local function slimPart(part)
+		if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
+			part.CollisionGroup = "PlayerBody"
+		end
+	end
+	local function slimCharacter(character)
+		for _, part in character:GetDescendants() do
+			slimPart(part)
+		end
+		local added = character.DescendantAdded:Connect(slimPart)
+		-- beim Sterben fallen die Körperteile auseinander: dann wieder normal, sonst fallen sie durch den Boden
+		local humanoid = character:FindFirstChildOfClass("Humanoid") or character:WaitForChild("Humanoid", 5)
+		if humanoid then
+			humanoid.Died:Connect(function()
+				added:Disconnect()
+				for _, part in character:GetDescendants() do
+					if part:IsA("BasePart") then
+						part.CollisionGroup = "Default"
+					end
+				end
+			end)
+		end
+	end
+	local function watchPlayer(player)
+		player.CharacterAdded:Connect(slimCharacter)
+		if player.Character then
+			task.spawn(slimCharacter, player.Character)
+		end
+	end
+	Players.PlayerAdded:Connect(watchPlayer)
+	for _, player in Players:GetPlayers() do
+		watchPlayer(player)
+	end
+
 	local function spawnPlayer(player)
 		local index = table.find(Players:GetPlayers(), player) or 1
 		local cframe

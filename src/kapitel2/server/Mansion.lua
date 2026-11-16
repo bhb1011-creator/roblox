@@ -383,13 +383,16 @@ local function buildWall(floorKey, a, b, kind, openings, topOverride)
 				local kc = A + dir * ((s0 + s1) / 2) + Vector3.new(0, (ya + knee) / 2, 0)
 				box("GlassWallBase", Vector3.new(len, knee - ya, t + 0.1), CFrame.lookAt(kc, kc + normal), COLORS.trim, M.Wood)
 			end
-			if yb > knee then
-				local gc = A + dir * ((s0 + s1) / 2) + Vector3.new(0, (knee + yb) / 2, 0)
-				box("GlassPane", Vector3.new(len, yb - knee, 0.12), CFrame.lookAt(gc, gc + normal), COLORS.glassHouse, M.Glass, { Transparency = 0.55 })
+			-- Glas erst ab dem Sockel bzw. ab der Unterkante dieses Stücks (über einer Tür beginnt
+			-- es erst über der Tür – sonst steckt eine Scheibe in der Türöffnung)
+			local paneFrom = math.max(knee, ya)
+			if yb > paneFrom then
+				local gc = A + dir * ((s0 + s1) / 2) + Vector3.new(0, (paneFrom + yb) / 2, 0)
+				box("GlassPane", Vector3.new(len, yb - paneFrom, 0.12), CFrame.lookAt(gc, gc + normal), COLORS.glassHouse, M.Glass, { Transparency = 0.55 })
 				local count = math.max(1, math.floor(len / 2.2))
 				for i = 1, count - 1 do
-					local mc = A + dir * (s0 + i * len / count) + Vector3.new(0, (knee + yb) / 2, 0)
-					box("Mullion", Vector3.new(0.16, yb - knee, t + 0.06), CFrame.lookAt(mc, mc + normal), COLORS.trim, M.Wood)
+					local mc = A + dir * (s0 + i * len / count) + Vector3.new(0, (paneFrom + yb) / 2, 0)
+					box("Mullion", Vector3.new(0.16, yb - paneFrom, t + 0.06), CFrame.lookAt(mc, mc + normal), COLORS.trim, M.Wood)
 				end
 				box("GlassRail", Vector3.new(len, 0.2, t + 0.06), frame * CFrame.new(0, (yb - 0.1) - (ya + yb) / 2, 0), COLORS.trim, M.Wood)
 			end

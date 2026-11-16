@@ -7,6 +7,15 @@ Diese Datei ist für einen **neuen Chat** gedacht: erst den Prompt unten kopiere
 
 ---
 
+## Stand K2-2026-11-16a (16. Nov.)
+- Türen „kaputt, man kommt nicht durch“: Ursache war die feste Spielfigur (PlayerFigure) mit 3,4 Studs breitem
+  Oberkörper bei 3,2–3,6 Studs breiten Türen. Jetzt stößt in Kapitel 2/3 nur der HumanoidRootPart (1,9) mit der
+  Welt zusammen; alle anderen Körperteile liegen in der Kollisionsgruppe „PlayerBody“ (kollidiert nicht mit
+  Default). Beim Sterben gehen sie zurück auf Default (sonst fallen sie durch den Boden). Code: Kapitel2.lua.
+- Glaswand: Über einer Glastür begann die Scheibe auf Kniehöhe → Scheibe steckte in der Wintergarten-Tür. Behoben.
+- Getestet: Figur läuft schräg und seitlich versetzt durch alle 25 Türen (beide Richtungen), keine Fehler.
+- Kapitel 1 unverändert (dort gilt die Kollisionsgruppe nicht).
+
 ## Stand K2-2026-11-13l (14. Nov.)
 - Türen: Die E-Abfrage hing am Türblatt (schwenkt beim Öffnen 3 Studs in den Raum). Roblox zeigt pro Taste nur
   die nächste Abfrage → man erwischte oft die Nachbartür. Jetzt sitzt sie an einem unsichtbaren Teil
