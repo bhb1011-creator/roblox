@@ -7,6 +7,22 @@ Diese Datei ist für einen **neuen Chat** gedacht: erst den Prompt unten kopiere
 
 ---
 
+## Stand K2-2026-11-17a (17. Nov.)
+- Haustür: Nach dem Verstecken knallte nur das Geräusch, die Tür blieb offen (Axt-Runde: man konnte raus).
+  Jetzt schwingt sie zu (`Night.lua`, Ende von hideRound) und wird zu Beginn der Axt-Runde sicherheitshalber geschlossen.
+- Flucht durch den Wald (Kapitel 3) leichter und klarer:
+  - Lenkhilfe (`steerAlongPath` in `client/Kapitel3.lua`): Solange man läuft, dreht sich der Blick sanft in
+    Wegrichtung (16 Studs voraus). Nur mit W kommt man den ganzen Weg entlang, ohne an den unsichtbaren Wänden
+    zu schrammen. Getestet: nur W gedrückt, nicht gesprungen/geduckt/ausgewichen, trotzdem bis zur Brücke.
+  - Wegmarker: Holzpflöcke mit hellem Rückstrahler (Neon), abwechselnd links/rechts alle 20 Studs (`TrailMarkers`).
+    Optik NICHT selbst gesehen (Screenshots im Play-Modus bleiben dunkel).
+  - Werte (`Kapitel3Data.lua`): Sarp 9.5, Biest 10.5, MAX_GAP 24, Start 3 s Schonzeit (12 Studs Abstand),
+    eine zweite Chance (er reißt einen, fällt 16 Studs zurück), Stolpern 0.5 s mit Tempo 8, Schlamm 13.5,
+    Bach 12, Tasten-Hinweis 22 Studs vorher, Ausweichen 1.8 s.
+- Neuer Teststart „Kapitel 3 – Wald“ (`wald`): gleich an der Luke, ohne Ritual.
+- Messung: Die Spielfigur rennt mit echter Tastatur sauber (17 von 17). Ein scheinbares Ruckeln kam nur vom
+  Testaufbau (ControlModule ausgeschaltet + Humanoid:Move), nicht vom Spiel.
+
 ## Stand K2-2026-11-16c (17. Nov.)
 - Neuer Ort **„Spiel“** (Place-ID 120897114277259) im selben Universe angelegt und einmal mit dem ganzen Spiel
   veröffentlicht. `Config.GAME_PLACE_ID` zeigt darauf, `Config.LOBBY_PLACE_ID` = 129277862104777 (Beta-Gästehaus).

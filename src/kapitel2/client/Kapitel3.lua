@@ -2775,7 +2775,7 @@ local function updateObstacles(C, now, playerS, root)
 	if humanoid and C.chasing and not C.caught then
 		local speed = Data.RUN_SPEED
 		if C.stopUntil and now < C.stopUntil then
-			speed = 3
+			speed = Data.STUMBLE_SPEED
 		elseif C.attack and not C.attack.result then
 			speed = 7
 		elseif zoneSpeed then
@@ -2863,6 +2863,7 @@ function handlers.run(message)
 		form = "sarp",
 		s = -3,
 		started = os.clock(),
+		chances = Data.SECOND_CHANCES, -- so oft darf er einen packen, ohne dass man stirbt
 	}
 	chase = C
 	C.pressed = {}
@@ -3298,6 +3299,26 @@ local function caughtInForest(C)
 	end)
 end
 
+-- Lenkhilfe: solange man läuft, dreht sich der Blick sanft dorthin, wo der Weg weitergeht.
+-- (W = immer den Weg entlang; mit der Maus kann man trotzdem schauen, der Blick kehrt langsam zurück)
+local function steerAlongPath(C, deltaTime, playerS, root)
+	local humanoid = ownHumanoid()
+	if C.attack or not humanoid or humanoid.MoveDirection.Magnitude < 0.1 or camera.CameraType ~= Enum.CameraType.Custom then
+		return
+	end
+	local ahead = Data.pointAt(C.points, playerS + Data.STEER_AHEAD)
+	local want = flat(ahead - root.Position)
+	local look = flat(camera.CFrame.LookVector)
+	if want.Magnitude < 1 or look.Magnitude < 0.1 then
+		return
+	end
+	local current = math.atan2(-look.X, -look.Z)
+	local wanted = math.atan2(-want.X, -want.Z)
+	local difference = (wanted - current + math.pi) % (2 * math.pi) - math.pi
+	local turn = difference * math.min(deltaTime * Data.STEER_RATE, 1)
+	camera.CFrame = CFrame.new(camera.CFrame.Position) * CFrame.Angles(0, turn, 0) * camera.CFrame.Rotation
+end
+
 -- Jedes Bild: die Verfolgung im Wald
 local nextStep, nextBeat = 0, 0
 local function updateChase(now, deltaTime)
@@ -3344,6 +3365,7 @@ local function updateChase(now, deltaTime)
 	local playerS = Data.progress(C.points, root.Position)
 	if C.chasing and not C.caught then
 		updateObstacles(C, now, playerS, root)
+		steerAlongPath(C, deltaTime, playerS, root)
 	end
 	-- Angriff aus dem Gebüsch: erst lauert es im Busch, dann springt es (vorbei oder trifft)
 	local A = C.attack
@@ -3385,6 +3407,10 @@ local function updateChase(now, deltaTime)
 		if playerS - target > Data.MAX_GAP then
 			target = math.min(playerS - Data.MAX_GAP, C.s + 40 * deltaTime)
 		end
+		-- am Anfang: Zeit zum Loslaufen (er kommt erst nach START_GRACE Sekunden näher)
+		if C.form ~= "beast" and now - (C.chaseStart or now) < Data.START_GRACE then
+			target = math.min(target, playerS - Data.START_GAP)
+		end
 	end
 	-- der umgestürzte Baum hält es kurz auf (es klettert drüber)
 	local block = C.treeBlock
@@ -3398,7 +3424,20 @@ local function updateChase(now, deltaTime)
 	local before = C.s
 	C.s = math.max(C.s, target)
 	if C.chasing and not C.caught and playerS - C.s <= Data.CATCH_GAP then
-		caughtInForest(C)
+		if (C.chances or 0) > 0 then
+			-- zweite Chance: er reißt einen, man taumelt kurz und läuft weiter
+			C.chances -= 1
+			C.s = playerS - Data.CATCH_PUSHBACK
+			C.stopUntil = now + 0.35
+			play("clawHit", { Volume = 2 })
+			play("roar", { Volume = 2 })
+			redFlash(0.6, 0.8)
+			showScratches()
+			shakeCustom(C, 0.07, 0.7)
+			showBigHint("He got you – don't stop!", 2.2, Color3.fromRGB(230, 70, 60))
+		else
+			caughtInForest(C)
+		end
 	end
 	local moved = math.max(C.s - before, 0)
 	local position, direction = Data.pointAt(C.points, math.max(C.s, 0))

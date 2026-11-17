@@ -34,10 +34,21 @@ Kapitel3Data.BRIDGE_SCENE = 4.6
 -- und bleiben höchstens MAX_GAP Studs zurück (weit genug, dass er nicht direkt hinter
 -- einem ist, nah genug, dass man ihn beim Umdrehen immer sieht). Wer stehen bleibt oder
 -- mehrmals stolpert, wird eingeholt; wer durchläuft, ist sicher.
-Kapitel3Data.SARP_SPEED = 10.5
-Kapitel3Data.BEAST_SPEED = 11.5
-Kapitel3Data.MAX_GAP = 22
+Kapitel3Data.SARP_SPEED = 9.5
+Kapitel3Data.BEAST_SPEED = 10.5
+Kapitel3Data.MAX_GAP = 24
 Kapitel3Data.CATCH_GAP = 2.4
+-- Start: so viele Sekunden kommt er nicht näher als START_GAP (Zeit zum Loslaufen)
+Kapitel3Data.START_GRACE = 3
+Kapitel3Data.START_GAP = 12
+-- Zweite Chance: so oft darf er einen packen, ohne dass man stirbt (er reißt einen
+-- nur, man taumelt weiter und er fällt CATCH_PUSHBACK Studs zurück)
+Kapitel3Data.SECOND_CHANCES = 1
+Kapitel3Data.CATCH_PUSHBACK = 16
+-- Lenkhilfe: solange man läuft, dreht sich der Blick sanft in Wegrichtung
+-- (STEER_AHEAD Studs voraus, STEER_RATE = wie schnell; mit der Maus kann man trotzdem schauen)
+Kapitel3Data.STEER_AHEAD = 16
+Kapitel3Data.STEER_RATE = 2.4
 Kapitel3Data.RUN_MAX_TIME = 120 -- Sicherheitsnetz (Sekunden)
 
 -- Was auf dem Weg passiert (s = Strecke ab der Luke in Studs; die Verwandlung ist bei
@@ -58,12 +69,13 @@ Kapitel3Data.OBSTACLES = {
 	{ kind = "side", s = 548, beast = true },
 	{ kind = "jump", s = 582 },
 }
-Kapitel3Data.PROMPT_DISTANCE = 17 -- so weit vorher erscheint "LEERTASTE" / "C"
-Kapitel3Data.STUMBLE_TIME = 0.75 -- verpasst: so lange kommt man kaum vorwärts
-Kapitel3Data.MUD_SPEED = 11.5
-Kapitel3Data.CREEK_SPEED = 10
+Kapitel3Data.PROMPT_DISTANCE = 22 -- so weit vorher erscheint "LEERTASTE" / "C"
+Kapitel3Data.STUMBLE_TIME = 0.5 -- verpasst: so lange ist man langsamer (STUMBLE_SPEED)
+Kapitel3Data.STUMBLE_SPEED = 8
+Kapitel3Data.MUD_SPEED = 13.5
+Kapitel3Data.CREEK_SPEED = 12
 Kapitel3Data.SIDE_SILENCE = 30 -- so viele Studs vor dem Angriff wird es still
-Kapitel3Data.SIDE_WINDOW = 1.5 -- so lange hat man Zeit zum Ausweichen
+Kapitel3Data.SIDE_WINDOW = 1.8 -- so lange hat man Zeit zum Ausweichen
 Kapitel3Data.TREE_BLOCK = 1.5 -- so lange hält der umgestürzte Baum das Biest auf
 
 -- Das Ende in Sarps Hütte

@@ -1225,6 +1225,7 @@ function Kapitel2.start()
 		schluessel = "im Vorratskeller vor dem Regal, mit dem Schlüssel",
 		kapitel3 = "gleich in Kapitel 3 (Ritualraum)",
 		huette = "gleich am Ende von Kapitel 3 (hinter der Brücke, Weg zu Sarps Hütte)",
+		wald = "gleich in Kapitel 3 an der Luke (Flucht durch den Wald)",
 	}
 	local testStart = TEST_STARTS[Config.TEST_START_KAPITEL2] ~= nil
 	-- (tuer1, schluessel und kapitel3 beginnen alle mit der Flucht; Escape.lua springt weiter)

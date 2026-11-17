@@ -8,6 +8,7 @@ return {
 	{ id = "tuer1", title = "Kapitel 2 – Die Flucht", info = "Großmutters Zimmer: Chemikalien und Pulver suchen" },
 	{ id = "schluessel", title = "Kapitel 2 – Schlüssel", info = "Vorratskeller vor dem Regal, Schlüssel in der Hand" },
 	{ id = "kapitel3", title = "Kapitel 3 – Ritual", info = "Ritualraum, Quick-Time-Events, Flucht durch den Wald" },
+	{ id = "wald", title = "Kapitel 3 – Wald", info = "Flucht durch den Wald (an der Luke)" },
 	{ id = "huette", title = "Kapitel 3 – Sarps Hütte", info = "Hinter der Brücke: Hütte, Telefon, Ende" },
 	{ id = "figuren", title = "Figuren ansehen", info = "Familie Wagner hell beleuchtet, Mrs. Wagner und Lucy laufen" },
 	{ id = "charaktere", title = "Charakterliste", info = "Alle Figuren mit Namen: Familie, Spieler, Sarp, Monster, Biest" },

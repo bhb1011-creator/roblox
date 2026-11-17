@@ -973,7 +973,7 @@ function Escape.run(kit)
 	------------------------------------------------------------------ Teststart: mit dem Schlüssel vor dem Regal
 	-- (Config.TEST_START_KAPITEL2 = "schluessel"; "kapitel3" springt gleich in den Ritualraum)
 	local startAt = ctx.startAt
-	if startAt == "schluessel" or startAt == "kapitel3" or startAt == "huette" then
+	if startAt == "schluessel" or startAt == "kapitel3" or startAt == "huette" or startAt == "wald" then
 		if kit.mr then
 			Wagners.place(kit.mr, ctx.hiddenSpot, ctx.facing)
 		end
@@ -991,7 +991,7 @@ function Escape.run(kit)
 		task.wait(0.8)
 		ctx.setMovement(true)
 		event:FireAllClients({ type = "candleLost" })
-		if startAt == "kapitel3" or startAt == "huette" then
+		if startAt == "kapitel3" or startAt == "huette" or startAt == "wald" then
 			phase = "done"
 			Escape.moveShelf(true)
 			Escape.swingDoor(true)

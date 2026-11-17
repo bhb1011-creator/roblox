@@ -612,6 +612,35 @@ local function buildForest()
 	end
 	bridge = { parts = parts, floor = floor }
 
+	-- Wegmarker: niedrige Holzpflöcke mit hellem Rückstrahler, abwechselnd links und rechts.
+	-- Im Dunkeln sieht man so von weitem, wo der Weg weitergeht (keine Lichter, kostet kaum Leistung).
+	local markers = Instance.new("Model")
+	markers.Name = "TrailMarkers"
+	markers.Parent = folder
+	local side = 1
+	for s = 14, chaseTotal - 4, 20 do
+		if s < bridgeStart - 8 or s > bridgeStart + bridgeLength + 8 then
+			local center, direction = Data.pointAt(points, s)
+			local along = Vector3.new(direction.X, 0, direction.Z).Unit
+			local right = Vector3.new(-along.Z, 0, along.X)
+			local foot = center + right * side * 6.4
+			-- auf den echten Boden stellen (das Gelände liegt etwas höher als der Wegpunkt)
+			local groundParams = RaycastParams.new()
+			groundParams.FilterType = Enum.RaycastFilterType.Include
+			groundParams.FilterDescendantsInstances = { terrain }
+			local ground = workspace:Raycast(foot + Vector3.new(0, 20, 0), Vector3.new(0, -40, 0), groundParams)
+			if ground then
+				foot = Vector3.new(foot.X, ground.Position.Y - 0.3, foot.Z)
+			end
+			-- der Rückstrahler schaut schräg zum Weg zurück (zum Läufer)
+			local frame = CFrame.lookAt(foot, foot - along * 2 - right * side)
+			block(markers, "MarkerPost", Vector3.new(0.45, 2.4, 0.45), frame * CFrame.new(0, 0.9, 0), Color3.fromRGB(78, 60, 42), M.Wood, { CanCollide = false, CanQuery = false })
+			block(markers, "MarkerCap", Vector3.new(0.5, 0.18, 0.5), frame * CFrame.new(0, 2.15, 0), Color3.fromRGB(58, 44, 32), M.Wood, { CanCollide = false, CanQuery = false })
+			block(markers, "MarkerReflector", Vector3.new(0.38, 0.5, 0.08), frame * CFrame.new(0, 1.7, -0.25), Color3.fromRGB(150, 168, 186), M.Neon, { CanCollide = false, CanQuery = false })
+			side = -side
+		end
+	end
+
 	-- Die Luke am Anfang: offen, daneben der Deckel
 	local hatchAt = points[1] - forward * 1.5
 	local hatchFrame = CFrame.lookAt(hatchAt, hatchAt + forward)
@@ -691,7 +720,8 @@ function Kapitel3.run(kit)
 	ctx.setMovement(false)
 	-- Teststart "huette": gleich hinter der Brücke (Weg zu Sarps Hütte, Telefon, Ende)
 	local skipToHut = ctx.startAt == "huette"
-	if not skipToHut then
+	local skipToForest = ctx.startAt == "wald" -- Teststart: gleich an der Luke (Flucht durch den Wald)
+	if not skipToHut and not skipToForest then
 		event:FireAllClients({ type = "k3", step = "card", title = Kapitel3.TITLE })
 	end
 	print("Kapitel 3: " .. #Players:GetPlayers() .. " Spieler – die Tür ist offen.")
@@ -1122,7 +1152,7 @@ function Kapitel3.run(kit)
 	end
 
 	local attempt = 0
-	while true do
+	while not skipToForest do
 		attempt += 1
 		local ok, survived = pcall(ritual, attempt)
 		if not ok then

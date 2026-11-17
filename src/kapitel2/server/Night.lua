@@ -71,7 +71,7 @@ function Night.run(ctx)
 	-- Teststart direkt nach dem Verstecken (Config.TEST_START_KAPITEL2 = "nachVerstecken")
 	-- oder gleich im Raum hinter Tür 1 (= "tuer1", dann beginnt sofort die Flucht)
 	-- ("schluessel" und "kapitel3" starten auch hier; Escape.lua springt dann weiter)
-	local atDoorOne = ctx.startAt == "tuer1" or ctx.startAt == "schluessel" or ctx.startAt == "kapitel3" or ctx.startAt == "huette"
+	local atDoorOne = ctx.startAt == "tuer1" or ctx.startAt == "schluessel" or ctx.startAt == "kapitel3" or ctx.startAt == "huette" or ctx.startAt == "wald"
 	local afterHide = ctx.startAt == "afterHide" or atDoorOne
 
 	-- Stuhl am Esstisch: Mitte der Sitzfläche, Blick zum Tisch
@@ -725,6 +725,8 @@ function Night.run(ctx)
 		if sarp then
 			Wagners.place(sarp, away, ctx.facing)
 		end
+		-- er geht und knallt die Haustür hinter sich zu (sonst stünde sie in der Axt-Runde offen)
+		ctx.frontDoor.swing(0, 0.25, true)
 		sfx("doorSlam", ctx.frontDoor.position, { volume = 1.2, maxDistance = 300 })
 		hidePhase = false
 		setPrompts(false)
@@ -826,6 +828,7 @@ function Night.run(ctx)
 
 	------------------------------------------------------------------ 6. Axt holen, Tür 1 aufbrechen
 	-- (Sarp läuft dabei durchs Erdgeschoss; jetzt ist er nicht mehr tödlich, nur unheimlich)
+	ctx.frontDoor.set(0) -- Haustür zu: raus geht es nicht (Sicherheitsnetz, falls sie noch offen steht)
 	local doneWithNight = false
 	local enterEscape -- Flucht (Escape.lua), wird ganz unten festgelegt
 	local patrolDone, familyDone = false, false
