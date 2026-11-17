@@ -15,6 +15,10 @@ Diese Datei ist für einen **neuen Chat** gedacht: erst den Prompt unten kopiere
   Code: `src/lobby/server/PlayMenu.lua`, `src/lobby/client/PlayMenu.client.lua`. Die Autos gibt es weiter.
 - Getestet in Studio (lobby.project.json): Menü und Karte sehen richtig aus, „Play alone“ zeigt in Studio den Hinweis
   „only works in the real Roblox game“. NICHT getestet: echter Teleport und Einladung mit zwei echten Spielern.
+- Hochgeladen (17. Nov., mit OK des Users, per Studio „Publish As → Overwrite“): Lobby → „Beta-Gästehaus“
+  (Startort, ersetzt das versehentliche ganze Spiel), ganzes Spiel → „Spiel“. Beide Stand K2-2026-11-17b.
+  Zielgruppe unverändert: „Only available to you and your collaborators“ (Playtest). Freunde: File → Manage
+  Audience → „Invite early testers“.
 
 ## Stand K2-2026-11-17a (17. Nov.)
 - Haustür: Nach dem Verstecken knallte nur das Geräusch, die Tür blieb offen (Axt-Runde: man konnte raus).
