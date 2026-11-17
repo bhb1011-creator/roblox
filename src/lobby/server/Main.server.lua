@@ -13,6 +13,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local CarQueue = require(script.Parent.CarQueue)
 local LobbyBuilder = require(script.Parent.LobbyBuilder)
 local PlayerData = require(script.Parent.PlayerData)
+local PlayMenu = require(script.Parent.PlayMenu)
 local Purchases = require(script.Parent.Purchases)
 local ShopService = require(script.Parent.ShopService)
 local ShopHut = require(script.Parent.ShopHut)
@@ -33,6 +34,7 @@ for _, player in Players:GetPlayers() do
 end
 ShopService.init()
 Purchases.init(notify)
+PlayMenu.init(remotes, notify)
 TestMenu.init() -- nur in Studio
 
 local lobby = LobbyBuilder.build()

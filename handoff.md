@@ -7,6 +7,15 @@ Diese Datei ist für einen **neuen Chat** gedacht: erst den Prompt unten kopiere
 
 ---
 
+## Stand K2-2026-11-17b (17. Nov.)
+- Lobby: Start-Menü „Play“ (Holzschild links über dem Shop, Taste P). Zettel mit „Play alone“ (sofort allein los)
+  und Liste der Spieler in dieser Lobby mit „Invite“. Der Eingeladene bekommt oben eine Karte („Play together“ /
+  „No thanks“, 30 s). Bei Ja fahren beide zusammen (TeleportData mode = "Duo", eigener reservierter Server).
+  Ist niemand sonst da: Knopf „Invite a friend to this lobby“ (SocialService:PromptGameInvite).
+  Code: `src/lobby/server/PlayMenu.lua`, `src/lobby/client/PlayMenu.client.lua`. Die Autos gibt es weiter.
+- Getestet in Studio (lobby.project.json): Menü und Karte sehen richtig aus, „Play alone“ zeigt in Studio den Hinweis
+  „only works in the real Roblox game“. NICHT getestet: echter Teleport und Einladung mit zwei echten Spielern.
+
 ## Stand K2-2026-11-17a (17. Nov.)
 - Haustür: Nach dem Verstecken knallte nur das Geräusch, die Tür blieb offen (Axt-Runde: man konnte raus).
   Jetzt schwingt sie zu (`Night.lua`, Ende von hideRound) und wird zu Beginn der Axt-Runde sicherheitshalber geschlossen.

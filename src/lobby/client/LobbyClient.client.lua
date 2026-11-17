@@ -239,5 +239,5 @@ RunService.RenderStepped:Connect(function()
 end)
 
 task.delay(2, function()
-	showToast("Welcome. Get into a car when you are ready…", 5)
+	showToast("Welcome. Press Play when you are ready – or get into a car…", 6)
 end)
