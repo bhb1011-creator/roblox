@@ -4,8 +4,12 @@ local Config = {}
 Config.GAME_TITLE = "Die letzte Nacht" -- Platzhalter-Titel, später ersetzen
 Config.GAME_SUBTITLE = "Based on true events"
 
--- PlaceId des Horror-Levels. Solange 0, fahren die Autos nur eine Proberunde.
-Config.GAME_PLACE_ID = 0
+-- PlaceId des Horror-Levels (Ort "Spiel" im selben Roblox-Spiel). Solange 0, fahren die Autos
+-- nur eine Proberunde. Teleport geht nur im echten Roblox, nicht in Studio.
+Config.GAME_PLACE_ID = 120897114277259
+-- PlaceId der Lobby (Startort "Beta-Gästehaus"): dorthin geht es nach dem Ende und mit
+-- "Back to lobby" beim Game Over.
+Config.LOBBY_PLACE_ID = 129277862104777
 
 -- Feste Uhrzeit in der Lobby (17.7 = Sonnenuntergang). Die Zeit läuft nicht weiter.
 Config.LOBBY_CLOCK_TIME = 17.7
@@ -206,7 +210,7 @@ Config.TEST_START_KAPITEL2 = ""
 Config.TEST_AUTOSTART = ""
 -- Versionsnummer: steht beim Laden auf dem Bildschirm und im Output. So sieht man sofort,
 -- ob in Studio wirklich der neueste Stand läuft (nach "git pull").
-Config.BUILD = "K2-2026-11-16b"
+Config.BUILD = "K2-2026-11-16c"
 Config.VOICES = {
 	-- Sarp: etwas tiefer, langsam, ruhig – mit Bass, weniger Höhen und dunklem Hall
 	sarp = {

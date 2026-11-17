@@ -7,6 +7,15 @@ Diese Datei ist für einen **neuen Chat** gedacht: erst den Prompt unten kopiere
 
 ---
 
+## Stand K2-2026-11-16c (17. Nov.)
+- Neuer Ort **„Spiel“** (Place-ID 120897114277259) im selben Universe angelegt und einmal mit dem ganzen Spiel
+  veröffentlicht. `Config.GAME_PLACE_ID` zeigt darauf, `Config.LOBBY_PLACE_ID` = 129277862104777 (Beta-Gästehaus).
+- Rückweg zur Lobby: `src/kapitel2/server/BackToLobby.lua`. Nach dem Ende von Kapitel 3 (8 s) automatisch, beim
+  Game Over Knopf „Back to lobby“ (RemoteEvent `BackToLobby`). Geht nur live, nicht im Studio.
+- **Gestoppt auf Wunsch des Users (17. Nov.):** Lobby noch NICHT nach Beta-Gästehaus übertragen, nichts für Freunde
+  freigegeben. Erst Bugs fixen. Achtung: Beta-Gästehaus enthält gerade aus Versehen das ganze Spiel (Version 13),
+  wird später durch die Lobby ersetzt.
+
 ## Stand K2-2026-11-16b (16. Nov.)
 - Gelände im Keller: Es wölbte sich durch die 1 Stud dicken Steinwände (Waschkeller bis 5 Studs hoch, kleiner
   im Vorratskeller, Heizungsraum, Kriechkeller). Ursache: 4er-Raster des Geländes, nur 2 Studs Rand beim Ausheben.

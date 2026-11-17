@@ -98,6 +98,10 @@ function Kapitel2.start()
 	local restartEvent = Instance.new("RemoteEvent")
 	restartEvent.Name = "Restart"
 	restartEvent.Parent = remotes
+	-- Game Over: "Back to lobby" (nur im echten Roblox, siehe BackToLobby.lua)
+	local lobbyEvent = Instance.new("RemoteEvent")
+	lobbyEvent.Name = "BackToLobby"
+	lobbyEvent.Parent = remotes
 	remotes.Parent = ReplicatedStorage
 
 	House.mansion = true -- das große Herrenhaus statt des kleinen Holzhauses
@@ -542,6 +546,14 @@ function Kapitel2.start()
 	loseHeartOnDeath = function(player)
 		loseHeart(player, "gestorben")
 	end
+	lobbyEvent.OnServerEvent:Connect(function(player)
+		if not player:GetAttribute("GameOver") then
+			return
+		end
+		if not require(script.Parent.BackToLobby).send({ player }) then
+			event:FireClient(player, { type = "hint", text = "Back to lobby only works in the real game.", seconds = 3 })
+		end
+	end)
 	restartEvent.OnServerEvent:Connect(function(player)
 		if not player:GetAttribute("GameOver") then
 			return

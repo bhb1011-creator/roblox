@@ -929,6 +929,9 @@ function Kapitel3.run(kit)
 		say("player", Script.KAPITEL3.comingOut)
 		waitUntil(Data.END_TITLE + 2)
 		print("Kapitel 3: ENDE – die Polizei hat alle abgeholt.")
+		-- nach dem Abspann zurück in die Lobby (nur im echten Roblox)
+		task.wait(8)
+		require(script.Parent.BackToLobby).send(Players:GetPlayers())
 	end
 
 	if skipToHut then

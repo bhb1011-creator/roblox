@@ -423,6 +423,21 @@ function Kapitel2.run()
 		Parent = gameOverFrame,
 	})
 	create("UICorner", { CornerRadius = UDim.new(0, 8), Parent = retryButton })
+	local lobbyButton = create("TextButton", {
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.75),
+		Size = UDim2.fromOffset(260, 52),
+		BackgroundColor3 = Color3.fromRGB(34, 30, 28),
+		Text = "Back to lobby",
+		Font = Enum.Font.SpecialElite,
+		TextSize = 20,
+		TextColor3 = Color3.fromRGB(210, 196, 180),
+		AutoLocalize = false,
+		Visible = false,
+		ZIndex = 21,
+		Parent = gameOverFrame,
+	})
+	create("UICorner", { CornerRadius = UDim.new(0, 8), Parent = lobbyButton })
 	local function setFade(transparency, duration)
 		TweenService:Create(fade, TweenInfo.new(duration), { BackgroundTransparency = transparency }):Play()
 	end
@@ -899,8 +914,15 @@ function Kapitel2.run()
 	local restartEvent = remotes:WaitForChild("Restart", 10)
 	retryButton.Activated:Connect(function()
 		retryButton.Visible = false
+		lobbyButton.Visible = false
 		if restartEvent then
 			restartEvent:FireServer()
+		end
+	end)
+	local lobbyEvent = remotes:WaitForChild("BackToLobby", 10)
+	lobbyButton.Activated:Connect(function()
+		if lobbyEvent then
+			lobbyEvent:FireServer()
 		end
 	end)
 	-- Quick-Time-Event: so oft tippen wie verlangt, bevor die Zeit um ist
@@ -1142,6 +1164,7 @@ function Kapitel2.run()
 			end)
 			task.delay(3.5, function()
 				retryButton.Visible = true
+				lobbyButton.Visible = true
 				UserInputService.MouseBehavior = Enum.MouseBehavior.Default
 				UserInputService.MouseIconEnabled = true
 			end)
@@ -1184,6 +1207,7 @@ function Kapitel2.run()
 		elseif kind == "retry" and gameOverFrame.Visible then
 			gameOverFrame.Visible = false
 			retryButton.Visible = false
+			lobbyButton.Visible = false
 			gameOverTitle.TextTransparency = 1
 			gameOverText.TextTransparency = 1
 			camera.CameraType = Enum.CameraType.Custom
