@@ -445,45 +445,6 @@ function Kapitel2.run()
 	Speech.init(gui)
 	Choices.init(gui)
 
-	------------------------------------------------------------------ Handy als Taschenlampe
-	local flashlight = create("Part", {
-		Name = "PhoneLight",
-		Size = Vector3.new(0.2, 0.2, 0.2),
-		Transparency = 1,
-		Anchored = true,
-		CanCollide = false,
-		CanQuery = false,
-		CastShadow = false,
-		CFrame = camera.CFrame,
-		Parent = workspace,
-	})
-	create("SpotLight", {
-		Face = Enum.NormalId.Front,
-		Range = 40,
-		Angle = 55,
-		Brightness = 2.6,
-		Color = Color3.fromRGB(225, 235, 255),
-		Shadows = true,
-		Parent = flashlight,
-	})
-	create("PointLight", { Range = 6, Brightness = 0.3, Color = Color3.fromRGB(225, 235, 255), Parent = flashlight })
-	-- Die anderen Spieler leuchten auch mit dem Handy (Licht am Kopf)
-	task.spawn(function()
-		while gui.Parent do
-			for _, other in Players:GetPlayers() do
-				local head = other ~= player and other.Character and other.Character:FindFirstChild("Head")
-				if head and not head:FindFirstChild("PhoneLight") then
-					create("SpotLight", { Name = "PhoneLight", Face = Enum.NormalId.Front, Range = 34, Angle = 55, Brightness = 2, Color = Color3.fromRGB(225, 235, 255), Shadows = true, Parent = head })
-				end
-				local phone = head and head:FindFirstChild("PhoneLight")
-				if phone then
-					phone.Enabled = not other:GetAttribute("LightOff") and other:GetAttribute("CandleMode") == nil
-				end
-			end
-			task.wait(1)
-		end
-	end)
-
 	------------------------------------------------------------------ Eigene Kerze
 	-- Der Server hängt die Kerze an die Hand (für die anderen). Man selbst sieht sie
 	-- unten links im Bild, mit eigenem Licht; die Kerze an der Hand bleibt unsichtbar.
@@ -1309,13 +1270,6 @@ function Kapitel2.run()
 
 	RunService.RenderStepped:Connect(function(deltaTime)
 		local now = os.clock()
-		-- Handylicht folgt dem Blick
-		local target = camera.CFrame * CFrame.new(0.35, -0.45, -0.3)
-		flashlight.CFrame = flashlight.CFrame:Lerp(target, math.min(deltaTime * 10, 1))
-		local phoneAllowed = player:GetAttribute("CandleMode") == nil -- ab der Flucht: keine Taschenlampe
-		for _, light in flashlight:GetChildren() do
-			light.Enabled = not lightOff and phoneAllowed
-		end
 
 		-- Kerzen flackern (und gehen bei "candleOut" fast aus)
 		if now - lastScan > 2 then
