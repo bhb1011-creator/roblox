@@ -831,3 +831,5 @@ Was im neuen Chat ohne den Mock noch geht:
 ## 25c (25.11.2026): schneller Start aus der Lobby
 
 Countdown 3 s statt 10, Schwarzblende nach 3 s, Wechsel ins Spiel direkt danach (CarQueue.depart), das Auto faehrt im Hintergrund weiter. Achtung: Studio "Beta-Gaestehaus" mit `rojo serve` enthaelt das Spiel, nicht die Lobby: vor dem Hochladen immer das richtige Projekt nehmen. Echter Wechsel und Duo sind nicht getestet.
+
+Hochgeladen (25.11., mit OK des Users, privat): Lobby -> Beta-Gaestehaus, Spiel -> Spiel, beide 25c. Inhalt danach aus der Cloud geprueft. Zielgruppe unveraendert (PRIVATE).
