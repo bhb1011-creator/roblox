@@ -866,6 +866,25 @@ function Kapitel2.run()
 	local leaveHideEvent = remotes:WaitForChild("LeaveHide", 10)
 	local qteEvent = remotes:WaitForChild("Qte", 10)
 	local hiddenNow = false
+	-- Im Schrank sind die Türen zu: die Kamera steht davor im Raum (`outside` Studs vor der
+	-- Figur, Blick in den Raum). nil/0 = Kamera wieder normal.
+	local function setHideView(outside)
+		local character = player.Character
+		local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+		local root = character and character:FindFirstChild("HumanoidRootPart")
+		if not humanoid then
+			return
+		end
+		humanoid.CameraOffset = Vector3.new(0, 0, -(outside or 0))
+		if outside and root then
+			-- kurz warten, bis die Figur vom Server aus im Schrank steht
+			task.delay(0.15, function()
+				if hiddenNow and root.Parent then
+					camera.CFrame = CFrame.lookAt(camera.CFrame.Position, camera.CFrame.Position + root.CFrame.LookVector)
+				end
+			end)
+		end
+	end
 	local function leaveHide()
 		if hiddenNow and leaveHideEvent then
 			leaveHideEvent:FireServer()
@@ -1066,11 +1085,13 @@ function Kapitel2.run()
 		elseif kind == "hidden" then
 			ownCandleOff = true
 			hiddenNow = true
+			setHideView(message.outside)
 			leaveButton.Visible = true
 			hint("Hidden. Stay very quiet … (E or Space: come out)", 5)
 		elseif kind == "unhidden" then
 			ownCandleOff = false
 			hiddenNow = false
+			setHideView(nil)
 			leaveButton.Visible = false
 		elseif kind == "nearScare" then
 			-- er steht direkt vor deinem Versteck
@@ -1115,6 +1136,7 @@ function Kapitel2.run()
 			qte = nil
 			qteFrame.Visible = false
 			hiddenNow = false
+			setHideView(nil)
 			leaveButton.Visible = false
 			gameOverFrame.Visible = true
 			gameOverFrame.BackgroundTransparency = 1
@@ -1158,6 +1180,7 @@ function Kapitel2.run()
 			hint("He lost you …", 3)
 		elseif kind == "caught" then
 			hiddenNow = false
+			setHideView(nil)
 			leaveButton.Visible = false
 			setFade(0, 0.1)
 			chapter.Text = "He found you …"

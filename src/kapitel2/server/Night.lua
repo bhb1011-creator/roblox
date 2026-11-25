@@ -395,7 +395,7 @@ function Night.run(ctx)
 		else
 			player.Character:PivotTo(spot.place + Vector3.new(0, footOffset(player), 0))
 		end
-		event:FireClient(player, { type = "hidden", spot = spot.name })
+		event:FireClient(player, { type = "hidden", spot = spot.name, outside = spot.outside })
 	end
 	local holder = Instance.new("Folder")
 	holder.Name = "HidePrompts"

@@ -414,6 +414,16 @@ local function buildWall(floorKey, a, b, kind, openings, topOverride)
 					if hi - lo > 0.02 then
 						local pc = A + dir * ((s0 + s1) / 2) + normal * (offset + side * (0.02 + depth / 2)) + Vector3.new(0, (lo + hi) / 2, 0)
 						box(name, Vector3.new(len + (grow or 0), hi - lo, depth), CFrame.lookAt(pc, pc + normal), panelColor, panelMaterial)
+						-- Enden der dicken Außenwände verkleiden (wo eine dünnere Innenwand anschließt, sah
+						-- man sonst die nackte Wand als senkrechten Strich)
+						if kind == "ext" then
+							for _, e in { { s0 < 0.01, s0 - 0.02 }, { s1 > length - 0.01, s1 + 0.02 } } do
+								if e[1] then
+									local ec = A + dir * e[2] + normal * (offset + side * (0.02 + depth - 0.16)) + Vector3.new(0, (lo + hi) / 2, 0)
+									box(name, Vector3.new(0.04, hi - lo - 0.02, 0.32), CFrame.lookAt(ec, ec + normal), panelColor, panelMaterial, { CanCollide = false })
+								end
+							end
+						end
 					end
 				end
 				if room.wainscot then
@@ -555,6 +565,16 @@ local function buildWall(floorKey, a, b, kind, openings, topOverride)
 					onSide(side, top + 0.2, Vector3.new(item.w + 0.6, 0.3, 0.18), "DoorCasing", Color3.fromRGB(70, 56, 42), M.Wood, 0.09)
 				end
 			end
+			-- Holz in der Laibung (sonst sieht man dort den hellen Putz als weißen Streifen)
+			if kind == "int" or kind == "ext" then
+				local jamb = Color3.fromRGB(62, 49, 37)
+				for _, e in { -1, 1 } do
+					local c = middle + dir * e * (item.w / 2 - 0.02) + Vector3.new(0, (bottom + top) / 2, 0)
+					box("DoorJamb", Vector3.new(0.06, top - bottom, t + 0.06), CFrame.lookAt(c, c + normal), jamb, M.Wood, { CanCollide = false })
+				end
+				local c = middle + Vector3.new(0, top + 0.02, 0)
+				box("DoorJamb", Vector3.new(item.w, 0.14, t + 0.1), CFrame.lookAt(c, c + normal), jamb, M.Wood, { CanCollide = false })
+			end
 			if o.kind == "door" then
 				local swingSide = 1
 				if o.swing then
@@ -666,7 +686,22 @@ local function wallChain(floorKey, kind, points, openings, closed)
 					local diameter = THICK[kind] + 0.35
 					local color = kind == "stone" and COLORS.stone or COLORS.trim
 					local material = kind == "stone" and M.Cobblestone or M.Wood
-					cyl("CornerPost", y1 - y0, diameter, CFrame.new(L(p[1], p[2], y0)), color, material)
+					-- etwas nach außen gerückt (sonst schaut die Säule innen als Streifen aus der Wand)
+					local px, py = p[1], p[2]
+					if kind == "ext" then
+						local ox, oy = 0, 0
+						for k = 0, 15 do
+							local dx, dy = math.cos(k * math.pi / 8), math.sin(k * math.pi / 8)
+							if not roomAt(floorKey, p[1] + dx, p[2] + dy) then
+								ox, oy = ox + dx, oy + dy
+							end
+						end
+						local len = math.sqrt(ox * ox + oy * oy)
+						if len > 0.5 then
+							px, py = px + ox / len * 0.35, py + oy / len * 0.35
+						end
+					end
+					cyl("CornerPost", y1 - y0, diameter, CFrame.new(L(px, py, y0)), color, material)
 				end
 			end
 		end
@@ -838,6 +873,7 @@ local function buildWalls()
 	int({ 54.25, 22 }, { 54.25, 34 })
 	int({ 54.25, 18 }, { 54.25, 20 })
 	int({ 40, 20 }, { 54.25, 20 }, { { 47, 20, kind = DOOR, angle = 60, swing = "speise" } })
+	int({ 34, 38 }, { 34, 42 }) -- hinter dem Herd (hier fehlte die Wand: man sah in den Salon)
 	int({ 34, 30 }, { 34, 38 }, { { 34, 34, kind = DOOR, angle = 70, swing = "gartenflur" } })
 	int({ 14, 38 }, { 34, 38 })
 	int({ 14, 60 }, { 34, 60 }, { { 24, 60, kind = DOOR, angle = 0, locked = true } }) -- Arbeitszimmer: abgeschlossen
@@ -849,6 +885,10 @@ local function buildWalls()
 	-- Kellertreppe: Wände und Kellertür
 	int({ 50, 22 }, { 50, 34 })
 	int({ 50, 22 }, { 54.25, 22 })
+	-- Eckleisten an den Außenecken der Kellertreppe (dort klaffte ein Spalt zwischen den Wänden)
+	for _, c in { { 49.73, 34.27 }, { 49.73, 21.73 } } do
+		box("CornerTrim", Vector3.new(0.22, CEIL.E - FLOOR.E, 0.22), CFrame.new(L(c[1], c[2], (CEIL.E + FLOOR.E) / 2)), Color3.fromRGB(70, 56, 42), M.Wood)
+	end
 	int({ 50, 34 }, { 54.25, 34 }, { { 52.12, 34, kind = DOOR, angle = 0, w = 3.2 } })
 
 	------------------------------------------------ Obergeschoss außen
@@ -1119,7 +1159,7 @@ local function buildFurniture()
 	local inside = Furniture.hideWardrobe(b, wardrobeFrame)
 	Furniture.curtain(b, L(66.2, 18.25, E), L(77.8, 18.25, E), CEIL.E - E - 0.25, Color3.fromRGB(96, 30, 32))
 	Mansion.hideSpots = {
-		{ name = "Schrank", kind = "stand", place = origin * inside, exit = origin * at(75, 38, E, "N"), prompt = origin * CFrame.new(L(75, 38.9, E + 3.5)), search = Mansion.point(75, 37.2, E) },
+		{ name = "Schrank", kind = "stand", outside = Furniture.HIDE_VIEW, place = origin * inside, exit = origin * at(75, 38, E, "N"), prompt = origin * CFrame.new(L(75, 38.9, E + 3.5)), search = Mansion.point(75, 37.2, E) },
 		{ name = "Tisch", kind = "lie", place = origin * CFrame.lookAt(L(67, 30, E + 0.55), L(67, 30, E + 5), L(67, 40, E) - L(67, 30, E)), exit = origin * at(63, 30, E, "E"), prompt = origin * CFrame.new(L(65, 30, E + 1.5)), search = Mansion.point(63.4, 28, E) },
 		{ name = "Vorhang", kind = "stand", place = origin * CFrame.lookAt(L(72, 15.9, E), L(72, 20, E)), exit = origin * at(72, 20.5, E, "S"), prompt = origin * CFrame.new(L(72, 18.9, E + 3.5)), search = Mansion.point(71, 19.8, E) },
 	}
@@ -1261,7 +1301,7 @@ local function buildFurniture()
 
 	-- Bad
 	Furniture.bathtub(b, at(57.5, 24, O, "E"))
-	Furniture.sink(b, at(62.4, 18.9, O, "S"))
+	Furniture.sink(b, at(62.4, 19.3, O, "S")) -- (weiter vorne: sonst steckt der Wasserhahn in der Wand)
 	Furniture.mirror(b, at(62.4, 18.54, O + 5.6, "S"), true)
 	Furniture.toilet(b, at(62.9, 30, O, "W"))
 
@@ -1371,7 +1411,7 @@ local function buildFurniture()
 	-- Schrank zum Verstecken (Nordwand)
 	do
 		local inside = Furniture.hideWardrobe(b, at(30, 39.8, O, "S"))
-		table.insert(escape.hideSpots, { name = "Schrank", label = "Wardrobe", kind = "stand", place = origin * inside, exit = origin * at(30, 42, O, "S"), prompt = origin * CFrame.new(L(30, 41.5, O + 3.5)), search = Mansion.point(30, 42.4, O) })
+		table.insert(escape.hideSpots, { name = "Schrank", label = "Wardrobe", kind = "stand", outside = Furniture.HIDE_VIEW, place = origin * inside, exit = origin * at(30, 42, O, "S"), prompt = origin * CFrame.new(L(30, 41.5, O + 3.5)), search = Mansion.point(30, 42.4, O) })
 	end
 	-- umgekipptes Bett an der Südwand: dahinter kann man sich auf den Boden legen
 	do
@@ -1473,6 +1513,7 @@ local function buildFurniture()
 			name = label,
 			label = "Wardrobe",
 			kind = "stand",
+			outside = Furniture.HIDE_VIEW,
 			place = origin * inside,
 			exit = origin * frame * CFrame.new(0, 0, -2.2),
 			prompt = origin * frame * CFrame.new(0, 3.5, -1.7),
@@ -1625,12 +1666,6 @@ local function buildFurniture()
 		box("BulbCord", Vector3.new(0.05, 1.6, 0.05), CFrame.new(L(p[1], p[2], CEIL.K - 0.8)), Color3.fromRGB(30, 28, 26), M.Fabric, NC)
 		cyl("BulbSocket", 0.3, 0.3, at(p[1], p[2], CEIL.K - 1.9), Color3.fromRGB(60, 56, 50), M.Metal, NC)
 		box("Bulb", Vector3.new(0.4, 0.4, 0.4), CFrame.new(L(p[1], p[2], CEIL.K - 2.05)), Color3.fromRGB(170, 164, 140), M.Glass, { CanCollide = false, Shape = Enum.PartType.Ball })
-	end
-	-- Spinnweben in Deckenecken (flach, halb durchsichtig)
-	for _, c in { { 34.6, 20.6, 1, 1 }, { 53.6, 34.6, -1, 1 }, { 14.6, 59.4, 1, -1 }, { 33.4, 38.6, -1, 1 }, { 69.4, 41.4, -1, -1 }, { 54.9, 18.6, 1, 1 } } do
-		local corner = L(c[1], c[2], CEIL.K - 0.6)
-		local inward = L(c[1] + c[3], c[2] + c[4], CEIL.K - 0.6) - corner
-		box("Cobweb", Vector3.new(2.2, 1.6, 0.02), CFrame.lookAt(corner + inward * 0.55, corner + inward * 0.55 + inward) * CFrame.Angles(math.rad(35), 0, 0), Color3.fromRGB(196, 196, 190), M.SmoothPlastic, { CanCollide = false, Transparency = 0.6 })
 	end
 	-- Pfützen und feuchte Flecken auf dem Steinboden
 	for _, p in { { 44, 29, 1.6 }, { 39, 37, 2.2 }, { 22, 41, 1.8 }, { 30, 53, 2.4 }, { 64, 29, 1.5 }, { 75, 37, 2 } } do

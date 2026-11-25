@@ -114,48 +114,60 @@ function Furniture.chair(b, cf, color)
 	b.box("ChairStretcher", Vector3.new(1.2, 0.08, 0.08), cf * CFrame.new(0, 0.7, 0), color, M.Wood, DECO)
 end
 
--- Sessel oder Sofa, optional unter einem weißen Tuch (unter dem man die Form ahnt)
+local DUST_SHEET = Color3.fromRGB(150, 143, 130) -- verstaubtes Tuch
+-- Sessel oder Sofa, optional unter einem weißen Tuch (unter dem man die Form ahnt).
+-- Alle Teile greifen etwas ineinander und enden nie auf derselben Ebene – sonst flackern
+-- die Flächen in Roblox.
 function Furniture.sofa(b, cf, w, color, covered)
-	local fabric = covered and C.sheet or color
-	local mat = M.Fabric
-	-- Grundform (Kollision)
-	b.box("SofaSeat", Vector3.new(w, 1.2, 2.6), cf * CFrame.new(0, 1.2, 0), fabric, mat)
-	b.box("SofaBack", Vector3.new(w, 2.4, 0.8), cf * CFrame.new(0, 2.4, 1.0), fabric, mat)
+	local fabric = covered and DUST_SHEET or color
+	local mat = covered and M.SmoothPlastic or M.Leather
+	local alongX = CFrame.Angles(0, 0, math.rad(-90)) -- Walze von links nach rechts
+	local alongZ = CFrame.Angles(math.rad(90), 0, 0) -- Walze von vorne nach hinten
+	local armW = math.min(0.75, w * 0.2)
+	local inner = w - armW * 2
+	local seats = math.max(1, math.floor(inner / 1.6 + 0.5))
+	local seatW = inner / seats
+	local seam = shade(fabric, 0.22)
+
+	-- Korpus: Sitz, Lehne, Armlehnen
+	b.box("SofaSeat", Vector3.new(inner + 0.2, 1.15, 2.3), cf * CFrame.new(0, 1.0, -0.05), fabric, mat)
+	b.box("SofaBack", Vector3.new(w - 0.3, 2.95, 0.6), cf * CFrame.new(0, 1.9, 1.08), fabric, mat)
+	b.cyl("SofaBackRoll", w - 0.36, 0.72, cf * CFrame.new(-(w - 0.36) / 2, 3.38, 1.1) * alongX, fabric, mat, DECO)
 	for _, x in { -1, 1 } do
-		b.box("SofaArm", Vector3.new(0.7, 1.9, 2.6), cf * CFrame.new(x * (w / 2 - 0.35), 1.55, 0), fabric, mat)
+		local ax = x * (w / 2 - armW / 2)
+		b.box("SofaArm", Vector3.new(armW - 0.1, 1.95, 2.46), cf * CFrame.new(ax, 1.3, -0.02), fabric, mat)
+		b.cyl("SofaArmRoll", 2.56, armW + 0.06, cf * CFrame.new(ax, 2.28, -1.32) * alongZ, fabric, mat, DECO)
+		b.ball("SofaBackEnd", 0.7, cf * CFrame.new(x * (w - 0.4) / 2, 3.38, 1.1), fabric, mat)
+		if not covered then
+			-- runder Knopf vorne auf der gerollten Armlehne
+			b.cyl("SofaArmButton", 0.06, 0.24, cf * CFrame.new(ax, 2.28, -1.37) * alongZ, seam, mat, DECO)
+		end
 	end
-	local seats = math.max(1, math.floor((w - 1.4) / 1.6 + 0.5))
-	local seatW = (w - 1.4) / seats
+	-- Sitzkissen (vorne rund) und Rückenkissen
+	for i = 1, seats do
+		local x = -inner / 2 + (i - 0.5) * seatW
+		local cushion = covered and seatW + 0.02 or seatW - 0.05
+		b.box("SofaCushion", Vector3.new(cushion, 0.42, 1.85), cf * CFrame.new(x, 1.7, -0.27), fabric, mat, DECO)
+		b.cyl("SofaCushionFront", cushion - 0.03, 0.4, cf * CFrame.new(x - (cushion - 0.03) / 2, 1.7, -1.19) * alongX, fabric, mat, DECO)
+		if not covered then -- (unter dem Tuch sieht man nur die glatte Lehne)
+			b.box("SofaBackCushion", Vector3.new(cushion, 1.45, 0.45), cf * CFrame.new(x, 2.52, 0.66) * CFrame.Angles(math.rad(-9), 0, 0), fabric, mat, DECO)
+			b.ball("SofaButton", 0.12, cf * CFrame.new(x, 2.6, 0.43), seam, mat)
+		end
+	end
+
 	if covered then
-		-- das Tuch: weiche Rundungen über Polstern und Armlehnen und ein Saum am Boden
-		for i = 1, seats do
-			local x = -w / 2 + 0.7 + (i - 0.5) * seatW
-			-- liegende Rollen (von links nach rechts): Sitzpolster vorne, Rückenpolster oben
-			local alongX = CFrame.Angles(0, 0, math.rad(-90))
-			b.cyl("SheetBump", seatW * 0.92, 0.7, cf * CFrame.new(x - seatW * 0.46, 1.65, -0.9) * alongX, C.sheet, mat, DECO)
-			b.cyl("SheetBump", seatW * 0.92, 0.8, cf * CFrame.new(x - seatW * 0.46, 3.45, 1.0) * alongX, C.sheet, mat, DECO)
+		-- das Tuch fällt rundum bis zum Boden und wird nach unten etwas weiter
+		for _, tier in { { 1.35, 0.06 }, { 0.8, 0.14 }, { 0.3, 0.22 } } do
+			b.box("SheetSkirt", Vector3.new(w + tier[2], tier[1], 2.76 + tier[2]), cf * CFrame.new(0, tier[1] / 2 + 0.01, 0.03), DUST_SHEET, mat)
 		end
-		for _, x in { -1, 1 } do
-			b.cyl("SheetArmRoll", 2.6, 0.95, cf * CFrame.new(x * (w / 2 - 0.35), 2.5, -1.3) * CFrame.Angles(math.rad(90), 0, 0), C.sheet, mat, DECO)
-		end
-		b.box("Sheet", Vector3.new(w + 0.2, 0.6, 3.0), cf * CFrame.new(0, 0.3, -0.1), C.sheet, mat)
+		b.box("SofaBackPad", Vector3.new(inner + 0.2, 1.6, 0.3), cf * CFrame.new(0, 2.5, 0.72) * CFrame.Angles(math.rad(-7), 0, 0), fabric, mat, DECO)
 	else
-		-- Sockel mit gedrechselten Füßen, einzelne Sitz- und Rückenkissen, gerollte Armlehnen
-		b.box("SofaBase", Vector3.new(w - 0.1, 0.45, 2.4), cf * CFrame.new(0, 0.37, 0), C.darkWood, M.Wood)
+		-- Sockel mit gedrechselten Füßen
+		b.box("SofaBase", Vector3.new(w - 0.24, 0.3, 2.3), cf * CFrame.new(0, 0.36, 0), C.darkWood, M.Wood, DECO)
 		for _, x in { -1, 1 } do
-			for _, z in { -1, 1 } do
-				b.cyl("SofaFoot", 0.18, 0.22, cf * CFrame.new(x * (w / 2 - 0.3), 0, z * 1.0), C.darkWood, M.Wood, DECO)
+			for _, z in { -0.95, 1.0 } do
+				b.cyl("SofaFoot", 0.26, 0.26, cf * CFrame.new(x * (w / 2 - 0.35), 0, z), C.darkWood, M.Wood, DECO)
 			end
-		end
-		local seam = shade(color, 0.3)
-		for i = 1, seats do
-			local x = -w / 2 + 0.7 + (i - 0.5) * seatW
-			b.box("SofaCushion", Vector3.new(seatW - 0.08, 0.35, 2.1), cf * CFrame.new(x, 1.95, -0.2), color, mat, DECO)
-			b.box("SofaBackCushion", Vector3.new(seatW - 0.1, 1.4, 0.4), cf * CFrame.new(x, 2.85, 0.45) * CFrame.Angles(math.rad(-8), 0, 0), color, mat, DECO)
-			b.ball("SofaButton", 0.1, cf * CFrame.new(x, 3.0, 0.23), seam, mat)
-		end
-		for _, x in { -1, 1 } do
-			b.cyl("SofaArmRoll", 2.6, 0.8, cf * CFrame.new(x * (w / 2 - 0.35), 2.5, -1.3) * CFrame.Angles(math.rad(90), 0, 0), color, mat, DECO)
 		end
 	end
 end
@@ -603,14 +615,79 @@ function Furniture.chandelier(b, ceilingCf, drop)
 	end
 end
 
+-- Freistehende, hohle Badewanne auf Füßen. Wand und Boden sind einzelne Flächen entlang eines
+-- Ovals (unten schmaler als oben), oben ein gerollter Rand. Wasserhahn am Ende +Z (Wandseite).
 function Furniture.bathtub(b, cf)
-	b.box("Tub", Vector3.new(2.8, 1.8, 5.6), cf * CFrame.new(0, 1.3, 0), C.porcelain, M.SmoothPlastic)
-	b.box("TubInside", Vector3.new(2.2, 0.1, 5.0), cf * CFrame.new(0, 2.2, 0), Color3.fromRGB(70, 60, 50), M.SmoothPlastic)
-	for _, x in { -1, 1 } do
-		for _, z in { -2.4, 2.4 } do
-			b.ball("TubFoot", 0.5, cf * CFrame.new(x * 1.1, 0.25, z), C.brass, M.Metal)
+	local white = C.porcelain
+	-- unsichtbarer Block: man läuft dagegen, kann aber nicht in der Wanne stecken bleiben
+	b.box("TubCollision", Vector3.new(2.7, 2.1, 5.4), cf * CFrame.new(0, 1.25, 0), white, M.SmoothPlastic, { Transparency = 1, CastShadow = false })
+
+	-- Oval aus zwei Halbkreisen (Radius r) und zwei Geraden (halbe Länge l) auf Höhe y
+	local ARC = 8
+	local function ring(r, l, y)
+		local points = {}
+		for half = 0, 1 do
+			for i = 0, ARC do
+				local angle = half * math.pi + i / ARC * math.pi
+				table.insert(points, Vector3.new(math.cos(angle) * r, y, math.sin(angle) * r + (half == 0 and l or -l)))
+			end
+		end
+		return points
+	end
+	local function rod(from, to, diameter)
+		local axis = from:Cross(to).Magnitude > 0.01 and math.abs((to - from).Unit.Y) > 0.98 and Vector3.xAxis or Vector3.yAxis
+		b.cyl("TubWall", (to - from).Magnitude, diameter, cf * CFrame.lookAt(from, to, axis) * CFrame.Angles(math.rad(-90), 0, 0), white, M.SmoothPlastic, DECO)
+	end
+	local rings = { ring(0.82, 1.3, 0.55), ring(1.16, 1.38, 1.0), ring(1.34, 1.42, 2.3) }
+	for k = 1, #rings - 1 do
+		local low, high = rings[k], rings[k + 1]
+		for i = 1, #low do
+			local n = i % #low + 1
+			local bottom, top = (low[i] + low[n]) / 2, (high[i] + high[n]) / 2
+			local along = (high[n] - high[i]).Unit
+			local up = (top - bottom).Unit
+			local out = along:Cross(up).Unit
+			up = out:Cross(along).Unit
+			local width = ((low[n] - low[i]).Magnitude + (high[n] - high[i]).Magnitude) / 2
+			b.box("TubWall", Vector3.new(width, (top - bottom).Magnitude, 0.13), cf * CFrame.fromMatrix((bottom + top) / 2, along, up, out), white, M.SmoothPlastic, DECO)
+			-- runde Stäbe in den Fugen (sonst sieht man die Kanten der einzelnen Flächen)
+			rod(low[i], high[i], 0.15)
+			rod(low[i], low[n], 0.15)
 		end
 	end
+	-- Boden: innen, mit Schmutzrand, Abfluss und Rostspur unter dem Hahn
+	b.box("TubBottom", Vector3.new(1.66, 0.1, 2.6), cf * CFrame.new(0, 0.55, 0), white, M.SmoothPlastic, DECO)
+	for _, z in { -1.3, 1.3 } do
+		b.cyl("TubBottom", 0.09, 1.66, cf * CFrame.new(0, 0.5, z), white, M.SmoothPlastic, DECO)
+	end
+	b.cyl("TubStain", 0.012, 1.0, cf * CFrame.new(0.05, 0.6, 1.25), Color3.fromRGB(122, 96, 66), M.SmoothPlastic, deco({ Transparency = 0.35 }))
+	b.cyl("TubDrain", 0.02, 0.3, cf * CFrame.new(0, 0.605, 1.35), C.metal, M.Metal, DECO)
+	b.cyl("TubDrainHole", 0.01, 0.16, cf * CFrame.new(0, 0.62, 1.35), C.black, M.SmoothPlastic, DECO)
+	-- gerollter Rand
+	local rim = ring(1.38, 1.42, 2.32)
+	for i = 1, #rim do
+		local from, to = rim[i], rim[i % #rim + 1]
+		local length = (to - from).Magnitude
+		b.cyl("TubRim", length, 0.24, cf * CFrame.lookAt(from, to) * CFrame.Angles(math.rad(-90), 0, 0), white, M.SmoothPlastic, DECO)
+		b.ball("TubRimJoint", 0.24, cf * CFrame.new(from), white, M.SmoothPlastic)
+	end
+	-- Füße (Kugel mit Ansatz)
+	for _, x in { -1, 1 } do
+		for _, z in { -1.7, 1.7 } do
+			b.ball("TubFoot", 0.36, cf * CFrame.new(x * 0.85, 0.18, z), C.brass, M.Metal)
+			b.box("TubLeg", Vector3.new(0.22, 0.55, 0.26), cf * CFrame.new(x * 0.85, 0.5, z) * CFrame.Angles(0, 0, math.rad(x * 14)), C.brass, M.Metal, DECO)
+		end
+	end
+	-- Standarmatur: zwei Rohre, Querstück, Auslauf über den Rand, zwei Griffe
+	local tapZ = 2.92
+	for _, x in { -0.35, 0.35 } do
+		b.cyl("TubPipe", 2.9, 0.12, cf * CFrame.new(x, 0, tapZ), C.brass, M.Metal, DECO)
+		b.ball("TubPipeTop", 0.2, cf * CFrame.new(x, 2.9, tapZ), C.brass, M.Metal)
+		b.cyl("TubTapHandle", 0.1, 0.34, cf * CFrame.new(x, 3.0, tapZ), white, M.SmoothPlastic, DECO)
+	end
+	b.cyl("TubTapBar", 0.7, 0.16, cf * CFrame.new(-0.35, 2.75, tapZ) * CFrame.Angles(0, 0, math.rad(-90)), C.brass, M.Metal, DECO)
+	b.cyl("TubSpout", 0.75, 0.14, cf * CFrame.new(0, 2.75, tapZ) * CFrame.Angles(math.rad(-90), 0, 0), C.brass, M.Metal, DECO)
+	b.cyl("TubSpoutEnd", 0.26, 0.15, cf * CFrame.new(0, 2.56, tapZ - 0.72), C.brass, M.Metal, DECO)
 end
 
 function Furniture.toilet(b, cf)
@@ -722,8 +799,9 @@ function Furniture.altar(b, cf)
 	b.box("SarpEyes", Vector3.new(0.5, 0.08, 0.02), cf * CFrame.new(0, 4.33, 0.62) * CFrame.Angles(math.rad(-10), 0, 0), Color3.fromRGB(200, 30, 20), M.Neon)
 end
 
--- Versteck: Schrank, innen hohl, vorne zwei Türen mit Schlitzen auf Augenhöhe (von innen
--- sieht man durch die Schlitze in den Raum). Vorne = -Z.
+-- Versteck: Schrank, innen hohl, vorne zwei geschlossene Türen. Wer sich versteckt, sieht den
+-- Raum von vor dem Schrank aus (Furniture.HIDE_VIEW, siehe Scene.lua "hidden"). Vorne = -Z.
+Furniture.HIDE_VIEW = 1.75 -- so weit vor dem Versteckten steht die Kamera
 function Furniture.hideWardrobe(b, cf)
 	local w, h, d = 3.4, 7.6, 2.4
 	local wood, dark = C.darkWood, C.black
@@ -733,27 +811,18 @@ function Furniture.hideWardrobe(b, cf)
 	end
 	b.box("HideWardrobeTop", Vector3.new(w + 0.3, 0.3, d + 0.3), cf * CFrame.new(0, h + 0.15, 0), C.wood, M.Wood)
 	b.box("HideWardrobeFloor", Vector3.new(w, 0.2, d), cf * CFrame.new(0, 0.1, 0), wood, M.Wood)
-	-- Türen: unten und oben geschlossen, dazwischen Lamellen mit Spalten
+	-- zwei Türen mit Kassetten, dazwischen ein dunkler Spalt
 	local front = -d / 2 + 0.06
-	local slitsFrom, slitsTo = 4.0, 6.4
-	b.box("HideWardrobeDoor", Vector3.new(w - 0.4, slitsFrom - 0.2, 0.12), cf * CFrame.new(0, 0.2 + (slitsFrom - 0.2) / 2, front), wood, M.WoodPlanks)
-	b.box("HideWardrobeDoor", Vector3.new(w - 0.4, h - slitsTo, 0.12), cf * CFrame.new(0, slitsTo + (h - slitsTo) / 2, front), wood, M.WoodPlanks)
-	-- Lamellen oben und unten, dazwischen ein breiter offener Schlitz auf Augenhöhe
-	local openFrom, openTo = 4.55, 5.75
-	local y = slitsFrom
-	while y < slitsTo - 0.1 do
-		if y + 0.2 < openFrom or y > openTo then
-			b.box("HideWardrobeSlat", Vector3.new(w - 0.4, 0.2, 0.12), cf * CFrame.new(0, y + 0.1, front) * CFrame.Angles(math.rad(-20), 0, 0), wood, M.Wood)
-		end
-		y += 0.38
-	end
+	local doorW = (w - 0.4) / 2
+	b.box("HideWardrobeGap", Vector3.new(w - 0.36, h - 0.2, 0.06), cf * CFrame.new(0, h / 2, front + 0.08), dark, M.Wood)
 	for _, x in { -1, 1 } do
-		-- schmale Rahmenleisten links und rechts vom Schlitz
-		b.box("HideWardrobeFrame", Vector3.new(0.2, openTo - openFrom + 0.2, 0.12), cf * CFrame.new(x * (w / 2 - 0.3), (openFrom + openTo) / 2, front), wood, M.Wood)
-	end
-	b.box("HideWardrobeLine", Vector3.new(0.05, h - 0.4, 0.04), cf * CFrame.new(0, h / 2, front - 0.08), dark, M.Wood)
-	for _, x in { -0.3, 0.3 } do
-		b.box("HideWardrobeKnob", Vector3.new(0.14, 0.14, 0.14), cf * CFrame.new(x, 3.6, front - 0.12), C.brass, M.Metal)
+		local dx = x * (doorW / 2 + 0.01)
+		b.box("HideWardrobeDoor", Vector3.new(doorW - 0.02, h - 0.4, 0.12), cf * CFrame.new(dx, h / 2, front), wood, M.Wood)
+		for _, panel in { { 1.95, 2.8 }, { 5.45, 3.2 } } do
+			b.box("HideWardrobePanelEdge", Vector3.new(doorW - 0.4, panel[2], 0.05), cf * CFrame.new(dx, panel[1], front - 0.07), shade(wood, 0.35), M.Wood, DECO)
+			b.box("HideWardrobePanel", Vector3.new(doorW - 0.58, panel[2] - 0.18, 0.06), cf * CFrame.new(dx, panel[1], front - 0.09), C.wood, M.Wood, DECO)
+		end
+		b.ball("HideWardrobeKnob", 0.18, cf * CFrame.new(x * 0.16, 3.6, front - 0.12), C.brass, M.Metal)
 	end
 	return cf * CFrame.new(0, 0.2, 0.15) -- Stelle für den Versteckten (Füße), Blick nach vorne
 end

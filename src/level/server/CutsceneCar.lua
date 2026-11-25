@@ -14,7 +14,6 @@ local PAINT = Color3.fromRGB(38, 52, 72)
 local DARK = Color3.fromRGB(20, 20, 23)
 local TRIM = Color3.fromRGB(38, 38, 42)
 local CHROME = Color3.fromRGB(180, 182, 188)
-local GLASS = Color3.fromRGB(70, 85, 100)
 local DASH = Color3.fromRGB(32, 31, 33)
 local LINER = Color3.fromRGB(175, 170, 162)
 
@@ -117,7 +116,6 @@ function CutsceneCar.build(parent)
 	end
 
 	local paint = { Reflectance = 0.12 }
-	local glass = { Transparency = 0.55, Reflectance = 0.08 }
 	local front, back = -LENGTH / 2, LENGTH / 2
 
 	------------------------------------------------------------------ Karosserie
@@ -130,8 +128,7 @@ function CutsceneCar.build(parent)
 		local x = side * (WIDTH / 2 - 0.2)
 		part("Door", Vector3.new(0.4, GLASS_BOTTOM - 0.7, back - 1.6 - (front + 4.3)), CFrame.new(x, (GLASS_BOTTOM + 0.7) / 2, (front + 4.3 + back - 1.6) / 2), PAINT, nil, paint)
 
-		-- Scheiben, Säulen und Zierleisten
-		part("SideWindow", Vector3.new(0.12, GLASS_TOP - GLASS_BOTTOM, ROOF_BACK - ROOF_FRONT), CFrame.new(x, (GLASS_BOTTOM + GLASS_TOP) / 2, (ROOF_FRONT + ROOF_BACK) / 2), GLASS, Enum.Material.Glass, glass)
+		-- Säulen und Zierleisten (ohne Scheiben: das Glas hat seltsam gespiegelt)
 		beam("APillar", Vector3.new(x, GLASS_BOTTOM, ROOF_FRONT - 2.4), Vector3.new(x, GLASS_TOP, ROOF_FRONT), 0.32, PAINT)
 		beam("APillarTrim", Vector3.new(side * (WIDTH / 2 - 0.45), GLASS_BOTTOM, ROOF_FRONT - 2.3), Vector3.new(side * (WIDTH / 2 - 0.45), GLASS_TOP - 0.05, ROOF_FRONT + 0.05), 0.3, LINER)
 		part("BPillar", Vector3.new(0.4, GLASS_TOP - GLASS_BOTTOM - 0.03, 0.5), CFrame.new(side * (WIDTH / 2 - 0.3), (GLASS_BOTTOM + GLASS_TOP) / 2, 2.6), DARK)
@@ -139,7 +136,7 @@ function CutsceneCar.build(parent)
 		part("WindowTrim", Vector3.new(0.15, 0.12, ROOF_BACK - ROOF_FRONT - 0.04), CFrame.new(side * (WIDTH / 2 - 0.1), GLASS_BOTTOM + 0.05, (ROOF_FRONT + ROOF_BACK) / 2), CHROME, Enum.Material.Metal)
 		part("SideSkirt", Vector3.new(0.12, 0.45, WHEEL_Z * 2 - 3.2), CFrame.new(side * (WIDTH / 2 + 0.03), 0.95, 0), TRIM)
 		part("Mirror", Vector3.new(0.6, 0.45, 0.9), CFrame.new(side * (WIDTH / 2 + 0.35), GLASS_BOTTOM + 0.3, ROOF_FRONT - 1.9), PAINT, nil, paint)
-		part("MirrorGlass", Vector3.new(0.5, 0.35, 0.05), CFrame.new(side * (WIDTH / 2 + 0.35), GLASS_BOTTOM + 0.3, ROOF_FRONT - 1.43), Color3.fromRGB(90, 100, 110), Enum.Material.Glass, { Reflectance = 0.5 })
+		part("MirrorGlass", Vector3.new(0.5, 0.35, 0.05), CFrame.new(side * (WIDTH / 2 + 0.35), GLASS_BOTTOM + 0.3, ROOF_FRONT - 1.43), Color3.fromRGB(44, 50, 56), Enum.Material.SmoothPlastic)
 		for _, z in { -0.6, 2.4 } do
 			part("DoorLine", Vector3.new(0.04, SILL - 1.1, 0.06), CFrame.new(side * (WIDTH / 2 + 0.01), (SILL + 1.1) / 2, z), DARK)
 		end
@@ -160,19 +157,16 @@ function CutsceneCar.build(parent)
 	for _, x in { -2.5, 2.5 } do
 		part("RoofRail", Vector3.new(0.15, 0.2, 6), CFrame.new(x, GLASS_TOP + 0.4, 3), TRIM, Enum.Material.Metal)
 	end
-	-- Frontscheibe als dünne, schräge Scheibe (man sieht von innen keine Glaskante)
+	-- Fläche, in der die Frontscheibe säße (keine Scheibe: sie hat seltsam gespiegelt)
 	local shieldFrom = Vector3.new(0, GLASS_BOTTOM, ROOF_FRONT - 2.4)
 	local shieldTo = Vector3.new(0, GLASS_TOP, ROOF_FRONT)
 	local shieldLength = (shieldTo - shieldFrom).Magnitude
 	local shield = CFrame.lookAt((shieldFrom + shieldTo) / 2, shieldTo)
-	part("Windshield", Vector3.new(WIDTH - 0.6, 0.08, shieldLength), shield, GLASS, Enum.Material.Glass, { Transparency = 0.75, Reflectance = 0.05 })
-	-- schwarzer Rand oben an der Scheibe und Scheibenwischer unten
-	part("WindshieldFrit", Vector3.new(WIDTH - 0.7, 0.02, 0.32), shield * CFrame.new(0, -0.05, -shieldLength / 2 + 0.16), BLACK)
+	-- Scheibenwischer unten
 	for _, info in { { -1.25, 0.12 }, { 1.35, 0.1 } } do
 		part("Wiper", Vector3.new(2.5, 0.06, 0.08), shield * CFrame.new(info[1], 0.07, shieldLength / 2 - 0.3) * CFrame.Angles(0, info[2], 0), BLACK)
 		part("WiperBlade", Vector3.new(2.3, 0.1, 0.04), shield * CFrame.new(info[1], 0.1, shieldLength / 2 - 0.36) * CFrame.Angles(0, info[2], 0), Color3.fromRGB(25, 25, 25), M.Rubber)
 	end
-	part("RearWindow", Vector3.new(WIDTH - 0.6, GLASS_TOP - GLASS_BOTTOM, 0.12), CFrame.new(0, (GLASS_BOTTOM + GLASS_TOP) / 2, ROOF_BACK), GLASS, Enum.Material.Glass, glass)
 	part("FrontBumper", Vector3.new(WIDTH + 0.2, 0.7, 0.5), CFrame.new(0, 1.1, front - 0.2), TRIM)
 	part("RearBumper", Vector3.new(WIDTH + 0.2, 0.7, 0.5), CFrame.new(0, 1.1, back + 0.2), TRIM)
 	part("Grille", Vector3.new(3.2, 0.7, 0.08), CFrame.new(0, 2.1, front - 0.03), DARK, Enum.Material.Metal)
@@ -744,7 +738,7 @@ function CutsceneCar.build(parent)
 	for _, dx in { -0.575, 0.575 } do
 		cyl("MirrorEnd", 0.14, 0.36, mirrorAt * CFrame.new(dx, 0, 0) * ALONG_Z, DARK)
 	end
-	part("RearViewGlass", Vector3.new(1.08, 0.29, 0.03), mirrorAt * CFrame.new(0, 0, 0.07), Color3.fromRGB(80, 90, 100), Enum.Material.Glass, { Reflectance = 0.6 })
+	part("RearViewGlass", Vector3.new(1.08, 0.29, 0.03), mirrorAt * CFrame.new(0, 0, 0.07), Color3.fromRGB(44, 50, 56), Enum.Material.SmoothPlastic)
 	-- Duftbaum (Tannenform) an einem Faden
 	local freshener = CFrame.new(0.25, GLASS_TOP - 1.25, ROOF_FRONT + 0.15) * CFrame.Angles(0, math.rad(25), 0)
 	part("FreshenerString", Vector3.new(0.02, 0.45, 0.02), CFrame.new(0.25, GLASS_TOP - 0.85, ROOF_FRONT + 0.15), Color3.fromRGB(230, 230, 230))

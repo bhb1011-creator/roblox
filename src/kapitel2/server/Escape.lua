@@ -196,7 +196,7 @@ function Escape.run(kit)
 		else
 			player.Character:PivotTo(spot.place + Vector3.new(0, footOffset(player), 0))
 		end
-		event:FireClient(player, { type = "hidden", spot = spot.name })
+		event:FireClient(player, { type = "hidden", spot = spot.name, outside = spot.outside })
 	end
 	local allSpots = {}
 	for _, list in { room.hideSpots, room.houseHideSpots or {}, Mansion.hideSpots or {} } do

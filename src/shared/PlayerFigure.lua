@@ -78,6 +78,9 @@ function PlayerFigure.load(player)
 		end
 	end
 	starter.PrimaryPart = starter:FindFirstChild("HumanoidRootPart")
+	-- Drehpunkt genau in die Mitte der Wurzel: die Figuren haben ihn an den Füßen, der Code rechnet
+	-- aber überall mit der Wurzel (sonst steht man im Versteck fast 3 Studs zu hoch).
+	starter.PrimaryPart.PivotOffset = CFrame.identity
 	starter.Parent = StarterPlayer
 	local ok, problem = pcall(function()
 		player:LoadCharacter()

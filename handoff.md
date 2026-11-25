@@ -7,6 +7,16 @@ Diese Datei ist für einen **neuen Chat** gedacht: erst den Prompt unten kopiere
 
 ---
 
+## Stand K2-2026-11-25a (25. Nov.)
+- Auto in Kapitel 1 (`CutsceneCar.lua`): alle Scheiben weg (spiegelten seltsam), Spiegel matt.
+- Sofas/Sessel neu (keine deckungsgleichen Flächen mehr), Badewanne hohl (Oval aus Einzelflächen, Armatur).
+- Versteck-Schränke sind zu. Wer drin ist, sieht den Raum von davor: `Furniture.HIDE_VIEW` → Feld `outside` am
+  Versteck → Nachricht "hidden" → `setHideView` in `Scene.lua` (Humanoid.CameraOffset).
+- Spielfiguren: PivotOffset der Wurzel auf 0 (`PlayerFigure.load`) – vorher stand man im Versteck 2,8 Studs zu hoch.
+- Haus: fehlende Wand hinter dem Herd, Holz in Türlaibungen, Eckleisten an der Kellertreppe, Wandenden verkleidet,
+  Ecksäulen nach außen gerückt, Spinnweben im Keller entfernt, Waschbecken im Bad vorgerückt.
+- Teile in Studio („Haus besichtigen“): 17.619 → ca. 18.100. Nicht gespielt: Bett, Abendessen, Ritual mit neuem Pivot.
+
 ## Stand K2-2026-11-17b (17. Nov.)
 - Lobby: Start-Menü „Play“ (Holzschild links über dem Shop, Taste P). Zettel mit „Play alone“ (sofort allein los)
   und Liste der Spieler in dieser Lobby mit „Invite“. Der Eingeladene bekommt oben eine Karte („Play together“ /
