@@ -245,6 +245,7 @@ local forestStart -- wo man aus der Luke steigt
 local bridgeStart, bridgeLength -- Strecke bis zum Anfang der Brücke, Länge der Brücke
 local bridge -- { parts, floor }
 local chaseTotal -- Länge des Wegs bis zum Ende der Verfolgung
+local buildOfficer -- (weiter unten)
 local hut -- Sarps Hütte (siehe SarpHut.lua)
 local roadFrame -- Ende des Wegs an der Straße (Blick zur Hütte = -Z)
 
@@ -604,6 +605,78 @@ local function buildForest()
 		count += planted
 		print("Kapitel 3: Ufer der Schlucht – " .. planted .. " Bäume")
 	end
+	-- Rand der Karte bei der Verfolgung: breiterer Waldboden, dichtere Tannen und dahinter ein Wall aus
+	-- Hügeln mit Bäumen, damit man nirgends ins Leere schaut.
+	do
+		local edge = Random.new(59)
+		local planted, hills = 0, 0
+		local function pathDistance(position)
+			local _, distance = Data.progress(points, position)
+			return distance
+		end
+		local at = -84
+		while at < total - 20 do
+			local center, direction = Data.pointAt(points, math.clamp(at, 0, total))
+			local along = Vector3.new(direction.X, 0, direction.Z).Unit
+			if at < 0 then
+				center += along * at
+			end
+			local right = Vector3.new(-along.Z, 0, along.X)
+			-- hinter dem Anfang auch geradeaus zumachen
+			local offsets = at < -40 and { -90, -60, -30, 0, 30, 60, 90 } or { -92, 92 }
+			for _, offset in offsets do
+				local radius = edge:NextNumber(26, 34)
+				local hill = center + right * (offset + edge:NextNumber(-6, 6)) + Vector3.new(0, -edge:NextNumber(4, 9), 0)
+				if pathDistance(hill) > radius + 34 and not nearRavine(hill, radius + 8) and not inClearing(hill, radius + 8) then
+					terrain:FillBlock(CFrame.new(hill.X, -4, hill.Z), Vector3.new(52, 8, 52), Enum.Material.LeafyGrass)
+					terrain:FillBall(hill, radius, Enum.Material.LeafyGrass)
+					hills += 1
+				end
+			end
+			task.wait()
+			at += 24
+		end
+		at = -80
+		while at < total - 10 do
+			local center, direction = Data.pointAt(points, math.clamp(at, 0, total))
+			local along = Vector3.new(direction.X, 0, direction.Z).Unit
+			if at < 0 then
+				center += along * at
+			end
+			local right = Vector3.new(-along.Z, 0, along.X)
+			for _, side in { -1, 1 } do
+				for _, band in { { 18, 30 }, { 34, 58 }, { 62, 88 } } do
+					local world = center + right * side * edge:NextNumber(band[1], band[2]) + along * edge:NextNumber(-4, 4)
+					if pathDistance(world) > 15 and not nearRavine(world, 6) and not inClearing(world, 4) then
+						local hit = workspace:Raycast(Vector3.new(world.X, 70, world.Z), Vector3.new(0, -100, 0), groundParams)
+						if hit and hit.Position.Y > -3 then
+							Forest.builders.simplePine(folder, Vector3.new(world.X, hit.Position.Y - 0.5, world.Z), edge:NextNumber(34, 52), edge)
+							planted += 1
+						end
+					end
+				end
+			end
+			-- hinter der Luke: quer stehende Reihe
+			if at < -10 then
+				for _ = 1, 3 do
+					local world = center + right * edge:NextNumber(-60, 60)
+					if pathDistance(world) > 15 then
+						local hit = workspace:Raycast(Vector3.new(world.X, 70, world.Z), Vector3.new(0, -100, 0), groundParams)
+						if hit then
+							Forest.builders.simplePine(folder, hit.Position - Vector3.new(0, 0.5, 0), edge:NextNumber(34, 50), edge)
+							planted += 1
+						end
+					end
+				end
+			end
+			at += 10
+			if planted % 12 < 4 then
+				task.wait()
+			end
+		end
+		count += planted
+		print("Kapitel 3: Rand der Karte – " .. planted .. " Bäume, " .. hills .. " Hügel")
+	end
 	-- Details am Weg (Farne, Gras, Laub, Wurzeln, Nebel, Glühwürmchen)
 	pcall(ForestDressing.terrain, points, function(position)
 		return not nearRavine(position, 4) and not inClearing(position, -2)
@@ -769,6 +842,62 @@ local function collapseBridge()
 	end
 end
 
+-- Polizist (Schlussszene): dunkelblaue Uniform, Mütze, Abzeichen, Gürtel mit Funkgerät
+function buildOfficer(parent)
+	local NAVY = Color3.fromRGB(28, 34, 52)
+	local DARK = Color3.fromRGB(18, 20, 26)
+	local GOLD = Color3.fromRGB(198, 164, 84)
+	local colors = { skin = Color3.fromRGB(206, 164, 134), torso = NAVY, arms = NAVY, legs = DARK, shoes = Color3.fromRGB(14, 14, 15), hair = Color3.fromRGB(46, 36, 28), eyes = Color3.fromRGB(70, 60, 50) }
+	local model = Wagners.newBody("Officer", colors, { HeightScale = 1.08, WidthScale = 0.9, DepthScale = 0.92 })
+	if not model then
+		return nil
+	end
+	local attach = Wagners.attach
+	local head, torso, hips = model.Head, model.UpperTorso, model.LowerTorso
+	pcall(Wagners.face, model, head, "tired", { hair = colors.hair, beard = colors.skin, eyes = colors.eyes, skin = colors.skin })
+	for _, item in model:GetChildren() do
+		if item.Name:find("Beard") or item.Name == "Mustache" then
+			item:Destroy()
+		end
+	end
+	local s = head.Size
+	local function round(name, size, offset, color)
+		local part = attach(model, head, name, size, offset, color, M.Fabric)
+		local mesh = Instance.new("SpecialMesh")
+		mesh.MeshType = Enum.MeshType.Sphere
+		mesh.Parent = part
+	end
+	-- Schirmmütze
+	local upright = CFrame.Angles(0, 0, math.rad(90))
+	attach(model, head, "CapBand", Vector3.new(s.Y * 0.2, s.X * 1.08, s.X * 1.08), CFrame.new(0, s.Y * 0.36, 0) * upright, DARK, M.Fabric, Enum.PartType.Cylinder)
+	round("CapTop", Vector3.new(s.X * 1.34, s.Y * 0.34, s.Z * 1.34), CFrame.new(0, s.Y * 0.52, -0.02), NAVY)
+	attach(model, head, "CapVisor", Vector3.new(s.X * 0.82, 0.05, s.Z * 0.4), CFrame.new(0, s.Y * 0.28, -s.Z * 0.62) * CFrame.Angles(math.rad(-14), 0, 0), Color3.fromRGB(12, 12, 13), M.SmoothPlastic)
+	attach(model, head, "CapBadge", Vector3.new(0.16, 0.2, 0.05), CFrame.new(0, s.Y * 0.44, -s.Z * 0.58), GOLD, M.Metal)
+	-- Abzeichen, Kragen, Knopfleiste, Funkgerät an der Schulter
+	local front = -torso.Size.Z / 2 - 0.02
+	attach(model, torso, "Badge", Vector3.new(0.22, 0.28, 0.05), CFrame.new(-0.36, 0.32, front), GOLD, M.Metal)
+	attach(model, torso, "NameTag", Vector3.new(0.34, 0.1, 0.04), CFrame.new(0.36, 0.3, front), GOLD, M.Metal)
+	attach(model, torso, "Placket", Vector3.new(0.12, torso.Size.Y * 0.9, 0.03), CFrame.new(0, 0, front + 0.008), DARK, M.Fabric)
+	attach(model, torso, "Tie", Vector3.new(0.18, torso.Size.Y * 0.6, 0.03), CFrame.new(0, torso.Size.Y * 0.14, front - 0.006), Color3.fromRGB(12, 12, 14), M.Fabric)
+	attach(model, torso, "Radio", Vector3.new(0.2, 0.34, 0.14), CFrame.new(0.5, torso.Size.Y * 0.36, front), Color3.fromRGB(12, 12, 13), M.SmoothPlastic)
+	-- Gürtel mit Schnalle und Taschen
+	local belt = hips.Size
+	attach(model, hips, "Belt", Vector3.new(belt.X + 0.1, 0.22, belt.Z + 0.1), CFrame.new(0, belt.Y * 0.2, 0), Color3.fromRGB(14, 13, 12), M.Leather)
+	attach(model, hips, "Buckle", Vector3.new(0.26, 0.2, 0.06), CFrame.new(0, belt.Y * 0.2, -belt.Z / 2 - 0.08), GOLD, M.Metal)
+	for _, x in { -0.5, 0.5 } do
+		attach(model, hips, "Pouch", Vector3.new(0.28, 0.3, 0.18), CFrame.new(x * belt.X * 0.8, belt.Y * 0.14, -belt.Z / 2 - 0.1), Color3.fromRGB(16, 15, 14), M.Leather)
+	end
+	for _, part in model:GetDescendants() do
+		if part:IsA("BasePart") then
+			part.CanCollide = false
+			part.CanTouch = false
+			part.CanQuery = false
+		end
+	end
+	model.Parent = parent
+	return model
+end
+
 ------------------------------------------------------------------ Ablauf
 function Kapitel3.run(kit)
 	local ctx = kit.ctx
@@ -865,6 +994,17 @@ function Kapitel3.run(kit)
 		end
 		local _, _, pathLength = Data.progress(forestPoints, forestPoints[1])
 		remotes:SetAttribute("Inside", false)
+		-- die Polizisten für die Schlussszene (stehen bis dahin versteckt unter der Hütte)
+		local officer
+		task.spawn(function()
+			local ok, result = pcall(buildOfficer, hut.folder)
+			if ok and result then
+				officer = result
+				Wagners.place(officer, (hut.frame * CFrame.new(0, -60, 0)).Position, (hut.frame * CFrame.new(0, -60, 5)).Position)
+			else
+				warn("Kapitel 3: Polizist konnte nicht gebaut werden: " .. tostring(result))
+			end
+		end)
 		ctx.setCheckpoint(afterBridgeFrame)
 		for _, player in Players:GetPlayers() do
 			local root = rootOf(player)
@@ -1004,7 +1144,7 @@ function Kapitel3.run(kit)
 			end
 		end
 		event:FireAllClients({ type = "objectives", clear = true })
-		event:FireAllClients({ type = "k3", step = "rest" })
+		event:FireAllClients({ type = "k3", step = "rest", officer = officer, frame = hut.frame, road = roadFrame })
 		local started = os.clock()
 		local function waitUntil(t)
 			local left = t - (os.clock() - started)
@@ -1016,6 +1156,8 @@ function Kapitel3.run(kit)
 		say("police", Script.KAPITEL3.knock)
 		waitUntil(Data.END_ANSWER)
 		say("player", Script.KAPITEL3.comingOut)
+		waitUntil(Data.END_OUTSIDE - 0.6)
+		hut.setDoor(true)
 		waitUntil(Data.END_TITLE + 2)
 		print("Kapitel 3: ENDE – die Polizei hat alle abgeholt.")
 		-- nach dem Abspann zurück in die Lobby (nur im echten Roblox)
@@ -1091,6 +1233,7 @@ function Kapitel3.run(kit)
 			local model = info.model
 			if model and model.Parent then
 				pcall(Wagners.stand, model)
+				pcall(Wagners.dropCandle, model) -- beim Ritual hält niemand eine Kerze
 				if kit.setFade then
 					kit.setFade(model, 0)
 				end

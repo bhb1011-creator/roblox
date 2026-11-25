@@ -4080,7 +4080,119 @@ function handlers.scares()
 end
 
 -- Ausruhen: schwarz, "A little later …", Blaulicht, Klopfen, draußen fährt das Auto weg, ENDE
-function handlers.rest()
+-- Schlussszene: alle kommen mit einem Polizisten aus der Hütte und gehen zum Streifenwagen,
+-- ein zweiter wartet am Auto. Gibt eine Liste der Figuren und das Geh-Programm zurück.
+local function buildArrest(message, folder)
+	local frame, road = message.frame, message.road
+	if not (frame and road) then
+		return nil
+	end
+	local RealFigure = require(Shared:WaitForChild("RealFigure"))
+	local params = RaycastParams.new()
+	params.FilterType = Enum.RaycastFilterType.Include
+	params.FilterDescendantsInstances = { workspace.Terrain, hutState.hut }
+	local function feetAt(position)
+		local hit = workspace:Raycast(Vector3.new(position.X, frame.Y + 5, position.Z), Vector3.new(0, -20, 0), params)
+		return hit and hit.Position or position
+	end
+	local cast = { actors = {} }
+	local function actor(model, points, speed, delay)
+		local root = model and model:FindFirstChild("HumanoidRootPart")
+		if not root then
+			return nil
+		end
+		model.Parent = folder
+		local rig = Rig.new(model, root, false, CFrame.new(0, footOffsetOf(model), 0))
+		rig.feet = feetAt(points[1])
+		rig.facing = flat((points[2] or points[1] + Vector3.new(0, 0, 1)) - points[1])
+		local state = { walk = 0, phase = math.random() * 6 }
+		table.insert(rig.layers, walkLayer(state))
+		table.insert(rig.layers, function(now)
+			return { Neck = CFrame.Angles(math.sin(now * 1.1 + state.phase) * 0.03, math.sin(now * 0.6) * 0.06, 0) }
+		end)
+		table.insert(rigs, rig)
+		local entry = { rig = rig, model = model, points = points, speed = speed, delay = delay, state = state }
+		table.insert(cast.actors, entry)
+		return entry
+	end
+	local function H3(x, z)
+		return (frame * CFrame.new(x, 0, z)).Position
+	end
+	local function R3(x, z)
+		return (road * CFrame.new(x, 0, z)).Position
+	end
+	-- die Spieler (dieselben Figuren und Anzüge wie im Spiel)
+	for index, other in Players:GetPlayers() do
+		local slot = other:GetAttribute("PlayerSkin") and 1 or other:GetAttribute("Figur") or index
+		local source = RealFigure.source("Spieler" .. math.clamp(slot, 1, 2), "Spieler")
+		local model = source and RealFigure.prepare(source, { height = slot == 2 and 5.3 or 5.6 })
+		if model then
+			local skinId = other:GetAttribute("PlayerSkin")
+			if skinId then
+				pcall(function()
+					local skin = require(Shared.ShopCatalog).find(skinId)
+					require(Shared.Skins).apply(model, skinId, skin and skin.options)
+				end)
+			end
+			local x = index == 1 and -0.7 or 0.9
+			actor(model, { H3(x, -2.5), H3(x, 3), H3(x + 0.6, 6.6), R3(index == 1 and 3.4 or 5.2, -11.7) }, 3.1, 0.5 + index * 0.45)
+		end
+	end
+	-- der Polizist, der sie hinausbegleitet, und der zweite am Auto
+	if message.officer then
+		local escort = localCopy(message.officer, "OfficerA")
+		actor(escort, { H3(0.1, -3.4), H3(0.1, 3), H3(0.6, 6.6), R3(7.4, -12.4) }, 3, 2.6)
+		local waiting = localCopy(message.officer, "OfficerB")
+		local entry = actor(waiting, { R3(-3.6, -12), R3(1, -15) }, 0, 999)
+		if entry then
+			-- dreht den Kopf zu den anderen
+			table.insert(entry.rig.layers, function()
+				local target = cast.actors[1]
+				if not target or target == entry then
+					return nil
+				end
+				local yaw, pitch = stareAngles(entry.rig, target.rig.feet + UP * 4.5)
+				return { Neck = CFrame.fromEulerAnglesYXZ(pitch, yaw, 0) }
+			end)
+		end
+	end
+	function cast.update(elapsed, dt)
+		for _, entry in cast.actors do
+			local walking = false
+			if elapsed > entry.delay and entry.speed > 0 then
+				entry.next = entry.next or 2
+				local target = entry.points[entry.next]
+				if target then
+					local offset = flat(target - entry.rig.feet)
+					local step = entry.speed * dt
+					if offset.Magnitude <= step + 0.02 then
+						entry.next += 1
+					else
+						walking = true
+						local position = entry.rig.feet + offset.Unit * step
+						local ground = feetAt(position)
+						local y = entry.rig.feet.Y + (ground.Y - entry.rig.feet.Y) * math.min(dt * 10, 1)
+						entry.rig.feet = Vector3.new(position.X, y, position.Z)
+						entry.rig.facing = flat(entry.rig.facing):Lerp(offset.Unit, math.min(dt * 6, 1))
+					end
+				end
+			end
+			entry.state.walk += ((walking and 0.48 or 0) - entry.state.walk) * math.min(dt * 7, 1)
+			if walking then
+				entry.state.phase += entry.speed * dt / 3.6 * math.pi * 2
+			end
+		end
+	end
+	function cast.hide()
+		for _, entry in cast.actors do
+			entry.model:Destroy()
+		end
+		table.clear(cast.actors)
+	end
+	return cast
+end
+
+function handlers.rest(message)
 	token += 1
 	local mine = token
 	local H = hutState
@@ -4135,13 +4247,52 @@ function handlers.rest()
 		local outside = H.endOutside or camera.CFrame
 		H.outsideShot = true
 		H.dark = 0
-		still(outside, 0)
-		setBlack(1, 0.9)
 		local carPosition = car.body.Position
-		at(Data.END_OUTSIDE + 1)
-		playAt("carDoor", carPosition, { Volume = 1.6 })
-		at(Data.END_OUTSIDE + 1.7)
-		playAt("carDoor", carPosition, { Volume = 1.6 })
+		local ok, cast = pcall(buildArrest, message, localFolder or workspace)
+		if not ok then
+			warn("Kapitel 3 (Client): Schlussszene ohne Figuren: " .. tostring(cast))
+			cast = nil
+		end
+		if cast then
+			local road = message.road
+			local castStart, last = os.clock(), os.clock()
+			local function play1(untilTime)
+				while os.clock() - started < untilTime do
+					local now = os.clock()
+					cast.update(now - castStart, math.min(now - last, 0.1))
+					last = now
+					hold(mine, 0)
+				end
+			end
+			-- 1) von der Seite: alle kommen aus der Hütte, davor das Auto mit Blaulicht
+			local shotStart = os.clock()
+			local from, target = (road * CFrame.new(13, 8, -14.4)).Position, (road * CFrame.new(1.2, 3.4, -14.2)).Position
+			shot(function(now)
+				local drift = (now - shotStart) * 0.25
+				return CFrame.lookAt(from - road.RightVector * drift, target)
+			end, 0)
+			setBlack(1, 0.9)
+			play1(Data.END_CAR)
+			-- 2) nah am Auto: sie kommen an der hinteren Tür an
+			local close = (road * CFrame.new(-3.4, 4.6, -15.4)).Position
+			local door = (road * CFrame.new(4.4, 3, -11.6)).Position
+			local closeStart = os.clock()
+			shot(function(now)
+				return CFrame.lookAt(close + road.RightVector * (now - closeStart) * 0.3, door)
+			end, 0)
+			play1(Data.END_CAR + 2)
+			playAt("carDoor", carPosition, { Volume = 1.6 })
+			play1(Data.END_ROAD - 0.35)
+			setBlack(0, 0.3)
+			play1(Data.END_ROAD)
+			cast.hide()
+			playAt("carDoor", carPosition, { Volume = 1.6 })
+		else
+			at(Data.END_ROAD)
+		end
+		-- 3) von der Straße aus: das Auto fährt los
+		still(outside, 0)
+		setBlack(1, 0.7)
 		at(Data.END_DRIVE - 0.9)
 		playAt("carEngine", carPosition, { Volume = 1.8 })
 		at(Data.END_DRIVE)

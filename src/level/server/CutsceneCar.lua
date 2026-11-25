@@ -146,7 +146,7 @@ function CutsceneCar.build(parent)
 
 		-- Lichter
 		local headlight = part("Headlight", Vector3.new(1.4, 0.4, 0.1), CFrame.new(side * 2.3, 2.45, front - 0.02), Color3.fromRGB(255, 248, 230), Enum.Material.Neon)
-		Parts.light("SpotLight", headlight, { Face = Enum.NormalId.Front, Range = 60, Angle = 55, Brightness = 3.2, Color = Color3.fromRGB(255, 244, 220), Shadows = true })
+		Parts.light("SpotLight", headlight, { Face = Enum.NormalId.Front, Range = 60, Angle = 72, Brightness = 1.8, Color = Color3.fromRGB(255, 244, 220), Shadows = true })
 		part("Indicator", Vector3.new(0.4, 0.25, 0.1), CFrame.new(side * 3.22, 2.45, front - 0.02), Color3.fromRGB(255, 150, 40), Enum.Material.Neon)
 		local taillight = part("Taillight", Vector3.new(1.3, 0.45, 0.1), CFrame.new(side * 2.5, 2.5, back + 0.02), Color3.fromRGB(210, 20, 20), Enum.Material.Neon)
 		Parts.light("PointLight", taillight, { Range = 7, Brightness = 0.8, Color = Color3.fromRGB(255, 40, 30) })

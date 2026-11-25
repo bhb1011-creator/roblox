@@ -907,6 +907,56 @@ function Kapitel2.run()
 			end
 		end
 	end)
+	------------------------------------------------------------------ Ins Bett legen
+	-- Kamera: erst an die Bettkante setzen, dann langsam zurück aufs Kissen; beim Aufstehen wieder hoch.
+	local bedCamera -- { start, from, steps = { { at, frame } … } }
+	local function smooth(a)
+		a = math.clamp(a, 0, 1)
+		return a * a * (3 - 2 * a)
+	end
+	local function endBedCamera()
+		if bedCamera then
+			bedCamera = nil
+			camera.CameraType = Enum.CameraType.Custom
+		end
+	end
+	RunService:BindToRenderStep("Kapitel2BedView", Enum.RenderPriority.Camera.Value + 3, function()
+		local B = bedCamera
+		if not B then
+			return
+		end
+		camera.CameraType = Enum.CameraType.Scriptable
+		local t = os.clock() - B.start
+		local frame, before = B.from, 0
+		for _, step in B.steps do
+			frame = frame:Lerp(step.frame, smooth((t - before) / (step.at - before)))
+			before = step.at
+		end
+		if t > before and B.breathe then
+			frame *= CFrame.new(0, math.sin(t * 1.5) * 0.03, 0)
+		end
+		camera.CFrame = frame
+		local character = player.Character
+		for _, part in character and character:GetDescendants() or {} do
+			if part:IsA("BasePart") then
+				part.LocalTransparencyModifier = 1
+			end
+		end
+		if B.leaving and t > before then
+			endBedCamera()
+		end
+	end)
+	player.CharacterAdded:Connect(endBedCamera)
+	local function bedView(message)
+		if message.up then
+			if bedCamera then
+				local eye = message.eye
+				bedCamera = { start = os.clock(), from = camera.CFrame, steps = { { at = 0.9, frame = eye } }, leaving = true }
+			end
+			return
+		end
+		bedCamera = { start = os.clock(), from = camera.CFrame, steps = { { at = 1, frame = message.sit }, { at = 2.6, frame = message.lie } }, breathe = true }
+	end
 	local function leaveHide()
 		if hiddenNow and leaveHideEvent then
 			leaveHideEvent:FireServer()
@@ -1115,6 +1165,8 @@ function Kapitel2.run()
 			hiddenNow = false
 			setHideView(nil)
 			leaveButton.Visible = false
+		elseif kind == "bed" then
+			bedView(message)
 		elseif kind == "nearScare" then
 			-- er steht direkt vor deinem Versteck
 			local seconds = message.seconds or 3
@@ -1299,9 +1351,9 @@ function Kapitel2.run()
 	-- Grundhelligkeit im Haus: man erkennt Wände, Türen und Möbel auch ohne Kerze. Dazu ein
 	-- schwaches, kühles Licht um einen selbst, wenn die Kerze aus oder weg ist (Augen, die sich
 	-- ans Dunkle gewöhnen; ohne Schatten, kostet kaum etwas). Draußen und in Kapitel 3 bleibt alles.
-	local HOUSE_AMBIENT = Color3.fromRGB(116, 109, 105)
-	local HOUSE_EXPOSURE = 0.4
-	local HOUSE_CONTRAST, HOUSE_BRIGHTNESS = 0.03, 0.03 -- (der starke Kontrast drückt dunkle Wände auf Schwarz)
+	local HOUSE_AMBIENT = Color3.fromRGB(92, 87, 84)
+	local HOUSE_EXPOSURE = 0.2
+	local HOUSE_CONTRAST, HOUSE_BRIGHTNESS = 0.07, 0.01 -- (der starke Kontrast drückt dunkle Wände auf Schwarz)
 	local houseBlend, baseAmbient, baseExposure = 0, nil, nil
 	local grading, baseContrast, baseBrightness
 	local eyePart = create("Part", { Name = "EyeLight", Size = Vector3.new(0.2, 0.2, 0.2), Transparency = 1, Anchored = true, CanCollide = false, CanQuery = false, CanTouch = false, CastShadow = false, Parent = workspace })
@@ -1334,7 +1386,7 @@ function Kapitel2.run()
 		end
 		local character = player.Character
 		local hasCandle = character and character:FindFirstChild("PlayerCandle") and not (ownCandleOff or lightOff)
-		local eye = (houseBlend > 0.5 and not hasCandle) and 0.55 or 0
+		local eye = (houseBlend > 0.5 and not hasCandle) and 0.42 or 0
 		eyeLight.Brightness += (eye - eyeLight.Brightness) * math.min(deltaTime * 2.5, 1)
 		eyePart.CFrame = camera.CFrame
 	end

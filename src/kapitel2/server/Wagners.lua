@@ -352,6 +352,8 @@ local function face(model, head, style, colors)
 	end
 end
 
+Wagners.face = face
+
 -- Rechter Arm angewinkelt, in der Hand eine brennende Kerze (Mrs. Wagner). Die Kerze wird
 -- in der Grundhaltung so angebracht, dass sie nach dem Anwinkeln genau senkrecht steht.
 local function holdCandle(model)
@@ -376,6 +378,11 @@ local function holdCandle(model)
 	local lift = hand.Size.Y / 2
 	-- detaillierte Kerze im Messinghalter (ReplicatedStorage.Shared.CandleModel), an der Hand fest
 	local CandleModel = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("CandleModel"))
+	local shoulderRest, elbowRest = canBend and shoulder.C0, canBend and elbow.C0
+	local had = {}
+	for _, child in model:GetDescendants() do
+		had[child] = true
+	end
 	local flame = CandleModel.build(model, hand.CFrame * upright * CFrame.new(0, lift, -0.05), 1.25, { weldTo = hand }).flame
 	local light = Instance.new("PointLight")
 	light.Name = "CandleLight"
@@ -384,9 +391,28 @@ local function holdCandle(model)
 	light.Color = Color3.fromRGB(255, 160, 85)
 	light.Shadows = true
 	light.Parent = flame
+	for _, child in model:GetDescendants() do
+		if child:IsA("BasePart") and not had[child] then
+			child:SetAttribute("HandCandle", true)
+		end
+	end
 	if canBend then
+		shoulder:SetAttribute("CandleRest", shoulderRest)
+		elbow:SetAttribute("CandleRest", elbowRest)
 		shoulder.C0 *= CFrame.Angles(up, 0, 0)
 		elbow.C0 *= CFrame.Angles(bend, 0, 0)
+	end
+end
+
+-- Kerze weg, Arm wieder locker nach unten (beim Essen, beim Ritual)
+function Wagners.dropCandle(model)
+	for _, item in model and model:GetDescendants() or {} do
+		if item:IsA("BasePart") and item:GetAttribute("HandCandle") then
+			item:Destroy()
+		elseif item:IsA("Motor6D") and item:GetAttribute("CandleRest") then
+			item.C0 = item:GetAttribute("CandleRest")
+			item:SetAttribute("CandleRest", nil)
+		end
 	end
 end
 

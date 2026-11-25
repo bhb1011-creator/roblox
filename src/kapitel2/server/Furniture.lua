@@ -114,61 +114,72 @@ function Furniture.chair(b, cf, color)
 	b.box("ChairStretcher", Vector3.new(1.2, 0.08, 0.08), cf * CFrame.new(0, 0.7, 0), color, M.Wood, DECO)
 end
 
-local DUST_SHEET = Color3.fromRGB(112, 106, 96) -- verstaubtes Tuch
--- Sessel oder Sofa, optional unter einem weißen Tuch (unter dem man die Form ahnt).
--- Alle Teile greifen etwas ineinander und enden nie auf derselben Ebene – sonst flackern
--- die Flächen in Roblox.
-function Furniture.sofa(b, cf, w, color, covered)
-	local fabric = covered and DUST_SHEET or color
-	local mat = covered and M.SmoothPlastic or M.Leather
+-- Rundes Kissen: Kern, vier Walzen an den Kanten und vier Kugeln an den Ecken (nirgends eine harte Kante)
+local function pillow(b, name, size, cf, color, mat)
+	local t = size.Y
+	local w, d = size.X - t, size.Z - t
+	b.box(name, Vector3.new(size.X - t, t, size.Z - t), cf, color, mat, DECO)
+	for _, side in { -1, 1 } do
+		b.cyl(name .. "Edge", w, t, cf * CFrame.new(-w / 2, 0, side * d / 2) * CFrame.Angles(0, 0, math.rad(-90)), color, mat, DECO)
+		b.cyl(name .. "Edge", d, t, cf * CFrame.new(side * w / 2, 0, -d / 2) * CFrame.Angles(math.rad(90), 0, 0), color, mat, DECO)
+		for _, z in { -1, 1 } do
+			b.ball(name .. "Corner", t, cf * CFrame.new(side * w / 2, 0, z * d / 2), color, mat)
+		end
+	end
+end
+
+-- Sessel oder Sofa im alten Landhausstil: Polster mit runden Kanten, gerollte Armlehnen mit
+-- Holzrosette, Holzsockel und gedrechselte Füße.
+-- `worn` = verblichener, staubiger Stoff (steht lange unbenutzt)
+function Furniture.sofa(b, cf, w, color, worn)
+	local fabric = worn and color:Lerp(Color3.fromRGB(112, 104, 92), 0.28) or color
+	local mat = M.Fabric
+	local cushionColor = fabric:Lerp(Color3.new(1, 1, 1), 0.05)
+	local dark = shade(fabric, 0.2)
 	local alongX = CFrame.Angles(0, 0, math.rad(-90)) -- Walze von links nach rechts
 	local alongZ = CFrame.Angles(math.rad(90), 0, 0) -- Walze von vorne nach hinten
-	local armW = math.min(0.75, w * 0.2)
+	local armW = 0.62
 	local inner = w - armW * 2
-	local seats = math.max(1, math.floor(inner / 1.6 + 0.5))
+	local seats = math.max(1, math.floor(inner / 1.75 + 0.5))
 	local seatW = inner / seats
-	local seam = shade(fabric, 0.22)
 
-	-- Korpus: Sitz, Lehne, Armlehnen
-	b.box("SofaSeat", Vector3.new(inner + 0.2, 1.15, 2.3), cf * CFrame.new(0, 1.0, -0.05), fabric, mat)
-	b.box("SofaBack", Vector3.new(w - 0.3, 2.95, 0.6), cf * CFrame.new(0, 1.9, 1.08), fabric, mat)
-	b.cyl("SofaBackRoll", w - 0.36, 0.72, cf * CFrame.new(-(w - 0.36) / 2, 3.38, 1.1) * alongX, fabric, mat, DECO)
+	-- Füße und Holzsockel
+	for _, x in { -1, 1 } do
+		for _, z in { -0.98, 1.02 } do
+			local foot = cf * CFrame.new(x * (w / 2 - 0.36), 0, z)
+			b.cyl("SofaFoot", 0.34, 0.24, foot, C.darkWood, M.Wood, DECO)
+			b.ball("SofaFootBall", 0.3, foot * CFrame.new(0, 0.2, 0), C.darkWood, M.Wood)
+		end
+	end
+	b.box("SofaBase", Vector3.new(w - 0.3, 0.3, 2.34), cf * CFrame.new(0, 0.47, 0.02), C.darkWood, M.Wood, DECO)
+	-- Korpus (auch die Kollision)
+	b.box("SofaSeat", Vector3.new(inner + 0.3, 0.78, 2.3), cf * CFrame.new(0, 0.98, 0.0), dark, mat)
+	b.box("SofaBack", Vector3.new(w - 0.36, 2.2, 0.5), cf * CFrame.new(0, 1.68, 1.06) * CFrame.Angles(math.rad(-5), 0, 0), fabric, mat)
+	-- Lehne oben rund
+	b.cyl("SofaBackRoll", w - 0.62, 0.56, cf * CFrame.new(-(w - 0.62) / 2, 2.86, 1.14) * alongX, fabric, mat, DECO)
+	for _, x in { -1, 1 } do
+		b.ball("SofaBackEnd", 0.56, cf * CFrame.new(x * (w - 0.62) / 2, 2.86, 1.14), fabric, mat)
+	end
+	-- Armlehnen: Kern, gerollte Oberseite, vorne Holzrosette
 	for _, x in { -1, 1 } do
 		local ax = x * (w / 2 - armW / 2)
-		b.box("SofaArm", Vector3.new(armW - 0.1, 1.95, 2.46), cf * CFrame.new(ax, 1.3, -0.02), fabric, mat)
-		b.cyl("SofaArmRoll", 2.56, armW + 0.06, cf * CFrame.new(ax, 2.28, -1.32) * alongZ, fabric, mat, DECO)
-		b.ball("SofaBackEnd", 0.7, cf * CFrame.new(x * (w - 0.4) / 2, 3.38, 1.1), fabric, mat)
-		if not covered then
-			-- runder Knopf vorne auf der gerollten Armlehne
-			b.cyl("SofaArmButton", 0.06, 0.24, cf * CFrame.new(ax, 2.28, -1.37) * alongZ, seam, mat, DECO)
-		end
+		b.box("SofaArm", Vector3.new(armW - 0.08, 1.3, 2.3), cf * CFrame.new(ax, 1.22, 0.0), fabric, mat)
+		b.cyl("SofaArmRoll", 2.34, armW + 0.1, cf * CFrame.new(ax + x * 0.04, 1.96, -1.2) * alongZ, fabric, mat, DECO)
+		b.cyl("SofaArmFront", 0.08, armW - 0.04, cf * CFrame.new(ax + x * 0.04, 1.96, -1.27) * alongZ, C.darkWood, M.Wood, DECO)
+		b.ball("SofaArmRosette", 0.2, cf * CFrame.new(ax + x * 0.04, 1.96, -1.28), C.brass, M.Metal)
+		b.box("SofaArmPost", Vector3.new(0.2, 1.1, 0.1), cf * CFrame.new(ax, 1.1, -1.18), C.darkWood, M.Wood, DECO)
 	end
-	-- Sitzkissen (vorne rund) und Rückenkissen
+	-- Sitz- und Rückenkissen (leicht unregelmäßig, wie benutzt)
 	for i = 1, seats do
 		local x = -inner / 2 + (i - 0.5) * seatW
-		local cushion = covered and seatW + 0.02 or seatW - 0.05
-		b.box("SofaCushion", Vector3.new(cushion, 0.42, 1.85), cf * CFrame.new(x, 1.7, -0.27), fabric, mat, DECO)
-		b.cyl("SofaCushionFront", cushion - 0.03, 0.4, cf * CFrame.new(x - (cushion - 0.03) / 2, 1.7, -1.19) * alongX, fabric, mat, DECO)
-		if not covered then -- (unter dem Tuch sieht man nur die glatte Lehne)
-			b.box("SofaBackCushion", Vector3.new(cushion, 1.45, 0.45), cf * CFrame.new(x, 2.52, 0.66) * CFrame.Angles(math.rad(-9), 0, 0), fabric, mat, DECO)
-			b.ball("SofaButton", 0.12, cf * CFrame.new(x, 2.6, 0.43), seam, mat)
-		end
+		local sag = (i % 2 == 0) and -0.03 or 0.02
+		pillow(b, "SofaCushion", Vector3.new(seatW - 0.04, 0.5, 2.0), cf * CFrame.new(x, 1.58 + sag, -0.22), cushionColor, mat)
+		pillow(b, "SofaBackCushion", Vector3.new(seatW - 0.06, 0.5, 1.3), cf * CFrame.new(x, 2.28, 0.66 - sag) * CFrame.Angles(math.rad(76), 0, 0), cushionColor, mat)
 	end
-
-	if covered then
-		-- das Tuch fällt rundum bis zum Boden und wird nach unten etwas weiter
-		for _, tier in { { 1.35, 0.06 }, { 0.8, 0.14 }, { 0.3, 0.22 } } do
-			b.box("SheetSkirt", Vector3.new(w + tier[2], tier[1], 2.76 + tier[2]), cf * CFrame.new(0, tier[1] / 2 + 0.01, 0.03), DUST_SHEET, mat)
-		end
-		b.box("SofaBackPad", Vector3.new(inner + 0.2, 1.6, 0.3), cf * CFrame.new(0, 2.5, 0.72) * CFrame.Angles(math.rad(-7), 0, 0), fabric, mat, DECO)
-	else
-		-- Sockel mit gedrechselten Füßen
-		b.box("SofaBase", Vector3.new(w - 0.24, 0.3, 2.3), cf * CFrame.new(0, 0.36, 0), C.darkWood, M.Wood, DECO)
-		for _, x in { -1, 1 } do
-			for _, z in { -0.95, 1.0 } do
-				b.cyl("SofaFoot", 0.26, 0.26, cf * CFrame.new(x * (w / 2 - 0.35), 0, z), C.darkWood, M.Wood, DECO)
-			end
-		end
+	-- ein Zierkissen (beim großen Sofa zwei)
+	for i = 1, (w > 4 and 2 or 1) do
+		local x = (i == 1 and -1 or 1) * (inner / 2 - 0.62)
+		pillow(b, "SofaThrow", Vector3.new(1.05, 0.36, 1.05), cf * CFrame.new(x, 2.22, 0.2) * CFrame.Angles(math.rad(68), math.rad(i == 1 and 10 or -12), math.rad(i == 1 and 6 or -8)), Color3.fromRGB(150, 122, 74), mat)
 	end
 end
 

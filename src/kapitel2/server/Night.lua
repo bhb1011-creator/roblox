@@ -165,6 +165,7 @@ function Night.run(ctx)
 				P(62.6, 26.5, "E"),
 			}, 4.5, steps)
 			if mrs then
+				Wagners.dropCandle(mrs) -- beim Essen keine Kerze in der Hand
 				Wagners.sit(mrs, CHAIRS.mrsWagner)
 			end
 			arrived = true
@@ -234,6 +235,9 @@ function Night.run(ctx)
 				bringTo(player, point(64, 33 + index), point(67, 30))
 			end
 		end
+		for _, player in Players:GetPlayers() do
+			ctx.setCandleAway(player, true)
+		end
 		sitEveryone()
 		seated = true
 		-- aufstehen geht beim Essen nicht: wer aufsteht, sitzt gleich wieder
@@ -262,6 +266,7 @@ function Night.run(ctx)
 	function actions.flee()
 		seated = false
 		for _, player in Players:GetPlayers() do
+			ctx.setCandleAway(player, false)
 			local _, humanoid = rootOf(player)
 			if humanoid then
 				humanoid.Sit = false
@@ -278,25 +283,28 @@ function Night.run(ctx)
 		Wagners.stand(lucy, point(62.8, 34.5), point(57, 38))
 		Wagners.stand(tommy, point(71.2, 34.5), point(57, 38))
 		task.wait(0.3)
-		local done = 0
-		task.spawn(function()
-			ctx.walkPath(mrs, { P(60, 34), P(57, 38), P(51, 38), P(46, 36) }, 10, steps)
-			done += 1
-		end)
-		task.spawn(function()
-			ctx.walkPath(lucy, { P(61.5, 36.5), P(57, 37.6), P(51, 37.6), P(46, 35.5) }, 10, steps)
-		end)
-		task.spawn(function()
-			ctx.walkPath(tommy, { P(71, 38.2), P(62, 39.2), P(57, 38.8), P(51, 38.8), P(46, 37.5) }, 10, steps)
-		end)
-		task.spawn(function()
-			ctx.walkPath(mr, { P(61, 40), P(57, 38.4), P(51, 38.4), P(46, 37) }, 10, steps)
-			done += 1
-		end)
+		local done, gone = 0, false
+		local function runAway(npc, spots)
+			task.spawn(function()
+				if npc then
+					ctx.walkPath(npc, spots, 10, steps)
+					if gone then
+						-- (war noch unterwegs, als alle schon weg waren: nicht im Flur stehen bleiben)
+						Wagners.place(npc, ctx.hiddenSpot, ctx.facing)
+					end
+				end
+				done += 1
+			end)
+		end
+		runAway(mrs, { P(60, 34), P(57, 38), P(51, 38), P(46, 36) })
+		runAway(lucy, { P(61.5, 36.5), P(57, 37.6), P(51, 37.6), P(46, 35.5) })
+		runAway(tommy, { P(71, 38.2), P(62, 39.2), P(57, 38.8), P(51, 38.8), P(46, 37.5) })
+		runAway(mr, { P(61, 40), P(57, 38.4), P(51, 38.4), P(46, 37) })
 		local deadline = os.clock() + 8
-		while done < 2 and os.clock() < deadline do
+		while done < 4 and os.clock() < deadline do
 			task.wait(0.1)
 		end
+		gone = true
 		for _, npc in { mrs, mr, lucy, tommy } do
 			if npc then
 				Wagners.place(npc, ctx.hiddenSpot, ctx.facing)
@@ -356,6 +364,7 @@ function Night.run(ctx)
 			return
 		end
 		hidden[player] = nil
+		ctx.setCandleAway(player, false)
 		spot.occupant = nil
 		if spot.promptObject then
 			spot.promptObject.ActionText = "Verstecken"
@@ -384,6 +393,7 @@ function Night.run(ctx)
 		end
 		hidden[player] = spot
 		spot.occupant = player
+		ctx.setCandleAway(player, true)
 		spot.promptObject.ActionText = "Rauskommen"
 		spot.promptObject.Enabled = false -- rauskommen: E oder Leertaste (Remote "LeaveHide")
 		humanoid.WalkSpeed = 0
@@ -457,54 +467,115 @@ function Night.run(ctx)
 		Wagners.place(sarp, away, ctx.facing)
 	end
 
+	-- Sarps Gang: schwer und schlurfend. Hüfte, Knie und Fußgelenk schwingen passend zum Tempo (die Füße
+	-- rutschen nicht), das rechte Bein zieht er etwas nach, der Oberkörper wiegt vorgebeugt gegen die
+	-- Beine, die langen Arme hängen schlaff und pendeln verspätet nach. Anlaufen und Stehenbleiben sind weich.
+	local gaitState
+	local function sarpGait()
+		if gaitState then
+			return gaitState
+		end
+		local state = { bob = 0, joints = {}, phase = 0, strength = 0, walks = 0, heading = nil, leg = 3.2 }
+		for _, info in {
+			{ "LeftUpperLeg", "LeftHip", "hip", 0, 1 },
+			{ "RightUpperLeg", "RightHip", "hip", math.pi, 0.82 },
+			{ "LeftLowerLeg", "LeftKnee", "knee", 0, 1 },
+			{ "RightLowerLeg", "RightKnee", "knee", math.pi, 0.65 },
+			{ "LeftFoot", "LeftAnkle", "ankle", 0, 1 },
+			{ "RightFoot", "RightAnkle", "ankle", math.pi, 0.6 },
+			{ "LeftUpperArm", "LeftShoulder", "arm", math.pi, 1 },
+			{ "RightUpperArm", "RightShoulder", "arm", 0, 0.8 },
+			{ "LeftLowerArm", "LeftElbow", "elbow", math.pi, 1 },
+			{ "RightLowerArm", "RightElbow", "elbow", 0, 0.8 },
+			{ "UpperTorso", "Waist", "waist", 0, 1 },
+		} do
+			local part = sarp:FindFirstChild(info[1])
+			local joint = part and (part:FindFirstChild(info[2]) or part:FindFirstChildOfClass("Motor6D"))
+			if joint and joint:IsA("Motor6D") then
+				table.insert(state.joints, { joint = joint, base = joint.C0, kind = info[3], offset = info[4], scale = info[5] })
+			end
+		end
+		local hip = sarp:FindFirstChild("LeftUpperLeg")
+		local hipJoint = hip and hip:FindFirstChild("LeftHip")
+		if hipJoint and hipJoint:IsA("Motor6D") and hipJoint.Part0 then
+			state.leg = math.max((hipJoint.Part0.CFrame * hipJoint.C0).Position.Y - Wagners.ground(sarp).Y, 2)
+		end
+		gaitState = state
+		return state
+	end
+	local function poseSarp(state, speed)
+		local k = state.strength
+		local reach = math.clamp(0.3 + speed * 0.022, 0.3, 0.46)
+		local sway = math.sin(state.phase)
+		for _, item in state.joints do
+			local p = state.phase + item.offset
+			local base, s = item.base, item.scale * k
+			local at = CFrame.new(base.Position)
+			local frame
+			if item.kind == "hip" then
+				frame = base * CFrame.Angles((math.sin(p) * reach + 0.05) * s, 0, 0)
+			elseif item.kind == "knee" then
+				-- beugt sich beim Vorschwingen, federt beim Auftreten leicht nach
+				frame = base * CFrame.Angles(-(math.max(0, math.cos(p)) ^ 1.4 * 0.75 + 0.1 + math.max(0, math.sin(p + 2.2)) * 0.12) * s, 0, 0)
+			elseif item.kind == "ankle" then
+				frame = base * CFrame.Angles((math.sin(p + 2.6) * 0.16 + 0.05) * s, 0, 0)
+			elseif item.kind == "arm" then
+				frame = at * CFrame.Angles((math.sin(p - 0.5) * 0.2 + 0.1) * s, 0, 0) * base.Rotation
+			elseif item.kind == "elbow" then
+				frame = at * CFrame.Angles((0.16 + math.max(0, math.sin(p - 0.9)) * 0.2) * s, 0, 0) * base.Rotation
+			else
+				frame = base * CFrame.Angles((-0.13 + math.cos(state.phase * 2) * 0.025) * k, -sway * 0.11 * k, math.cos(state.phase) * 0.05 * k)
+			end
+			pcall(function()
+				item.joint.C0 = frame
+			end)
+		end
+		return reach
+	end
+	-- nach dem Gehen: Beine in Ruhe zurück (nicht mitten im Schritt stehen bleiben, kein Ruck)
+	local function settleSarp(state, speed)
+		local mine = state.walks
+		local root = sarp.HumanoidRootPart
+		state.lastRoot = root.Position
+		task.spawn(function()
+			task.wait(0.08) -- (geht er gleich weiter, läuft der Gang ohne Unterbrechung weiter)
+			local last = os.clock()
+			while state.walks == mine and state.strength > 0 do
+				RunService.Heartbeat:Wait()
+				local now = os.clock()
+				state.strength = math.max(0, state.strength - (now - last) / 0.4)
+				last = now
+				if state.walks == mine then
+					poseSarp(state, speed)
+					-- wieder auf volle Höhe (außer er wurde inzwischen woanders hingestellt)
+					if state.lastRoot and (root.Position - state.lastRoot).Magnitude < 0.01 then
+						local bob = state.bob * state.strength
+						root.CFrame += Vector3.new(0, bob - state.bob, 0)
+						state.bob = bob
+						state.lastRoot = root.Position
+					else
+						state.bob = 0
+						state.lastRoot = nil
+					end
+				end
+			end
+		end)
+	end
 	-- Sarp bewegen; bricht ab, sobald `interrupted()` wahr ist
 	local function sarpWalk(points, speed, interrupted)
 		if not sarp then
 			return true
 		end
 		local position = Wagners.ground(sarp)
-		-- Gelenke für den Gang: Hüfte und Knie schwingen, die langen Arme pendeln schlaff mit
-		local hips = {}
-		local gait = {}
-		for _, info in {
-			{ "LeftUpperLeg", "LeftHip", "hip", 0 },
-			{ "RightUpperLeg", "RightHip", "hip", math.pi },
-			{ "LeftLowerLeg", "LeftKnee", "knee", 0 },
-			{ "RightLowerLeg", "RightKnee", "knee", math.pi },
-			{ "LeftUpperArm", "LeftShoulder", "arm", math.pi },
-			{ "RightUpperArm", "RightShoulder", "arm", 0 },
-			{ "LeftLowerArm", "LeftElbow", "elbow", math.pi },
-			{ "RightLowerArm", "RightElbow", "elbow", 0 },
-		} do
-			local part = sarp:FindFirstChild(info[1])
-			local joint = part and (part:FindFirstChild(info[2]) or part:FindFirstChildOfClass("Motor6D"))
-			if joint and joint:IsA("Motor6D") then
-				local entry = { joint = joint, base = joint.C0, kind = info[3], offset = info[4] }
-				table.insert(hips, entry)
-				table.insert(gait, entry)
-			end
+		local gait = sarpGait()
+		if gait.lastRoot and (sarp.HumanoidRootPart.Position - gait.lastRoot).Magnitude < 0.01 then
+			position -= Vector3.new(0, gait.bob, 0)
 		end
-		local phase, lastFrame = 0, nil
-		local function stepPose(dt, pace)
-			phase += pace * dt / 3.2 * math.pi * 2 -- 3,2 Studs pro Doppelschritt
-			for _, item in gait do
-				local p = phase + item.offset
-				local base = item.base
-				pcall(function()
-					if item.kind == "hip" then
-						item.joint.C0 = base * CFrame.Angles(math.sin(p) * 0.36, 0, 0)
-					elseif item.kind == "knee" then
-						item.joint.C0 = base * CFrame.Angles(-math.max(0, math.cos(p)) * 0.6, 0, 0)
-					elseif item.kind == "arm" then
-						-- um die Körperachse am Schultergelenk (die Arme sind aus der T-Haltung gedreht)
-						item.joint.C0 = CFrame.new(base.Position) * CFrame.Angles(math.sin(p) * 0.22, 0, 0) * base.Rotation
-					else
-						item.joint.C0 = CFrame.new(base.Position) * CFrame.Angles(0.12 + math.max(0, math.sin(p)) * 0.18, 0, 0) * base.Rotation
-					end
-				end)
-			end
-		end
-		local nextStep = 0
+		gait.bob, gait.lastRoot = 0, nil
+		local facingNow = sarp.HumanoidRootPart.CFrame.LookVector * Vector3.new(1, 0, 1)
+		gait.heading = facingNow.Magnitude > 0.05 and facingNow.Unit or gait.heading
+		gait.walks += 1 -- (ein noch laufendes Ausschwingen hört auf)
+		local lastFrame
 		-- jedes Ziel über Türen und Treppen ansteuern, nie durch Wände oder Decken
 		local legs, legDoors = {}, {}
 		for _, goal in points do
@@ -530,22 +601,35 @@ function Night.run(ctx)
 				local from, start = position, os.clock()
 				while true do
 					if interrupted and interrupted() then
-						-- Beine wieder gerade (sonst bleibt er mitten im Schritt stehen)
-						for _, hip in hips do
-							pcall(function()
-								hip.joint.C0 = hip.base
-							end)
-						end
+						settleSarp(gait, speed)
 						return false
 					end
 					local a = math.min((os.clock() - start) * speed / distance, 1)
 					position = from:Lerp(target, a)
-					Wagners.place(sarp, position, position + direction)
 					local now = os.clock()
-					stepPose(math.min(now - (lastFrame or now), 0.1), speed)
+					local dt = math.min(now - (lastFrame or now), 0.1)
 					lastFrame = now
-					if os.clock() >= nextStep then
-						nextStep = os.clock() + 0.7
+					-- weich in die Laufrichtung drehen
+					local flatDirection = direction * Vector3.new(1, 0, 1)
+					if flatDirection.Magnitude > 0.05 then
+						local heading = gait.heading or flatDirection.Unit
+						if heading:Dot(flatDirection.Unit) < -0.95 then
+							heading = (heading + Vector3.new(-heading.Z, 0, heading.X) * 0.4).Unit -- (genau umgekehrt: zur Seite anfangen)
+						end
+						heading = heading:Lerp(flatDirection.Unit, math.min(dt * 6, 1))
+						gait.heading = heading.Magnitude > 0.05 and heading.Unit or flatDirection.Unit
+					end
+					gait.strength = math.min(1, gait.strength + dt / 0.35)
+					local reach = math.clamp(0.3 + speed * 0.022, 0.3, 0.46)
+					local before = gait.phase
+					gait.phase += speed * dt / (4 * gait.leg * math.sin(reach)) * math.pi * 2
+					poseSarp(gait, speed)
+					-- leichtes Auf und Ab: bei gespreizten Beinen am tiefsten
+					local bob = -math.abs(math.sin(gait.phase)) * gait.leg * (1 - math.cos(reach)) * 0.9 * gait.strength
+					gait.bob = bob
+					Wagners.place(sarp, position + Vector3.new(0, bob, 0), position + Vector3.new(0, bob, 0) + (gait.heading or direction))
+					-- Schritt-Geräusch genau dann, wenn ein Fuß aufsetzt
+					if math.floor(before / math.pi - 0.5) ~= math.floor(gait.phase / math.pi - 0.5) then
 						-- sehr laut und weit zu hören: man merkt, wenn er näher kommt
 						sfx("sarpStep", position + Vector3.new(0, 0.5, 0), { volume = 2.6, maxDistance = 170 })
 					end
@@ -556,10 +640,8 @@ function Night.run(ctx)
 				end
 			end
 		end
-		for _, hip in hips do
-			pcall(function()
-				hip.joint.C0 = hip.base
-			end)
+		if moved then
+			settleSarp(gait, speed)
 		end
 		if not moved then
 			RunService.Heartbeat:Wait()
@@ -801,6 +883,13 @@ function Night.run(ctx)
 
 	------------------------------------------------------------------ 5. Richard kommt zurück
 	function actions.richardComes()
+		-- die Kinder und Mrs. Wagner sind sicher weg, bevor Richard hereinkommt
+		for _, npc in { mrs, lucy, tommy } do
+			if npc then
+				Wagners.stand(npc)
+				Wagners.place(npc, ctx.hiddenSpot, ctx.facing)
+			end
+		end
 		if kitchenDoor then
 			kitchenDoor.locked = false
 			if kitchenDoor.angle == 0 then
@@ -833,7 +922,11 @@ function Night.run(ctx)
 	local enterEscape -- Flucht (Escape.lua), wird ganz unten festgelegt
 	local patrolDone, familyDone = false, false
 	local axeHolder
+	local broken = false -- Tür 1 ist offen: die Axt wird nicht mehr gebraucht
 	local function giveAxe(player)
+		if broken then
+			return
+		end
 		local character = player.Character
 		local hand = character and (character:FindFirstChild("LeftHand") or character:FindFirstChild("Left Arm"))
 		local root = character and character:FindFirstChild("HumanoidRootPart")
@@ -902,12 +995,12 @@ function Night.run(ctx)
 
 	-- Tür 1 (oben im langen Flur: Großmutters Zimmer, vernagelt) mit der Axt aufbrechen
 	local doorOne = Mansion.doorAt(38, 40, "O")
-	local broken = false
+	local breaking = false
 	local function breakDoor(player)
-		if broken or not doorOne then
+		if breaking or broken or not doorOne then
 			return
 		end
-		broken = true
+		breaking = true
 		local origin = Mansion.origin
 		local middle = origin * (doorOne.middle + Vector3.new(0, O + 4, 0))
 		event:FireAllClients({ type = "hint", text = player.DisplayName .. " is breaking the door open …", seconds = 4 })
@@ -939,6 +1032,13 @@ function Night.run(ctx)
 		doorOne.locked = false
 		sfx("doorSlam", middle, { volume = 1.4 })
 		ctx.moveDoor(doorOne, doorOne.openAngle, 0.35)
+		broken = true
+		for _, other in Players:GetPlayers() do
+			local held = other.Character and other.Character:FindFirstChild("PlayerAxe")
+			if held then
+				held:Destroy()
+			end
+		end
 		event:FireAllClients({ type = "hint", text = "The door is open. Go inside.", seconds = 5 })
 		ctx.remotes:SetAttribute("Phase", "doorOne")
 		-- sobald jemand den Raum hinter Tür 1 betritt: alles schwarz
@@ -964,7 +1064,7 @@ function Night.run(ctx)
 	end
 	if doorOne then
 		doorOne.onLocked = function(player)
-			if broken then
+			if broken or breaking then
 				return true
 			end
 			if player == axeHolder then

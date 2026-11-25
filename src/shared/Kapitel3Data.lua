@@ -91,9 +91,11 @@ Kapitel3Data.END_INSIDE = 6
 Kapitel3Data.END_KNOCK = 7.6
 Kapitel3Data.END_ANSWER = 11
 Kapitel3Data.END_OUTSIDE = 14.2
-Kapitel3Data.END_DRIVE = 17
-Kapitel3Data.END_FADE = 24
-Kapitel3Data.END_TITLE = 26.5
+Kapitel3Data.END_DRIVE = 23.2
+Kapitel3Data.END_FADE = 30.2
+Kapitel3Data.END_TITLE = 32.7
+Kapitel3Data.END_CAR = 18.4 -- Schnitt: am Auto, einsteigen
+Kapitel3Data.END_ROAD = 21.8 -- Schnitt: von der Straße aus, das Auto fährt los
 
 -- Wo auf dem Weg (Liste von Punkten) steht `position`? Gibt die Strecke ab dem Anfang
 -- zurück, den seitlichen Abstand und die Länge des ganzen Wegs.

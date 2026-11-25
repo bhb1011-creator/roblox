@@ -833,3 +833,14 @@ Was im neuen Chat ohne den Mock noch geht:
 Countdown 3 s statt 10, Schwarzblende nach 3 s, Wechsel ins Spiel direkt danach (CarQueue.depart), das Auto faehrt im Hintergrund weiter. Achtung: Studio "Beta-Gaestehaus" mit `rojo serve` enthaelt das Spiel, nicht die Lobby: vor dem Hochladen immer das richtige Projekt nehmen. Echter Wechsel und Duo sind nicht getestet.
 
 Hochgeladen (25.11., mit OK des Users, privat): Lobby -> Beta-Gaestehaus, Spiel -> Spiel, beide 25c. Inhalt danach aus der Cloud geprueft. Zielgruppe unveraendert (PRIVATE).
+
+## 25d (25.11.2026): 13 Punkte nach dem Spielen
+- Kapitel 1: Nachtlicht und Dunst (World.setupLighting(drive)), Scheinwerfer weicher. Nur ohne keepRadius.
+- Haus etwas dunkler (Scene.lua HOUSE_*), Sarps Aura schwach (SarpStage2.addAura, kein Umriss mehr).
+- Bett: erst Bettkante, dann aufs Kissen (Kapitel2.lieDown, Client "bed"), Decke ueber dem Koerper, Figur wird ausgemessen.
+- Sofas neu (Furniture.sofa, pillow), Sitzgruppe zum Kamin gedreht.
+- Kerze: ctx.setCandleAway (Essen, Bett, Versteck), Wagners.dropCandle (Mrs. Wagner beim Essen, beim Ritual).
+- Sarps Gang: sarpGait/poseSarp/settleSarp in Night.lua. Axt weg, sobald Tuer 1 offen ist.
+- Familie ist sicher weg, bevor Richard kommt (flee/richardComes). Richard laeuft in Grossmutters Zimmer (Escape.lua).
+- Verfolgung: 534 Baeume und 68 Huegel am Rand (Kapitel3.buildForest).
+- Schlussszene: Figuren + zwei Polizisten (Kapitel3.buildOfficer, Client buildArrest, END_CAR, END_ROAD).

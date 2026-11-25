@@ -157,6 +157,7 @@ function Escape.run(kit)
 			return
 		end
 		hidden[player] = nil
+		ctx.setCandleAway(player, false)
 		spot.occupant = nil
 		if spot.promptObject then
 			spot.promptObject.ActionText = "Verstecken"
@@ -185,6 +186,7 @@ function Escape.run(kit)
 		end
 		hidden[player] = spot
 		spot.occupant = player
+		ctx.setCandleAway(player, true)
 		spot.promptObject.ActionText = "Rauskommen"
 		spot.promptObject.Enabled = false -- rauskommen: E oder Leertaste (Remote "LeaveHide")
 		humanoid.WalkSpeed = 0
@@ -1008,6 +1010,35 @@ function Escape.run(kit)
 	------------------------------------------------------------------ 1. Richard im Raum
 	local mr = kit.mr
 	if mr then
+		-- Richard kommt durch den Flur und läuft herein (Start dort, wo ihn gerade niemand sieht)
+		local path = room.sarpApproach
+		local first = #path - 2
+		for index = #path - 1, math.max(#path - 4, 1), -1 do
+			first = index
+			if not kit.anyoneSees(path[index], mr) then
+				break
+			end
+		end
+		local ways = {}
+		for index = first + 1, #path do
+			table.insert(ways, { at = path[index] })
+		end
+		table.insert(ways, { at = room.sarpEnter })
+		table.insert(ways, { at = room.richard })
+		Wagners.place(mr, path[first], path[first + 1] or room.sarpEnter)
+		mr:SetAttribute("Look", "down")
+		local walked = false
+		task.spawn(function()
+			local ok, problem = pcall(ctx.walkPath, mr, ways, 6, kit.steps)
+			if not ok then
+				warn("Kapitel 2: Richard konnte nicht hereinlaufen: " .. tostring(problem))
+			end
+			walked = true
+		end)
+		local deadline = os.clock() + 15
+		while not walked and os.clock() < deadline do
+			task.wait(0.1)
+		end
 		Wagners.place(mr, room.richard, room.richardLook)
 		mr:SetAttribute("Look", "player")
 	end

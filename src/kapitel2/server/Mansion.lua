@@ -1083,18 +1083,18 @@ local function buildFurniture()
 	-- Wohnzimmer: Kamin, Möbel unter Tüchern
 	Furniture.fireplace(b, at(79.5, 50, E, "W"))
 	Furniture.picture(b, at(80.02, 50, E + 7.6, "W"), 3, 3, Color3.fromRGB(50, 40, 34), true)
-	Furniture.rug(b, at(68, 52, E), 10, 8, Color3.fromRGB(80, 34, 30))
-	Furniture.sofa(b, at(67, 50, E, "E"), 6, Color3.fromRGB(96, 36, 34), true)
-	Furniture.sofa(b, at(72, 45, E, "S"), 2.6, Color3.fromRGB(96, 36, 34), true)
-	Furniture.sofa(b, at(72, 56, E, "N"), 2.6, Color3.fromRGB(96, 36, 34), true)
-	Furniture.table(b, at(72, 50.5, E), 3, 2, 1.6)
+	Furniture.rug(b, at(71.4, 50, E), 9, 11, Color3.fromRGB(80, 34, 30))
+	Furniture.sofa(b, at(67.2, 50, E, "E"), 6, Color3.fromRGB(139, 52, 49), true)
+	Furniture.sofa(b, at(73.2, 45.2, E, 155), 2.9, Color3.fromRGB(78, 95, 72), true)
+	Furniture.sofa(b, at(73.2, 54.8, E, 25), 2.9, Color3.fromRGB(78, 95, 72), true)
+	Furniture.table(b, at(72.2, 50, E), 2, 3, 1.6)
 	Furniture.shelf(b, at(57.2, 42.9, E, "S"), 5, 7.5, "books", rng) -- links und rechts der Tür zum Esszimmer
 	Furniture.shelf(b, at(66.6, 42.9, E, "S"), 4, 7.5, "books", rng)
 	Furniture.picture(b, at(54.64, 66, E + 5.5, "E"), 2, 2.6, Color3.fromRGB(70, 60, 50), true)
 
 	-- Turmzimmer
 	Furniture.rug(b, at(84, 66, E), 9, 9, Color3.fromRGB(40, 50, 60))
-	Furniture.sofa(b, at(85, 64, E, "S"), 2.6, Color3.fromRGB(60, 40, 30), false)
+	Furniture.sofa(b, at(85, 64.2, E, 145), 2.9, Color3.fromRGB(87, 58, 43), false)
 	local side = Furniture.table(b, at(88, 67, E), 1.6, 1.6, 2.2)
 	box("Book", Vector3.new(1, 0.25, 1.3), side * CFrame.new(0, 0.12, 0) * CFrame.Angles(0, 0.4, 0), Color3.fromRGB(80, 30, 26), M.Fabric)
 
@@ -1214,7 +1214,7 @@ local function buildFurniture()
 
 	-- Salon: Klavier (hier steht Tommy)
 	Furniture.piano(b, at(15.4, 48.6, E, "E"))
-	Furniture.sofa(b, at(26, 55, E, "N"), 6, Color3.fromRGB(70, 50, 80), true)
+	Furniture.sofa(b, at(25, 55, E, "N"), 6, Color3.fromRGB(101, 72, 116), true)
 	Furniture.rug(b, at(25, 48, E), 10, 10, Color3.fromRGB(60, 40, 70))
 	local gramo = Furniture.table(b, at(31, 41, E), 2, 2, 2.6)
 	box("Gramophone", Vector3.new(1.2, 0.5, 1.2), gramo * CFrame.new(0, 0.25, 0), Color3.fromRGB(50, 34, 24), M.Wood)
@@ -1337,7 +1337,7 @@ local function buildFurniture()
 	Furniture.bed(b, at(18, 44, O, "E"), 4.6, 7, Color3.fromRGB(180, 174, 160))
 	Furniture.chair(b, at(19.5, 54.5, O, 200), Color3.fromRGB(60, 46, 34))
 	Furniture.picture(b, at(14.54, 49, O + 5.6, "E"), 2.2, 3, Color3.fromRGB(70, 66, 56), true)
-	Furniture.sofa(b, at(36, 56, O, "W"), 3, Color3.fromRGB(80, 70, 60), true)
+	Furniture.sofa(b, at(36, 56, O, "W"), 3, Color3.fromRGB(116, 101, 87), true)
 	Furniture.rug(b, at(28, 49, O), 9, 7, Color3.fromRGB(86, 40, 36))
 
 	-- Licht: rote Kerzen (gedämpft, man sieht genug, aber es ist nicht hell): Hängelampe in der

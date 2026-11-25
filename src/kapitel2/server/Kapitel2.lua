@@ -369,7 +369,7 @@ function Kapitel2.start()
 	-- "normal" = gelbe Kerze, "red" = rote Kerze von Richard (Flucht), "none" = keine mehr
 	local candleMode = "normal"
 	local function giveCandle(player)
-		if candleMode == "none" then
+		if candleMode == "none" or player:GetAttribute("CandleAway") then
 			return
 		end
 		local red = candleMode == "red"
@@ -394,6 +394,19 @@ function Kapitel2.start()
 		light.Enabled = not player:GetAttribute("LightOff")
 		light.Parent = flame
 		model.Parent = character
+	end
+
+	-- Kerze weglegen, solange man sie nicht braucht (beim Essen, im Bett, im Versteck)
+	local function setCandleAway(player, away)
+		player:SetAttribute("CandleAway", away or nil)
+		if away then
+			local old = player.Character and player.Character:FindFirstChild("PlayerCandle")
+			if old then
+				old:Destroy()
+			end
+		elseif candlesGiven then
+			giveCandle(player)
+		end
 	end
 
 	-- Kerze für alle neu verteilen (oder wegnehmen)
@@ -735,6 +748,7 @@ function Kapitel2.start()
 	-- ein – hier geht es später mit der Nacht weiter.
 	local startNight -- wird weiter unten gesetzt (Night.lua)
 	local lying = {} -- Spieler -> Bett
+	local lieToken = {} -- Spieler -> Nummer (bricht ein laufendes Hinlegen ab)
 	local asleep = false
 	local exploring = false
 	local function standUp(player)
@@ -749,7 +763,14 @@ function Kapitel2.start()
 				bed.prompt.ActionText = "Go to sleep"
 			end
 		end
+		lieToken[player] = (lieToken[player] or 0) + 1
+		if bed and bed.cover then
+			bed.cover:Destroy()
+			bed.cover = nil
+		end
+		setCandleAway(player, false)
 		if root and humanoid then
+			humanoid.Sit = false
 			humanoid.PlatformStand = false
 			humanoid.AutoRotate = true
 			humanoid.WalkSpeed = WALK_SPEED
@@ -758,6 +779,8 @@ function Kapitel2.start()
 				-- am Fußende aufstehen
 				local foot = bed.cframe * CFrame.new(0, 3.2, -bed.length / 2 - 1.6)
 				character:PivotTo(CFrame.lookAt(foot.Position, foot.Position + bed.cframe.LookVector))
+				local eye = foot.Position + Vector3.new(0, 1.6, 0)
+				event:FireClient(player, { type = "bed", up = true, eye = CFrame.lookAt(eye, eye + bed.cframe.LookVector) })
 			end
 		end
 	end
@@ -788,7 +811,7 @@ function Kapitel2.start()
 				return
 			end
 		end
-		task.delay(2.5, function()
+		task.delay(4, function()
 			-- immer noch alle im Bett?
 			for _, player in Players:GetPlayers() do
 				if not lying[player] then
@@ -812,17 +835,108 @@ function Kapitel2.start()
 		humanoid.AutoRotate = false
 		humanoid.PlatformStand = true
 		root.Anchored = true
-		-- auf dem Rücken liegen, Kopf auf dem Kissen
-		local headward = -bed.cframe.LookVector -- zum Kopfende
-		local center = bed.cframe * Vector3.new(0, 2.85, bed.length / 2 - 2.9)
-		-- Gesicht nach oben, Kopf zum Kissen
-		character:PivotTo(CFrame.lookAt(center, center + Vector3.new(0, 1, 0), headward))
+		setCandleAway(player, true)
+		local token = (lieToken[player] or 0) + 1
+		lieToken[player] = token
+		local length, width = bed.length, bed.width or 4
+		local MATTRESS = 2.2 -- Oberkante der Decke über dem Boden
+		-- erst auf die Bettkante (auf der Seite, auf der man steht), dann auf den Rücken
+		local side = bed.cframe:PointToObjectSpace(root.Position).X >= 0 and 1 or -1
+		local edge = bed.cframe * CFrame.new(side * (width / 2 - 0.25), MATTRESS + 1.35, 0.6) * CFrame.Angles(0, -side * math.rad(90), 0)
+		local headward = -bed.cframe.LookVector
+		local center = bed.cframe * Vector3.new(0, MATTRESS + 0.8, length / 2 - 2.9)
+		local lie = CFrame.lookAt(center, center + Vector3.new(0, 1, 0), headward)
+		-- genau ausmessen (die Figuren sind verschieden groß): Rücken auf der Decke, Kopf auf dem Kissen
+		local lowest, headZ = math.huge, nil
+		for _, part in character:GetDescendants() do
+			if part:IsA("BasePart") and part ~= root and part.Transparency < 0.95 and not part:FindFirstAncestorOfClass("Accessory") then
+				local frame = bed.cframe:ToObjectSpace(lie * root.CFrame:ToObjectSpace(part.CFrame))
+				local half = part.Size / 2
+				if part.Name:find("Torso") then
+					lowest = math.min(lowest, frame.Y - math.abs(frame.RightVector.Y) * half.X - math.abs(frame.UpVector.Y) * half.Y - math.abs(frame.LookVector.Y) * half.Z)
+				end
+				if part.Name == "Head" then
+					headZ = frame.Z
+				end
+			end
+		end
+		if lowest < math.huge then
+			lie += Vector3.new(0, MATTRESS - 0.1 - lowest, 0)
+		end
+		if headZ then
+			lie += headward * (length / 2 - 1.0 - headZ)
+		end
+		local sitEye = edge.Position + Vector3.new(0, 1.7, 0)
+		event:FireClient(player, {
+			type = "bed",
+			sit = CFrame.lookAt(sitEye, sitEye + edge.LookVector * 4 + Vector3.new(0, -0.8, 0)),
+			lie = bed.cframe * CFrame.new(0, 3.25, length / 2 - 1.2) * CFrame.Angles(math.rad(4), 0, 0),
+		})
+		task.spawn(function()
+			local function move(target, duration)
+				local from, start = root.CFrame, os.clock()
+				while lieToken[player] == token and root.Parent do
+					local t = math.min((os.clock() - start) / duration, 1)
+					root.CFrame = from:Lerp(target, t * t * (3 - 2 * t))
+					if t >= 1 then
+						return true
+					end
+					RunService.Heartbeat:Wait()
+				end
+				return false
+			end
+			humanoid.PlatformStand = false
+			humanoid.Sit = true
+			if not move(edge, 0.9) then
+				return
+			end
+			task.wait(0.25)
+			if lieToken[player] ~= token then
+				return
+			end
+			humanoid.Sit = false
+			humanoid.PlatformStand = true
+			if not move(lie, 1.4) then
+				return
+			end
+			-- Decke über dem Körper (nur so lange man liegt)
+			local blanket
+			for _, part in Mansion.model and Mansion.model:GetDescendants() or {} do
+				if part.Name == "Blanket" and (part.Position - bed.cframe.Position).Magnitude < 4 then
+					blanket = part
+					break
+				end
+			end
+			if blanket and not bed.cover then
+				local cover = Instance.new("Part")
+				cover.Name = "BlanketCover"
+				cover.Anchored = true
+				cover.CanCollide = false
+				cover.CanQuery = false
+				cover.CanTouch = false
+				cover.Size = Vector3.new(width - 0.5, 1.7, 4.9)
+				cover.CFrame = bed.cframe * CFrame.new(0, MATTRESS, -0.95)
+				cover.Color = blanket.Color
+				cover.Material = blanket.Material
+				local mesh = Instance.new("SpecialMesh")
+				mesh.MeshType = Enum.MeshType.Sphere
+				mesh.Parent = cover
+				cover.Parent = blanket.Parent
+				bed.cover = cover
+			end
+		end)
 		event:FireClient(player, { type = "hint", text = "Good night …", seconds = 3 })
 		humanoid.Died:Connect(function()
 			if lying[player] == bed then
 				lying[player] = nil
 				bed.taken = nil
 				bed.prompt.ActionText = "Go to sleep"
+				lieToken[player] = (lieToken[player] or 0) + 1
+				player:SetAttribute("CandleAway", nil)
+				if bed.cover then
+					bed.cover:Destroy()
+					bed.cover = nil
+				end
 			end
 		end)
 		checkAllAsleep()
@@ -1162,6 +1276,7 @@ function Kapitel2.start()
 			facing = facing,
 			spawnPlayer = spawnPlayer,
 			setCandleMode = setCandleMode,
+			setCandleAway = setCandleAway,
 			loseHeart = loseHeart,
 			gameOver = gameOver,
 			setCheckpoint = function(fn)

@@ -35,7 +35,7 @@ local COLORS = {
 -- Pechschwarze Nacht: kein Mond, keine Sterne, schwarzer Himmel. Licht kommt nur von
 -- den orangen Straßenlaternen, den Scheinwerfern und dem Innenlicht. Ein schwaches,
 -- neutrales Grundlicht lässt nahe Umrisse gerade noch erkennen.
-local function setupLighting()
+local function setupLighting(drive)
 	Lighting.ClockTime = 0
 	Lighting.GeographicLatitude = 41
 	Lighting.Brightness = 0
@@ -84,6 +84,20 @@ local function setupLighting()
 	bloom.Size = 20
 	bloom.Threshold = 1.25
 	bloom.Parent = Lighting
+
+	-- Kapitel 1 (Fahrt und Waldweg): Sonst ist alles außerhalb der Scheinwerfer ganz schwarz und nur
+	-- ein einzelner Baum grell. Blaues Nachtlicht und heller Dunst: man sieht die Bäume als Umrisse.
+	if drive then
+		Lighting.OutdoorAmbient = Color3.fromRGB(104, 114, 140)
+		Lighting.ExposureCompensation = 0.55
+		atmosphere.Density = 0.3
+		atmosphere.Offset = 0.2
+		atmosphere.Haze = 2
+		atmosphere.Color = Color3.fromRGB(60, 68, 86)
+		atmosphere.Decay = Color3.fromRGB(30, 34, 44)
+		grading.Contrast = 0.08
+		grading.Brightness = 0
+	end
 end
 
 -- Abschnitte der Straße: CFrame (Mitte auf Höhe 0, Blick entlang der Straße) und Länge
@@ -737,7 +751,7 @@ function World.build(options)
 			existing:Destroy()
 		end
 	end
-	setupLighting()
+	setupLighting(not (options and options.keepRadius))
 
 	keep = nil
 	if options and options.keepRadius then
