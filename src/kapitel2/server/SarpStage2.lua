@@ -16,6 +16,44 @@ local JEANS = Color3.fromRGB(38, 42, 54)
 local BONE = Color3.fromRGB(206, 198, 180)
 local GLOW = Color3.fromRGB(200, 40, 24)
 
+-- Rote Aura: Licht um den Körper (wirft Schatten, scheint also nicht durch Wände), ein roter
+-- Umriss (nur wenn man ihn sieht) und aufsteigender roter Rauch
+local function addAura(model)
+	local torso = model:FindFirstChild("UpperTorso") or model:FindFirstChild("Torso") or model:FindFirstChild("HumanoidRootPart")
+	if not torso then
+		return
+	end
+	local light = Instance.new("PointLight")
+	light.Name = "SarpAura"
+	light.Color = Color3.fromRGB(255, 36, 24)
+	light.Range = 15
+	light.Brightness = 1.5
+	light.Shadows = true
+	light.Parent = torso
+	local outline = Instance.new("Highlight")
+	outline.Name = "SarpAuraOutline"
+	outline.FillColor = Color3.fromRGB(255, 24, 16)
+	outline.FillTransparency = 0.82
+	outline.OutlineColor = Color3.fromRGB(255, 44, 30)
+	outline.OutlineTransparency = 0.25
+	outline.DepthMode = Enum.HighlightDepthMode.Occluded
+	outline.Adornee = model
+	outline.Parent = model
+	local smoke = Instance.new("ParticleEmitter")
+	smoke.Name = "SarpAuraSmoke"
+	smoke.Texture = "rbxasset://textures/particles/smoke_main.dds"
+	smoke.Color = ColorSequence.new(Color3.fromRGB(255, 40, 24), Color3.fromRGB(90, 4, 4))
+	smoke.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1.4), NumberSequenceKeypoint.new(1, 3.2) })
+	smoke.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.25, 0.72), NumberSequenceKeypoint.new(1, 1) })
+	smoke.LightEmission = 0.7
+	smoke.Rate = 9
+	smoke.Lifetime = NumberRange.new(1.2, 2)
+	smoke.Speed = NumberRange.new(0.6, 1.6)
+	smoke.SpreadAngle = Vector2.new(35, 35)
+	smoke.Rotation = NumberRange.new(0, 360)
+	smoke.Parent = torso
+end
+
 -- Echte KI-Figur (assets/sarp/Sarp2.rbxm, „das Monster im Haus“): Gelenke werden zu
 -- Motor6D wie bei den Wagners; dazu Fliegen, rotes Glühen und der verdrehte Hals
 local function buildReal(parent)
@@ -52,6 +90,7 @@ local function buildReal(parent)
 			model:SetAttribute("NeckBase", true)
 		end
 	end
+	addAura(model)
 	model.Parent = parent
 	return model
 end
@@ -133,6 +172,7 @@ function SarpStage2.build(parent)
 		end)
 		model:SetAttribute("NeckBase", true)
 	end
+	addAura(model)
 	model.Parent = parent
 	return model
 end

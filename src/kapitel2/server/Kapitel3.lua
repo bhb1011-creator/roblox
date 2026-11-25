@@ -253,6 +253,9 @@ local function buildForest()
 	folder.Name = "Kapitel3Forest"
 	folder.Parent = workspace
 	local terrain = workspace.Terrain
+	-- Fels an der Schlucht dunkelgrau (die normalen Farben sahen hier wie Schnee und Eis aus)
+	terrain:SetMaterialColor(Enum.Material.Rock, Color3.fromRGB(74, 72, 68))
+	terrain:SetMaterialColor(Enum.Material.Slate, Color3.fromRGB(62, 62, 62))
 	local points = {}
 	for _, p in FOREST_PATH do
 		table.insert(points, FOREST_ORIGIN + Vector3.new(p[1], 0, p[2]))
@@ -544,6 +547,62 @@ local function buildForest()
 				task.wait()
 			end
 		end
+	end
+	-- Rund um die Schlucht: beim Blick zurück (Brücke stürzt ein) sah man links und rechts leeres
+	-- Gelände und den schwarzen Rand der Welt. Darum dort breiter Waldboden, Tannen auf beiden
+	-- Ufern, dahinter Hügel und an den Enden der Schlucht Felswände.
+	do
+		local half = bridgeLength / 2
+		local function free(world, margin)
+			local _, distance = Data.progress(points, world)
+			return distance > margin and not inClearing(world, margin * 0.4)
+		end
+		local bank = Random.new(77)
+		local planted = 0
+		for _, side in { 1, -1 } do -- 1 = Ufer, von dem man kommt; -1 = Ufer der Hütte
+			for _, x in { -1, 1 } do
+				-- Waldboden neben dem Wegstreifen (der Weg selbst bleibt, wie er ist)
+				-- (nicht dort, wo die Straße zur Hütte läuft)
+				if side == 1 or x == -1 then
+					terrain:FillBlock(ravineFrame * CFrame.new(x * 125, -4, side * (half + 92)), Vector3.new(120, 8, 170), Enum.Material.LeafyGrass)
+				end
+				-- Hügel weiter hinten
+				for k = 0, 4 do
+					local radius = bank:NextNumber(34, 46)
+					local center = ravineFrame * Vector3.new(x * (84 + k * 22 + bank:NextNumber(-6, 6)), -bank:NextNumber(2, 12), side * (half + 70 + bank:NextNumber(0, 55) + (4 - k) * 8))
+					if free(center, radius + 14) and not inClearing(center, radius + 6) then
+						terrain:FillBall(center, radius, Enum.Material.LeafyGrass)
+					end
+				end
+				task.wait()
+				-- Tannen am Ufer (nah) und dahinter
+				for _ = 1, 46 do
+					local far = bank:NextNumber() < 0.55
+					local world = ravineFrame * Vector3.new(x * bank:NextNumber(17, 150), 0, side * (half + (far and bank:NextNumber(24, 78) or bank:NextNumber(5, 24))))
+					if free(world, 15) then
+						local hit = workspace:Raycast(world + Vector3.new(0, 70, 0), Vector3.new(0, -100, 0), groundParams)
+						if hit and hit.Position.Y > -3 then
+							local at = Vector3.new(world.X, hit.Position.Y - 0.5, world.Z)
+							Forest.builders.simplePine(folder, at, far and bank:NextNumber(36, 54) or bank:NextNumber(30, 48), bank)
+							planted += 1
+						end
+					end
+					if planted % 10 == 0 then
+						task.wait()
+					end
+				end
+			end
+		end
+		-- Felswände an beiden Enden der Schlucht
+		for _, x in { -1, 1 } do
+			for _, z in { -0.7, 0, 0.7 } do
+				for _, y in { -70, -30, 6 } do
+					terrain:FillBall(ravineFrame * Vector3.new(x * bank:NextNumber(158, 170), y, z * half), bank:NextNumber(24, 30), Enum.Material.Rock)
+				end
+			end
+		end
+		count += planted
+		print("Kapitel 3: Ufer der Schlucht – " .. planted .. " Bäume")
 	end
 	-- Details am Weg (Farne, Gras, Laub, Wurzeln, Nebel, Glühwürmchen)
 	pcall(ForestDressing.terrain, points, function(position)

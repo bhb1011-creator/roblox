@@ -7,6 +7,18 @@ Diese Datei ist für einen **neuen Chat** gedacht: erst den Prompt unten kopiere
 
 ---
 
+## Stand K2-2026-11-25b (25. Nov.)
+- Haus heller (`Scene.lua` → `updateHouseLight`): Grundlicht, Belichtung und weniger Kontrast nur im Haus (nicht draußen,
+  nicht in Kapitel 3), dazu schwaches kühles Licht um einen selbst, wenn die Kerze aus/weg ist.
+- Sarp im Haus: rote Aura (`SarpStage2.lua` → `addAura`: Licht, Umriss nur bei Sichtkontakt, roter Rauch). Auch in Kapitel 3.
+- Verstecke: feste Kamera je Versteck (`view`/`pitch` am Versteck in `Mansion.lua`, `setHideView` in `Scene.lua`),
+  eigene Figur unsichtbar. Sarp bleibt etwas weiter weg stehen (`search`), sonst steckte die Kamera in ihm.
+- Tür zum Ritualraum: PivotOffset an der Angel (WorldPivot wirkt nicht mit PrimaryPart).
+- Keine Spinnweben mehr; Wäsche im Keller ohne Strickmuster.
+- Schlucht (Blick zurück auf die Brücke): Ufer mit 173 Tannen, Hügel, Felswände an den Enden, dunkler Fels.
+- Leistung: `src/shared/TreeCulling.lua` blendet Tannen im Wald von Kapitel 3 ab 210 Studs aus. Dreiecke an der Brücke
+  4,0 Mio. → 2,3 Mio. (trotz mehr Bäumen). Bildrate in Studio nicht aussagekräftig (Fenster im Hintergrund gebremst).
+
 ## Stand K2-2026-11-25a (25. Nov.)
 - Auto in Kapitel 1 (`CutsceneCar.lua`): alle Scheiben weg (spiegelten seltsam), Spiegel matt.
 - Sofas/Sessel neu (keine deckungsgleichen Flächen mehr), Badewanne hohl (Oval aus Einzelflächen, Armatur).

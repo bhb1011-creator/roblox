@@ -1159,9 +1159,9 @@ local function buildFurniture()
 	local inside = Furniture.hideWardrobe(b, wardrobeFrame)
 	Furniture.curtain(b, L(66.2, 18.25, E), L(77.8, 18.25, E), CEIL.E - E - 0.25, Color3.fromRGB(96, 30, 32))
 	Mansion.hideSpots = {
-		{ name = "Schrank", kind = "stand", outside = Furniture.HIDE_VIEW, place = origin * inside, exit = origin * at(75, 38, E, "N"), prompt = origin * CFrame.new(L(75, 38.9, E + 3.5)), search = Mansion.point(75, 37.2, E) },
-		{ name = "Tisch", kind = "lie", place = origin * CFrame.lookAt(L(67, 30, E + 0.55), L(67, 30, E + 5), L(67, 40, E) - L(67, 30, E)), exit = origin * at(63, 30, E, "E"), prompt = origin * CFrame.new(L(65, 30, E + 1.5)), search = Mansion.point(63.4, 28, E) },
-		{ name = "Vorhang", kind = "stand", place = origin * CFrame.lookAt(L(72, 15.9, E), L(72, 20, E)), exit = origin * at(72, 20.5, E, "S"), prompt = origin * CFrame.new(L(72, 18.9, E + 3.5)), search = Mansion.point(71, 19.8, E) },
+		{ name = "Schrank", kind = "stand", view = origin * wardrobeFrame * Furniture.HIDE_VIEW, place = origin * inside, exit = origin * at(75, 38, E, "N"), prompt = origin * CFrame.new(L(75, 38.9, E + 3.5)), search = Mansion.point(75, 36.8, E) },
+		{ name = "Tisch", kind = "lie", pitch = 14, view = origin * CFrame.lookAt(L(66.2, 28, E + 0.62), L(60, 28, E + 0.62)), place = origin * CFrame.lookAt(L(67, 30, E + 0.55), L(67, 30, E + 5), L(67, 40, E) - L(67, 30, E)), exit = origin * at(63, 30, E, "E"), prompt = origin * CFrame.new(L(65, 30, E + 1.5)), search = Mansion.point(63.4, 28, E) },
+		{ name = "Vorhang", kind = "stand", view = origin * CFrame.lookAt(L(72, 18.95, E + 5), L(72, 30, E + 4.4)), place = origin * CFrame.lookAt(L(72, 15.9, E), L(72, 20, E)), exit = origin * at(72, 20.5, E, "S"), prompt = origin * CFrame.new(L(72, 18.9, E + 3.5)), search = Mansion.point(71, 21.6, E) },
 	}
 	-- die Stühle, auf die sich die Spieler beim Abendessen setzen
 	Mansion.dinnerSeats = { origin * at(64.5, 30, E, "E"), origin * at(69.5, 30, E, "W") }
@@ -1410,8 +1410,9 @@ local function buildFurniture()
 	end
 	-- Schrank zum Verstecken (Nordwand)
 	do
-		local inside = Furniture.hideWardrobe(b, at(30, 39.8, O, "S"))
-		table.insert(escape.hideSpots, { name = "Schrank", label = "Wardrobe", kind = "stand", outside = Furniture.HIDE_VIEW, place = origin * inside, exit = origin * at(30, 42, O, "S"), prompt = origin * CFrame.new(L(30, 41.5, O + 3.5)), search = Mansion.point(30, 42.4, O) })
+		local frame = at(30, 39.8, O, "S")
+		local inside = Furniture.hideWardrobe(b, frame)
+		table.insert(escape.hideSpots, { name = "Schrank", label = "Wardrobe", kind = "stand", view = origin * frame * Furniture.HIDE_VIEW, place = origin * inside, exit = origin * at(30, 42, O, "S"), prompt = origin * CFrame.new(L(30, 41.5, O + 3.5)), search = Mansion.point(30, 43.5, O) })
 	end
 	-- umgekipptes Bett an der Südwand: dahinter kann man sich auf den Boden legen
 	do
@@ -1424,7 +1425,7 @@ local function buildFurniture()
 		end
 		box("TippedBedSheet", Vector3.new(3.4, 1.8, 0.06), frame * CFrame.new(0.4, -0.5, 0.21) * CFrame.Angles(math.rad(4), 0, 0), Color3.fromRGB(190, 182, 168), M.Fabric)
 		local spot = L(22.5, 58.75, O + 0.55)
-		table.insert(escape.hideSpots, { name = "Bett", label = "Behind the bed", kind = "lie", place = origin * CFrame.lookAt(spot, spot + Vector3.new(0, 5, 0), L(30, 58.75, O) - L(22.5, 58.75, O)), exit = origin * at(22.5, 55.9, O, "N"), prompt = origin * CFrame.new(L(22.5, 56.4, O + 2.5)), search = Mansion.point(22.5, 55.5, O) })
+		table.insert(escape.hideSpots, { name = "Bett", label = "Behind the bed", kind = "lie", view = origin * CFrame.lookAt(L(22.5, 58.2, O + 3.9), L(22.5, 50, O + 4.6)), place = origin * CFrame.lookAt(spot, spot + Vector3.new(0, 5, 0), L(30, 58.75, O) - L(22.5, 58.75, O)), exit = origin * at(22.5, 55.9, O, "N"), prompt = origin * CFrame.new(L(22.5, 56.4, O + 2.5)), search = Mansion.point(22.5, 55.5, O) })
 	end
 	-- Truhe an der Ostwand: man legt sich hinein
 	do
@@ -1444,7 +1445,7 @@ local function buildFurniture()
 		end
 		box("ChestLock", Vector3.new(0.4, 0.4, 0.12), frame * CFrame.new(0, h - 0.2, -d / 2 - 0.11), Color3.fromRGB(150, 140, 110), M.Metal)
 		local spot = L(40.55, 56, O + 0.55)
-		table.insert(escape.hideSpots, { name = "Truhe", label = "Into the chest", kind = "lie", place = origin * CFrame.lookAt(spot, spot + Vector3.new(0, 5, 0), L(40.55, 62, O) - L(40.55, 56, O)), exit = origin * at(38.6, 56, O, "W"), prompt = origin * CFrame.new(L(38.9, 56, O + 1.5)), search = Mansion.point(38.3, 56, O) })
+		table.insert(escape.hideSpots, { name = "Truhe", label = "Into the chest", kind = "lie", view = origin * CFrame.lookAt(L(41, 56, O + 3.2), L(30, 56, O + 5.6)), place = origin * CFrame.lookAt(spot, spot + Vector3.new(0, 5, 0), L(40.55, 62, O) - L(40.55, 56, O)), exit = origin * at(38.6, 56, O, "W"), prompt = origin * CFrame.new(L(38.9, 56, O + 1.5)), search = Mansion.point(38.3, 56, O) })
 	end
 	-- Richard steht neben dem Pult; neu anfangen (nach dem Erwischtwerden) östlich davon
 	escape.richard = Mansion.point(27.8, 46.6, O)
@@ -1513,11 +1514,11 @@ local function buildFurniture()
 			name = label,
 			label = "Wardrobe",
 			kind = "stand",
-			outside = Furniture.HIDE_VIEW,
+			view = origin * frame * Furniture.HIDE_VIEW,
 			place = origin * inside,
 			exit = origin * frame * CFrame.new(0, 0, -2.2),
 			prompt = origin * frame * CFrame.new(0, 3.5, -1.7),
-			search = (origin * frame * CFrame.new(0, 0, -2.6)).Position,
+			search = (origin * frame * CFrame.new(0, 0, -3.7)).Position,
 		})
 	end
 	hideCloset("Gästezimmer", 60.35, 50, O, "W")
@@ -1561,7 +1562,9 @@ local function buildFurniture()
 		end
 		current = beforeDoor
 		door.PrimaryPart = leaf
-		door.WorldPivot = origin * hinge
+		-- Drehpunkt an der Angel am Boden. (WorldPivot wirkt nicht, sobald es ein PrimaryPart gibt –
+		-- die Tür drehte sich darum um ihre Mitte und steckte danach halb im Boden.)
+		leaf.PivotOffset = leaf.CFrame:ToObjectSpace(origin * hinge)
 		door.Parent = current
 		-- Sturz über der Tür (die Öffnung in der Wand ist höher als der Gang); nur auf der
 		-- Gangseite der Wand, damit er nicht in das Regal davor ragt

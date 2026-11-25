@@ -5,6 +5,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local Lighting = game:GetService("Lighting")
 local SoundService = game:GetService("SoundService")
 local StarterGui = game:GetService("StarterGui")
 local TweenService = game:GetService("TweenService")
@@ -325,7 +326,7 @@ function Kapitel2.run()
 	local leaveButton = create("TextButton", {
 		Name = "LeaveHideButton",
 		AnchorPoint = Vector2.new(0.5, 1),
-		Position = UDim2.new(0.5, 0, 1, -70),
+		Position = UDim2.new(0.5, 0, 1, -108), -- (über der Kerze in der Leiste)
 		Size = UDim2.fromOffset(240, 54),
 		BackgroundColor3 = Color3.fromRGB(30, 26, 22),
 		BackgroundTransparency = 0.25,
@@ -451,7 +452,7 @@ function Kapitel2.run()
 	local candleDim, candleDimUntil = 1, 0 -- 1 = normal, kleiner = Kerzen fast aus
 	local dimTarget = 1 -- so hell werden die Kerzen nach dem Flackern wieder ("dim")
 	local ownCandleOff = false -- im Versteck ist die eigene Kerze aus
-	local lightOff = false -- Taste F: Kerze und Handylicht aus (dann sieht Sarp einen nicht)
+	local lightOff = false -- Taste F: Kerze aus (dann sieht Sarp einen nicht)
 	local held = create("Model", { Name = "HeldCandle" })
 	-- detaillierte Kerze im Messinghalter (CandleModel.lua), Größe passend zum Bild
 	local heldInfo = CandleModel.build(held, CFrame.new(), 0.8)
@@ -516,7 +517,7 @@ function Kapitel2.run()
 	local function updateHeldCandle(deltaTime, now)
 		local character = player.Character
 		local serverCandle = character and character:FindFirstChild("PlayerCandle")
-		if not serverCandle then
+		if not serverCandle or ownCandleOff then
 			held.Parent = nil
 			return
 		end
@@ -546,7 +547,7 @@ function Kapitel2.run()
 			heldLight.Range = red and 16 or 26
 			CandleModel.recolor(heldInfo, red)
 		end
-		heldLight.Brightness = off and 0 or (red and 1.7 or 2.4) * flicker * math.max(candleDim, 0.35)
+		heldLight.Brightness = off and 0 or (red and 1.5 or 2) * flicker * math.max(candleDim, 0.35)
 		local fade = 1 - math.clamp(candleDim * 1.2, 0, 1)
 		for part, baseTransparency in heldFlameBase do
 			part.Transparency = off and 1 or math.max(baseTransparency, fade)
@@ -866,25 +867,46 @@ function Kapitel2.run()
 	local leaveHideEvent = remotes:WaitForChild("LeaveHide", 10)
 	local qteEvent = remotes:WaitForChild("Qte", 10)
 	local hiddenNow = false
-	-- Im Schrank sind die Türen zu: die Kamera steht davor im Raum (`outside` Studs vor der
-	-- Figur, Blick in den Raum). nil/0 = Kamera wieder normal.
-	local function setHideView(outside)
-		local character = player.Character
-		local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-		local root = character and character:FindFirstChild("HumanoidRootPart")
-		if not humanoid then
-			return
-		end
-		humanoid.CameraOffset = Vector3.new(0, 0, -(outside or 0))
-		if outside and root then
-			-- kurz warten, bis die Figur vom Server aus im Schrank steht
-			task.delay(0.15, function()
-				if hiddenNow and root.Parent then
-					camera.CFrame = CFrame.lookAt(camera.CFrame.Position, camera.CFrame.Position + root.CFrame.LookVector)
+	-- Im Versteck steht die Kamera fest an einer Stelle (`view` vom Server: vor dem Schrank, unter
+	-- dem Tisch, über dem Bett …). Umschauen geht weiter, aber nur in den Raum hinein. Die eigene
+	-- Figur ist dabei unsichtbar (sonst sieht man in sie hinein). nil = Kamera wieder normal.
+	local hideView, hidePitch, hideTurn
+	local function setHideView(view, pitch)
+		local leaving = hideView and not view
+		hideView = view
+		hidePitch = math.rad(pitch or 38)
+		hideTurn = view ~= nil -- beim Hineingehen einmal in den Raum drehen
+		if leaving and player.Character then
+			for _, part in player.Character:GetDescendants() do
+				if part:IsA("BasePart") and part:FindFirstAncestorOfClass("Tool") == nil then
+					part.LocalTransparencyModifier = 1 -- (Ego-Sicht: bleibt unsichtbar wie sonst)
 				end
-			end)
+			end
 		end
 	end
+	RunService:BindToRenderStep("Kapitel2HideView", Enum.RenderPriority.Camera.Value + 1, function()
+		if not hideView or camera.CameraType == Enum.CameraType.Scriptable then
+			return
+		end
+		local yaw, pitch = 0, 0
+		if hideTurn then
+			hideTurn = false
+		else
+			local look = hideView:VectorToObjectSpace(camera.CFrame.LookVector)
+			yaw = math.clamp(math.atan2(-look.X, -look.Z), -1.25, 1.25)
+			pitch = math.clamp(math.asin(math.clamp(look.Y, -1, 1)), -hidePitch, hidePitch)
+		end
+		camera.CFrame = hideView * CFrame.Angles(0, yaw, 0) * CFrame.Angles(pitch, 0, 0)
+		camera.Focus = camera.CFrame
+		local character = player.Character
+		if character then
+			for _, part in character:GetDescendants() do
+				if part:IsA("BasePart") then
+					part.LocalTransparencyModifier = 1
+				end
+			end
+		end
+	end)
 	local function leaveHide()
 		if hiddenNow and leaveHideEvent then
 			leaveHideEvent:FireServer()
@@ -1085,7 +1107,7 @@ function Kapitel2.run()
 		elseif kind == "hidden" then
 			ownCandleOff = true
 			hiddenNow = true
-			setHideView(message.outside)
+			setHideView(message.view, message.pitch)
 			leaveButton.Visible = true
 			hint("Hidden. Stay very quiet … (E or Space: come out)", 5)
 		elseif kind == "unhidden" then
@@ -1274,6 +1296,49 @@ function Kapitel2.run()
 	local origin = Route.houseCFrame()
 	local lastScan = 0
 
+	-- Grundhelligkeit im Haus: man erkennt Wände, Türen und Möbel auch ohne Kerze. Dazu ein
+	-- schwaches, kühles Licht um einen selbst, wenn die Kerze aus oder weg ist (Augen, die sich
+	-- ans Dunkle gewöhnen; ohne Schatten, kostet kaum etwas). Draußen und in Kapitel 3 bleibt alles.
+	local HOUSE_AMBIENT = Color3.fromRGB(116, 109, 105)
+	local HOUSE_EXPOSURE = 0.4
+	local HOUSE_CONTRAST, HOUSE_BRIGHTNESS = 0.03, 0.03 -- (der starke Kontrast drückt dunkle Wände auf Schwarz)
+	local houseBlend, baseAmbient, baseExposure = 0, nil, nil
+	local grading, baseContrast, baseBrightness
+	local eyePart = create("Part", { Name = "EyeLight", Size = Vector3.new(0.2, 0.2, 0.2), Transparency = 1, Anchored = true, CanCollide = false, CanQuery = false, CanTouch = false, CastShadow = false, Parent = workspace })
+	local eyeLight = create("PointLight", { Range = 30, Brightness = 0, Color = Color3.fromRGB(186, 200, 230), Shadows = false, Parent = eyePart })
+	local function updateHouseLight(deltaTime, inHouse)
+		local chapter3 = remotes:GetAttribute("Phase") == "kapitel3"
+		local want = (inHouse and not chapter3) and 1 or 0
+		-- (Testmenü "Tag": nicht dazwischenfunken)
+		if Lighting.ClockTime > 6 and Lighting.ClockTime < 18 then
+			eyeLight.Brightness = 0
+			return
+		end
+		if houseBlend == 0 and want == 1 then
+			baseAmbient, baseExposure = Lighting.Ambient, Lighting.ExposureCompensation
+			grading = Lighting:FindFirstChildOfClass("ColorCorrectionEffect")
+			if grading then
+				baseContrast, baseBrightness = grading.Contrast, grading.Brightness
+			end
+		end
+		if houseBlend ~= want then
+			houseBlend = chapter3 and 0 or math.clamp(houseBlend + (want - houseBlend > 0 and 1 or -1) * deltaTime / 1.5, 0, 1)
+			if baseAmbient then
+				Lighting.Ambient = baseAmbient:Lerp(HOUSE_AMBIENT, houseBlend)
+				Lighting.ExposureCompensation = baseExposure + HOUSE_EXPOSURE * houseBlend
+				if grading and grading.Parent then
+					grading.Contrast = baseContrast + (HOUSE_CONTRAST - baseContrast) * houseBlend
+					grading.Brightness = baseBrightness + (HOUSE_BRIGHTNESS - baseBrightness) * houseBlend
+				end
+			end
+		end
+		local character = player.Character
+		local hasCandle = character and character:FindFirstChild("PlayerCandle") and not (ownCandleOff or lightOff)
+		local eye = (houseBlend > 0.5 and not hasCandle) and 0.55 or 0
+		eyeLight.Brightness += (eye - eyeLight.Brightness) * math.min(deltaTime * 2.5, 1)
+		eyePart.CFrame = camera.CFrame
+	end
+
 	-- Bei der Antwortauswahl braucht man einen freien Mauszeiger (nach der Kamera setzen)
 	RunService:BindToRenderStep("Kapitel2Shake", Enum.RenderPriority.Camera.Value + 2, function()
 		-- Kamera zittert, wenn Sarp direkt vor dem Versteck steht
@@ -1348,6 +1413,7 @@ function Kapitel2.run()
 		-- Im Haus ist es still: kein Wind, keine Tiere, nur das Haus knarrt
 		local relative = origin:Inverse() * camera.CFrame.Position
 		local inHouse = houseInside or (math.abs(relative.X) < Route.HOUSE_SIZE.X / 2 and math.abs(relative.Z) < Route.HOUSE_SIZE.Z / 2)
+		updateHouseLight(deltaTime, inHouse)
 		Ambience.update(deltaTime, {
 			camera = camera,
 			walking = true,

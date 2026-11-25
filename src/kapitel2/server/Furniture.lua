@@ -114,7 +114,7 @@ function Furniture.chair(b, cf, color)
 	b.box("ChairStretcher", Vector3.new(1.2, 0.08, 0.08), cf * CFrame.new(0, 0.7, 0), color, M.Wood, DECO)
 end
 
-local DUST_SHEET = Color3.fromRGB(150, 143, 130) -- verstaubtes Tuch
+local DUST_SHEET = Color3.fromRGB(112, 106, 96) -- verstaubtes Tuch
 -- Sessel oder Sofa, optional unter einem weißen Tuch (unter dem man die Form ahnt).
 -- Alle Teile greifen etwas ineinander und enden nie auf derselben Ebene – sonst flackern
 -- die Flächen in Roblox.
@@ -785,7 +785,7 @@ function Furniture.clothesline(b, from, to, rng)
 		local at = from:Lerp(to, t)
 		-- das Laken hängt über der Leine (Oberkante knapp darüber)
 		local sheetHeight = rng:NextNumber(2.2, 3.4)
-		b.boxWorld("HangingSheet", Vector3.new(2.2, sheetHeight, 0.09), CFrame.lookAt(at, at + (to - from):Cross(Vector3.yAxis)) * CFrame.new(0, -sheetHeight / 2 + 0.05, 0), C.sheet, M.Fabric)
+		b.boxWorld("HangingSheet", Vector3.new(2.2, sheetHeight, 0.09), CFrame.lookAt(at, at + (to - from):Cross(Vector3.yAxis)) * CFrame.new(0, -sheetHeight / 2 + 0.05, 0), Color3.fromRGB(112, 106, 96), M.SmoothPlastic) -- (Stoff-Muster sah aus wie Spinnweben)
 	end
 end
 
@@ -801,7 +801,7 @@ end
 
 -- Versteck: Schrank, innen hohl, vorne zwei geschlossene Türen. Wer sich versteckt, sieht den
 -- Raum von vor dem Schrank aus (Furniture.HIDE_VIEW, siehe Scene.lua "hidden"). Vorne = -Z.
-Furniture.HIDE_VIEW = 1.75 -- so weit vor dem Versteckten steht die Kamera
+Furniture.HIDE_VIEW = CFrame.new(0, 5, -1.6) -- Kamera: knapp vor den Türen, Augenhöhe, Blick in den Raum
 function Furniture.hideWardrobe(b, cf)
 	local w, h, d = 3.4, 7.6, 2.4
 	local wood, dark = C.darkWood, C.black
