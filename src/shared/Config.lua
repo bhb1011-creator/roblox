@@ -15,10 +15,10 @@ Config.LOBBY_PLACE_ID = 129277862104777
 Config.LOBBY_CLOCK_TIME = 17.7
 
 -- Sekunden, bis ein volles Auto losfährt
-Config.COUNTDOWN_SECONDS = 10
+Config.COUNTDOWN_SECONDS = 3
 
 -- Sekunden nach der Abfahrt, bis der Bildschirm schwarz wird
-Config.FADE_DELAY = 7
+Config.FADE_DELAY = 3
 
 Config.MODES = {
 	Solo = { title = "SOLO", capacity = 1 },
@@ -210,7 +210,7 @@ Config.TEST_START_KAPITEL2 = ""
 Config.TEST_AUTOSTART = ""
 -- Versionsnummer: steht beim Laden auf dem Bildschirm und im Output. So sieht man sofort,
 -- ob in Studio wirklich der neueste Stand läuft (nach "git pull").
-Config.BUILD = "K2-2026-11-25b"
+Config.BUILD = "K2-2026-11-25c"
 Config.VOICES = {
 	-- Sarp: etwas tiefer, langsam, ruhig – mit Bass, weniger Höhen und dunklem Hall
 	sarp = {

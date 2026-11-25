@@ -16,7 +16,8 @@ local CarQueue = {}
 
 local LOT_SPEED = 18
 local ROAD_SPEED = 35
-local TELEPORT_TIMEOUT = 15
+local TELEPORT_TIMEOUT = 30
+local FADE_TIME = 2 -- so lange blendet LobbyClient auf Schwarz
 
 local gate
 local notifyRemote
@@ -159,10 +160,18 @@ local function depart(car)
 	local riders = getRiders(car)
 
 	gate.open()
-	driveAlong(car.model, car.route)
-	gate.close()
-
+	-- Das Auto fährt weiter, während der Bildschirm schwarz wird und der Wechsel ins Spiel startet
+	local arrived = false
+	task.spawn(function()
+		driveAlong(car.model, car.route)
+		gate.close()
+		arrived = true
+	end)
+	task.wait(Config.FADE_DELAY + FADE_TIME)
 	sendOff(car, riders)
+	while not arrived do
+		task.wait(0.2)
+	end
 
 	task.wait(2)
 	car.model:PivotTo(car.home)

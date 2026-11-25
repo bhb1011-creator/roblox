@@ -827,3 +827,7 @@ Was im neuen Chat ohne den Mock noch geht:
    - `Config.TEST_START_KAPITEL2` wieder auf `""` setzen, wenn Testphase vorbei ist.
    - `sarp_07` (offen aus früherer Planung).
    - Optional: SessionStart-Hook (`.claude/hooks/session-start.sh`) für Rojo/Luau – war angefangen, wurde abgebrochen.
+
+## 25c (25.11.2026): schneller Start aus der Lobby
+
+Countdown 3 s statt 10, Schwarzblende nach 3 s, Wechsel ins Spiel direkt danach (CarQueue.depart), das Auto faehrt im Hintergrund weiter. Achtung: Studio "Beta-Gaestehaus" mit `rojo serve` enthaelt das Spiel, nicht die Lobby: vor dem Hochladen immer das richtige Projekt nehmen. Echter Wechsel und Duo sind nicht getestet.
