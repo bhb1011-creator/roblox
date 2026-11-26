@@ -844,3 +844,9 @@ Hochgeladen (25.11., mit OK des Users, privat): Lobby -> Beta-Gaestehaus, Spiel 
 - Familie ist sicher weg, bevor Richard kommt (flee/richardComes). Richard laeuft in Grossmutters Zimmer (Escape.lua).
 - Verfolgung: 534 Baeume und 68 Huegel am Rand (Kapitel3.buildForest).
 - Schlussszene: Figuren + zwei Polizisten (Kapitel3.buildOfficer, Client buildArrest, END_CAR, END_ROAD).
+
+## 26a (26.11.2026): Schlussszene und Waldrand angesehen
+- Polizei-Szene im Studio angesehen: zweite Kamera (am Auto) stand direkt hinter dem wartenden Polizisten, jetzt weiter hinten und hoeher (Client Kapitel3, road * (-10.4, 6.2, -18.8)).
+- Waldrand bei der Verfolgung angesehen (Seiten, hinter der Luke): ueberall zu.
+- Wald: 14.200 Teile, davon ca. 1.070 neue Randbaeume (+8 %). Echte FPS nicht gemessen (Studio lief im Hintergrund).
+- Nicht hochgeladen, online ist 25c.

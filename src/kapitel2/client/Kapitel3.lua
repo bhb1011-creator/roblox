@@ -4274,7 +4274,8 @@ function handlers.rest(message)
 			setBlack(1, 0.9)
 			play1(Data.END_CAR)
 			-- 2) nah am Auto: sie kommen an der hinteren Tür an
-			local close = (road * CFrame.new(-3.4, 4.6, -15.4)).Position
+			-- weiter hinten und höher, damit der wartende Polizist (bei -3.6, -12) nicht vor der Linse steht
+			local close = (road * CFrame.new(-10.4, 6.2, -18.8)).Position
 			local door = (road * CFrame.new(4.4, 3, -11.6)).Position
 			local closeStart = os.clock()
 			shot(function(now)
