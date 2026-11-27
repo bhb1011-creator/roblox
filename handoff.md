@@ -862,3 +862,12 @@ Hochgeladen (25.11., mit OK des Users, privat): Lobby -> Beta-Gaestehaus, Spiel 
 - Kamera 2: von der Motorhaube am Auto entlang zur hinteren Tuer, faehrt langsam heran.
 - Wartender Polizist steht jetzt auf der Strassenseite vor dem Auto (R3(-6.8,-6)), nicht mehr im Bild.
 - Im Studio angesehen (alle drei Einstellungen). Nicht hochgeladen, online ist 25c.
+
+## 27c (27.11.2026): Polizisten als echte KI-Figuren
+- Zwei KI-Polizisten (generate_avatar, npc): `assets/figuren/Polizist.rbxm` (begleitet die Spieler) und `Polizist2.rbxm`
+  (wartet am Auto). Rojo → `ReplicatedStorage.Wagners`. WrapTargets entfernt (ca. 170 KB pro Datei).
+- Server `buildOfficer(parent, figureName)` nimmt die KI-Figur ueber RealFigure (5,9 bzw. 5,8 Studs), sonst die alte gebaute.
+  Nachricht "rest" schickt `officer` und `officer2`, Client nimmt fuer OfficerB `officer2` (sonst Kopie des ersten).
+- Im Studio gemessen: beide Polizisten als neue Figuren in der Szene, Fuesse 0,00 ueber dem Boden, Raeder 0,08.
+- NICHT angesehen (Mac war gesperrt): Aussehen der beiden Polizisten, Gang und Kopfdrehung.
+- Wichtig: neue .rbxm-Figuren bei laufendem Rojo → einmal Disconnect/Connect, sonst fehlt die Form.

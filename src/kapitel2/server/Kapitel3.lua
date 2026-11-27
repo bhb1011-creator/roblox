@@ -843,7 +843,26 @@ local function collapseBridge()
 end
 
 -- Polizist (Schlussszene): dunkelblaue Uniform, Mütze, Abzeichen, Gürtel mit Funkgerät
-function buildOfficer(parent)
+function buildOfficer(parent, figureName)
+	-- Echte KI-Figur (assets/figuren/Polizist.rbxm bzw. Polizist2.rbxm → ReplicatedStorage.Wagners), sonst die gebaute
+	local okFigure, RealFigure = pcall(require, ReplicatedStorage.Shared.RealFigure)
+	local source = okFigure and RealFigure.source(figureName or "Polizist", "Wagners")
+	if figureName and not source then
+		return nil -- zweiter Polizist: ohne eigene Figur nimmt der Client eine Kopie des ersten
+	end
+	if source then
+		local real = RealFigure.prepare(source, { height = figureName == "Polizist2" and 5.8 or 5.9 })
+		real.Name = figureName or "Officer"
+		for _, part in real:GetDescendants() do
+			if part:IsA("BasePart") then
+				part.CanCollide = false
+				part.CanTouch = false
+				part.CanQuery = false
+			end
+		end
+		real.Parent = parent
+		return real
+	end
 	local NAVY = Color3.fromRGB(28, 34, 52)
 	local DARK = Color3.fromRGB(18, 20, 26)
 	local GOLD = Color3.fromRGB(198, 164, 84)
@@ -995,7 +1014,7 @@ function Kapitel3.run(kit)
 		local _, _, pathLength = Data.progress(forestPoints, forestPoints[1])
 		remotes:SetAttribute("Inside", false)
 		-- die Polizisten für die Schlussszene (stehen bis dahin versteckt unter der Hütte)
-		local officer
+		local officer, officer2
 		task.spawn(function()
 			local ok, result = pcall(buildOfficer, hut.folder)
 			if ok and result then
@@ -1003,6 +1022,11 @@ function Kapitel3.run(kit)
 				Wagners.place(officer, (hut.frame * CFrame.new(0, -60, 0)).Position, (hut.frame * CFrame.new(0, -60, 5)).Position)
 			else
 				warn("Kapitel 3: Polizist konnte nicht gebaut werden: " .. tostring(result))
+			end
+			local ok2, result2 = pcall(buildOfficer, hut.folder, "Polizist2")
+			if ok2 and result2 then
+				officer2 = result2
+				Wagners.place(officer2, (hut.frame * CFrame.new(4, -60, 0)).Position, (hut.frame * CFrame.new(4, -60, 5)).Position)
 			end
 		end)
 		ctx.setCheckpoint(afterBridgeFrame)
@@ -1144,7 +1168,7 @@ function Kapitel3.run(kit)
 			end
 		end
 		event:FireAllClients({ type = "objectives", clear = true })
-		event:FireAllClients({ type = "k3", step = "rest", officer = officer, frame = hut.frame, road = roadFrame })
+		event:FireAllClients({ type = "k3", step = "rest", officer = officer, officer2 = officer2, frame = hut.frame, road = roadFrame })
 		local started = os.clock()
 		local function waitUntil(t)
 			local left = t - (os.clock() - started)

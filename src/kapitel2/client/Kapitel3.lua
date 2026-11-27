@@ -4160,7 +4160,7 @@ local function buildArrest(message, folder)
 	if message.officer then
 		local escort = localCopy(message.officer, "OfficerA")
 		actor(escort, { H3(0.1, -3.4), H3(0.1, 3), H3(0.6, 6.6), R3(7.4, -12.4) }, 3, 2.6)
-		local waiting = localCopy(message.officer, "OfficerB")
+		local waiting = localCopy(message.officer2 or message.officer, "OfficerB")
 		-- wartet auf der Straßenseite vor dem Auto (so steht er keiner der beiden Kameras im Bild)
 		local entry = actor(waiting, { R3(-6.8, -6), R3(2, -12) }, 0, 999)
 		if entry then
