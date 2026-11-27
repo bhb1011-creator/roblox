@@ -3939,7 +3939,9 @@ local function buildPoliceCar(parent)
 		table.insert(blue, { part = lamp, light = glow, on = info[2], off = info[3] })
 	end
 	model.PrimaryPart = body
-	model.WorldPivot = CFrame.new()
+	-- Drehpunkt unten zwischen den Rädern (Unterkante der Reifen), damit "Boden + kleiner Abstand"
+	-- das Auto auf die Räder stellt. (WorldPivot allein wird mit PrimaryPart ignoriert.)
+	body.PivotOffset = CFrame.new(0, -2, 0)
 	model.Parent = parent
 	return { model = model, blue = blue, body = body }
 end
@@ -4159,7 +4161,8 @@ local function buildArrest(message, folder)
 		local escort = localCopy(message.officer, "OfficerA")
 		actor(escort, { H3(0.1, -3.4), H3(0.1, 3), H3(0.6, 6.6), R3(7.4, -12.4) }, 3, 2.6)
 		local waiting = localCopy(message.officer, "OfficerB")
-		local entry = actor(waiting, { R3(-3.6, -12), R3(1, -15) }, 0, 999)
+		-- wartet auf der Straßenseite vor dem Auto (so steht er keiner der beiden Kameras im Bild)
+		local entry = actor(waiting, { R3(-6.8, -6), R3(2, -12) }, 0, 999)
 		if entry then
 			-- dreht den Kopf zu den anderen
 			table.insert(entry.rig.layers, function()
@@ -4237,7 +4240,7 @@ function handlers.rest(message)
 			params.FilterType = Enum.RaycastFilterType.Include
 			params.FilterDescendantsInstances = { workspace.Terrain }
 			local hit = workspace:Raycast(H.carStop.Position + Vector3.new(0, 15, 0), Vector3.new(0, -40, 0), params)
-			H.carStop += Vector3.new(0, (hit and hit.Position.Y + 0.6 or H.carStop.Y) - H.carStop.Y, 0)
+			H.carStop += Vector3.new(0, (hit and hit.Position.Y + 0.08 or H.carStop.Y) - H.carStop.Y, 0)
 			car.model:PivotTo(H.carStop)
 		end
 		H.car = car
@@ -4280,22 +4283,46 @@ function handlers.rest(message)
 					hold(mine, 0)
 				end
 			end
-			-- 1) von der Seite: alle kommen aus der Hütte, davor das Auto mit Blaulicht
+			-- Blickpunkt folgt weich der ersten Figur (statt starr auf einen Punkt zu schauen)
+			local function follower(base, weight)
+				local look = base
+				local before = os.clock()
+				return function(now)
+					local lead = cast.actors[1]
+					local want = base
+					if lead and lead.rig and lead.rig.feet then
+						want = base:Lerp(lead.rig.feet + UP * 3.6, weight)
+					end
+					look = look:Lerp(want, math.clamp((now - before) * 2.5, 0, 1))
+					before = now
+					return look
+				end
+			end
+			local function smooth(a)
+				a = math.clamp(a, 0, 1)
+				return a * a * (3 - 2 * a)
+			end
+			-- 1) schräg von vorne links, an der Motorhaube vorbei: sie kommen aus der Hütte,
+			-- die Kamera fährt langsam heran
 			local shotStart = os.clock()
-			local from, target = (road * CFrame.new(13, 8, -14.4)).Position, (road * CFrame.new(1.2, 3.4, -14.2)).Position
+			local fromA, toA = (road * CFrame.new(-13, 6.5, -10.5)).Position, (road * CFrame.new(-10.8, 5.9, -11.3)).Position
+			local lookA = follower((road * CFrame.new(1.5, 4.2, -15)).Position, 0.45)
+			local lengthA = Data.END_CAR - Data.END_OUTSIDE
 			shot(function(now)
-				local drift = (now - shotStart) * 0.25
-				return CFrame.lookAt(from - road.RightVector * drift, target)
+				local a = smooth((now - shotStart) / lengthA)
+				return CFrame.lookAt(fromA:Lerp(toA, a), lookA(now))
 			end, 0)
 			setBlack(1, 0.9)
 			play1(Data.END_CAR)
-			-- 2) nah am Auto: sie kommen an der hinteren Tür an
-			-- weiter hinten und höher, damit der wartende Polizist (bei -3.6, -12) nicht vor der Linse steht
-			local close = (road * CFrame.new(-10.4, 6.2, -18.8)).Position
-			local door = (road * CFrame.new(4.4, 3, -11.6)).Position
+			-- 2) von der Motorhaube am Auto entlang: sie gehen zur hinteren Tür, wo der Polizist
+			-- wartet, und steigen ein
 			local closeStart = os.clock()
+			local fromB, toB = (road * CFrame.new(-9, 5.3, -11)).Position, (road * CFrame.new(-6.5, 5, -11.2)).Position
+			local lookB = follower((road * CFrame.new(4.4, 3.6, -11.6)).Position, 0.3)
+			local lengthB = Data.END_ROAD - Data.END_CAR
 			shot(function(now)
-				return CFrame.lookAt(close + road.RightVector * (now - closeStart) * 0.3, door)
+				local a = smooth((now - closeStart) / lengthB)
+				return CFrame.lookAt(fromB:Lerp(toB, a), lookB(now))
 			end, 0)
 			play1(Data.END_CAR + 2)
 			playAt("carDoor", carPosition, { Volume = 1.6 })
@@ -4330,7 +4357,7 @@ function handlers.rest(message)
 			local pivot = from * CFrame.new(0, 0, -distance)
 			local hit = workspace:Raycast(pivot.Position + Vector3.new(0, 15, 0), Vector3.new(0, -40, 0), groundParams)
 			if hit then
-				pivot += Vector3.new(0, hit.Position.Y + 0.6 - pivot.Y, 0) -- (+0,6: Terrain sieht etwas höher aus, als der Strahl misst)
+				pivot += Vector3.new(0, hit.Position.Y + 0.08 - pivot.Y, 0) -- Drehpunkt = Unterkante der Reifen
 			end
 			car.model:PivotTo(pivot)
 			if os.clock() - started >= Data.END_FADE and not H.fading then

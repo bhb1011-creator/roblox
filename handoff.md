@@ -855,3 +855,10 @@ Hochgeladen (25.11., mit OK des Users, privat): Lobby -> Beta-Gaestehaus, Spiel 
 - Ursache: beim Polizisten (Wagners.newBody) ist HipHeight negativ (-1.08), footOffsetOf ergab 0 statt 3.45.
 - buildArrest misst jetzt jede Figur aus (Wurzel bis tiefste Sohle) und setzt FootOffset. Gemessen: alle Fuesse 0-0.06 ueber dem Boden.
 - Nicht hochgeladen, online ist 25c.
+
+## 27b (27.11.2026): Polizei-Szene schoener, Auto auf den Raedern
+- Auto steckte 1,4 Studs im Boden: mit PrimaryPart lag der Drehpunkt in der Karosserie (WorldPivot wurde ignoriert). Jetzt body.PivotOffset = (0,-2,0), Abstand zum Boden 0,08.
+- Kamera 1: schraeg von vorne links an der Motorhaube vorbei zur Veranda, faehrt langsam heran, Blick folgt weich dem ersten Spieler.
+- Kamera 2: von der Motorhaube am Auto entlang zur hinteren Tuer, faehrt langsam heran.
+- Wartender Polizist steht jetzt auf der Strassenseite vor dem Auto (R3(-6.8,-6)), nicht mehr im Bild.
+- Im Studio angesehen (alle drei Einstellungen). Nicht hochgeladen, online ist 25c.
