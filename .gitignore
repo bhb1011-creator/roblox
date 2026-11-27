@@ -154,3 +154,6 @@ vite.config.ts.timestamp-*
 *.rbxl.lock
 *.rbxlx.lock
 sourcemap.json
+
+# ElevenLabs-Schlüssel (nie hochladen)
+.elevenlabs_key
