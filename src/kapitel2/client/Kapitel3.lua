@@ -12,6 +12,7 @@ local UserInputService = game:GetService("UserInputService")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
+local SoundBank = require(Shared:WaitForChild("SoundBank"))
 local Data = require(Shared:WaitForChild("Kapitel3Data"))
 local Beast = require(Shared:WaitForChild("Beast"))
 local Script = require(Shared:WaitForChild("Kapitel2Dialogue"))
@@ -177,6 +178,13 @@ local function makeSound(key, parent, props)
 		ids = id
 		id = ids[1] or ""
 	end
+	-- Stück aus einer Sammeldatei (Config.SOUND_BANKS)
+	local piece
+	if id == "" then
+		local bankId
+		bankId, piece = SoundBank.find(key)
+		id = bankId or ""
+	end
 	if id == "" and FALLBACK[key] then
 		id = Config.SOUNDS[FALLBACK[key][1]] or ""
 		speed = FALLBACK[key][2]
@@ -193,6 +201,10 @@ local function makeSound(key, parent, props)
 		sound[property] = value
 	end
 	sound.PlaybackSpeed *= speed
+	if piece then
+		SoundBank.apply(sound, piece)
+		sound:SetAttribute("PieceLength", piece.length / sound.PlaybackSpeed)
+	end
 	sound.Parent = parent or SoundService
 	if ids and #ids > 1 then
 		layerSounds(sound, ids, sound.Parent, props)
@@ -204,7 +216,8 @@ local function play(key, props, parent)
 	local sound = makeSound(key, parent, props)
 	if sound then
 		sound:Play()
-		task.delay(10, function()
+		-- (längere Stücke wie die Musik am Ende nicht nach 10 s abschneiden)
+		task.delay(math.max(10, (sound:GetAttribute("PieceLength") or 0) + 1), function()
 			sound:Destroy()
 		end)
 	end
@@ -224,7 +237,7 @@ local function playAt(key, position, props)
 	holder.CFrame = CFrame.new(position)
 	holder.Parent = workspace
 	local sound = play(key, props, holder)
-	task.delay(10, function()
+	task.delay(math.max(10, (sound and sound:GetAttribute("PieceLength") or 0) + 1), function()
 		holder:Destroy()
 	end)
 	return sound

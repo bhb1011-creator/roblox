@@ -871,3 +871,14 @@ Hochgeladen (25.11., mit OK des Users, privat): Lobby -> Beta-Gaestehaus, Spiel 
 - Im Studio gemessen: beide Polizisten als neue Figuren in der Szene, Fuesse 0,00 ueber dem Boden, Raeder 0,08.
 - NICHT angesehen (Mac war gesperrt): Aussehen der beiden Polizisten, Gang und Kopfdrehung.
 - Wichtig: neue .rbxm-Figuren bei laufendem Rojo → einmal Disconnect/Connect, sonst fehlt die Form.
+
+## 27d (27.11.2026): Sound-Sammeldateien (nur 5 Uploads)
+- Alle 66 leeren Plaetze in Config.SOUNDS liegen jetzt in fuenf Sammeldateien `assets/audio/banks/sammel_1.mp3` … `sammel_5.mp3`
+  (zusammen ca. 7,5 Minuten, 9 MB), gebaut von `tools/make_sound_banks.py`. Lage jedes Sounds: `src/shared/SoundPieces.lua` (automatisch).
+- Schleifen liegen dreimal hintereinander, geschleift wird im mittleren Stueck (nahtlos, auch bei MP3-Versatz).
+- `src/shared/SoundBank.lua`: `find(key)` -> ID der Sammeldatei + Stueck, `apply(sound, piece)` setzt PlaybackRegion/LoopRegion.
+  Eingebaut in makeSound von Kapitel 1 (Cutscene), Kapitel 2 (Scene, auch Ambience) und Kapitel 3. Eigene ID in Config.SOUNDS hat Vorrang.
+- Kapitel 3: `play`/`playAt` loeschen lange Stuecke (Musik am Ende, Donner) nicht mehr nach 10 s.
+- 6 fehlende Sounds neu berechnet (scream_distant, heavy_knock, door_burst, fuse, explosion, secret_door_open) in `make_kapitel3_audio.py`.
+- OFFEN: Die 5 Dateien hochladen und die IDs in `Config.SOUND_BANKS` eintragen. Bis dahin bleiben die Ersatz-Sounds.
+- Im Studio geprueft (mit Platzhalter-ID): Stuecke und Schleifen werden richtig gesetzt, keine Fehler. Gehoert noch nichts.

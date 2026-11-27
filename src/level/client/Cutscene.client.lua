@@ -18,6 +18,7 @@ local UserInputService = game:GetService("UserInputService")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
+local SoundBank = require(Shared:WaitForChild("SoundBank"))
 local Dialogue = require(Shared:WaitForChild("Dialogue"))
 local Route = require(Shared:WaitForChild("LevelRoute"))
 local Speech = require(script.Parent:WaitForChild("Speech"))
@@ -332,6 +333,13 @@ local madeSounds = {} -- alle Sounds von Kapitel 1 (im ganzen Spiel am Ende stop
 local function makeSound(key, parent, props)
 	local id = Config.SOUNDS and Config.SOUNDS[key] or ""
 	local fallback = FALLBACK_KEYS[key]
+	-- Stück aus einer Sammeldatei (Config.SOUND_BANKS)
+	local piece
+	if id == "" then
+		local bankId
+		bankId, piece = SoundBank.find(key)
+		id = bankId or ""
+	end
 	if id == "" and fallback then
 		id = Config.SOUNDS[fallback[1]] or ""
 		props = table.clone(props or {})
@@ -349,6 +357,7 @@ local function makeSound(key, parent, props)
 	for property, value in props or {} do
 		sound[property] = value
 	end
+	SoundBank.apply(sound, piece)
 	sound.Parent = parent
 	table.insert(madeSounds, sound)
 	return sound

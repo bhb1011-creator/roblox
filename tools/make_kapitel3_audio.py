@@ -190,7 +190,11 @@ def save(name, x, level=None, drive=None):
         w.setsampwidth(2)
         w.setframerate(SR)
         w.writeframes((x * 32767).astype(np.int16).tobytes())
-    subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", wav, "-c:a", "libvorbis", "-q:a", "6", os.path.join(OUT, name + ".ogg")], check=True)
+    target = os.path.join(OUT, name + ".ogg")
+    done = subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", wav, "-c:a", "libvorbis", "-q:a", "6", target])
+    if done.returncode != 0:
+        # ffmpeg ohne libvorbis: eingebauter Vorbis-Encoder (kann nur Stereo)
+        subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", wav, "-ac", "2", "-c:a", "vorbis", "-strict", "-2", target], check=True)
     os.remove(wav)
     print(f"{name}.ogg  {len(x) / SR:.1f}s")
 
@@ -948,15 +952,94 @@ def ending_music():
     return fade(normalize(mix, 0.8), 0.5, 4.0)
 
 
+# ------------------------------------------------------------------ Kapitel 2: die Nacht und die Flucht
+def scream_distant():
+    """Schrei irgendwo im Haus: Frauenstimme, durch Wände gedämpft, mit Hall"""
+    d = 2.4
+    t = t_axis(d)
+    env = lambda tt: np.clip(tt / 0.06, 0, 1) * np.clip((d - tt) / 1.2, 0, 1)
+    pitch = lambda tt: 520 + 160 * np.sin(np.pi * np.clip(tt / d, 0, 1) * 0.8) + 18 * np.sin(2 * np.pi * 6 * tt)
+    voice = throat(d, pitch, 0.6, env, formants=(700, 2600, 1100, 1800))
+    breath = fft_filter(noise(len(t)), bandpass(1500, 5000)) * env(t) * 0.12
+    muffled = fft_filter(voice + breath, lowpass(1600))
+    return reverb(muffled, 2.8, 0.55, 1800)
+
+
+def heavy_knock():
+    """drei schwere Schläge gegen die Haustür (Faust/Schulter, dumpf, die Tür bebt)"""
+    d = 2.6
+    out = np.zeros(int(d * SR))
+    for at in [0.0, 0.55, 1.1]:
+        place(out, at, add(wood_knock(1.2, 0.5, 0.9), thump(0.7, 80, 40, 7) * 1.4, burst(0.05, 300, 3000, 90) * 0.4))
+        place(out, at + 0.02, metal_clang(0.05, 1.4, 0.4))  # Klinke klappert
+    return reverb(out, 1.6, 0.3, 2500)
+
+
+def door_burst():
+    """Tür wird aufgerissen und knallt gegen die Wand: Krachen, Splittern, Nachschwingen"""
+    d = 2.2
+    out = np.zeros(int(d * SR))
+    place(out, 0, burst(0.25, 200, 6000, 25) * 0.8)
+    for _ in range(10):
+        place(out, rng.uniform(0, 0.08), crack(rng.uniform(0.4, 0.9), rng.uniform(0.6, 1.0)))
+    place(out, 0.12, add(wood_knock(1.4, 0.45, 1.0), thump(0.9, 70, 35, 5) * 1.6))
+    place(out, 0.14, metal_clang(0.2, 0.9, 1.2))
+    return reverb(out, 1.8, 0.35, 3000)
+
+
+def fuse():
+    """Zündschnur zischt etwa 5 Sekunden, mit kleinen Funken-Knistern"""
+    d = 5.0
+    t = t_axis(d)
+    hiss = fft_filter(noise(len(t)), bandpass(2500, 9000)) * (0.7 + 0.3 * np.abs(fft_filter(noise(len(t)), lowpass(12))))
+    out = hiss * np.minimum(t / 0.15, 1) * np.clip((d - t) / 0.1, 0, 1) * 0.6
+    for _ in range(70):
+        place(out, rng.uniform(0.1, d - 0.2), crack(rng.uniform(0.05, 0.2), rng.uniform(1.4, 2.0)))
+    return out
+
+
+def explosion():
+    """Explosion im Raum: Knall, tiefer Druck, Trümmer, langer Nachhall"""
+    d = 5.5
+    out = np.zeros(int(d * SR))
+    place(out, 0, burst(0.4, 100, 9000, 12) * 1.2)
+    place(out, 0, thump(4.0, 90, 25, 1.2) * 2.0)
+    place(out, 0, fft_filter(brown(int(3.5 * SR)), lowpass(400)) * np.exp(-t_axis(3.5) * 1.3) * 1.2)
+    for _ in range(40):
+        place(out, rng.uniform(0.15, 2.5), crack(rng.uniform(0.1, 0.5), rng.uniform(0.6, 1.2)))
+    for _ in range(6):
+        place(out, rng.uniform(0.4, 2.0), metal_clang(rng.uniform(0.05, 0.15), rng.uniform(0.7, 1.3), 0.8))
+    return reverb(out, 3.0, 0.4, 2500)
+
+
+def secret_door_open():
+    """schwere alte Tür hinter dem Regal knarrt auf, schleift über den Boden, dumpfer Anschlag"""
+    d = 4.2
+    out = np.zeros(int(d * SR))
+    place(out, 0, crack(0.6, 0.7))
+    place(out, 0.1, creak(3.0, 22, [150, 260, 430, 720], 1.0))
+    scrape = fft_filter(brown(int(3.0 * SR)), bandpass(80, 900)) * np.sin(np.pi * np.clip(t_axis(3.0) / 3.0, 0, 1)) * 0.4
+    place(out, 0.2, scrape)
+    place(out, 3.3, add(wood_knock(0.9, 0.45, 0.8), thump(0.6, 70, 40, 8)))
+    return reverb(out, 2.2, 0.4, 2500)
+
+
 # ------------------------------------------------------------------ Los
 # leise, kurze Knack-Geräusche etwas kräftiger machen (weiche Sättigung)
 DRIVE = {
+    "heavy_knock": 1.8, "door_burst": 2.0, "explosion": 1.6,
     "neck_crack": 3, "wood_splinter": 2.5, "phone_hangup": 2, "head_hit": 2, "bush_rustle": 2, "splash": 2,
     "claw_hit": 2, "police_knock": 1.8, "puppet_collapse": 1.8, "candelabrum_fall": 1.5, "bridge_collapse": 1.8,
     "bridge_crack": 1.8, "fire_crackle_loop": 2.2, "stumble": 1.6, "jump_land": 1.6, "car_door": 1.6, "body_fall": 1.5,
 }
 
 SOUNDS = [
+    ("scream_distant", scream_distant, 0.7),
+    ("heavy_knock", heavy_knock, 0.9),
+    ("door_burst", door_burst, 0.95),
+    ("fuse", fuse, 0.6),
+    ("explosion", explosion, 0.95),
+    ("secret_door_open", secret_door_open, 0.85),
     ("ritual_whisper_loop", ritual_whisper_loop, 0.8),
     ("neck_crack", neck_crack, 0.9),
     ("ritual_sting", ritual_sting, 0.95),

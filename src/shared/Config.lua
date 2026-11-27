@@ -178,6 +178,17 @@ Config.SOUNDS = {
 	-- roar, beastStep und beastBreath (siehe oben)
 }
 
+-- Sammeldateien: alle leeren Plätze oben liegen in fünf Dateien (assets/audio/banks,
+-- gebaut von tools/make_sound_banks.py). Hier die IDs nach dem Hochladen eintragen.
+-- Wo jeder Sound darin liegt, steht in SoundPieces.lua. Eine eigene ID oben hat Vorrang.
+Config.SOUND_BANKS = {
+	"", -- sammel_1.mp3 (Umgebung und Schritte)
+	"", -- sammel_2.mp3 (Kapitel 2: Nacht und Flucht)
+	"", -- sammel_3.mp3 (Kapitel 3: Verfolgung)
+	"", -- sammel_4.mp3 (Kapitel 3: Hütte)
+	"", -- sammel_5.mp3 (Kapitel 3: Ende)
+}
+
 -- Sprachausgabe auf Englisch mit der Text-to-Speech-Funktion von Roblox.
 -- `id` = Nummer der Roblox-Stimme:
 --   "1" britisch, Mann     "2" britisch, Frau
@@ -210,7 +221,7 @@ Config.TEST_START_KAPITEL2 = ""
 Config.TEST_AUTOSTART = ""
 -- Versionsnummer: steht beim Laden auf dem Bildschirm und im Output. So sieht man sofort,
 -- ob in Studio wirklich der neueste Stand läuft (nach "git pull").
-Config.BUILD = "K2-2026-11-27c"
+Config.BUILD = "K2-2026-11-27d"
 Config.VOICES = {
 	-- Sarp: etwas tiefer, langsam, ruhig – mit Bass, weniger Höhen und dunklem Hall
 	sarp = {
