@@ -882,3 +882,8 @@ Hochgeladen (25.11., mit OK des Users, privat): Lobby -> Beta-Gaestehaus, Spiel 
 - 6 fehlende Sounds neu berechnet (scream_distant, heavy_knock, door_burst, fuse, explosion, secret_door_open) in `make_kapitel3_audio.py`.
 - OFFEN: Die 5 Dateien hochladen und die IDs in `Config.SOUND_BANKS` eintragen. Bis dahin bleiben die Ersatz-Sounds.
 - Im Studio geprueft (mit Platzhalter-ID): Stuecke und Schleifen werden richtig gesetzt, keine Fehler. Gehoert noch nichts.
+
+## 27e (27.11.2026): Sammeldateien hochgeladen
+- IDs in `Config.SOUND_BANKS`: 114057724828351, 73018740795233, 92944685604052, 95725948456743, 108798063630506.
+- In Studio geprueft: alle fuenf laden (AssetFetchStatus.Success), Laengen 133.6 / 59.5 / 63.6 / 117.0 / 85.9 s = wie gebaut.
+- Noch NICHT im Spiel angehoert (Zeitpunkte, Lautstaerke, nahtlose Schleifen).
