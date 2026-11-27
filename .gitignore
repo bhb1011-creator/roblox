@@ -157,3 +157,5 @@ sourcemap.json
 
 # ElevenLabs-Schlüssel (nie hochladen)
 .elevenlabs_key
+# nur zum Anhören (MP3-Kopien)
+assets/voice/anhoeren/

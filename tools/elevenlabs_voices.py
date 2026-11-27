@@ -6,6 +6,7 @@ Der Schlüssel steht in .elevenlabs_key im Projektordner (nicht auf GitHub).
   python3 tools/elevenlabs_voices.py sarp <voice_id>      # alle Sarp-Sätze erzeugen
   python3 tools/elevenlabs_voices.py erzaehler <voice_id> # alle Erzähler-/Spieler-Sätze erzeugen
   python3 tools/elevenlabs_voices.py sarp <voice_id> sarp_01_evening sarp2_stay   # nur einzelne
+  python3 tools/elevenlabs_voices.py erzaehler <voice_id> --fehlende              # nur die, die noch fehlen
 
 Ergebnis: assets/voice/raw_v3/<name>.mp3 (so wie von ElevenLabs) und assets/voice/v3/<name>.ogg.
 Sarp als Monster (sarp2_*) wird danach etwas tiefer gesetzt.
@@ -169,8 +170,12 @@ def generate(table, voice_id, only):
     os.makedirs(RAW, exist_ok=True)
     os.makedirs(OUT, exist_ok=True)
     chars = 0
+    missing_only = "--fehlende" in only
+    only = {name for name in only if name != "--fehlende"}
     for name, text in table:
         if only and name not in only:
+            continue
+        if missing_only and os.path.exists(os.path.join(OUT, name + ".ogg")):
             continue
         mp3 = os.path.join(RAW, name + ".mp3")
         audio = request("POST", f"/v1/text-to-speech/{voice_id}?output_format=mp3_44100_128",
