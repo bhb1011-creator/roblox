@@ -850,3 +850,8 @@ Hochgeladen (25.11., mit OK des Users, privat): Lobby -> Beta-Gaestehaus, Spiel 
 - Waldrand bei der Verfolgung angesehen (Seiten, hinter der Luke): ueberall zu.
 - Wald: 14.200 Teile, davon ca. 1.070 neue Randbaeume (+8 %). Echte FPS nicht gemessen (Studio lief im Hintergrund).
 - Nicht hochgeladen, online ist 25c.
+
+## 27a (27.11.2026): Figuren in der Polizei-Szene standen im Boden
+- Ursache: beim Polizisten (Wagners.newBody) ist HipHeight negativ (-1.08), footOffsetOf ergab 0 statt 3.45.
+- buildArrest misst jetzt jede Figur aus (Wurzel bis tiefste Sohle) und setzt FootOffset. Gemessen: alle Fuesse 0-0.06 ueber dem Boden.
+- Nicht hochgeladen, online ist 25c.

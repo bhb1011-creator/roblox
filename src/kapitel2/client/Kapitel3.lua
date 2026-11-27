@@ -4101,6 +4101,22 @@ local function buildArrest(message, folder)
 		if not root then
 			return nil
 		end
+		-- Fußhöhe an der Figur selbst ausmessen (Abstand Wurzel bis zur tiefsten Sohle): beim Polizisten
+		-- stimmt HipHeight nicht (negativ), sonst steht er im Boden
+		if not model:GetAttribute("FootOffset") then
+			local low = math.huge
+			for _, part in model:GetDescendants() do
+				if part:IsA("BasePart") and part ~= root and part.Transparency < 1 then
+					local cf, half = part.CFrame, part.Size / 2
+					local reach = math.abs(cf.RightVector.Y) * half.X + math.abs(cf.UpVector.Y) * half.Y + math.abs(cf.LookVector.Y) * half.Z
+					low = math.min(low, cf.Position.Y - reach)
+				end
+			end
+			local measured = root.Position.Y - low
+			if measured > 1 and measured < 8 then
+				model:SetAttribute("FootOffset", measured)
+			end
+		end
 		model.Parent = folder
 		local rig = Rig.new(model, root, false, CFrame.new(0, footOffsetOf(model), 0))
 		rig.feet = feetAt(points[1])
